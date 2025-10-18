@@ -24,6 +24,7 @@
 ## 2. Prototyp Interfejsu (Lab 1)
 
 Wstępny prototyp interfejsu (Pulpit Bibliotekarza) został przygotowany w celu zdefiniowania uporządkowanego układu strony. W projekcie zastosowano **auto-layout** oraz **komponenty** z Figmy, co wspiera budowę responsywnego interfejsu.
+`.figma.png`
 
 ---
 
