@@ -1,12 +1,11 @@
 # 📚 Biblioteka - Aplikacja do Zarządzania Zasobami (Library_app)
-
 ## Spis Treści
 1.  Opis Projektu
 2.  Prototyp Interfejsu (Lab 1)
-3.  [cite_start]Wymagania Technologiczne i Uzasadnienie (Kryterium 6) [cite: 37]
-4.  [cite_start]Architektura Projektu (Kryterium 7) [cite: 38]
-5.  [cite_start]Uruchomienie Aplikacji (Kryterium 1) [cite: 32]
-6.  [cite_start]Status Implementacji (Kryterium 5) [cite: 36]
+3.  Wymagania Technologiczne i Uzasadnienie
+4.  Architektura Projektu
+5.  Uruchomienie Aplikacji
+6.  Status Implementacji
 
 ---
 
@@ -15,55 +14,51 @@
 **Biblioteka** to pełnoprawna, rozproszona aplikacja webowa przeznaczona do zarządzania zasobami biblioteki. Aplikacja wspiera procesy CRUD (Create, Read, Update, Delete) dla książek, użytkowników oraz zarządzania wypożyczeniami i zwrotami.
 
 ### Kluczowe Elementy Projektu
-* [cite_start]**Architektura:** Podział na warstwy (kontrolery, serwisy)[cite: 38].
-* [cite_start]**Baza Danych:** Zaprojektowana w 3NF, zawierająca minimum 30 rekordów testowych[cite: 34].
-* [cite_start]**System Ról:** Uwierzytelnianie (JWT) i autoryzacja na podstawie ról użytkowników[cite: 40].
-* [cite_start]**Historia Git:** Minimum 40 commitów z zachowaniem konwencji[cite: 35].
+* **Architektura:** Podział na rozdzielone warstwy (kontrolery, serwisy).
+* **Baza Danych:** Zaprojektowana w 3NF, zawierająca minimum 30 rekordów testowych.
+* **System Ról:** Uwierzytelnianie (JWT) i autoryzacja na podstawie ról użytkowników.
+* **Historia Git:** Minimum 40 commitów z zachowaniem konwencji.
 
 ---
 
 ## 2. Prototyp Interfejsu (Lab 1)
 
-[cite_start]Wstępny prototyp interfejsu (Pulpit Bibliotekarza) został przygotowany w celu zdefiniowania uporządkowanego układu strony[cite: 11, 23]. [cite_start]W projekcie zastosowano **auto-layout** oraz **komponenty** z Figmy, co wspiera budowę responsywnego interfejsu[cite: 8, 39].
-
-**Link do projektu w Figmie / Zrzut Ekranu:**
-* **Zrzut ekranu:** `./docs/Library_Dashboard_Prototype.png`
-* [cite_start]**Adres repozytorium z plikiem:** `https://github.com/barthig/Biblioteka` [cite: 24]
+Wstępny prototyp interfejsu (Pulpit Bibliotekarza) został przygotowany w celu zdefiniowania uporządkowanego układu strony. W projekcie zastosowano **auto-layout** oraz **komponenty** z Figmy, co wspiera budowę responsywnego interfejsu.
 
 ---
 
-## 3. Wymagania Technologiczne i Uzasadnienie (Kryterium 6)
+## 3. Wymagania Technologiczne i Uzasadnienie
 
-[cite_start]Projekt wykorzystuje nowoczesne technologie [cite: 37][cite_start], a ich wybór jest sensowny dla tego typu aplikacji[cite: 18].
+Projekt wykorzystuje nowoczesne technologie, a ich wybór jest sensowny dla tego typu aplikacji.
 
 ### 💻 Frontend
 | Technologia | Cel / Uzasadnienie |
 | :--- | :--- |
-| **React** | Wybrany ze względu na modułowość i dużą społeczność. [cite_start]Idealny do budowania dynamicznych interfejsów (np. obsługa stanów `loading`/`error`)[cite: 42]. |
-| **Tailwind CSS** | [cite_start]Wybrany jako narzędzie wspierające szybkie tworzenie **responsywnego interfejsu** i utrzymanie ujednoliconego design system[cite: 19, 39]. |
+| **React** | Wybrany ze względu na modułowość i dużą społeczność. Idealny do budowania dynamicznych interfejsów (np. obsługa stanów `loading`/`error`). |
+| **Tailwind CSS** | Wybrany jako narzędzie wspierające szybkie tworzenie **responsywnego interfejsu** i utrzymanie ujednoliconego design system. |
 
 ### ⚙️ Backend
 | Technologia | Cel / Uzasadnienie |
 | :--- | :--- |
-| **[Wstaw Technologię, np. Spring Boot (Java) lub NestJS (Node.js)]** | [cite_start]Wybrany ze względu na stabilność, wydajność i natywne wsparcie dla architektury warstwowej, co ułatwia rozdzielenie kontrolerów i serwisów[cite: 38]. |
-| **PostgreSQL** | [cite_start]Wybrany jako stabilny, relacyjny system baz danych, idealny do utrzymania bazy danych w 3NF[cite: 34]. |
-| **RabbitMQ** | [cite_start]Użyty do implementacji asynchronicznych zadań kolejkowych (np. wysyłania powiadomień e-mail o zbliżającym się terminie zwrotu książki)[cite: 44]. |
+| **[Wstaw Technologię, np. Spring Boot (Java) lub NestJS (Node.js)]** | Wybrany ze względu na stabilność, wydajność i natywne wsparcie dla architektury warstwowej, co ułatwia rozdzielenie kontrolerów i serwisów. |
+| **PostgreSQL** | Wybrany jako stabilny, relacyjny system baz danych, idealny do utrzymania bazy danych w 3NF. |
+| **RabbitMQ** | Użyty do implementacji asynchronicznych zadań kolejkowych (np. wysyłania powiadomień e-mail o zbliżającym się terminie zwrotu książki). |
 
 ---
 
-## 4. Architektura Projektu (Kryterium 7)
+## 4. Architektura Projektu
 
-[cite_start]Kod został zorganizowany w warstwy [cite: 38][cite_start], co zapobiega powielaniu logiki (DRY) i ułatwia zarządzanie kodem (Kryterium 12)[cite: 43].
+Kod został zorganizowany w warstwy, co zapobiega powielaniu logiki (DRY) i ułatwia zarządzanie kodem.
 
-* [cite_start]**Controller Layer:** Obsługa żądań HTTP i komunikacja z API (REST/GraphQL)[cite: 41].
+* **Controller Layer:** Obsługa żądań HTTP i komunikacja z API (REST/GraphQL).
 * **Service Layer:** Zawiera logikę biznesową (np. walidacja, czy użytkownik ma limit wypożyczeń).
 * **Repository/DAO Layer:** Bezpośrednia komunikacja z bazą danych (np. ORM).
 
 ---
 
-## 5. Uruchomienie Aplikacji (Kryterium 1)
+## 5. Uruchomienie Aplikacji
 
-[cite_start]Instrukcja startu backendu i frontendu[cite: 32].
+Instrukcja startu backendu i frontendu.
 
 ### Wymagania Wstępne
 * Node.js (v18+)
@@ -83,15 +78,15 @@
 
 ---
 
-## 6. Status Implementacji (Kryterium 5)
+## 6. Status Implementacji
 
-Poniższa lista przedstawia zadeklarowane funkcjonalności. [cite_start]W dniu zaliczenia musi działać co najmniej **70%** z nich[cite: 36].
+Poniższa lista przedstawia zadeklarowane funkcjonalności. W dniu zaliczenia musi działać co najmniej **70%** z nich.
 
 | Funkcjonalność | Status | Kryterium |
 | :--- | :--- | :--- |
-| CRUD Książek i Użytkowników | ✅ Gotowe | [cite_start]Podstawa funkcjonalności [cite: 36] |
-| Wypożyczanie/Zwrot | ✅ Gotowe | [cite_start]Podstawa funkcjonalności [cite: 36] |
-| Uwierzytelnianie JWT i Role | ✅ Gotowe | [cite_start]Kryterium 9 [cite: 40] |
-| Asynchroniczne powiadomienia (RabbitMQ) | ⏳ W toku | [cite_start]Kryterium 13 [cite: 44] |
-| Obsługa stanów Loading/Error (Frontend) | ⏳ W toku | [cite_start]Kryterium 11 [cite: 42] |
-| Dokumentacja API (Swagger/OpenAPI) | ⏳ W toku | [cite_start]Kryterium 14 [cite: 45] |
+| CRUD Książek i Użytkowników | ✅ Gotowe | Podstawa funkcjonalności |
+| Wypożyczanie/Zwrot | ✅ Gotowe | Podstawa funkcjonalności |
+| Uwierzytelnianie JWT i Role | ✅ Gotowe | Bezpieczeństwo |
+| Asynchroniczne powiadomienia (RabbitMQ) | ⏳ W toku | Kolejki |
+| Obsługa stanów Loading/Error (Frontend) | ⏳ W toku | Frontend-API |
+| Dokumentacja API (Swagger/OpenAPI) | ⏳ W toku | Dokumentacja |
