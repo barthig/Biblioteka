@@ -1,0 +1,23 @@
+{
+  "name": "barthig/biblioteka-backend",
+  "type": "project",
+  "require": {
+    "php": "^8.1",
+    "ext-pdo": "*",
+    "symfony/framework-bundle": "^6.4",
+    "symfony/orm-pack": "^2.2",
+    "doctrine/doctrine-bundle": "^2.8",
+    "symfony/maker-bundle": "^1.52",
+    "doctrine/doctrine-fixtures-bundle": "^4.7",
+    "symfony/serializer-pack": "^2.0",
+    "nelmio/api-doc-bundle": "^4.5"
+  },
+  "require-dev": {
+    "symfony/debug-bundle": "^6.4",
+    "phpunit/phpunit": "^10.0"
+  },
+  "scripts": {
+    "start": "symfony server:start",
+    "test": "phpunit"
+  }
+}

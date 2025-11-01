@@ -1,0 +1,6 @@
+nelmio_api_doc:
+  documentation:
+    info:
+      title: "Biblioteka API"
+      description: "OpenAPI documentation for Biblioteka backend"
+      version: "1.0.0"

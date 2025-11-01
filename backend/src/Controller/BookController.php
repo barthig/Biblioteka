@@ -1,0 +1,69 @@
+<?php
+namespace App\Controller;
+
+use App\Repository\BookRepository;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Routing\Annotation\Route;
+use App\Entity\Book;
+use Doctrine\Persistence\ManagerRegistry;
+
+class BookController extends AbstractController
+{
+    #[Route('/api/books', name: 'api_books_list', methods: ['GET'])]
+    public function list(BookRepository $repo): JsonResponse
+    {
+        $books = $repo->findAll();
+        return $this->json($books, 200);
+    }
+
+    #[Route('/api/books/{id}', name: 'api_books_get', methods: ['GET'])]
+    public function getBook(int $id, BookRepository $repo): JsonResponse
+    {
+        $book = $repo->find($id);
+        if (!$book) return $this->json(['error' => 'Book not found'], 404);
+        return $this->json($book, 200);
+    }
+
+    #[Route('/api/books', name: 'api_books_create', methods: ['POST'])]
+    public function create(Request $request, ManagerRegistry $doctrine): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+        if (empty($data['title']) || empty($data['author'])) {
+            return $this->json(['error' => 'Missing title or author'], 400);
+        }
+        $book = new Book();
+        $book->setTitle($data['title'])->setAuthor($data['author'])->setIsbn($data['isbn'] ?? null)->setCopies((int)($data['copies'] ?? 1));
+        $em = $doctrine->getManager();
+        $em->persist($book);
+        $em->flush();
+        return $this->json($book, 201);
+    }
+
+    #[Route('/api/books/{id}', name: 'api_books_update', methods: ['PUT'])]
+    public function update(int $id, Request $request, BookRepository $repo, ManagerRegistry $doctrine): JsonResponse
+    {
+        $book = $repo->find($id);
+        if (!$book) return $this->json(['error' => 'Book not found'], 404);
+        $data = json_decode($request->getContent(), true);
+        if (!empty($data['title'])) $book->setTitle($data['title']);
+        if (!empty($data['author'])) $book->setAuthor($data['author']);
+        if (isset($data['copies'])) $book->setCopies((int)$data['copies']);
+        $em = $doctrine->getManager();
+        $em->persist($book);
+        $em->flush();
+        return $this->json($book, 200);
+    }
+
+    #[Route('/api/books/{id}', name: 'api_books_delete', methods: ['DELETE'])]
+    public function delete(int $id, BookRepository $repo, ManagerRegistry $doctrine): JsonResponse
+    {
+        $book = $repo->find($id);
+        if (!$book) return $this->json(['error' => 'Book not found'], 404);
+        $em = $doctrine->getManager();
+        $em->remove($book);
+        $em->flush();
+        return $this->json(null, 204);
+    }
+}
