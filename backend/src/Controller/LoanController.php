@@ -17,20 +17,44 @@ use App\Entity\User;
 class LoanController extends AbstractController
 {
     #[Route('/api/loans', name: 'api_loans_list', methods: ['GET'])]
-    public function list(ManagerRegistry $doctrine): JsonResponse
+    public function list(Request $request, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
     {
+        // librarians see all loans; regular users see only their loans
+        if ($security->hasRole($request, 'ROLE_LIBRARIAN')) {
+            $repo = $doctrine->getRepository(Loan::class);
+            $loans = $repo->findAll();
+            return $this->json($loans, 200);
+        }
+
+        $payload = $security->getJwtPayload($request);
+        if (!$payload || !isset($payload['sub'])) {
+            return $this->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $userId = (int)$payload['sub'];
         $repo = $doctrine->getRepository(Loan::class);
-        $loans = $repo->findAll();
+        $loans = $repo->findBy(['user' => $userId]);
         return $this->json($loans, 200);
     }
 
     #[Route('/api/loans/{id}', name: 'api_loans_get', methods: ['GET'])]
-    public function getLoan(string $id, ManagerRegistry $doctrine): JsonResponse
+    public function getLoan(string $id, Request $request, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
     {
         if (!ctype_digit($id) || (int)$id <= 0) return $this->json(['error' => 'Invalid id parameter'], 400);
         $repo = $doctrine->getRepository(Loan::class);
         $loan = $repo->find((int)$id);
         if (!$loan) return $this->json(['error' => 'Loan not found'], 404);
+
+        // allow librarian or the borrower to view
+        if ($security->hasRole($request, 'ROLE_LIBRARIAN')) {
+            return $this->json($loan, 200);
+        }
+
+        $payload = $security->getJwtPayload($request);
+        if (!$payload || !isset($payload['sub']) || $payload['sub'] != $loan->getUser()->getId()) {
+            return $this->json(['error' => 'Forbidden'], 403);
+        }
+
         return $this->json($loan, 200);
     }
 
@@ -57,6 +81,15 @@ class LoanController extends AbstractController
         $book = $bookRepo->find((int)$bookId);
         if (!$user) return $this->json(['error' => 'User not found'], 404);
         if (!$book) return $this->json(['error' => 'Book not found'], 404);
+
+        // only allow creating a loan on behalf of another user when librarian
+        $payload = $security->getJwtPayload($request);
+        $isLibrarian = $security->hasRole($request, 'ROLE_LIBRARIAN');
+        if (!$isLibrarian) {
+            if (!$payload || !isset($payload['sub']) || (int)$payload['sub'] !== (int)$userId) {
+                return $this->json(['error' => 'Forbidden'], 403);
+            }
+        }
 
         // attempt borrow
         $ok = $bookService->borrow($book);

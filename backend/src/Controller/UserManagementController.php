@@ -34,7 +34,11 @@ class UserManagementController extends AbstractController
     #[Route('/api/users/{id}', name: 'api_users_update', methods: ['PUT'])]
     public function update(string $id, Request $request, UserRepository $repo, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
     {
-        if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
+        // allow librarians to update any user, allow a user to update their own profile
+        $isLibrarian = $security->hasRole($request, 'ROLE_LIBRARIAN');
+        $payload = $security->getJwtPayload($request);
+        $isOwner = $payload && isset($payload['sub']) && (int)$payload['sub'] === (int)$id;
+        if (!($isLibrarian || $isOwner)) {
             return $this->json(['error' => 'Forbidden'], 403);
         }
         if (!ctype_digit($id) || (int)$id <= 0) {
