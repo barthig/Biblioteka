@@ -8,11 +8,9 @@ use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Routing\Annotation\Route;
 
 class UserManagementController extends AbstractController
 {
-    #[Route('/api/users', name: 'api_users_create', methods: ['POST'])]
     public function create(Request $request, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
@@ -31,7 +29,6 @@ class UserManagementController extends AbstractController
         return $this->json($user, 201);
     }
 
-    #[Route('/api/users/{id}', name: 'api_users_update', methods: ['PUT'])]
     public function update(string $id, Request $request, UserRepository $repo, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
     {
         // allow librarians to update any user, allow a user to update their own profile
@@ -56,7 +53,6 @@ class UserManagementController extends AbstractController
         return $this->json($user, 200);
     }
 
-    #[Route('/api/users/{id}', name: 'api_users_delete', methods: ['DELETE'])]
     public function delete(string $id, Request $request, UserRepository $repo, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {

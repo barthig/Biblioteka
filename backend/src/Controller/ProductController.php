@@ -3,12 +3,10 @@ namespace App\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Request;
 
 class ProductController extends AbstractController
 {
-    #[Route('/api/products', name: 'api_products_list', methods: ['GET'])]
     public function list(): JsonResponse
     {
         // Simple demo resources related to the Biblioteka project
@@ -19,7 +17,6 @@ class ProductController extends AbstractController
         return $this->json($products, 200);
     }
 
-    #[Route('/api/products/{id}', name: 'api_products_get', methods: ['GET'])]
     public function getProduct(string $id, Request $request): JsonResponse
     {
         // validate id (must be positive integer)

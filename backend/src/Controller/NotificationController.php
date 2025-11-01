@@ -5,11 +5,9 @@ use App\Service\SecurityService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Routing\Annotation\Route;
 
 class NotificationController extends AbstractController
 {
-    #[Route('/api/notifications', name: 'api_notifications_list', methods: ['GET'])]
     public function list(Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
@@ -32,7 +30,6 @@ class NotificationController extends AbstractController
         return $this->json($notifications, 200);
     }
 
-    #[Route('/api/notifications/test', name: 'api_notifications_test', methods: ['POST'])]
     public function triggerTest(Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {

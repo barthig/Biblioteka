@@ -8,13 +8,11 @@ use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Routing\Annotation\Route;
 use App\Entity\Book;
 use App\Entity\User;
 
 class LoanController extends AbstractController
 {
-    #[Route('/api/loans', name: 'api_loans_list', methods: ['GET'])]
     public function list(Request $request, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
     {
         // librarians see all loans; regular users see only their loans
@@ -35,7 +33,6 @@ class LoanController extends AbstractController
         return $this->json($loans, 200);
     }
 
-    #[Route('/api/loans/{id}', name: 'api_loans_get', methods: ['GET'])]
     public function getLoan(string $id, Request $request, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
     {
         if (!ctype_digit($id) || (int)$id <= 0) return $this->json(['error' => 'Invalid id parameter'], 400);
@@ -56,7 +53,6 @@ class LoanController extends AbstractController
         return $this->json($loan, 200);
     }
 
-    #[Route('/api/loans', name: 'api_loans_create', methods: ['POST'])]
     public function create(Request $request, ManagerRegistry $doctrine, BookService $bookService, SecurityService $security): JsonResponse
     {
         // require an authenticated user (JWT) or API secret
@@ -107,7 +103,6 @@ class LoanController extends AbstractController
         return $this->json($loan, 201);
     }
 
-    #[Route('/api/loans/user/{id}', name: 'api_loans_by_user', methods: ['GET'])]
     public function listByUser(string $id, Request $request, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
     {
         if (!ctype_digit($id) || (int)$id <= 0) {
@@ -132,7 +127,6 @@ class LoanController extends AbstractController
         return $this->json($loans, 200);
     }
 
-    #[Route('/api/loans/{id}/return', name: 'api_loans_return', methods: ['PUT'])]
     public function returnLoan(string $id, Request $request, ManagerRegistry $doctrine, BookService $bookService, SecurityService $security): JsonResponse
     {
         if (!ctype_digit($id) || (int)$id <= 0) return $this->json(['error' => 'Invalid id parameter'], 400);
@@ -155,7 +149,6 @@ class LoanController extends AbstractController
         return $this->json($loan, 200);
     }
 
-    #[Route('/api/loans/{id}', name: 'api_loans_delete', methods: ['DELETE'])]
     public function delete(string $id, Request $request, ManagerRegistry $doctrine, BookService $bookService, SecurityService $security): JsonResponse
     {
         // only librarians may delete loans

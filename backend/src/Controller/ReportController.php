@@ -8,11 +8,9 @@ use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Routing\Annotation\Route;
 
 class ReportController extends AbstractController
 {
-    #[Route('/api/reports/usage', name: 'api_reports_usage', methods: ['GET'])]
     public function usage(Request $request, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
@@ -55,7 +53,6 @@ class ReportController extends AbstractController
         ], 200);
     }
 
-    #[Route('/api/reports/export', name: 'api_reports_export', methods: ['GET'])]
     public function export(Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {

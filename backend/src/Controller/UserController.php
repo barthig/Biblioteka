@@ -4,18 +4,15 @@ namespace App\Controller;
 use App\Repository\UserRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\Routing\Annotation\Route;
 
 class UserController extends AbstractController
 {
-    #[Route('/api/users', name: 'api_users_list', methods: ['GET'])]
     public function list(UserRepository $repo): JsonResponse
     {
         $users = $repo->findAll();
         return $this->json($users, 200);
     }
 
-    #[Route('/api/users/{id}', name: 'api_users_get', methods: ['GET'])]
     public function getUserById(string $id, UserRepository $repo): JsonResponse
     {
         // validate id — should be positive integer

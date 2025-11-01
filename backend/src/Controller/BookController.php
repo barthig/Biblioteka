@@ -5,21 +5,18 @@ use App\Repository\BookRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Routing\Annotation\Route;
 use App\Entity\Book;
 use App\Service\SecurityService;
 use Doctrine\Persistence\ManagerRegistry;
 
 class BookController extends AbstractController
 {
-    #[Route('/api/books', name: 'api_books_list', methods: ['GET'])]
     public function list(BookRepository $repo): JsonResponse
     {
         $books = $repo->findAll();
         return $this->json($books, 200);
     }
 
-    #[Route('/api/books/{id}', name: 'api_books_get', methods: ['GET'])]
     public function getBook(int $id, BookRepository $repo): JsonResponse
     {
         $book = $repo->find($id);
@@ -27,7 +24,6 @@ class BookController extends AbstractController
         return $this->json($book, 200);
     }
 
-    #[Route('/api/books', name: 'api_books_create', methods: ['POST'])]
     public function create(Request $request, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
@@ -45,7 +41,6 @@ class BookController extends AbstractController
         return $this->json($book, 201);
     }
 
-    #[Route('/api/books/{id}', name: 'api_books_update', methods: ['PUT'])]
     public function update(int $id, Request $request, BookRepository $repo, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
@@ -63,7 +58,6 @@ class BookController extends AbstractController
         return $this->json($book, 200);
     }
 
-    #[Route('/api/books/{id}', name: 'api_books_delete', methods: ['DELETE'])]
     public function delete(int $id, BookRepository $repo, ManagerRegistry $doctrine, Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {

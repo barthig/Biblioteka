@@ -5,7 +5,6 @@ use App\Service\SecurityService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Routing\Annotation\Route;
 
 class SettingsController extends AbstractController
 {
@@ -19,7 +18,6 @@ class SettingsController extends AbstractController
         ],
     ];
 
-    #[Route('/api/settings', name: 'api_settings_get', methods: ['GET'])]
     public function getSettings(Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
@@ -33,7 +31,6 @@ class SettingsController extends AbstractController
         return $this->json($this->defaults, 200);
     }
 
-    #[Route('/api/settings', name: 'api_settings_update', methods: ['PATCH'])]
     public function updateSettings(Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {

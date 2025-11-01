@@ -1,0 +1,169 @@
+# Central routing configuration (replaces annotation-based mappings)
+
+# Healthcheck
+health_check:
+  path: /health
+  controller: App\Controller\HealthController::health
+  methods: [GET]
+
+# Authentication
+api_auth_login:
+  path: /api/auth/login
+  controller: App\Controller\AuthController::login
+  methods: [POST]
+
+# Dashboard overview
+api_dashboard_overview:
+  path: /api/dashboard
+  controller: App\Controller\DashboardController::overview
+  methods: [GET]
+
+# Product catalogue
+api_products_list:
+  path: /api/products
+  controller: App\Controller\ProductController::list
+  methods: [GET]
+
+api_products_get:
+  path: /api/products/{id}
+  controller: App\Controller\ProductController::getProduct
+  methods: [GET]
+  requirements:
+    id: '\\d+'
+
+# User facing queries
+api_users_list:
+  path: /api/users
+  controller: App\Controller\UserController::list
+  methods: [GET]
+
+api_users_get:
+  path: /api/users/{id}
+  controller: App\Controller\UserController::getUserById
+  methods: [GET]
+  requirements:
+    id: '\\d+'
+
+# User management (staff only)
+api_users_create:
+  path: /api/users
+  controller: App\Controller\UserManagementController::create
+  methods: [POST]
+
+api_users_update:
+  path: /api/users/{id}
+  controller: App\Controller\UserManagementController::update
+  methods: [PUT]
+  requirements:
+    id: '\\d+'
+
+api_users_delete:
+  path: /api/users/{id}
+  controller: App\Controller\UserManagementController::delete
+  methods: [DELETE]
+  requirements:
+    id: '\\d+'
+
+# Books catalogue management
+api_books_list:
+  path: /api/books
+  controller: App\Controller\BookController::list
+  methods: [GET]
+
+api_books_get:
+  path: /api/books/{id}
+  controller: App\Controller\BookController::getBook
+  methods: [GET]
+  requirements:
+    id: '\\d+'
+
+api_books_create:
+  path: /api/books
+  controller: App\Controller\BookController::create
+  methods: [POST]
+
+api_books_update:
+  path: /api/books/{id}
+  controller: App\Controller\BookController::update
+  methods: [PUT]
+  requirements:
+    id: '\\d+'
+
+api_books_delete:
+  path: /api/books/{id}
+  controller: App\Controller\BookController::delete
+  methods: [DELETE]
+  requirements:
+    id: '\\d+'
+
+# Loan operations
+api_loans_list:
+  path: /api/loans
+  controller: App\Controller\LoanController::list
+  methods: [GET]
+
+api_loans_get:
+  path: /api/loans/{id}
+  controller: App\Controller\LoanController::getLoan
+  methods: [GET]
+  requirements:
+    id: '\\d+'
+
+api_loans_create:
+  path: /api/loans
+  controller: App\Controller\LoanController::create
+  methods: [POST]
+
+api_loans_by_user:
+  path: /api/loans/user/{id}
+  controller: App\Controller\LoanController::listByUser
+  methods: [GET]
+  requirements:
+    id: '\\d+'
+
+api_loans_return:
+  path: /api/loans/{id}/return
+  controller: App\Controller\LoanController::returnLoan
+  methods: [PUT]
+  requirements:
+    id: '\\d+'
+
+api_loans_delete:
+  path: /api/loans/{id}
+  controller: App\Controller\LoanController::delete
+  methods: [DELETE]
+  requirements:
+    id: '\\d+'
+
+# Notifications
+api_notifications_list:
+  path: /api/notifications
+  controller: App\Controller\NotificationController::list
+  methods: [GET]
+
+api_notifications_test:
+  path: /api/notifications/test
+  controller: App\Controller\NotificationController::triggerTest
+  methods: [POST]
+
+# Reports
+api_reports_usage:
+  path: /api/reports/usage
+  controller: App\Controller\ReportController::usage
+  methods: [GET]
+
+api_reports_export:
+  path: /api/reports/export
+  controller: App\Controller\ReportController::export
+  methods: [GET]
+
+# Settings
+api_settings_get:
+  path: /api/settings
+  controller: App\Controller\SettingsController::getSettings
+  methods: [GET]
+
+api_settings_update:
+  path: /api/settings
+  controller: App\Controller\SettingsController::updateSettings
+  methods: [PATCH]

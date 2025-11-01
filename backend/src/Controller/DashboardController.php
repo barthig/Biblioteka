@@ -8,15 +8,13 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\Routing\Annotation\Route;
 
 class DashboardController extends AbstractController
 {
-    #[Route('/api/dashboard', name: 'api_dashboard_overview', methods: ['GET'])]
     public function overview(ManagerRegistry $doctrine): JsonResponse
     {
-    /** @var EntityManagerInterface $entityManager */
-    $entityManager = $doctrine->getManager();
+        /** @var EntityManagerInterface $entityManager */
+        $entityManager = $doctrine->getManager();
 
         $bookCount = (int)$entityManager
             ->createQuery('SELECT COUNT(b.id) FROM App\\Entity\\Book b')
