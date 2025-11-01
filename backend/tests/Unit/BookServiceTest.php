@@ -4,6 +4,8 @@ namespace App\Tests\Unit;
 use PHPUnit\Framework\TestCase;
 use App\Service\BookService;
 use App\Entity\Book;
+use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\Persistence\ObjectManager;
 
 class BookServiceTest extends TestCase
 {
@@ -13,13 +15,14 @@ class BookServiceTest extends TestCase
         $book = new Book();
         $book->setTitle('T')->setAuthor('A')->setCopies(2);
 
-        // mock an entity manager
-        $em = $this->createMock(\stdClass::class);
-        $em->method('persist');
-        $em->method('flush');
+    // mock an entity manager
+    $em = $this->createMock(ObjectManager::class);
+    $em->expects($this->exactly(2))->method('persist')->with($book);
+    $em->expects($this->exactly(2))->method('flush');
 
         // mock manager registry
-        $mr = $this->createMock(\Doctrine\Persistence\ManagerRegistry::class);
+    /** @var ManagerRegistry&\PHPUnit\Framework\MockObject\MockObject $mr */
+    $mr = $this->createMock(ManagerRegistry::class);
         $mr->method('getManager')->willReturn($em);
 
         $svc = new BookService($mr);
