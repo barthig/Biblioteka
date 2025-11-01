@@ -13,12 +13,16 @@ class AppFixtures extends Fixture
     {
         // create some users
         $users = [];
-        for ($i = 1; $i <= 5; $i++) {
-            $u = new User();
-            $u->setName('User '.$i)->setEmail('user'.$i.'@example.com')->setRoles(['ROLE_USER']);
-            $manager->persist($u);
-            $users[] = $u;
-        }
+                for ($i = 1; $i <= 5; $i++) {
+                        $u = new User();
+                        $password = password_hash('password' . $i, PASSWORD_BCRYPT);
+                        $u->setName('User '.$i)
+                            ->setEmail('user'.$i.'@example.com')
+                            ->setRoles(['ROLE_USER'])
+                            ->setPassword($password);
+                        $manager->persist($u);
+                        $users[] = $u;
+                }
 
         // create 30 books
         $books = [];

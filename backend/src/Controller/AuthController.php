@@ -17,8 +17,16 @@ class AuthController extends AbstractController
         $email = $data['email'] ?? null;
         if (!$email) return $this->json(['error' => 'Missing email'], 400);
 
+        $password = $data['password'] ?? null;
+        if (!$password) return $this->json(['error' => 'Missing password'], 400);
+
         $user = $repo->findOneBy(['email' => $email]);
         if (!$user) return $this->json(['error' => 'User not found'], 404);
+
+        // verify password
+        if (!password_verify($password, $user->getPassword())) {
+            return $this->json(['error' => 'Invalid credentials'], 401);
+        }
 
         $token = JwtService::createToken(['sub' => $user->getId(), 'roles' => $user->getRoles()]);
         return $this->json(['token' => $token], 200);
