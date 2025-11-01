@@ -5,6 +5,7 @@ use App\Entity\Loan;
 use App\Repository\BookRepository;
 use App\Repository\UserRepository;
 use App\Service\BookService;
+use App\Service\SecurityService;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -34,8 +35,13 @@ class LoanController extends AbstractController
     }
 
     #[Route('/api/loans', name: 'api_loans_create', methods: ['POST'])]
-    public function create(Request $request, ManagerRegistry $doctrine, BookService $bookService): JsonResponse
+    public function create(Request $request, ManagerRegistry $doctrine, BookService $bookService, SecurityService $security): JsonResponse
     {
+        // require an authenticated user (JWT) or API secret
+        $payload = $security->getJwtPayload($request);
+        if ($payload === null) {
+            return $this->json(['error' => 'Unauthorized'], 401);
+        }
         $data = json_decode($request->getContent(), true) ?: [];
         $userId = $data['userId'] ?? null;
         $bookId = $data['bookId'] ?? null;
@@ -65,12 +71,19 @@ class LoanController extends AbstractController
     }
 
     #[Route('/api/loans/{id}/return', name: 'api_loans_return', methods: ['PUT'])]
-    public function returnLoan(string $id, ManagerRegistry $doctrine, BookService $bookService): JsonResponse
+    public function returnLoan(string $id, Request $request, ManagerRegistry $doctrine, BookService $bookService, SecurityService $security): JsonResponse
     {
         if (!ctype_digit($id) || (int)$id <= 0) return $this->json(['error' => 'Invalid id parameter'], 400);
         $repo = $doctrine->getRepository(Loan::class);
         $loan = $repo->find((int)$id);
         if (!$loan) return $this->json(['error' => 'Loan not found'], 404);
+        // only librarian or the user who borrowed may mark as returned
+        $payload = $security->getJwtPayload($request);
+        $isLibrarian = $security->hasRole($request, 'ROLE_LIBRARIAN');
+        $isOwner = $payload && isset($payload['sub']) && $payload['sub'] == $loan->getUser()->getId();
+        if (!($isLibrarian || $isOwner)) {
+            return $this->json(['error' => 'Forbidden'], 403);
+        }
         if ($loan->getReturnedAt() !== null) return $this->json(['error' => 'Loan already returned'], 400);
         $loan->setReturnedAt(new \DateTimeImmutable());
         $bookService->restore($loan->getBook());
@@ -81,8 +94,12 @@ class LoanController extends AbstractController
     }
 
     #[Route('/api/loans/{id}', name: 'api_loans_delete', methods: ['DELETE'])]
-    public function delete(string $id, ManagerRegistry $doctrine, BookService $bookService): JsonResponse
+    public function delete(string $id, Request $request, ManagerRegistry $doctrine, BookService $bookService, SecurityService $security): JsonResponse
     {
+        // only librarians may delete loans
+        if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
+            return $this->json(['error' => 'Forbidden'], 403);
+        }
         if (!ctype_digit($id) || (int)$id <= 0) return $this->json(['error' => 'Invalid id parameter'], 400);
         $repo = $doctrine->getRepository(Loan::class);
         $loan = $repo->find((int)$id);

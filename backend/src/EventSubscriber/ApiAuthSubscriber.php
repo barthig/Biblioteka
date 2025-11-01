@@ -50,11 +50,13 @@ class ApiAuthSubscriber implements EventSubscriberInterface
         if ($bearer) {
             $payload = JwtService::validateToken($bearer);
             if ($payload) {
-                // valid token
+                // attach payload to request for downstream role checks
+                $request->attributes->set('jwt_payload', $payload);
                 return;
             }
         }
 
+        // if API secret matched earlier we would have returned; otherwise unauthorized
         $event->setResponse(new JsonResponse(['error' => 'Unauthorized'], 401));
     }
 }

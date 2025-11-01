@@ -3,6 +3,7 @@ namespace App\Controller;
 
 use App\Entity\User;
 use App\Repository\UserRepository;
+use App\Service\SecurityService;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -12,8 +13,11 @@ use Symfony\Component\Routing\Annotation\Route;
 class UserManagementController extends AbstractController
 {
     #[Route('/api/users', name: 'api_users_create', methods: ['POST'])]
-    public function create(Request $request, ManagerRegistry $doctrine): JsonResponse
+    public function create(Request $request, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
     {
+        if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
+            return $this->json(['error' => 'Forbidden'], 403);
+        }
         $data = json_decode($request->getContent(), true) ?: [];
         if (empty($data['email']) || empty($data['name'])) {
             return $this->json(['error' => 'Missing email or name'], 400);
@@ -28,8 +32,11 @@ class UserManagementController extends AbstractController
     }
 
     #[Route('/api/users/{id}', name: 'api_users_update', methods: ['PUT'])]
-    public function update(string $id, Request $request, UserRepository $repo, ManagerRegistry $doctrine): JsonResponse
+    public function update(string $id, Request $request, UserRepository $repo, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
     {
+        if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
+            return $this->json(['error' => 'Forbidden'], 403);
+        }
         if (!ctype_digit($id) || (int)$id <= 0) {
             return $this->json(['error' => 'Invalid id parameter'], 400);
         }
@@ -46,8 +53,11 @@ class UserManagementController extends AbstractController
     }
 
     #[Route('/api/users/{id}', name: 'api_users_delete', methods: ['DELETE'])]
-    public function delete(string $id, UserRepository $repo, ManagerRegistry $doctrine): JsonResponse
+    public function delete(string $id, Request $request, UserRepository $repo, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
     {
+        if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
+            return $this->json(['error' => 'Forbidden'], 403);
+        }
         if (!ctype_digit($id) || (int)$id <= 0) {
             return $this->json(['error' => 'Invalid id parameter'], 400);
         }

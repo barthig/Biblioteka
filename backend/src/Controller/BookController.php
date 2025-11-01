@@ -7,6 +7,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use App\Entity\Book;
+use App\Service\SecurityService;
 use Doctrine\Persistence\ManagerRegistry;
 
 class BookController extends AbstractController
@@ -27,8 +28,11 @@ class BookController extends AbstractController
     }
 
     #[Route('/api/books', name: 'api_books_create', methods: ['POST'])]
-    public function create(Request $request, ManagerRegistry $doctrine): JsonResponse
+    public function create(Request $request, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
     {
+        if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
+            return $this->json(['error' => 'Forbidden'], 403);
+        }
         $data = json_decode($request->getContent(), true);
         if (empty($data['title']) || empty($data['author'])) {
             return $this->json(['error' => 'Missing title or author'], 400);
@@ -42,8 +46,11 @@ class BookController extends AbstractController
     }
 
     #[Route('/api/books/{id}', name: 'api_books_update', methods: ['PUT'])]
-    public function update(int $id, Request $request, BookRepository $repo, ManagerRegistry $doctrine): JsonResponse
+    public function update(int $id, Request $request, BookRepository $repo, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
     {
+        if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
+            return $this->json(['error' => 'Forbidden'], 403);
+        }
         $book = $repo->find($id);
         if (!$book) return $this->json(['error' => 'Book not found'], 404);
         $data = json_decode($request->getContent(), true);
@@ -57,8 +64,11 @@ class BookController extends AbstractController
     }
 
     #[Route('/api/books/{id}', name: 'api_books_delete', methods: ['DELETE'])]
-    public function delete(int $id, BookRepository $repo, ManagerRegistry $doctrine): JsonResponse
+    public function delete(int $id, BookRepository $repo, ManagerRegistry $doctrine, Request $request, SecurityService $security): JsonResponse
     {
+        if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
+            return $this->json(['error' => 'Forbidden'], 403);
+        }
         $book = $repo->find($id);
         if (!$book) return $this->json(['error' => 'Book not found'], 404);
         $em = $doctrine->getManager();
