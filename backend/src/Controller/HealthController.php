@@ -2,13 +2,15 @@
 namespace App\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\HttpFoundation\JsonResponse;
 
 class HealthController extends AbstractController
 {
-    #[Route('/health', name: 'health', methods: ['GET'])]
-    public function health(): array
+    public function health(): JsonResponse
     {
-        return ['status' => 'ok', 'message' => 'Biblioteka API is running'];
+        return $this->json([
+            'status' => 'ok',
+            'message' => 'Biblioteka API is running',
+        ]);
     }
 }

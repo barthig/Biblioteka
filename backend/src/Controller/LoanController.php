@@ -2,8 +2,6 @@
 namespace App\Controller;
 
 use App\Entity\Loan;
-use App\Repository\BookRepository;
-use App\Repository\UserRepository;
 use App\Service\BookService;
 use App\Service\SecurityService;
 use Doctrine\Persistence\ManagerRegistry;
@@ -77,10 +75,16 @@ class LoanController extends AbstractController
 
         $userRepo = $doctrine->getRepository(User::class);
         $bookRepo = $doctrine->getRepository(Book::class);
+        $loanRepo = $doctrine->getRepository(Loan::class);
         $user = $userRepo->find((int)$userId);
         $book = $bookRepo->find((int)$bookId);
         if (!$user) return $this->json(['error' => 'User not found'], 404);
         if (!$book) return $this->json(['error' => 'Book not found'], 404);
+
+        $openLoan = $loanRepo->findOneBy(['book' => $book, 'returnedAt' => null]);
+        if ($openLoan) {
+            return $this->json(['error' => 'Book already borrowed'], 409);
+        }
 
         // only allow creating a loan on behalf of another user when librarian
         $payload = $security->getJwtPayload($request);
@@ -101,6 +105,31 @@ class LoanController extends AbstractController
         $em->persist($loan);
         $em->flush();
         return $this->json($loan, 201);
+    }
+
+    #[Route('/api/loans/user/{id}', name: 'api_loans_by_user', methods: ['GET'])]
+    public function listByUser(string $id, Request $request, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
+    {
+        if (!ctype_digit($id) || (int)$id <= 0) {
+            return $this->json(['error' => 'Invalid id parameter'], 400);
+        }
+
+        $userId = (int)$id;
+        $payload = $security->getJwtPayload($request);
+        $isLibrarian = $security->hasRole($request, 'ROLE_LIBRARIAN');
+        $isOwner = $payload && isset($payload['sub']) && (int)$payload['sub'] === $userId;
+
+        if (!($isLibrarian || $isOwner)) {
+            return $this->json(['error' => 'Forbidden'], 403);
+        }
+
+        $repo = $doctrine->getRepository(Loan::class);
+        $loans = $repo->findBy(['user' => $userId]);
+        if (empty($loans)) {
+            return new JsonResponse(null, 204);
+        }
+
+        return $this->json($loans, 200);
     }
 
     #[Route('/api/loans/{id}/return', name: 'api_loans_return', methods: ['PUT'])]
