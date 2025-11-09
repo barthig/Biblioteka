@@ -10,6 +10,8 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use App\Entity\Book;
 use App\Entity\User;
+use App\Entity\Reservation;
+use App\Entity\BookCopy;
 
 class LoanController extends AbstractController
 {
@@ -30,9 +32,9 @@ class LoanController extends AbstractController
 
         $userId = (int)$payload['sub'];
         $repo = $doctrine->getRepository(Loan::class);
-    $loans = $repo->findBy(['user' => $userId]);
+        $loans = $repo->findBy(['user' => $userId]);
 
-    return $this->json($loans, 200, [], ['groups' => ['loan:read']]);
+        return $this->json($loans, 200, [], ['groups' => ['loan:read']]);
     }
 
     public function getLoan(string $id, Request $request, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
@@ -52,7 +54,7 @@ class LoanController extends AbstractController
             return $this->json(['error' => 'Forbidden'], 403);
         }
 
-    return $this->json($loan, 200, [], ['groups' => ['loan:read']]);
+        return $this->json($loan, 200, [], ['groups' => ['loan:read']]);
     }
 
     public function create(Request $request, ManagerRegistry $doctrine, BookService $bookService, SecurityService $security): JsonResponse
@@ -73,16 +75,12 @@ class LoanController extends AbstractController
 
         $userRepo = $doctrine->getRepository(User::class);
         $bookRepo = $doctrine->getRepository(Book::class);
-        $loanRepo = $doctrine->getRepository(Loan::class);
+        /** @var \App\Repository\ReservationRepository $reservationRepo */
+        $reservationRepo = $doctrine->getRepository(Reservation::class);
         $user = $userRepo->find((int)$userId);
         $book = $bookRepo->find((int)$bookId);
         if (!$user) return $this->json(['error' => 'User not found'], 404);
         if (!$book) return $this->json(['error' => 'Book not found'], 404);
-
-        $openLoan = $loanRepo->findOneBy(['book' => $book, 'returnedAt' => null]);
-        if ($openLoan) {
-            return $this->json(['error' => 'Book already borrowed'], 409);
-        }
 
         // only allow creating a loan on behalf of another user when librarian
         $payload = $security->getJwtPayload($request);
@@ -93,16 +91,32 @@ class LoanController extends AbstractController
             }
         }
 
+        $reservation = $reservationRepo->findFirstActiveForUserAndBook($user, $book);
+
         // attempt borrow
-        $ok = $bookService->borrow($book);
-        if (!$ok) return $this->json(['error' => 'No copies available'], 400);
+        $copy = $bookService->borrow($book, $reservation);
+        if (!$copy) {
+            $queue = $reservationRepo->findActiveByBook($book);
+            if (!empty($queue) && (!$isLibrarian || $queue[0]->getUser()->getId() !== $user->getId())) {
+                return $this->json(['error' => 'Book reserved by another reader'], 409);
+            }
+
+            return $this->json(['error' => 'No copies available'], 409);
+        }
 
         $loan = new Loan();
-        $loan->setBook($book)->setUser($user)->setDueAt((new \DateTimeImmutable())->modify("+{$days} days"));
+        $loan->setBook($book)
+            ->setBookCopy($copy)
+            ->setUser($user)
+            ->setDueAt((new \DateTimeImmutable())->modify("+{$days} days"));
         $em = $doctrine->getManager();
         $em->persist($loan);
+        if ($reservation) {
+            $em->persist($reservation);
+        }
         $em->flush();
-    return $this->json($loan, 201, [], ['groups' => ['loan:read']]);
+
+        return $this->json($loan, 201, [], ['groups' => ['loan:read']]);
     }
 
     public function listByUser(string $id, Request $request, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
@@ -144,11 +158,32 @@ class LoanController extends AbstractController
         }
         if ($loan->getReturnedAt() !== null) return $this->json(['error' => 'Loan already returned'], 400);
         $loan->setReturnedAt(new \DateTimeImmutable());
-        $bookService->restore($loan->getBook());
-        $em = $doctrine->getManager();
-        $em->persist($loan);
-        $em->flush();
-    return $this->json($loan, 200, [], ['groups' => ['loan:read']]);
+        $bookService->restore($loan->getBook(), $loan->getBookCopy());
+
+        // check reservations waiting for this book
+        /** @var \App\Repository\ReservationRepository $reservationRepo */
+        $reservationRepo = $doctrine->getRepository(Reservation::class);
+        $queue = $reservationRepo->findActiveByBook($loan->getBook());
+        $copy = $loan->getBookCopy();
+        if ($copy && !empty($queue)) {
+            $nextReservation = $queue[0];
+            $copy->setStatus(BookCopy::STATUS_RESERVED);
+            $nextReservation->assignBookCopy($copy);
+            $nextReservation->setExpiresAt((new \DateTimeImmutable())->modify('+2 days'));
+            $em = $doctrine->getManager();
+            $loan->getBook()->recalculateInventoryCounters();
+            $em->persist($copy);
+            $em->persist($nextReservation);
+            $em->persist($loan->getBook());
+            $em->persist($loan);
+            $em->flush();
+        } else {
+            $em = $doctrine->getManager();
+            $em->persist($loan);
+            $em->flush();
+        }
+
+        return $this->json($loan, 200, [], ['groups' => ['loan:read']]);
     }
 
     public function delete(string $id, Request $request, ManagerRegistry $doctrine, BookService $bookService, SecurityService $security): JsonResponse
@@ -163,7 +198,7 @@ class LoanController extends AbstractController
         if (!$loan) return $this->json(['error' => 'Loan not found'], 404);
         // if not returned, restore copy
         if ($loan->getReturnedAt() === null) {
-            $bookService->restore($loan->getBook());
+            $bookService->restore($loan->getBook(), $loan->getBookCopy());
         }
         $em = $doctrine->getManager();
         $em->remove($loan);

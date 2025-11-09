@@ -12,11 +12,11 @@ class Category
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
-    #[Groups(['book:read'])]
+    #[Groups(['book:read', 'reservation:read'])]
     private ?int $id = null;
 
     #[ORM\Column(type: 'string', length: 120, unique: true)]
-    #[Groups(['book:read'])]
+    #[Groups(['book:read', 'reservation:read'])]
     private string $name;
 
     #[ORM\ManyToMany(targetEntity: Book::class, mappedBy: 'categories')]

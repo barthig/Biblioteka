@@ -12,11 +12,11 @@ class Author
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
-    #[Groups(['book:read', 'loan:read'])]
+    #[Groups(['book:read', 'loan:read', 'reservation:read'])]
     private ?int $id = null;
 
     #[ORM\Column(type: 'string', length: 255, unique: true)]
-    #[Groups(['book:read', 'loan:read'])]
+    #[Groups(['book:read', 'loan:read', 'reservation:read'])]
     private string $name;
 
     #[ORM\OneToMany(mappedBy: 'author', targetEntity: Book::class, orphanRemoval: false)]

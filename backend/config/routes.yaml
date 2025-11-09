@@ -135,6 +135,37 @@ api_loans_delete:
   requirements:
     id: '\\d+'
 
+# Reservations
+api_reservations_list:
+  path: /api/reservations
+  controller: App\Controller\ReservationController::list
+  methods: [GET]
+
+api_reservations_create:
+  path: /api/reservations
+  controller: App\Controller\ReservationController::create
+  methods: [POST]
+
+api_reservations_cancel:
+  path: /api/reservations/{id}
+  controller: App\Controller\ReservationController::cancel
+  methods: [DELETE]
+  requirements:
+    id: '\\d+'
+
+# Fines
+api_fines_list:
+  path: /api/fines
+  controller: App\Controller\FineController::list
+  methods: [GET]
+
+api_fines_pay:
+  path: /api/fines/{id}/pay
+  controller: App\Controller\FineController::pay
+  methods: [POST]
+  requirements:
+    id: '\\d+'
+
 # Notifications
 api_notifications_list:
   path: /api/notifications

@@ -23,9 +23,9 @@ class LoanControllerTest extends ApiTestCase
     public function testUserCanCreateLoanForSelf(): void
     {
         $user = $this->createUser('borrower@example.com');
-    $author = $this->createAuthor('Author Borrowable');
-    $category = $this->createCategory('Loans');
-    $book = $this->createBook('Borrowable Book', $author, 2, [$category], 3);
+        $author = $this->createAuthor('Author Borrowable');
+        $category = $this->createCategory('Loans');
+        $book = $this->createBook('Borrowable Book', $author, 2, [$category], 3);
 
         $client = $this->createAuthenticatedClient($user);
         $this->jsonRequest($client, 'POST', '/api/loans', [
@@ -49,7 +49,7 @@ class LoanControllerTest extends ApiTestCase
     {
         $borrower = $this->createUser('borrower@example.com');
         $other = $this->createUser('other@example.com');
-    $book = $this->createBook();
+        $book = $this->createBook();
 
         $client = $this->createAuthenticatedClient($other);
         $this->jsonRequest($client, 'POST', '/api/loans', [
@@ -63,7 +63,7 @@ class LoanControllerTest extends ApiTestCase
     public function testCreateLoanFailsWhenAlreadyBorrowed(): void
     {
         $user = $this->createUser('borrower@example.com');
-        $book = $this->createBook();
+        $book = $this->createBook('Single Copy', null, 1, null, 1);
         $this->createLoan($user, $book);
 
         $client = $this->createAuthenticatedClient($user);
@@ -78,9 +78,9 @@ class LoanControllerTest extends ApiTestCase
     public function testBorrowerCanReturnLoan(): void
     {
         $user = $this->createUser('borrower@example.com');
-    $author = $this->createAuthor('Author');
-    $category = $this->createCategory('Returns');
-    $book = $this->createBook('Book', $author, 0, [$category], 1);
+        $author = $this->createAuthor('Author');
+        $category = $this->createCategory('Returns');
+        $book = $this->createBook('Book', $author, 0, [$category], 1);
         $loan = $this->createLoan($user, $book);
 
         $client = $this->createAuthenticatedClient($user);
@@ -113,8 +113,8 @@ class LoanControllerTest extends ApiTestCase
         $librarian = $this->createUser('librarian@example.com', ['ROLE_LIBRARIAN']);
         $user1 = $this->createUser('user1@example.com');
         $user2 = $this->createUser('user2@example.com');
-    $book1 = $this->createBook('Book1', $this->createAuthor('Author1'));
-    $book2 = $this->createBook('Book2', $this->createAuthor('Author2'));
+        $book1 = $this->createBook('Book1', $this->createAuthor('Author1'));
+        $book2 = $this->createBook('Book2', $this->createAuthor('Author2'));
         $this->createLoan($user1, $book1);
         $this->createLoan($user2, $book2);
 
@@ -130,8 +130,8 @@ class LoanControllerTest extends ApiTestCase
     {
         $user = $this->createUser('user@example.com');
         $other = $this->createUser('other@example.com');
-    $book1 = $this->createBook('Book1', $this->createAuthor('Author1'));
-    $book2 = $this->createBook('Book2', $this->createAuthor('Author2'));
+        $book1 = $this->createBook('Book1', $this->createAuthor('Author1'));
+        $book2 = $this->createBook('Book2', $this->createAuthor('Author2'));
         $this->createLoan($user, $book1);
         $this->createLoan($other, $book2);
 
@@ -182,9 +182,9 @@ class LoanControllerTest extends ApiTestCase
     {
         $librarian = $this->createUser('librarian@example.com', ['ROLE_LIBRARIAN']);
         $user = $this->createUser('user@example.com');
-    $author = $this->createAuthor('Author');
-    $category = $this->createCategory('Rare');
-    $book = $this->createBook('Rare Book', $author, 0, [$category], 1);
+        $author = $this->createAuthor('Author');
+        $category = $this->createCategory('Rare');
+        $book = $this->createBook('Rare Book', $author, 0, [$category], 1);
         $loan = $this->createLoan($user, $book);
 
         $client = $this->createAuthenticatedClient($librarian);

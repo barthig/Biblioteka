@@ -13,48 +13,53 @@ class Book
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
-    #[Groups(['book:read', 'loan:read'])]
+    #[Groups(['book:read', 'loan:read', 'reservation:read'])]
     private ?int $id = null;
 
     #[ORM\Column(type: 'string', length: 255)]
-    #[Groups(['book:read', 'loan:read'])]
+    #[Groups(['book:read', 'loan:read', 'reservation:read'])]
     private string $title;
 
     #[ORM\ManyToOne(targetEntity: Author::class, inversedBy: 'books')]
     #[ORM\JoinColumn(nullable: false, onDelete: 'RESTRICT')]
-    #[Groups(['book:read', 'loan:read'])]
+    #[Groups(['book:read', 'loan:read', 'reservation:read'])]
     private Author $author;
 
     #[ORM\ManyToMany(targetEntity: Category::class, inversedBy: 'books')]
     #[ORM\JoinTable(name: 'book_category')]
-    #[Groups(['book:read'])]
+    #[Groups(['book:read', 'reservation:read'])]
     private Collection $categories;
 
     #[ORM\Column(type: 'string', length: 20, nullable: true)]
-    #[Groups(['book:read'])]
+    #[Groups(['book:read', 'reservation:read'])]
     private ?string $isbn = null;
 
-    #[ORM\Column(type: 'integer')]
-    #[Groups(['book:read', 'loan:read'])]
-    private int $copies = 1;
+    #[ORM\OneToMany(mappedBy: 'book', targetEntity: BookCopy::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
+    #[Groups(['inventory:read'])]
+    private Collection $inventory;
 
     #[ORM\Column(type: 'integer')]
-    #[Groups(['book:read'])]
+    #[Groups(['book:read', 'loan:read', 'reservation:read'])]
+    private int $copies = 0;
+
+    #[ORM\Column(type: 'integer')]
+    #[Groups(['book:read', 'reservation:read'])]
     #[SerializedName('totalCopies')]
-    private int $totalCopies = 1;
+    private int $totalCopies = 0;
 
     #[ORM\Column(type: 'text', nullable: true)]
-    #[Groups(['book:read'])]
+    #[Groups(['book:read', 'reservation:read'])]
     private ?string $description = null;
 
     #[ORM\Column(type: 'datetime')]
-    #[Groups(['book:read'])]
+    #[Groups(['book:read', 'reservation:read'])]
     private \DateTimeInterface $createdAt;
 
     public function __construct()
     {
         $this->createdAt = new \DateTimeImmutable();
         $this->categories = new ArrayCollection();
+        $this->inventory = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -152,6 +157,32 @@ class Book
         return $this;
     }
 
+    /** @return Collection<int, BookCopy> */
+    public function getInventory(): Collection
+    {
+        return $this->inventory;
+    }
+
+    public function addInventoryCopy(BookCopy $copy): self
+    {
+        if (!$this->inventory->contains($copy)) {
+            $this->inventory->add($copy);
+            $copy->setBook($this);
+            $this->recalculateInventoryCounters();
+        }
+
+        return $this;
+    }
+
+    public function removeInventoryCopy(BookCopy $copy): self
+    {
+        if ($this->inventory->removeElement($copy)) {
+            $this->recalculateInventoryCounters();
+        }
+
+        return $this;
+    }
+
     public function getCopies(): int
     {
         return $this->copies;
@@ -159,8 +190,7 @@ class Book
 
     public function setCopies(int $copies): self
     {
-        $copies = max(0, $copies);
-        $this->copies = $this->totalCopies > 0 ? min($copies, $this->totalCopies) : $copies;
+        $this->copies = max(0, $copies);
 
         return $this;
     }
@@ -172,11 +202,24 @@ class Book
 
     public function setTotalCopies(int $totalCopies): self
     {
-        $totalCopies = max(0, $totalCopies);
-        $this->totalCopies = $totalCopies;
-        if ($this->copies > $totalCopies && $totalCopies > 0) {
-            $this->copies = $totalCopies;
+        $this->totalCopies = max(0, $totalCopies);
+
+        return $this;
+    }
+
+    public function recalculateInventoryCounters(): self
+    {
+        $total = 0;
+        $available = 0;
+        foreach ($this->inventory as $copy) {
+            ++$total;
+            if ($copy->getStatus() === BookCopy::STATUS_AVAILABLE) {
+                ++$available;
+            }
         }
+
+        $this->totalCopies = $total;
+        $this->copies = $available;
 
         return $this;
     }

@@ -18,6 +18,11 @@ class Loan
     #[Groups(['loan:read'])]
     private Book $book;
 
+    #[ORM\ManyToOne(targetEntity: BookCopy::class)]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
+    #[Groups(['loan:read'])]
+    private ?BookCopy $bookCopy = null;
+
     #[ORM\ManyToOne(targetEntity: User::class)]
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     #[Groups(['loan:read'])]
@@ -43,6 +48,8 @@ class Loan
     public function getId(): ?int { return $this->id; }
     public function getBook(): Book { return $this->book; }
     public function setBook(Book $b): self { $this->book = $b; return $this; }
+    public function getBookCopy(): ?BookCopy { return $this->bookCopy; }
+    public function setBookCopy(?BookCopy $copy): self { $this->bookCopy = $copy; return $this; }
     public function getUser(): User { return $this->user; }
     public function setUser(User $u): self { $this->user = $u; return $this; }
     public function getBorrowedAt(): \DateTimeInterface { return $this->borrowedAt; }

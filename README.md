@@ -29,6 +29,7 @@ Aplikacja realizuje pełny cykl życia książki: od dodania do katalogu, przez 
 Kluczowe cechy:
 - Dwuwarstwowa architektura (backend REST + frontend SPA).
 - Baza relacyjna w 3NF z ponad 30 rekordami startowymi.
+- Zarządzanie egzemplarzami (`BookCopy`), rezerwacjami kolejkowymi oraz karami finansowymi.
 - JWT oraz `X-API-SECRET` zabezpieczające zasoby API.
 - Testy jednostkowe i funkcjonalne (PHPUnit) oraz budowanie frontendu (Vite).
 
@@ -40,7 +41,7 @@ Kluczowe cechy:
 - **Symfony 6 / PHP 8.2** – dojrzały framework MVC z bogatym ekosystemem oraz wysoką produktywnością przy tworzeniu API.
 - **Doctrine ORM** – mapowanie encji na relacyjną bazę danych, migracje i repozytoria.
 - **Autorski JwtService** – generowanie oraz walidacja tokenów JWT w algorytmie HS256.
-- **Doctrine Fixtures** – szybkie ładowanie danych demonstracyjnych.
+- **Doctrine Fixtures** – szybkie ładowanie danych demonstracyjnych (autorzy, kategorie, książki, egzemplarze, rezerwacje, kary).
 
 ### Frontend
 - **React 18 + Vite** – szybkie środowisko deweloperskie i możliwość tworzenia komponentowego SPA.
@@ -56,9 +57,9 @@ Kluczowe cechy:
 
 ## 3. Architektura rozwiązania
 
-- **Warstwa API** – kontrolery Symfony (`backend/src/Controller`) wystawiają zasoby książek, kategorii, autorów, wypożyczeń i autoryzacji.
-- **Warstwa logiki biznesowej** – serwisy (np. `BookService`) pilnują zasad dostępności książek i limitów.
-- **Warstwa danych** – encje Doctrine (`Author`, `Book`, `Category`, `Loan`, `User`) oraz repozytoria dedykowane zapytaniom.
+- **Warstwa API** – kontrolery Symfony (`backend/src/Controller`) wystawiają zasoby książek, egzemplarzy, rezerwacji, kar, wypożyczeń i autoryzacji.
+- **Warstwa logiki biznesowej** – serwisy (np. `BookService`) pilnują zasad dostępności egzemplarzy, rezerwacji i limitów wypożyczeń.
+- **Warstwa danych** – encje Doctrine (`Author`, `Book`, `BookCopy`, `Category`, `Loan`, `Reservation`, `Fine`, `User`) oraz repozytoria dedykowane zapytaniom.
 - **Frontend** – kontekst autoryzacji (`AuthContext`), strony katalogu książek i wypożyczeń, komponenty prezentujące szczegóły.
 - **Zabezpieczenia** – `ApiAuthSubscriber` wymusza obecność tokena JWT lub sekretu API dla wszystkich tras `/api/*` poza wyjątkami.
 
@@ -177,10 +178,10 @@ Plik należy utworzyć manualnie – patrz instrukcja w sekcji 6.
 
 ## 7. Zarządzanie danymi (migracje, fixtures)
 
-- Aktualne migracje znajdują się w `backend/migrations/` (np. `Version20251109101500.php`).
+- Aktualne migracje znajdują się w `backend/migrations/` (np. `Version20251109101500.php`, `Version20251109113000.php`).
 - W przypadku zmian schematu uruchom `php bin/console doctrine:migrations:diff`, następnie `doctrine:migrations:migrate`.
-- Dane demonstracyjne (ponad 30 rekordów) ładowane są za pomocą `php bin/console doctrine:fixtures:load --no-interaction`.
-- Encje i relacje są znormalizowane (3NF): osobne tabele dla autorów, kategorii i wypożyczeń.
+- Dane demonstracyjne (ponad 30 rekordów) ładowane są za pomocą `php bin/console doctrine:fixtures:load --no-interaction` (tworzą m.in. egzemplarze książek, rezerwacje, kary).
+- Encje i relacje są znormalizowane (3NF): osobne tabele dla autorów, kategorii, egzemplarzy, wypożyczeń, rezerwacji i kar.
 
 ---
 
@@ -192,6 +193,7 @@ Plik należy utworzyć manualnie – patrz instrukcja w sekcji 6.
 | `user2@example.com` – `user6@example.com` | `password2` – `password6` | `ROLE_USER` |
 
 Hasła zapisywane są w formacie bcrypt i generowane podczas ładowania fixtures.
+Każde konto posiada przykładowe dane kontaktowe (telefon, adres, kod pocztowy), które można wykorzystać przy powiadomieniach i naliczaniu kar.
 
 ---
 
@@ -202,6 +204,8 @@ Hasła zapisywane są w formacie bcrypt i generowane podczas ładowania fixtures
 - Integracje systemowe mogą używać `X-API-SECRET` bez JWT (np. w procesach automatycznych).
 - Publiczne endpointy: `POST /api/auth/login`, `GET /api/health`, `GET /health`, wszystkie zapytania `OPTIONS`.
 - Weryfikacja tokena i sekretu realizowana jest w `backend/src/EventSubscriber/ApiAuthSubscriber.php`.
+- Rezerwacje: `GET /api/reservations`, `POST /api/reservations`, `DELETE /api/reservations/{id}` – zarządzanie kolejką oczekujących na egzemplarze.
+- Kary: `GET /api/fines`, `POST /api/fines/{id}/pay` – przegląd i opłacanie kar powiązanych z wypożyczeniami.
 
 ---
 
@@ -211,6 +215,7 @@ Hasła zapisywane są w formacie bcrypt i generowane podczas ładowania fixtures
 - Sprawdzenie statusu migracji: `php bin/console doctrine:migrations:status`.
 - Budowa frontendu (test smoke): `cd frontend`, `npm run build`.
 - Zalecane (opcjonalne): konfiguracja lintów PHPStan/ESLint oraz testów e2e.
+- Scenariusze pokryte testami funkcjonalnymi obejmują m.in. wypożyczenia, rezerwacje (`ReservationControllerTest`) oraz kary (`FineControllerTest`).
 
 ---
 
@@ -221,6 +226,7 @@ Hasła zapisywane są w formacie bcrypt i generowane podczas ładowania fixtures
 | Architektura rozproszona (frontend + backend) | Zrealizowane | React + Symfony komunikujące się REST.
 | Baza danych w 3NF z min. 30 rekordami | Zrealizowane | Migracja `Version20251109101500`, fixtures >30 rekordów.
 | CRUD książek, kategorii, wypożyczeń | Zrealizowane | Endpointy w `BookController`, `LoanController`.
+| Zarządzanie egzemplarzami, rezerwacjami i karami | Zrealizowane | Encje `BookCopy`, `Reservation`, `Fine` + kontrolery `ReservationController`, `FineController`.
 | Uwierzytelnianie i role | Zrealizowane | JWT + role użytkowników.
 | Historia git (min. 40 commitów) | W toku / do weryfikacji | Sprawdź przed oddaniem pracy.
 | Kolejki asynchroniczne (RabbitMQ) | W trakcie | Do implementacji z Messengerem.

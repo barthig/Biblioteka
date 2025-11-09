@@ -10,6 +10,7 @@ use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use App\Entity\BookCopy;
 
 class BookController extends AbstractController
 {
@@ -69,15 +70,13 @@ class BookController extends AbstractController
             return $this->json(['error' => 'totalCopies must be at least 1'], 400);
         }
 
-        $copies = isset($data['copies']) ? (int) $data['copies'] : $totalCopies;
-        $copies = max(0, min($copies, $totalCopies));
+        $desiredAvailable = isset($data['copies']) ? (int) $data['copies'] : $totalCopies;
+        $desiredAvailable = max(0, min($desiredAvailable, $totalCopies));
 
         $book = (new Book())
             ->setTitle($data['title'])
             ->setAuthor($author)
             ->setIsbn($data['isbn'] ?? null)
-            ->setTotalCopies($totalCopies)
-            ->setCopies($copies)
             ->setDescription($data['description'] ?? null);
 
         foreach ($categories as $category) {
@@ -86,6 +85,21 @@ class BookController extends AbstractController
 
         $em = $doctrine->getManager();
         $em->persist($book);
+        $em->flush();
+
+        $codePrefix = strtoupper(substr(bin2hex(random_bytes(4)), 0, 8));
+
+        for ($i = 1; $i <= $totalCopies; $i++) {
+            $copy = (new BookCopy())
+                ->setBook($book)
+                ->setInventoryCode(sprintf('B%s-%03d', $codePrefix, $i))
+                ->setStatus($i <= $desiredAvailable ? BookCopy::STATUS_AVAILABLE : BookCopy::STATUS_MAINTENANCE);
+
+            $book->addInventoryCopy($copy);
+            $em->persist($copy);
+        }
+
+        $book->recalculateInventoryCounters();
         $em->flush();
 
         return $this->json($book, 201, [], ['groups' => ['book:read']]);
@@ -139,20 +153,8 @@ class BookController extends AbstractController
             }
         }
 
-        if (isset($data['totalCopies'])) {
-            $totalCopies = (int) $data['totalCopies'];
-            if ($totalCopies < 1) {
-                return $this->json(['error' => 'totalCopies must be at least 1'], 400);
-            }
-            $book->setTotalCopies($totalCopies);
-        }
-
-        if (isset($data['copies'])) {
-            $copies = (int) $data['copies'];
-            if ($copies < 0) {
-                return $this->json(['error' => 'copies must be non-negative'], 400);
-            }
-            $book->setCopies($copies);
+        if (isset($data['totalCopies']) || isset($data['copies'])) {
+            return $this->json(['error' => 'Inventory is managed automatycznie przez system wypożyczeń i nie może być edytowane ręcznie'], 400);
         }
 
         if (array_key_exists('description', $data)) {

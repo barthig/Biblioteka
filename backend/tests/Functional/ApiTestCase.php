@@ -6,6 +6,9 @@ use App\Entity\Author;
 use App\Entity\Book;
 use App\Entity\Category;
 use App\Entity\Loan;
+use App\Entity\BookCopy;
+use App\Entity\Reservation;
+use App\Entity\Fine;
 use App\Entity\User;
 use App\Service\JwtService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -182,8 +185,6 @@ abstract class ApiTestCase extends WebTestCase
         $book = (new Book())
             ->setTitle($title)
             ->setAuthor($author)
-            ->setTotalCopies($total)
-            ->setCopies($copies)
             ->setIsbn('ISBN-' . substr(md5($title . microtime()), 0, 8));
 
         foreach ($categories as $category) {
@@ -191,6 +192,19 @@ abstract class ApiTestCase extends WebTestCase
         }
 
         $this->entityManager->persist($book);
+
+        $available = min($copies, $total);
+        for ($i = 1; $i <= $total; $i++) {
+            $copy = (new BookCopy())
+                ->setBook($book)
+                ->setInventoryCode(sprintf('TST-%05d-%02d', random_int(1000, 9999), $i))
+                ->setStatus($i <= $available ? BookCopy::STATUS_AVAILABLE : BookCopy::STATUS_MAINTENANCE);
+
+            $book->addInventoryCopy($copy);
+            $this->entityManager->persist($copy);
+        }
+
+        $book->recalculateInventoryCounters();
         $this->entityManager->flush();
 
         return $book;
@@ -198,25 +212,42 @@ abstract class ApiTestCase extends WebTestCase
 
     protected function createLoan(User $user, Book $book, ?\DateTimeImmutable $due = null, bool $returned = false): Loan
     {
-        if ($book->getCopies() <= 0 && !$returned) {
-            $book->setCopies(1);
+        $availableCopy = null;
+        foreach ($book->getInventory() as $copy) {
+            if ($copy->getStatus() === BookCopy::STATUS_AVAILABLE) {
+                $availableCopy = $copy;
+                break;
+            }
+        }
+
+        if (!$availableCopy) {
+            $availableCopy = (new BookCopy())
+                ->setBook($book)
+                ->setInventoryCode(sprintf('ADHOC-%05d', random_int(10000, 99999)))
+                ->setStatus(BookCopy::STATUS_AVAILABLE);
+            $book->addInventoryCopy($availableCopy);
+            $this->entityManager->persist($availableCopy);
         }
 
         if (!$returned) {
-            $book->setCopies($book->getCopies() - 1);
+            $availableCopy->setStatus(BookCopy::STATUS_BORROWED);
         }
 
         $loan = new Loan();
         $loan->setUser($user)
             ->setBook($book)
+            ->setBookCopy($availableCopy)
             ->setDueAt($due ?? new \DateTimeImmutable('+14 days'));
 
         if ($returned) {
             $loan->setReturnedAt(new \DateTimeImmutable('-1 day'));
-            $book->setCopies(min($book->getTotalCopies(), $book->getCopies() + 1));
+            $availableCopy->setStatus(BookCopy::STATUS_AVAILABLE);
         }
 
+        $book->recalculateInventoryCounters();
+
         $this->entityManager->persist($loan);
+        $this->entityManager->persist($book);
         $this->entityManager->flush();
 
         return $loan;
@@ -224,7 +255,10 @@ abstract class ApiTestCase extends WebTestCase
 
     private function purgeDatabase(): void
     {
+        $this->entityManager->createQuery('DELETE FROM App\Entity\Fine f')->execute();
+        $this->entityManager->createQuery('DELETE FROM App\Entity\Reservation r')->execute();
         $this->entityManager->createQuery('DELETE FROM App\Entity\Loan l')->execute();
+        $this->entityManager->createQuery('DELETE FROM App\Entity\BookCopy bc')->execute();
         $this->entityManager->createQuery('DELETE FROM App\Entity\Book b')->execute();
         $this->entityManager->createQuery('DELETE FROM App\Entity\Category c')->execute();
         $this->entityManager->createQuery('DELETE FROM App\Entity\Author a')->execute();

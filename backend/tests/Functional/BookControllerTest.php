@@ -99,8 +99,6 @@ class BookControllerTest extends ApiTestCase
         $this->jsonRequest($client, 'PUT', '/api/books/' . $book->getId(), [
             'title' => 'Refactored Title',
             'authorId' => $newAuthor->getId(),
-            'copies' => 5,
-            'totalCopies' => 6,
             'categoryIds' => [$newCategory->getId()],
         ]);
 
@@ -109,10 +107,24 @@ class BookControllerTest extends ApiTestCase
         $updated = $this->entityManager->getRepository(Book::class)->find($book->getId());
         self::assertNotNull($updated);
         self::assertSame('Refactored Title', $updated->getTitle());
-        self::assertSame(5, $updated->getCopies());
-        self::assertSame(6, $updated->getTotalCopies());
+        self::assertSame(1, $updated->getCopies());
+        self::assertSame(2, $updated->getTotalCopies());
         self::assertSame('Refactoring Guru', $updated->getAuthor()->getName());
         self::assertCount(1, $updated->getCategories());
+    }
+
+    public function testUpdateBookRejectsManualInventoryChanges(): void
+    {
+        $librarian = $this->createUser('librarian@example.com', ['ROLE_LIBRARIAN']);
+        $book = $this->createBook();
+
+        $client = $this->createAuthenticatedClient($librarian);
+        $this->jsonRequest($client, 'PUT', '/api/books/' . $book->getId(), [
+            'copies' => 10,
+            'totalCopies' => 12,
+        ]);
+
+        $this->assertResponseStatusCodeSame(400);
     }
 
     public function testDeleteBook(): void
