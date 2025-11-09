@@ -22,20 +22,70 @@ export default function BookDetails() {
       }
     }
     load()
-    return () => (mounted = false)
+    return () => {
+      mounted = false
+    }
   }, [id])
 
-  if (loading) return <div>Loading...</div>
-  if (error) return <div className="error">{error}</div>
-  if (!book) return <div>No book found</div>
+  if (loading) {
+    return (
+      <div className="page">
+        <div className="surface-card empty-state">Ładuję szczegóły książki...</div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="page">
+        <div className="surface-card">
+          <p className="error">Nie udało się pobrać danych książki: {error}</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!book) {
+    return (
+      <div className="page">
+        <div className="surface-card empty-state">Nie znaleziono książki.</div>
+      </div>
+    )
+  }
+
+  const categories = Array.isArray(book.categories) && book.categories.length
+    ? book.categories.map(c => c.name).join(', ')
+    : '—'
 
   return (
-    <div>
-      <h2>{book.title}</h2>
-      <p><strong>Author:</strong> {book.author?.name ?? 'Unknown'}</p>
-      <p><strong>Kategorie:</strong> {Array.isArray(book.categories) && book.categories.length ? book.categories.map(c => c.name).join(', ') : '—'}</p>
-      <p><strong>Opis:</strong> {book.description ?? '—'}</p>
-      <p><strong>Dostępne egzemplarze:</strong> {book.copies ?? 0} / {book.totalCopies ?? book.copies ?? 0}</p>
+    <div className="page">
+      <header className="page-header">
+        <div>
+          <h1>{book.title}</h1>
+          <p className="support-copy">Poznaj szczegóły wybranego tytułu, aby zdecydować o wypożyczeniu lub rezerwacji.</p>
+        </div>
+      </header>
+
+      <article className="surface-card">
+        <dl>
+          <div className="resource-item__meta">
+            <dt>Autor</dt>
+            <dd>{book.author?.name ?? 'Autor nieznany'}</dd>
+          </div>
+          <div className="resource-item__meta">
+            <dt>Kategorie</dt>
+            <dd>{categories}</dd>
+          </div>
+          <div className="resource-item__meta">
+            <dt>Opis</dt>
+            <dd>{book.description ?? 'Brak opisu.'}</dd>
+          </div>
+          <div className="resource-item__meta">
+            <dt>Dostępne egzemplarze</dt>
+            <dd>{book.copies ?? 0} / {book.totalCopies ?? book.copies ?? 0}</dd>
+          </div>
+        </dl>
+      </article>
     </div>
   )
 }

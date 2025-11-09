@@ -22,30 +22,55 @@ export default function Login() {
       if (data && data.token) {
         auth.login(data.token)
       } else {
-        throw new Error('No token returned')
+        throw new Error('Brak tokenu w odpowiedzi')
       }
     } catch (err) {
-      setError(err.message || 'Login failed')
+      setError(err.message || 'Logowanie nie powiodło się')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div>
-      <h2>Login</h2>
-      <form onSubmit={handleSubmit}>
+    <div className="page page--centered">
+      <header className="page-header">
         <div>
-          <label>Email</label>
-          <input value={email} onChange={e => setEmail(e.target.value)} />
+          <h1>Zaloguj się</h1>
+          <p className="support-copy">Uzyskaj dostęp do panelu czytelnika i poczekalni rezerwacji.</p>
         </div>
-        <div>
-          <label>Password</label>
-          <input type="password" value={password} onChange={e => setPassword(e.target.value)} />
-        </div>
-        <button disabled={loading}>{loading ? 'Logging...' : 'Login'}</button>
-        {error && <div className="error">{error}</div>}
-      </form>
+      </header>
+
+      <div className="surface-card form-card">
+        <form onSubmit={handleSubmit}>
+          <div>
+            <label htmlFor="login-email">Email</label>
+            <input
+              id="login-email"
+              name="email"
+              autoComplete="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              required
+            />
+          </div>
+          <div>
+            <label htmlFor="login-password">Hasło</label>
+            <input
+              id="login-password"
+              name="password"
+              type="password"
+              autoComplete="current-password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              required
+            />
+          </div>
+          <button className="btn btn-primary" disabled={loading}>
+            {loading ? 'Logowanie...' : 'Zaloguj'}
+          </button>
+          {error && <div className="error">{error}</div>}
+        </form>
+      </div>
     </div>
   )
 }

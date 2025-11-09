@@ -2,23 +2,25 @@ import React from 'react'
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
+const navClass = ({ isActive }) => isActive ? 'sidebar__link is-active' : 'sidebar__link'
+
 export default function Navbar() {
   const { token, logout } = useAuth()
 
   return (
     <aside className="sidebar">
-      <div className="brand">Biblioteka</div>
-      <nav className="menu">
-        <NavLink to="/" end className={({isActive})=> isActive? 'active' : ''}>Dashboard</NavLink>
-        <NavLink to="/books" className={({isActive})=> isActive? 'active' : ''}>Books</NavLink>
-        <NavLink to="/my-loans" className={({isActive})=> isActive? 'active' : ''}>My Loans</NavLink>
+      <div className="sidebar__brand">Biblioteka</div>
+      <nav className="sidebar__menu">
+        <NavLink to="/" end className={navClass}>Dashboard</NavLink>
+        <NavLink to="/books" className={navClass}>Książki</NavLink>
+        <NavLink to="/my-loans" className={navClass}>Wypożyczenia</NavLink>
       </nav>
 
-      <div className="sidebar-footer">
+      <div className="sidebar__footer">
         {token ? (
-          <button onClick={logout}>Logout</button>
+          <button className="btn btn-ghost" onClick={logout}>Wyloguj</button>
         ) : (
-          <NavLink to="/login">Login</NavLink>
+          <NavLink to="/login" className="btn btn-primary">Zaloguj</NavLink>
         )}
       </div>
     </aside>

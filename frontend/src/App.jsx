@@ -11,7 +11,7 @@ import MyLoans from './pages/MyLoans'
 export default function App() {
   return (
     <AuthProvider>
-      <div className="app">
+      <div className="app-shell">
         <Navbar />
         <main className="main">
           <Routes>

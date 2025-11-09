@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { apiFetch } from '../api'
 import BookItem from '../components/BookItem'
 
@@ -18,35 +17,51 @@ export default function Books() {
       if (err.status === 401) {
         setError('Zaloguj się, aby zobaczyć listę książek.')
       } else {
-        setError(err.message || 'Nie udało się pobrać listy książek')
+        setError(err.message || 'Nie udało się pobrać listy książek.')
       }
     } finally {
       setLoading(false)
     }
   }
 
-  useEffect(() => { load() }, [])
+  useEffect(() => {
+    load()
+  }, [])
 
   function onBorrowed(borrowedBook) {
-    // Optionally mark book as borrowed locally
     setBooks(prev => prev.filter(b => b.id !== borrowedBook.id))
   }
 
-  if (loading) return <div>Loading books...</div>
-  if (error) return <div className="error">Error: {error}</div>
-
   return (
-    <div>
-      <h2>Books</h2>
-      {books.length === 0 ? (
-        <div>No books found.</div>
-      ) : (
-        <div className="books-list">
-          {books.map(b => (
-            <div key={b.id} className="book-row">
-              <Link to={`/books/${b.id}`} className="book-link">{b.title}</Link>
-              <BookItem book={b} onBorrowed={onBorrowed} />
-            </div>
+    <div className="page">
+      <header className="page-header">
+        <div>
+          <h1>Książki</h1>
+          <p className="support-copy">Przeglądaj katalog i błyskawicznie wypożycz dostępne egzemplarze.</p>
+        </div>
+        <button className="btn btn-outline" onClick={load} disabled={loading}>
+          {loading ? 'Odświeżanie...' : 'Odśwież listę'}
+        </button>
+      </header>
+
+      {loading && (
+        <div className="surface-card empty-state">Trwa ładowanie książek...</div>
+      )}
+
+      {!loading && error && (
+        <div className="surface-card">
+          <p className="error">{error}</p>
+        </div>
+      )}
+
+      {!loading && !error && books.length === 0 && (
+        <div className="surface-card empty-state">Brak dopasowanych książek.</div>
+      )}
+
+      {!loading && !error && books.length > 0 && (
+        <div className="books-grid">
+          {books.map(book => (
+            <BookItem key={book.id} book={book} onBorrowed={onBorrowed} />
           ))}
         </div>
       )}
