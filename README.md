@@ -1,141 +1,249 @@
-# 📚 Biblioteka - Aplikacja do Zarządzania Zasobami (Library_app)
-## Spis Treści
-1.  Opis Projektu
-2.  Prototyp Interfejsu (Lab 1)
-3.  Wymagania Technologiczne i Uzasadnienie
-4.  Architektura Projektu
-5.  Uruchomienie Aplikacji
-6.  Status Implementacji
+# Biblioteka
+
+Kompleksowa aplikacja webowa umożliwiająca zarządzanie zasobami biblioteki: katalogiem książek, kontami czytelników oraz procesem wypożyczeń i zwrotów. Warstwa backend powstała w Symfony 6 (PHP 8.2) i udostępnia REST API zabezpieczone JWT oraz sekretem API, frontend to React 18 uruchamiany w środowisku Vite.
 
 ---
 
-## 1. Opis Projektu
+## Spis treści
 
-**Biblioteka** to pełnoprawna, rozproszona aplikacja webowa przeznaczona do zarządzania zasobami biblioteki. Aplikacja wspiera procesy CRUD (Create, Read, Update, Delete) dla książek, użytkowników oraz zarządzania wypożyczeniami i zwrotami.
-
-### Kluczowe Elementy Projektu
-* **Architektura:** Podział na rozdzielone warstwy (kontrolery, serwisy).
-* **Baza Danych:** Zaprojektowana w 3NF, zawierająca minimum 30 rekordów testowych.
-* **System Ról:** Uwierzytelnianie (JWT) i autoryzacja na podstawie ról użytkowników.
-* **Historia Git:** Minimum 40 commitów z zachowaniem konwencji.
-
----
-
-## Lab 2 – Routing
-
-### 1. Wstęp
-Celem tego laboratorium jest zapoznanie się z podstawami tworzenia usług **REST API**, obsługi **routingu**, zwracania danych w formacie **JSON** oraz odpowiedniego zarządzania statusami HTTP. Poniżej opisano, jak wymogi zostały spełnione w projekcie.
-
-### 2. Podstawowe zagadnienia
-
-#### 2.1. Definicja formatu odpowiedzi kontrolera
-Kontrolery zwracają dane w formacie JSON przy pomocy metody pomocniczej `$this->json(...)` lub ręcznie tworzonych obiektów `JsonResponse`. Dzięki temu każda odpowiedź zawiera poprawny nagłówek `Content-Type: application/json` oraz właściwy kod statusu (np. 200, 400, 404). Przykłady można znaleźć w `src/Controller/ProductController.php` oraz `src/Controller/UserController.php`.
-
-#### 2.2. Implementacja routingu
-Routing przypisuje adresy URL do konkretnych metod kontrolera. W projekcie celowo wykorzystano oba mechanizmy dostępne w Symfony, co w pełni realizuje wymagania podpunktu:
-
-- **Adnotacje (atrybuty) w kodzie:** większość tras, np. `GET /api/products` i `GET /api/users/{id}`, jest definiowana bezpośrednio przy metodach kontrolera za pomocą atrybutu `#[Route(...)]`. Dzięki temu definicja trasy znajduje się tuż obok logiki biznesowej.
-- **Konfiguracja w pliku YAML:** wybrane trasy, np. `GET /health`, są utrzymywane w zewnętrznych plikach konfiguracyjnych (`config/routes/health.yaml`). Pozwala to centralnie zarządzać kluczowymi endpointami i ułatwia współpracę z zespołami, które preferują podejście konfiguracyjne.
-
-Oba podejścia współdziałają dzięki loaderowi w `config/routes/annotations.yaml`, który importuje wszystkie kontrolery, oraz dodatkowym plikom YAML dla tras specjalnych. Taka kombinacja zapewnia elastyczność i pełne pokrycie wymagań laboratorium.
+1. Opis projektu
+2. Technologie i uzasadnienie
+3. Architektura rozwiązania
+4. Wymagania wstępne
+5. Konfiguracja środowiska
+6. Uruchomienie aplikacji
+7. Zarządzanie danymi (migracje, fixtures)
+8. Konta testowe
+9. Dostęp do API i autoryzacja
+10. Testy i kontrola jakości
+11. Zgodność z wymaganiami projektu
+12. Rozwiązywanie problemów
+13. Przydatne linki
 
 ---
 
-## 2. Prototyp Interfejsu (Lab 1)
+## 1. Opis projektu
 
-Wstępny prototyp interfejsu (Pulpit Bibliotekarza) został przygotowany w celu zdefiniowania uporządkowanego układu strony. W projekcie zastosowano **auto-layout** oraz **komponenty** z Figmy, co wspiera budowę responsywnego interfejsu.
-![Prototyp Figma](./figma.png)
+Aplikacja realizuje pełny cykl życia książki: od dodania do katalogu, przez przypisanie autora i kategorii, po obsługę wypożyczeń oraz zwrotów. Zapewnia proces logowania i autoryzacji ról, a interfejs React dynamicznie komunikuje się z API i prezentuje aktualne stany zasobów.
 
----
-
-## 3. Wymagania Technologiczne i Uzasadnienie
-
-Projekt wykorzystuje nowoczesne technologie, a ich wybór jest sensowny dla tego typu aplikacji.
-
-### 💻 Frontend
-| Technologia | Cel / Uzasadnienie |
-| :--- | :--- |
-| **React** | Wybrany ze względu na modułowość i dużą społeczność. Idealny do budowania dynamicznych interfejsów (np. obsługa stanów `loading`/`error`). |
-| **Tailwind CSS** | Wybrany jako narzędzie wspierające szybkie tworzenie **responsywnego interfejsu** i utrzymanie ujednoliconego design system. |
-
-### ⚙️ Backend
-| Technologia | Cel / Uzasadnienie |
-| :--- | :--- |
-| **[Wstaw Technologię, np. Spring Boot (Java) lub NestJS (Node.js)]** | Wybrany ze względu na stabilność, wydajność i natywne wsparcie dla architektury warstwowej, co ułatwia rozdzielenie kontrolerów i serwisów. |
-| **PostgreSQL** | Wybrany jako stabilny, relacyjny system baz danych, idealny do utrzymania bazy danych w 3NF. |
-| **RabbitMQ** | Użyty do implementacji asynchronicznych zadań kolejkowych (np. wysyłania powiadomień e-mail o zbliżającym się terminie zwrotu książki). |
+Kluczowe cechy:
+- Dwuwarstwowa architektura (backend REST + frontend SPA).
+- Baza relacyjna w 3NF z ponad 30 rekordami startowymi.
+- JWT oraz `X-API-SECRET` zabezpieczające zasoby API.
+- Testy jednostkowe i funkcjonalne (PHPUnit) oraz budowanie frontendu (Vite).
 
 ---
 
-## 4. Architektura Projektu
+## 2. Technologie i uzasadnienie
 
-Kod został zorganizowany w warstwy, co zapobiega powielaniu logiki (DRY) i ułatwia zarządzanie kodem.
+### Backend
+- **Symfony 6 / PHP 8.2** – dojrzały framework MVC z bogatym ekosystemem oraz wysoką produktywnością przy tworzeniu API.
+- **Doctrine ORM** – mapowanie encji na relacyjną bazę danych, migracje i repozytoria.
+- **Autorski JwtService** – generowanie oraz walidacja tokenów JWT w algorytmie HS256.
+- **Doctrine Fixtures** – szybkie ładowanie danych demonstracyjnych.
 
-* **Controller Layer:** Obsługa żądań HTTP i komunikacja z API (REST/GraphQL).
-* **Service Layer:** Zawiera logikę biznesową (np. walidacja, czy użytkownik ma limit wypożyczeń).
-* **Repository/DAO Layer:** Bezpośrednia komunikacja z bazą danych (np. ORM).
+### Frontend
+- **React 18 + Vite** – szybkie środowisko deweloperskie i możliwość tworzenia komponentowego SPA.
+- **React Router** – obsługa trasowania po stronie klienta.
+- **Fetch API** – komunikacja z backendem oraz obsługa tokenów JWT.
 
----
-
-## 5. Uruchomienie Aplikacji
-
-Instrukcja startu backendu i frontendu.
-
-### Wymagania Wstępne
-* Node.js (v18+)
-* [Wymagany runtime dla backendu, np. Java 17+ lub Python 3.10+]
-* Docker (dla bazy danych i RabbitMQ)
-
-### 🚀 Start Backendu
-1.  Sklonuj repozytorium: `git clone https://github.com/barthig/Biblioteka.git`
-2.  Przejdź do katalogu backendu: `cd Biblioteka/backend`
-3.  Uruchom kontener bazy danych i kolejek: `docker-compose up -d`
-4.  Zbuduj i uruchom aplikację: `[Komenda uruchamiająca backend, np. ./mvnw spring-boot:run]`
-
-### 🌐 Start Frontendu
-1.  Przejdź do katalogu frontendu: `cd Biblioteka/frontend`
-2.  Zainstaluj zależności: `npm install`
-3.  Uruchom aplikację: `npm run dev`
+### Infrastruktura
+- **PostgreSQL 15 (Docker Compose)** – wydajna relacyjna baza danych dostępna lokalnie w kontenerze.
+- **Composer / npm** – zarządzanie zależnościami backendu i frontendu.
+- **PHPUnit, ESLint (planowane)** – kontrola jakości kodu.
 
 ---
 
-## 6. Status Implementacji
+## 3. Architektura rozwiązania
 
-Poniższa lista przedstawia zadeklarowane funkcjonalności. W dniu zaliczenia musi działać co najmniej **70%** z nich.
+- **Warstwa API** – kontrolery Symfony (`backend/src/Controller`) wystawiają zasoby książek, kategorii, autorów, wypożyczeń i autoryzacji.
+- **Warstwa logiki biznesowej** – serwisy (np. `BookService`) pilnują zasad dostępności książek i limitów.
+- **Warstwa danych** – encje Doctrine (`Author`, `Book`, `Category`, `Loan`, `User`) oraz repozytoria dedykowane zapytaniom.
+- **Frontend** – kontekst autoryzacji (`AuthContext`), strony katalogu książek i wypożyczeń, komponenty prezentujące szczegóły.
+- **Zabezpieczenia** – `ApiAuthSubscriber` wymusza obecność tokena JWT lub sekretu API dla wszystkich tras `/api/*` poza wyjątkami.
 
-| Funkcjonalność | Status | Kryterium |
-| :--- | :--- | :--- |
-| CRUD Książek i Użytkowników | ✅ Gotowe | Podstawa funkcjonalności |
-| Wypożyczanie/Zwrot | ✅ Gotowe | Podstawa funkcjonalności |
-| Uwierzytelnianie JWT i Role | ✅ Gotowe | Bezpieczeństwo |
-| Asynchroniczne powiadomienia (RabbitMQ) | ⏳ W toku | Kolejki |
-| Obsługa stanów Loading/Error (Frontend) | ⏳ W toku | Frontend-API |
-| Dokumentacja API (Swagger/OpenAPI) | ⏳ W toku | Dokumentacja |
+Szczegółowe diagramy i dodatkowe materiały przechowywane są w katalogu `docs/`.
 
-## 7. Kody Odpowiedzi HTTP
+---
 
-| Status | Opis |
-| :--- | :--- |
-| 200 OK | Żądanie zakończone sukcesem, odpowiedź zawiera poprawne dane. |
-| 201 Created | Zasób został pomyślnie utworzony. |
-| 204 No Content | Żądanie zakończone sukcesem, ale brak treści w odpowiedzi. |
-| 400 Bad Request | Błąd klienta, niepoprawne zapytanie. |
-| 401 Unauthorized | Brak autoryzacji, użytkownik musi się uwierzytelnić. |
-| 403 Forbidden | Użytkownik nie ma dostępu do zasobu. |
-| 404 Not Found | Zasób nie istnieje. |
-| 500 Internal Server Error | Błąd po stronie serwera. |
-| 503 Service Unavailable | Serwer jest chwilowo niedostępny. |
+## 4. Wymagania wstępne
 
-## 8. Logika Stron Aplikacji
+- PHP 8.2 z rozszerzeniami: `ctype`, `iconv`, `intl`, `pdo_pgsql`.
+- Composer w wersji 2.x.
+- Node.js 18+ wraz z npm.
+- Docker Desktop lub kompatybilny silnik kontenerów (dla PostgreSQL).
+- (Opcjonalnie) Symfony CLI ułatwiające start serwera lokalnego.
 
-| Strona | Kluczowe funkcje | Wymagane endpointy / statusy |
-| :--- | :--- | :--- |
-| Pulpit (Dashboard) | Podsumowanie aktywnych wypożyczeń, kondycja systemu, ostatnie działania | `GET /health` (200/503), `GET /api/loans` (200/204/503) |
-| Użytkownicy | Lista, wyszukiwanie, dodawanie i blokowanie użytkowników | `GET /api/users` (200/401/403), `POST /api/users` (201/400/409), `PATCH /api/users/{id}` (200/400/404), `DELETE /api/users/{id}` (204/404) |
-| Książki | Przegląd katalogu, CRUD, zarządzanie dostępnością | `GET /api/books` (200/401), `POST /api/books` (201/400), `PATCH /api/books/{id}` (200/400/404), `DELETE /api/books/{id}` (204/404) |
-| Wypożyczenia | Rezerwacje, zwroty, kontrola limitów i kolizji terminów | `POST /api/loans` (201/400/409), `PATCH /api/loans/{id}/return` (200/404/409), `GET /api/loans/user/{id}` (200/401/403/404) |
-| Powiadomienia | Przegląd i ręczne wyzwalanie powiadomień e-mail/SMS | `GET /api/notifications` (200/503), `POST /api/notifications/test` (202/400/503) |
-| Raporty i statystyki | Eksport danych o aktywności biblioteki, raporty CSV/PDF | `GET /api/reports/usage` (200/204/401/403/503), `GET /api/reports/export` (200/400/500) |
-| Ustawienia systemu | Konfiguracja limitów, integracji i ról | `GET /api/settings` (200/401/403), `PATCH /api/settings` (200/400/403/503) |
+---
 
-> Powyższy układ stron zapewnia spójność logiki biznesowej biblioteki oraz pokrywa wszystkie wymagane statusy HTTP, co ułatwia dalsze rozszerzanie routingu i dokumentacji API.
+## 5. Konfiguracja środowiska
+
+Przed uruchomieniem przygotuj pliki `.env.local` na backendzie i froncie.
+
+### Backend (`backend/.env.local`)
+
+| Zmienna | Opis | Przykład |
+| :-- | :-- | :-- |
+| `APP_ENV` | Tryb pracy Symfony | `dev` |
+| `APP_SECRET` | Klucz aplikacji (generuj losowo) | `php -r "echo bin2hex(random_bytes(16));"` |
+| `DATABASE_URL` | Łącze do PostgreSQL | `postgresql://biblioteka:biblioteka@127.0.0.1:5432/biblioteka_dev?serverVersion=15&charset=utf8` |
+| `API_SECRET` | Sekret nagłówka `X-API-SECRET` | np. `super_tajne_haslo` |
+| `JWT_SECRET` | Sekret podpisu tokenów JWT | wygeneruj własny | 
+| `PORT` | Port lokalnego serwera | `8000` |
+
+Punkt wyjścia: `backend/.env.example`.
+
+### Frontend (`frontend/.env.local`)
+
+| Zmienna | Opis | Przykład |
+| :-- | :-- | :-- |
+| `VITE_API_URL` | Bazowy adres API | `http://127.0.0.1:8000/api` |
+| `VITE_API_SECRET` | Sekret używany przed zalogowaniem | zgodny z backendowym `API_SECRET` |
+
+Plik należy utworzyć manualnie – patrz instrukcja w sekcji 6.
+
+---
+
+## 6. Uruchomienie aplikacji
+
+### 6.1. Szybki start (środowisko deweloperskie)
+
+1. Sklonuj repozytorium i przejdź do katalogu projektu:
+
+   ```powershell
+   git clone https://github.com/barthig/Biblioteka.git
+   Set-Location Biblioteka
+   ```
+
+2. Uruchom bazę danych:
+
+   ```powershell
+   docker compose up -d db
+   ```
+
+3. Backend – instalacja zależności i konfiguracja:
+
+   ```powershell
+   Set-Location backend
+   composer install
+   Copy-Item .env.example .env.local -Force
+   ```
+
+   Edytuj `backend/.env.local`, ustawiając poprawne sekrety.
+
+4. Migracje i dane przykładowe:
+
+   ```powershell
+   php bin/console doctrine:migrations:migrate
+   php bin/console doctrine:fixtures:load --no-interaction
+   ```
+
+5. Uruchom API (wybierz jedną z opcji):
+
+   ```powershell
+   # Symfony CLI
+   symfony server:start --dir=public --no-tls
+
+   # serwer wbudowany w PHP
+   php -S 127.0.0.1:8000 -t public
+   ```
+
+6. Frontend – nowe okno terminala:
+
+   ```powershell
+   Set-Location ..\frontend
+   npm install
+   if (-not (Test-Path .env.local)) {
+     Set-Content .env.local "VITE_API_URL=http://127.0.0.1:8000/api`nVITE_API_SECRET=change_me"
+   }
+   npm run dev
+   ```
+
+   Wygenerowane wartości `change_me` należy zastąpić własnym sekretem zgodnym z backendem.
+
+7. Interfejs deweloperski React będzie dostępny pod `http://127.0.0.1:5173`. Zaloguj się kontem z sekcji 8.
+
+### 6.2. Backend w trybie standalone (np. testy API)
+
+- Po wykonaniu kroków 1–5 możesz korzystać z API wyłącznie z narzędzia typu Postman/HTTPie.
+- Pamiętaj o ustawieniu w żądaniach nagłówka `Authorization: Bearer <token>` lub `X-API-SECRET`.
+
+### 6.3. Budowanie produkcyjne
+
+- Backend: `php bin/console cache:clear --env=prod`, konfiguracja serwera (Nginx/Apache) wskazująca katalog `backend/public`.
+- Frontend: `npm run build` tworzy statyczne pliki w `frontend/dist/` – gotowe do umieszczenia na serwerze HTTP lub w CDN.
+
+---
+
+## 7. Zarządzanie danymi (migracje, fixtures)
+
+- Aktualne migracje znajdują się w `backend/migrations/` (np. `Version20251109101500.php`).
+- W przypadku zmian schematu uruchom `php bin/console doctrine:migrations:diff`, następnie `doctrine:migrations:migrate`.
+- Dane demonstracyjne (ponad 30 rekordów) ładowane są za pomocą `php bin/console doctrine:fixtures:load --no-interaction`.
+- Encje i relacje są znormalizowane (3NF): osobne tabele dla autorów, kategorii i wypożyczeń.
+
+---
+
+## 8. Konta testowe
+
+| Email | Hasło | Role |
+| :-- | :-- | :-- |
+| `user1@example.com` | `password1` | `ROLE_LIBRARIAN` |
+| `user2@example.com` – `user6@example.com` | `password2` – `password6` | `ROLE_USER` |
+
+Hasła zapisywane są w formacie bcrypt i generowane podczas ładowania fixtures.
+
+---
+
+## 9. Dostęp do API i autoryzacja
+
+- Logowanie: `POST /api/auth/login` z parametrami `email`, `password` (JSON).
+- Po autoryzacji każdorazowo wysyłaj nagłówek `Authorization: Bearer <token>`.
+- Integracje systemowe mogą używać `X-API-SECRET` bez JWT (np. w procesach automatycznych).
+- Publiczne endpointy: `POST /api/auth/login`, `GET /api/health`, `GET /health`, wszystkie zapytania `OPTIONS`.
+- Weryfikacja tokena i sekretu realizowana jest w `backend/src/EventSubscriber/ApiAuthSubscriber.php`.
+
+---
+
+## 10. Testy i kontrola jakości
+
+- Testy jednostkowe/funkcjonalne: `cd backend`, `vendor\bin\phpunit`.
+- Sprawdzenie statusu migracji: `php bin/console doctrine:migrations:status`.
+- Budowa frontendu (test smoke): `cd frontend`, `npm run build`.
+- Zalecane (opcjonalne): konfiguracja lintów PHPStan/ESLint oraz testów e2e.
+
+---
+
+## 11. Zgodność z wymaganiami projektu
+
+| Kryterium | Status | Uwagi |
+| :-- | :-- | :-- |
+| Architektura rozproszona (frontend + backend) | Zrealizowane | React + Symfony komunikujące się REST.
+| Baza danych w 3NF z min. 30 rekordami | Zrealizowane | Migracja `Version20251109101500`, fixtures >30 rekordów.
+| CRUD książek, kategorii, wypożyczeń | Zrealizowane | Endpointy w `BookController`, `LoanController`.
+| Uwierzytelnianie i role | Zrealizowane | JWT + role użytkowników.
+| Historia git (min. 40 commitów) | W toku / do weryfikacji | Sprawdź przed oddaniem pracy.
+| Kolejki asynchroniczne (RabbitMQ) | W trakcie | Do implementacji z Messengerem.
+| Dokumentacja API (Swagger/OpenAPI) | W trakcie | Zaplanowane do dodania.
+| Stany loading/error na froncie | W trakcie | Częściowo zaimplementowane.
+| Kompletny README + instrukcja startu | Zrealizowane | Niniejszy dokument.
+
+---
+
+## 12. Rozwiązywanie problemów
+
+- **Baza nie startuje** – sprawdź konflikt portu `5432`; zmodyfikuj `docker-compose.yml` lub zatrzymaj lokalny Postgres.
+- **Brak rozszerzeń PHP** – włącz `pdo_pgsql` oraz `intl` w konfiguracji PHP.
+- **Komunikat 401/403** – zweryfikuj poprawność tokena lub sekretu API oraz konfigurację CORS.
+- **Migracje konfliktują** – uruchom `doctrine:migrations:status`, a następnie wykonaj brakujące migracje.
+- **Vite nie widzi API** – upewnij się, że `VITE_API_URL` wskazuje na właściwy adres oraz że backend jest uruchomiony.
+
+---
+
+## 13. Przydatne linki
+
+- Symfony: https://symfony.com/doc/current/
+- Doctrine ORM: https://www.doctrine-project.org/projects/doctrine-orm/en/current/
+- React: https://react.dev/
+- Vite: https://vitejs.dev/
+- PostgreSQL: https://www.postgresql.org/
