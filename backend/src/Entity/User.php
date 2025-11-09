@@ -2,6 +2,7 @@
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Ignore;
 
 #[ORM\Entity]
 class User
@@ -21,6 +22,7 @@ class User
     private array $roles = [];
 
     #[ORM\Column(type:'string', length:255)]
+    #[Ignore]
     private string $password;
 
     public function getId(): ?int { return $this->id; }

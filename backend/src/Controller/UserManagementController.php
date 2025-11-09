@@ -17,12 +17,15 @@ class UserManagementController extends AbstractController
             return $this->json(['error' => 'Forbidden'], 403);
         }
         $data = json_decode($request->getContent(), true) ?: [];
-        if (empty($data['email']) || empty($data['name'])) {
-            return $this->json(['error' => 'Missing email or name'], 400);
+        if (empty($data['email']) || empty($data['name']) || empty($data['password'])) {
+            return $this->json(['error' => 'Missing email, name or password'], 400);
         }
 
         $user = new User();
         $user->setEmail($data['email'])->setName($data['name'])->setRoles($data['roles'] ?? ['ROLE_USER']);
+        // hash and set password
+        $hashed = password_hash($data['password'], PASSWORD_BCRYPT);
+        $user->setPassword($hashed);
         $em = $doctrine->getManager();
         $em->persist($user);
         $em->flush();
