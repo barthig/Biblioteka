@@ -28,7 +28,7 @@ class DashboardController extends AbstractController
 
         $queueCount = (int) $entityManager
             ->createQuery('SELECT COUNT(r.id) FROM App\\Entity\\Reservation r WHERE r.status = :status')
-            ->setParameter('status', \App\Entity\Reservation::STATUS_ACTIVE)
+            ->setParameter('status', Reservation::STATUS_ACTIVE)
             ->getSingleScalarResult();
 
         return $this->json([

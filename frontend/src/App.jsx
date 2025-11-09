@@ -21,6 +21,14 @@ export default function App() {
             <Route path="/my-loans" element={<MyLoans />} />
             <Route path="/login" element={<Login />} />
           </Routes>
+          <footer className="footer">
+            <p>© 2025 Biblioteka. Wspieramy czytelników w odkrywaniu literatury i edukacji cyfrowej.</p>
+            <div className="footer__links">
+              <a href="#">Regulamin korzystania</a>
+              <a href="#">Polityka prywatności</a>
+              <a href="#">Kontakt</a>
+            </div>
+          </footer>
         </main>
       </div>
     </AuthProvider>

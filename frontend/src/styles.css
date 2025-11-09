@@ -148,6 +148,31 @@ a {
 	gap: var(--space-4);
 }
 
+.footer {
+	margin-top: auto;
+	padding: var(--space-4) var(--space-3);
+	text-align: center;
+	color: var(--color-muted);
+	font-size: .85rem;
+	border-top: 1px solid var(--color-border);
+}
+
+.footer__links {
+	margin-top: var(--space-2);
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: var(--space-3);
+}
+
+.footer__links a {
+	color: var(--color-muted);
+}
+
+.footer__links a:hover {
+	color: var(--color-primary);
+}
+
 .page {
 	display: grid;
 	gap: var(--space-4);
