@@ -5,12 +5,14 @@
     "php": "^8.1",
     "ext-pdo": "*",
     "symfony/framework-bundle": "^6.4",
-    "symfony/orm-pack": "^2.2",
-    "doctrine/doctrine-bundle": "^2.8",
-    "symfony/maker-bundle": "^1.52",
-    "doctrine/doctrine-fixtures-bundle": "^4.4",
-    "symfony/serializer-pack": "^1.3",
-    "nelmio/api-doc-bundle": "^4.5"
+  "symfony/orm-pack": "^2.2",
+  "doctrine/doctrine-bundle": "^2.8",
+  "symfony/messenger": "^6.4",
+  "symfony/amqp-messenger": "^5.4",
+  "symfony/maker-bundle": "^1.52",
+  "doctrine/doctrine-fixtures-bundle": "^4.4",
+  "symfony/serializer-pack": "^1.3",
+  "nelmio/api-doc-bundle": "^4.5"
   },
   "autoload": {
     "psr-4": {

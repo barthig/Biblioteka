@@ -90,6 +90,7 @@ Przed uruchomieniem przygotuj pliki `.env.local` na backendzie i froncie.
 | `DATABASE_URL` | Łącze do PostgreSQL | `postgresql://biblioteka:biblioteka@127.0.0.1:5432/biblioteka_dev?serverVersion=15&charset=utf8` |
 | `API_SECRET` | Sekret nagłówka `X-API-SECRET` | np. `super_tajne_haslo` |
 | `JWT_SECRET` | Sekret podpisu tokenów JWT | wygeneruj własny | 
+| `MESSENGER_TRANSPORT_DSN` | Połączenie do brokera RabbitMQ | `amqp://guest:guest@localhost:5672/%2f/messages` |
 | `PORT` | Port lokalnego serwera | `8000` |
 
 Punkt wyjścia: `backend/.env.example`.
@@ -162,7 +163,16 @@ Plik należy utworzyć manualnie – patrz instrukcja w sekcji 6.
 
    Wygenerowane wartości `change_me` należy zastąpić własnym sekretem zgodnym z backendem.
 
-7. Interfejs deweloperski React będzie dostępny pod `http://127.0.0.1:5173`. Zaloguj się kontem z sekcji 8.
+7. Kolejki i powiadomienia asynchroniczne:
+
+   ```powershell
+   docker compose up -d rabbitmq
+   php bin/console messenger:consume async
+   ```
+
+   Wysyłane rezerwacje trafiają do kolejki RabbitMQ i są zapisywane w `var/log/reservation_queue.log`.
+
+8. Interfejs deweloperski React będzie dostępny pod `http://127.0.0.1:5173`. Zaloguj się kontem z sekcji 8.
 
 ### 6.2. Backend w trybie standalone (np. testy API)
 
@@ -206,6 +216,7 @@ Każde konto posiada przykładowe dane kontaktowe (telefon, adres, kod pocztowy)
 - Weryfikacja tokena i sekretu realizowana jest w `backend/src/EventSubscriber/ApiAuthSubscriber.php`.
 - Rezerwacje: `GET /api/reservations`, `POST /api/reservations`, `DELETE /api/reservations/{id}` – zarządzanie kolejką oczekujących na egzemplarze.
 - Kary: `GET /api/fines`, `POST /api/fines/{id}/pay` – przegląd i opłacanie kar powiązanych z wypożyczeniami.
+- Dokumentacja OpenAPI: `GET /api/docs` (UI) oraz `GET /api/docs.json` (specyfikacja JSON przygotowana przez NelmioApiDocBundle).
 
 ---
 
@@ -229,8 +240,8 @@ Każde konto posiada przykładowe dane kontaktowe (telefon, adres, kod pocztowy)
 | Zarządzanie egzemplarzami, rezerwacjami i karami | Zrealizowane | Encje `BookCopy`, `Reservation`, `Fine` + kontrolery `ReservationController`, `FineController`.
 | Uwierzytelnianie i role | Zrealizowane | JWT + role użytkowników.
 | Historia git (min. 40 commitów) | W toku / do weryfikacji | Sprawdź przed oddaniem pracy.
-| Kolejki asynchroniczne (RabbitMQ) | W trakcie | Do implementacji z Messengerem.
-| Dokumentacja API (Swagger/OpenAPI) | W trakcie | Zaplanowane do dodania.
+| Kolejki asynchroniczne (RabbitMQ) | Zrealizowane | Symfony Messenger + RabbitMQ, konsument `messenger:consume async`.
+| Dokumentacja API (Swagger/OpenAPI) | Zrealizowane | NelmioApiDocBundle, UI pod `/api/docs`.
 | Stany loading/error na froncie | W trakcie | Częściowo zaimplementowane.
 | Kompletny README + instrukcja startu | Zrealizowane | Niniejszy dokument.
 
@@ -253,3 +264,5 @@ Każde konto posiada przykładowe dane kontaktowe (telefon, adres, kod pocztowy)
 - React: https://react.dev/
 - Vite: https://vitejs.dev/
 - PostgreSQL: https://www.postgresql.org/
+- Symfony Messenger: https://symfony.com/doc/current/messenger.html
+- Nelmio ApiDoc: https://symfony.com/bundles/NelmioApiDocBundle/current/index.html

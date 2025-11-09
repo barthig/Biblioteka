@@ -33,6 +33,8 @@ abstract class ApiTestCase extends WebTestCase
         $_ENV['API_SECRET'] = self::API_SECRET;
         putenv('JWT_SECRET=' . self::JWT_SECRET);
         $_ENV['JWT_SECRET'] = self::JWT_SECRET;
+    putenv('MESSENGER_TRANSPORT_DSN=sync://');
+    $_ENV['MESSENGER_TRANSPORT_DSN'] = 'sync://';
 
         /** @var EntityManagerInterface $em */
         $em = static::getContainer()->get('doctrine')->getManager();

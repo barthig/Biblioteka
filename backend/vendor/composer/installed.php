@@ -3,7 +3,7 @@
         'name' => 'barthig/biblioteka-backend',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => '8a0300b45bce1b1fe6bf4586ffbb08900bb653e5',
+        'reference' => 'b73ca7649df21595178caaeb5b95cc9c8b0a2de7',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -13,7 +13,7 @@
         'barthig/biblioteka-backend' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => '8a0300b45bce1b1fe6bf4586ffbb08900bb653e5',
+            'reference' => 'b73ca7649df21595178caaeb5b95cc9c8b0a2de7',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
@@ -304,6 +304,21 @@
                 0 => '2.0|3.0',
             ),
         ),
+        'psr/clock' => array(
+            'pretty_version' => '1.0.0',
+            'version' => '1.0.0.0',
+            'reference' => 'e41a24703d4560fd0acb709162f73b8adfc3aa0d',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../psr/clock',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+        'psr/clock-implementation' => array(
+            'dev_requirement' => false,
+            'provided' => array(
+                0 => '1.0',
+            ),
+        ),
         'psr/container' => array(
             'pretty_version' => '2.0.2',
             'version' => '2.0.2.0',
@@ -490,6 +505,15 @@
             'aliases' => array(),
             'dev_requirement' => true,
         ),
+        'symfony/amqp-messenger' => array(
+            'pretty_version' => 'v5.4.45',
+            'version' => '5.4.45.0',
+            'reference' => '822ad5f425ef362580273a175c45aa765220fe73',
+            'type' => 'symfony-messenger-bridge',
+            'install_path' => __DIR__ . '/../symfony/amqp-messenger',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
         'symfony/cache' => array(
             'pretty_version' => 'v7.3.5',
             'version' => '7.3.5.0',
@@ -513,6 +537,15 @@
             'provided' => array(
                 0 => '1.1|2.0|3.0',
             ),
+        ),
+        'symfony/clock' => array(
+            'pretty_version' => 'v7.3.0',
+            'version' => '7.3.0.0',
+            'reference' => 'b81435fbd6648ea425d1ee96a2d8e68f4ceacd24',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../symfony/clock',
+            'aliases' => array(),
+            'dev_requirement' => false,
         ),
         'symfony/config' => array(
             'pretty_version' => 'v7.3.4',
@@ -652,6 +685,15 @@
             'reference' => 'c86da84640b0586e92aee2b276ee3638ef2f425a',
             'type' => 'symfony-bundle',
             'install_path' => __DIR__ . '/../symfony/maker-bundle',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+        'symfony/messenger' => array(
+            'pretty_version' => 'v6.4.28',
+            'version' => '6.4.28.0',
+            'reference' => '6a758210a2392c4a326de84a6c8c70e7e18296f9',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../symfony/messenger',
             'aliases' => array(),
             'dev_requirement' => false,
         ),

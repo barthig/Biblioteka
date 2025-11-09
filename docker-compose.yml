@@ -12,5 +12,28 @@ services:
     volumes:
       - db_data:/var/lib/postgresql/data
 
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: app
+      RABBITMQ_DEFAULT_PASS: app
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  php-worker:
+    build:
+      context: .
+      dockerfile: docker/php-worker/Dockerfile
+    depends_on:
+      - db
+      - rabbitmq
+    volumes:
+      - ./backend:/app
+    working_dir: /app
+    env_file:
+      - ./backend/.env.worker
+
 volumes:
   db_data:

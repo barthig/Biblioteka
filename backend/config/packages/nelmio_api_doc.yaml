@@ -2,5 +2,37 @@ nelmio_api_doc:
   documentation:
     info:
       title: "Biblioteka API"
-      description: "OpenAPI documentation for Biblioteka backend"
-      version: "1.0.0"
+      description: "OpenAPI specification for the Biblioteka platform"
+      version: "1.1.0"
+    servers:
+      - url: http://127.0.0.1:8000
+        description: Lokalny serwer deweloperski
+    components:
+      securitySchemes:
+        BearerAuth:
+          type: http
+          scheme: bearer
+          bearerFormat: JWT
+        ApiSecret:
+          type: apiKey
+          in: header
+          name: X-API-SECRET
+    security:
+      - BearerAuth: []
+      - ApiSecret: []
+  areas:
+    default:
+      path_patterns:
+        - ^/api(?!/docs)
+      documentation:
+        tags:
+          - name: Autoryzacja
+            description: Logowanie i odnawianie sesji
+          - name: Książki
+            description: Operacje na katalogu książek i egzemplarzach
+          - name: Wypożyczenia
+            description: Zarządzanie wypożyczeniami oraz zwrotami
+          - name: Rezerwacje
+            description: Obsługa kolejki rezerwacji oraz powiadomień
+          - name: Kary
+            description: Naliczone kary finansowe i płatności

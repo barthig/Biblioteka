@@ -5,12 +5,14 @@ use App\Entity\Book;
 use App\Entity\Reservation;
 use App\Entity\BookCopy;
 use App\Entity\User;
+use App\Message\ReservationQueuedNotification;
 use App\Repository\ReservationRepository;
 use App\Service\SecurityService;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Messenger\MessageBusInterface;
 
 class ReservationController extends AbstractController
 {
@@ -38,7 +40,7 @@ class ReservationController extends AbstractController
         return $this->json($reservations, 200, [], ['groups' => ['reservation:read']]);
     }
 
-    public function create(Request $request, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
+    public function create(Request $request, ManagerRegistry $doctrine, SecurityService $security, MessageBusInterface $bus): JsonResponse
     {
         $payload = $security->getJwtPayload($request);
         if (!$payload || !isset($payload['sub'])) {
@@ -80,6 +82,12 @@ class ReservationController extends AbstractController
         $em = $doctrine->getManager();
         $em->persist($reservation);
         $em->flush();
+
+        $bus->dispatch(new ReservationQueuedNotification(
+            $reservation->getId(),
+            $book->getId(),
+            $user->getEmail()
+        ));
 
         return $this->json($reservation, 201, [], ['groups' => ['reservation:read']]);
     }

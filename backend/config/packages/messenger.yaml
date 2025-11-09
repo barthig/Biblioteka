@@ -1,0 +1,14 @@
+framework:
+  messenger:
+    default_bus: messenger.bus.default
+    transports:
+      async:
+        dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
+        serializer: messenger.transport.symfony_serializer
+        retry_strategy:
+          max_retries: 3
+          delay: 1000
+          multiplier: 2
+      sync: 'sync://'
+    routing:
+      App\Message\ReservationQueuedNotification: async
