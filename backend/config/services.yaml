@@ -1,0 +1,18 @@
+parameters:
+  locale: 'pl'
+
+services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+
+  App\:
+    resource: '../src/'
+    exclude:
+      - '../src/DataFixtures/'
+      - '../src/Entity/'
+      - '../src/Kernel.php'
+
+  App\DataFixtures\:
+    resource: '../src/DataFixtures/'
+    tags: ['doctrine.fixture.orm']
