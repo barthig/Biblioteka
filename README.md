@@ -90,7 +90,7 @@ Przed uruchomieniem przygotuj pliki `.env.local` na backendzie i froncie.
 | `DATABASE_URL` | Łącze do PostgreSQL | `postgresql://biblioteka:biblioteka@127.0.0.1:5432/biblioteka_dev?serverVersion=15&charset=utf8` |
 | `API_SECRET` | Sekret nagłówka `X-API-SECRET` | np. `super_tajne_haslo` |
 | `JWT_SECRET` | Sekret podpisu tokenów JWT | wygeneruj własny | 
-| `MESSENGER_TRANSPORT_DSN` | Połączenie do brokera RabbitMQ | `amqp://guest:guest@localhost:5672/%2f/messages` |
+| `MESSENGER_TRANSPORT_DSN` | Połączenie do brokera RabbitMQ | `amqp://app:app@localhost:5672/%2f/messages` |
 | `PORT` | Port lokalnego serwera | `8000` |
 
 Punkt wyjścia: `backend/.env.example`.
@@ -167,10 +167,10 @@ Plik należy utworzyć manualnie – patrz instrukcja w sekcji 6.
 
    ```powershell
    docker compose up -d rabbitmq
-   php bin/console messenger:consume async
+   docker compose run --rm php-worker php bin/console messenger:consume async
    ```
 
-   Wysyłane rezerwacje trafiają do kolejki RabbitMQ i są zapisywane w `var/log/reservation_queue.log`.
+   Wysyłane rezerwacje trafiają do kolejki RabbitMQ i są zapisywane w `var/log/reservation_queue.log`. Kontener `php-worker` ma wbudowane rozszerzenie `ext-amqp`, dzięki czemu konsument działa bez dodatkowej konfiguracji lokalnego PHP.
 
 8. Interfejs deweloperski React będzie dostępny pod `http://127.0.0.1:5173`. Zaloguj się kontem z sekcji 8.
 

@@ -17,6 +17,12 @@ if (class_exists('Symfony\Component\Dotenv\Dotenv')) {
         [$name, $value] = array_map('trim', explode('=', $line, 2));
         $value = trim($value, "\"' ");
 
+        $existing = getenv($name);
+        if ($existing !== false) {
+            $_ENV[$name] = $_SERVER[$name] = $existing;
+            continue;
+        }
+
         putenv(sprintf('%s=%s', $name, $value));
         $_ENV[$name] = $value;
         $_SERVER[$name] = $value;
