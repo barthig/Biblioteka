@@ -15,7 +15,11 @@ export default function Books() {
       const data = await apiFetch('/api/books')
       setBooks(data || [])
     } catch (err) {
-      setError(err.message || 'Failed to load')
+      if (err.status === 401) {
+        setError('Zaloguj się, aby zobaczyć listę książek.')
+      } else {
+        setError(err.message || 'Nie udało się pobrać listy książek')
+      }
     } finally {
       setLoading(false)
     }

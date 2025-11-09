@@ -15,4 +15,7 @@ input { padding: .3rem .4rem; margin-bottom: .6rem; width: 100% }
 .book-item { display: flex; justify-content: space-between; align-items: center; gap: 1rem }
 .book-row { display: flex; justify-content: space-between; align-items: center; gap: 1rem }
 .book-link { text-decoration: none; color: #000 }
+.loans-list { list-style: none; padding: 0; margin: 0; display: grid; gap: .6rem }
+.loan-item { border: 1px solid #ddd; border-radius: 6px; padding: .8rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem; background: #fff }
+.tag { background: #e5f5ff; color: #0366d6; padding: .2rem .6rem; border-radius: 999px; font-size: .75rem; font-weight: 600 }
 @media (max-width: 700px) { .app { grid-template-columns: 1fr } .sidebar { display: flex; flex-direction: row; gap: 1rem } }

@@ -20,13 +20,27 @@ class ApiAuthSubscriber implements EventSubscriberInterface
     {
         $request = $event->getRequest();
         $path = $request->getPathInfo();
+        $method = $request->getMethod();
 
         // Only protect /api routes (allow health check)
         if (strpos($path, '/api') !== 0) {
             return;
         }
 
+        if ($method === 'OPTIONS') {
+            return;
+        }
+
         if ($path === '/api/health' || $path === '/health') {
+            return;
+        }
+
+        $publicRoutes = [
+            // allow authentication bootstrap without token
+            '/api/auth/login' => ['POST'],
+        ];
+
+        if (isset($publicRoutes[$path]) && in_array($method, $publicRoutes[$path], true)) {
             return;
         }
 

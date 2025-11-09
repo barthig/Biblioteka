@@ -6,6 +6,7 @@ import Login from './pages/Login'
 import Books from './pages/Books'
 import Dashboard from './pages/Dashboard'
 import BookDetails from './pages/BookDetails'
+import MyLoans from './pages/MyLoans'
 
 export default function App() {
   return (
@@ -17,6 +18,7 @@ export default function App() {
             <Route path="/" element={<Dashboard />} />
             <Route path="/books" element={<Books />} />
             <Route path="/books/:id" element={<BookDetails />} />
+            <Route path="/my-loans" element={<MyLoans />} />
             <Route path="/login" element={<Login />} />
           </Routes>
         </main>
