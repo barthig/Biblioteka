@@ -2,8 +2,9 @@
 namespace App\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
-use App\Service\BookService;
+use App\Entity\Author;
 use App\Entity\Book;
+use App\Service\BookService;
 use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\Persistence\ObjectManager;
 
@@ -11,9 +12,14 @@ class BookServiceTest extends TestCase
 {
     public function testBorrowAndRestore()
     {
-        // create a book with 2 copies
-        $book = new Book();
-        $book->setTitle('T')->setAuthor('A')->setCopies(2);
+        $author = (new Author())->setName('Tester');
+
+        // create a book with 2 total copies, 2 available
+        $book = (new Book())
+            ->setTitle('T')
+            ->setAuthor($author)
+            ->setTotalCopies(2)
+            ->setCopies(2);
 
     // mock an entity manager
     $em = $this->createMock(ObjectManager::class);

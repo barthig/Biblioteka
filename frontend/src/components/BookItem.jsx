@@ -32,7 +32,8 @@ export default function BookItem({ book, onBorrowed }) {
     <div className="book-item">
       <div>
         <strong>{book.title}</strong>
-        <div className="meta">{book.author ?? 'Unknown'}</div>
+        <div className="meta">{book.author?.name ?? 'Unknown author'}</div>
+        <div className="meta">Dostępne: {book.copies ?? 0} / {book.totalCopies ?? book.copies ?? 0}</div>
       </div>
       <div>
         <button disabled={loading} onClick={borrow}>{loading ? '...' : 'Borrow'}</button>

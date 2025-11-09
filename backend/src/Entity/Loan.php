@@ -2,30 +2,37 @@
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity]
 class Loan
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(type:'integer')]
+    #[ORM\Column(type: 'integer')]
+    #[Groups(['loan:read'])]
     private ?int $id = null;
 
     #[ORM\ManyToOne(targetEntity: Book::class)]
-    #[ORM\JoinColumn(nullable:false)]
+    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
+    #[Groups(['loan:read'])]
     private Book $book;
 
     #[ORM\ManyToOne(targetEntity: User::class)]
-    #[ORM\JoinColumn(nullable:false)]
+    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
+    #[Groups(['loan:read'])]
     private User $user;
 
-    #[ORM\Column(type:'datetime')]
+    #[ORM\Column(type: 'datetime')]
+    #[Groups(['loan:read'])]
     private \DateTimeInterface $borrowedAt;
 
-    #[ORM\Column(type:'datetime')]
+    #[ORM\Column(type: 'datetime')]
+    #[Groups(['loan:read'])]
     private \DateTimeInterface $dueAt;
 
-    #[ORM\Column(type:'datetime', nullable:true)]
+    #[ORM\Column(type: 'datetime', nullable: true)]
+    #[Groups(['loan:read'])]
     private ?\DateTimeInterface $returnedAt = null;
 
     public function __construct()

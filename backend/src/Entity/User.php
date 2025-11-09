@@ -2,26 +2,31 @@
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Annotation\Ignore;
 
 #[ORM\Entity]
+#[ORM\Table(name: 'app_user')]
 class User
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(type:'integer')]
+    #[ORM\Column(type: 'integer')]
+    #[Groups(['loan:read'])]
     private ?int $id = null;
 
-    #[ORM\Column(type:'string', length:180, unique:true)]
+    #[ORM\Column(type: 'string', length: 180, unique: true)]
+    #[Groups(['loan:read'])]
     private string $email;
 
-    #[ORM\Column(type:'string', length:255)]
+    #[ORM\Column(type: 'string', length: 255)]
+    #[Groups(['loan:read'])]
     private string $name;
 
-    #[ORM\Column(type:'json')]
+    #[ORM\Column(type: 'json')]
     private array $roles = [];
 
-    #[ORM\Column(type:'string', length:255)]
+    #[ORM\Column(type: 'string', length: 255)]
     #[Ignore]
     private string $password;
 

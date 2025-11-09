@@ -32,9 +32,10 @@ export default function BookDetails() {
   return (
     <div>
       <h2>{book.title}</h2>
-      <p><strong>Author:</strong> {book.author ?? 'Unknown'}</p>
-      <p><strong>Description:</strong> {book.description ?? '—'}</p>
-      <p><strong>Available copies:</strong> {book.available ?? '—'}</p>
+      <p><strong>Author:</strong> {book.author?.name ?? 'Unknown'}</p>
+      <p><strong>Kategorie:</strong> {Array.isArray(book.categories) && book.categories.length ? book.categories.map(c => c.name).join(', ') : '—'}</p>
+      <p><strong>Opis:</strong> {book.description ?? '—'}</p>
+      <p><strong>Dostępne egzemplarze:</strong> {book.copies ?? 0} / {book.totalCopies ?? book.copies ?? 0}</p>
     </div>
   )
 }

@@ -2,7 +2,9 @@
 
 namespace App\Tests\Functional;
 
+use App\Entity\Author;
 use App\Entity\Book;
+use App\Entity\Category;
 use App\Entity\Loan;
 use App\Entity\User;
 use App\Service\JwtService;
@@ -149,13 +151,44 @@ abstract class ApiTestCase extends WebTestCase
         return $user;
     }
 
-    protected function createBook(string $title = 'Sample Book', string $author = 'Author', int $copies = 3): Book
+    protected function createAuthor(string $name = 'Author'): Author
     {
-        $book = new Book();
-        $book->setTitle($title)
+        $author = (new Author())->setName($name);
+        $this->entityManager->persist($author);
+        $this->entityManager->flush();
+
+        return $author;
+    }
+
+    protected function createCategory(string $name = 'General'): Category
+    {
+        $category = (new Category())->setName($name);
+        $this->entityManager->persist($category);
+        $this->entityManager->flush();
+
+        return $category;
+    }
+
+    /**
+     * @param Category[] $categories
+     */
+    protected function createBook(string $title = 'Sample Book', ?Author $author = null, int $copies = 3, ?array $categories = null, ?int $totalCopies = null): Book
+    {
+        $author ??= $this->createAuthor('Author ' . uniqid('', true));
+        $categories = $categories ?? [$this->createCategory('General')];
+
+        $total = $totalCopies ?? max($copies, 1);
+
+        $book = (new Book())
+            ->setTitle($title)
             ->setAuthor($author)
+            ->setTotalCopies($total)
             ->setCopies($copies)
             ->setIsbn('ISBN-' . substr(md5($title . microtime()), 0, 8));
+
+        foreach ($categories as $category) {
+            $book->addCategory($category);
+        }
 
         $this->entityManager->persist($book);
         $this->entityManager->flush();
@@ -165,6 +198,14 @@ abstract class ApiTestCase extends WebTestCase
 
     protected function createLoan(User $user, Book $book, ?\DateTimeImmutable $due = null, bool $returned = false): Loan
     {
+        if ($book->getCopies() <= 0 && !$returned) {
+            $book->setCopies(1);
+        }
+
+        if (!$returned) {
+            $book->setCopies($book->getCopies() - 1);
+        }
+
         $loan = new Loan();
         $loan->setUser($user)
             ->setBook($book)
@@ -172,6 +213,7 @@ abstract class ApiTestCase extends WebTestCase
 
         if ($returned) {
             $loan->setReturnedAt(new \DateTimeImmutable('-1 day'));
+            $book->setCopies(min($book->getTotalCopies(), $book->getCopies() + 1));
         }
 
         $this->entityManager->persist($loan);
@@ -182,9 +224,11 @@ abstract class ApiTestCase extends WebTestCase
 
     private function purgeDatabase(): void
     {
-        $this->entityManager->createQuery('DELETE FROM App\\Entity\\Loan l')->execute();
-        $this->entityManager->createQuery('DELETE FROM App\\Entity\\Book b')->execute();
-        $this->entityManager->createQuery('DELETE FROM App\\Entity\\User u')->execute();
+        $this->entityManager->createQuery('DELETE FROM App\Entity\Loan l')->execute();
+        $this->entityManager->createQuery('DELETE FROM App\Entity\Book b')->execute();
+        $this->entityManager->createQuery('DELETE FROM App\Entity\Category c')->execute();
+        $this->entityManager->createQuery('DELETE FROM App\Entity\Author a')->execute();
+        $this->entityManager->createQuery('DELETE FROM App\Entity\User u')->execute();
         $this->entityManager->clear();
     }
 }
