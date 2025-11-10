@@ -12,6 +12,10 @@ export default function BookItem({ book, onBorrowed }) {
   const available = book?.copies ?? 0
   const total = book?.totalCopies ?? available
   const isAvailable = available > 0
+  const publisher = book?.publisher
+  const publicationYear = book?.publicationYear
+  const resourceType = book?.resourceType
+  const signature = book?.signature
 
   async function borrow() {
     if (!user?.id) {
@@ -41,8 +45,16 @@ export default function BookItem({ book, onBorrowed }) {
           <Link to={`/books/${book.id}`} className="book-card__title">{book.title}</Link>
           <div className="book-card__meta">
             <span>{book.author?.name ?? 'Autor nieznany'}</span>
+            {publicationYear && <span>Rok wydania {publicationYear}</span>}
+            {resourceType && <span>{resourceType}</span>}
             {book.isbn && <span>ISBN {book.isbn}</span>}
           </div>
+          {(publisher || signature) && (
+            <div className="book-card__meta">
+              {publisher && <span>Wydawca: {publisher}</span>}
+              {signature && <span>Sygnatura: {signature}</span>}
+            </div>
+          )}
         </div>
         <span className={`status-pill ${isAvailable ? '' : 'is-danger'}`}>
           {isAvailable ? `Dostępne ${available}/${total}` : 'Brak wolnych egzemplarzy'}

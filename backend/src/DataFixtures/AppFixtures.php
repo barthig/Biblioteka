@@ -60,13 +60,24 @@ class AppFixtures extends Fixture
         }
 
         $books = [];
+        $publishers = [
+            'Wydawnictwo Literackie',
+            'Czytelnik Press',
+            'Akademia Nauki',
+            'Digital Stories',
+        ];
+        $resourceTypes = ['Książka drukowana', 'E-book', 'Audiobook'];
         for ($i = 1; $i <= 30; $i++) {
             $author = $authors[$i % count($authors)];
             $book = (new Book())
                 ->setTitle('Book title ' . $i)
                 ->setAuthor($author)
                 ->setIsbn('ISBN-' . str_pad((string) $i, 5, '0', STR_PAD_LEFT))
-                ->setDescription(sprintf('Sample description for book %d in the Biblioteka catalog.', $i));
+                ->setDescription(sprintf('Sample description for book %d in the Biblioteka catalog.', $i))
+                ->setPublisher($publishers[$i % count($publishers)])
+                ->setPublicationYear(2000 + ($i % 20))
+                ->setResourceType($resourceTypes[$i % count($resourceTypes)])
+                ->setSignature(sprintf('SIG-%03d-%02d', $i, $i % 7 + 1));
 
             $assignedCategories = array_rand($categories, 2);
             foreach ((array) $assignedCategories as $index) {

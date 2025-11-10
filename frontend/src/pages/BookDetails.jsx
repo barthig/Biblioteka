@@ -77,6 +77,26 @@ export default function BookDetails() {
             <dd>{categories}</dd>
           </div>
           <div className="resource-item__meta">
+            <dt>ISBN</dt>
+            <dd>{book.isbn ?? '—'}</dd>
+          </div>
+          <div className="resource-item__meta">
+            <dt>Wydawca</dt>
+            <dd>{book.publisher ?? '—'}</dd>
+          </div>
+          <div className="resource-item__meta">
+            <dt>Rok wydania</dt>
+            <dd>{book.publicationYear ?? '—'}</dd>
+          </div>
+          <div className="resource-item__meta">
+            <dt>Typ zasobu</dt>
+            <dd>{book.resourceType ?? '—'}</dd>
+          </div>
+          <div className="resource-item__meta">
+            <dt>Sygnatura</dt>
+            <dd>{book.signature ?? '—'}</dd>
+          </div>
+          <div className="resource-item__meta">
             <dt>Opis</dt>
             <dd>{book.description ?? 'Brak opisu.'}</dd>
           </div>

@@ -51,6 +51,22 @@ class Book
     #[Groups(['book:read', 'reservation:read'])]
     private ?string $description = null;
 
+    #[ORM\Column(type: 'string', length: 180, nullable: true)]
+    #[Groups(['book:read', 'loan:read', 'reservation:read'])]
+    private ?string $publisher = null;
+
+    #[ORM\Column(type: 'smallint', nullable: true)]
+    #[Groups(['book:read', 'loan:read', 'reservation:read'])]
+    private ?int $publicationYear = null;
+
+    #[ORM\Column(type: 'string', length: 60, nullable: true)]
+    #[Groups(['book:read', 'loan:read', 'reservation:read'])]
+    private ?string $resourceType = null;
+
+    #[ORM\Column(type: 'string', length: 60, nullable: true)]
+    #[Groups(['book:read', 'loan:read', 'reservation:read'])]
+    private ?string $signature = null;
+
     #[ORM\Column(type: 'datetime')]
     #[Groups(['book:read', 'reservation:read'])]
     private \DateTimeInterface $createdAt;
@@ -232,6 +248,57 @@ class Book
     public function setDescription(?string $description): self
     {
         $this->description = $description;
+
+        return $this;
+    }
+
+    public function getPublisher(): ?string
+    {
+        return $this->publisher;
+    }
+
+    public function setPublisher(?string $publisher): self
+    {
+        $this->publisher = $publisher !== null ? trim($publisher) : null;
+
+        return $this;
+    }
+
+    public function getPublicationYear(): ?int
+    {
+        return $this->publicationYear;
+    }
+
+    public function setPublicationYear(?int $year): self
+    {
+        if ($year !== null) {
+            $year = max(0, min(9999, $year));
+        }
+        $this->publicationYear = $year;
+
+        return $this;
+    }
+
+    public function getResourceType(): ?string
+    {
+        return $this->resourceType;
+    }
+
+    public function setResourceType(?string $resourceType): self
+    {
+        $this->resourceType = $resourceType !== null ? trim($resourceType) : null;
+
+        return $this;
+    }
+
+    public function getSignature(): ?string
+    {
+        return $this->signature;
+    }
+
+    public function setSignature(?string $signature): self
+    {
+        $this->signature = $signature !== null ? trim($signature) : null;
 
         return $this;
     }

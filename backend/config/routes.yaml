@@ -70,6 +70,11 @@ api_books_list:
   controller: App\Controller\BookController::list
   methods: [GET]
 
+api_books_filters:
+  path: /api/books/filters
+  controller: App\Controller\BookController::filters
+  methods: [GET]
+
 api_books_get:
   path: /api/books/{id}
   controller: App\Controller\BookController::getBook

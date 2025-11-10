@@ -16,11 +16,29 @@ class BookController extends AbstractController
 {
     public function list(Request $request, BookRepository $repo): JsonResponse
     {
-        $query = (string) $request->query->get('q', '');
-        $books = trim($query) !== ''
-            ? $repo->searchPublic($query)
-            : $repo->findAllForPublic();
+        $filters = [
+            'q' => $request->query->get('q'),
+            'authorId' => $request->query->has('authorId') ? $request->query->getInt('authorId') : null,
+            'categoryId' => $request->query->has('categoryId') ? $request->query->getInt('categoryId') : null,
+            'publisher' => $request->query->get('publisher'),
+            'resourceType' => $request->query->get('resourceType'),
+            'signature' => $request->query->get('signature'),
+            'yearFrom' => $request->query->has('yearFrom') ? $request->query->getInt('yearFrom') : null,
+            'yearTo' => $request->query->has('yearTo') ? $request->query->getInt('yearTo') : null,
+        ];
+
+        if ($request->query->has('available')) {
+            $filters['available'] = $request->query->get('available');
+        }
+
+        $books = $repo->searchPublic($filters);
+
         return $this->json($books, 200, [], ['groups' => ['book:read']]);
+    }
+
+    public function filters(BookRepository $repo): JsonResponse
+    {
+        return $this->json($repo->getPublicFacets());
     }
 
     public function getBook(int $id, BookRepository $repo): JsonResponse
