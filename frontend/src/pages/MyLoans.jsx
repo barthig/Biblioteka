@@ -12,6 +12,10 @@ export default function MyLoans() {
   const [loans, setLoans] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [actionError, setActionError] = useState(null)
+  const [actionSuccess, setActionSuccess] = useState(null)
+  const [extendDays, setExtendDays] = useState({})
+  const [extendLoading, setExtendLoading] = useState({})
 
   useEffect(() => {
     if (!token) {
@@ -25,6 +29,8 @@ export default function MyLoans() {
     async function load() {
       setLoading(true)
       setError(null)
+      setActionError(null)
+      setActionSuccess(null)
       try {
         const data = await apiFetch('/api/loans')
         if (!cancelled) {
@@ -52,6 +58,26 @@ export default function MyLoans() {
     () => loans.filter(loan => loan.returnedAt).sort((a, b) => new Date(b.returnedAt).getTime() - new Date(a.returnedAt).getTime()),
     [loans]
   )
+
+  async function extendLoan(id, days = 14) {
+    setActionError(null)
+    setActionSuccess(null)
+    setExtendLoading(prev => ({ ...prev, [id]: true }))
+    try {
+      const updatedLoan = await apiFetch(`/api/loans/${id}/extend`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ days }),
+      })
+      setLoans(prev => prev.map(loan => (loan.id === id ? updatedLoan : loan)))
+      setActionSuccess(`Termin wypożyczenia został przedłużony do ${formatDate(updatedLoan.dueAt)}.`)
+      setExtendDays(prev => ({ ...prev, [id]: 14 }))
+    } catch (err) {
+      setActionError(err.message || 'Nie udało się przedłużyć wypożyczenia')
+    } finally {
+      setExtendLoading(prev => ({ ...prev, [id]: false }))
+    }
+  }
 
   if (!token || !user?.id) {
     return (
@@ -85,6 +111,16 @@ export default function MyLoans() {
           <p className="error">{error}</p>
         </div>
       )}
+      {actionError && (
+        <div className="surface-card">
+          <p className="error">{actionError}</p>
+        </div>
+      )}
+      {actionSuccess && (
+        <div className="surface-card">
+          <p className="success">{actionSuccess}</p>
+        </div>
+      )}
 
       <div className="page-grid">
         <section className="surface-card">
@@ -100,9 +136,39 @@ export default function MyLoans() {
                     <div className="resource-item__meta">
                       <span>Termin zwrotu: {formatDate(loan.dueAt)}</span>
                       {loan.bookCopy?.inventoryCode && <span>Kod egz.: {loan.bookCopy.inventoryCode}</span>}
+                      {typeof loan.extensionsCount === 'number' && <span>Przedłużenia: {loan.extensionsCount}</span>}
                     </div>
+                    {loan.lastExtendedAt && (
+                      <div className="resource-item__meta">
+                        <span>Ostatnio przedłużono: {formatDate(loan.lastExtendedAt)}</span>
+                      </div>
+                    )}
                   </div>
-                  <span className="status-pill">Wypożyczono</span>
+                  <div className="resource-item__actions loan-actions">
+                    <span className="status-pill">Wypożyczono</span>
+                    {(loan.extensionsCount ?? 0) < 1 && (
+                      <div className="loan-extend">
+                        <label htmlFor={`loan-extend-${loan.id}`} className="sr-only">Liczba dni przedłużenia</label>
+                        <select
+                          id={`loan-extend-${loan.id}`}
+                          value={extendDays[loan.id] ?? 14}
+                          onChange={event => setExtendDays(prev => ({ ...prev, [loan.id]: Number(event.target.value) }))}
+                        >
+                          {[7, 14, 21, 28].map(option => (
+                            <option key={option} value={option}>{`+${option} dni`}</option>
+                          ))}
+                        </select>
+                        <button
+                          type="button"
+                          className="btn btn-outline"
+                          disabled={extendLoading[loan.id]}
+                          onClick={() => extendLoan(loan.id, extendDays[loan.id] ?? 14)}
+                        >
+                          {extendLoading[loan.id] ? 'Przetwarzanie...' : 'Przedłuż'}
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </li>
               ))}
             </ul>

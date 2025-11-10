@@ -215,6 +215,13 @@
         <argument type="service" id=".service_locator.ZyP9f7K.App\Controller\DashboardController"/>
       </call>
     </service>
+    <service id="App\Controller\FavoriteController" class="App\Controller\FavoriteController" public="true" autowire="true" autoconfigure="true">
+      <tag name="controller.service_arguments"/>
+      <tag name="container.service_subscriber"/>
+      <call method="setContainer">
+        <argument type="service" id=".service_locator.ZyP9f7K.App\Controller\FavoriteController"/>
+      </call>
+    </service>
     <service id="App\Controller\FineController" class="App\Controller\FineController" public="true" autowire="true" autoconfigure="true">
       <tag name="controller.service_arguments"/>
       <tag name="container.service_subscriber"/>
@@ -243,6 +250,13 @@
         <argument type="service" id=".service_locator.ZyP9f7K.App\Controller\NotificationController"/>
       </call>
     </service>
+    <service id="App\Controller\OrderController" class="App\Controller\OrderController" public="true" autowire="true" autoconfigure="true">
+      <tag name="controller.service_arguments"/>
+      <tag name="container.service_subscriber"/>
+      <call method="setContainer">
+        <argument type="service" id=".service_locator.ZyP9f7K.App\Controller\OrderController"/>
+      </call>
+    </service>
     <service id="App\Controller\ProductController" class="App\Controller\ProductController" public="true" autowire="true" autoconfigure="true">
       <tag name="controller.service_arguments"/>
       <tag name="container.service_subscriber"/>
@@ -262,6 +276,13 @@
       <tag name="container.service_subscriber"/>
       <call method="setContainer">
         <argument type="service" id=".service_locator.ZyP9f7K.App\Controller\ReservationController"/>
+      </call>
+    </service>
+    <service id="App\Controller\ReviewController" class="App\Controller\ReviewController" public="true" autowire="true" autoconfigure="true">
+      <tag name="controller.service_arguments"/>
+      <tag name="container.service_subscriber"/>
+      <call method="setContainer">
+        <argument type="service" id=".service_locator.ZyP9f7K.App\Controller\ReviewController"/>
       </call>
     </service>
     <service id="App\Controller\SettingsController" class="App\Controller\SettingsController" public="true" autowire="true" autoconfigure="true">
@@ -312,11 +333,23 @@
       <tag name="doctrine.repository_service"/>
       <argument type="service" id="doctrine"/>
     </service>
+    <service id="App\Repository\FavoriteRepository" class="App\Repository\FavoriteRepository" autowire="true" autoconfigure="true">
+      <tag name="doctrine.repository_service"/>
+      <argument type="service" id="doctrine"/>
+    </service>
     <service id="App\Repository\FineRepository" class="App\Repository\FineRepository" autowire="true" autoconfigure="true">
       <tag name="doctrine.repository_service"/>
       <argument type="service" id="doctrine"/>
     </service>
+    <service id="App\Repository\OrderRequestRepository" class="App\Repository\OrderRequestRepository" autowire="true" autoconfigure="true">
+      <tag name="doctrine.repository_service"/>
+      <argument type="service" id="doctrine"/>
+    </service>
     <service id="App\Repository\ReservationRepository" class="App\Repository\ReservationRepository" autowire="true" autoconfigure="true">
+      <tag name="doctrine.repository_service"/>
+      <argument type="service" id="doctrine"/>
+    </service>
+    <service id="App\Repository\ReviewRepository" class="App\Repository\ReviewRepository" autowire="true" autoconfigure="true">
       <tag name="doctrine.repository_service"/>
       <argument type="service" id="doctrine"/>
     </service>
@@ -359,7 +392,7 @@
     </service>
     <service id="argument_resolver.service" class="Symfony\Component\HttpKernel\Controller\ArgumentResolver\ServiceValueResolver">
       <tag priority="-50" name="Symfony\Component\HttpKernel\Controller\ArgumentResolver\ServiceValueResolver">controller.argument_value_resolver</tag>
-      <argument type="service" id=".service_locator.bbI6Izk"/>
+      <argument type="service" id=".service_locator.NBIGnlz"/>
     </service>
     <service id="argument_resolver.default" class="Symfony\Component\HttpKernel\Controller\ArgumentResolver\DefaultValueResolver">
       <tag priority="-100" name="Symfony\Component\HttpKernel\Controller\ArgumentResolver\DefaultValueResolver">controller.argument_value_resolver</tag>
@@ -1633,7 +1666,7 @@
     </service>
     <service id="argument_resolver.not_tagged_controller" class="Symfony\Component\HttpKernel\Controller\ArgumentResolver\NotTaggedControllerValueResolver">
       <tag name="controller.argument_value_resolver" priority="-200"/>
-      <argument type="service" id=".service_locator.bbI6Izk"/>
+      <argument type="service" id=".service_locator.NBIGnlz"/>
     </service>
     <service id="routing.resolver" class="Symfony\Component\Config\Loader\LoaderResolver">
       <call method="addLoader">
@@ -2500,7 +2533,7 @@
     <service id="doctrine.orm.configuration" class="Doctrine\ORM\Configuration" abstract="true"/>
     <service id="doctrine.orm.entity_manager.abstract" class="Doctrine\ORM\EntityManager" lazy="true" abstract="true"/>
     <service id="doctrine.orm.container_repository_factory" class="Doctrine\Bundle\DoctrineBundle\Repository\ContainerRepositoryFactory">
-      <argument type="service" id=".service_locator.OYsDYnj"/>
+      <argument type="service" id=".service_locator.d9OcmmT"/>
     </service>
     <service id="doctrine.orm.manager_configurator.abstract" class="Doctrine\Bundle\DoctrineBundle\ManagerConfigurator" abstract="true">
       <argument type="collection"/>
@@ -3527,6 +3560,9 @@
     <service id=".instanceof.Symfony\Contracts\Service\ServiceSubscriberInterface.0.App\Controller\DashboardController" class="App\Controller\DashboardController" autowire="true" abstract="true"/>
     <service id=".instanceof.Symfony\Bundle\FrameworkBundle\Controller\AbstractController.0.App\Controller\DashboardController" class="App\Controller\DashboardController" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Controller\DashboardController" class="App\Controller\DashboardController" autowire="true" autoconfigure="true" abstract="true"/>
+    <service id=".instanceof.Symfony\Contracts\Service\ServiceSubscriberInterface.0.App\Controller\FavoriteController" class="App\Controller\FavoriteController" autowire="true" abstract="true"/>
+    <service id=".instanceof.Symfony\Bundle\FrameworkBundle\Controller\AbstractController.0.App\Controller\FavoriteController" class="App\Controller\FavoriteController" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\Controller\FavoriteController" class="App\Controller\FavoriteController" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Symfony\Contracts\Service\ServiceSubscriberInterface.0.App\Controller\FineController" class="App\Controller\FineController" autowire="true" abstract="true"/>
     <service id=".instanceof.Symfony\Bundle\FrameworkBundle\Controller\AbstractController.0.App\Controller\FineController" class="App\Controller\FineController" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Controller\FineController" class="App\Controller\FineController" autowire="true" autoconfigure="true" abstract="true"/>
@@ -3539,6 +3575,9 @@
     <service id=".instanceof.Symfony\Contracts\Service\ServiceSubscriberInterface.0.App\Controller\NotificationController" class="App\Controller\NotificationController" autowire="true" abstract="true"/>
     <service id=".instanceof.Symfony\Bundle\FrameworkBundle\Controller\AbstractController.0.App\Controller\NotificationController" class="App\Controller\NotificationController" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Controller\NotificationController" class="App\Controller\NotificationController" autowire="true" autoconfigure="true" abstract="true"/>
+    <service id=".instanceof.Symfony\Contracts\Service\ServiceSubscriberInterface.0.App\Controller\OrderController" class="App\Controller\OrderController" autowire="true" abstract="true"/>
+    <service id=".instanceof.Symfony\Bundle\FrameworkBundle\Controller\AbstractController.0.App\Controller\OrderController" class="App\Controller\OrderController" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\Controller\OrderController" class="App\Controller\OrderController" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Symfony\Contracts\Service\ServiceSubscriberInterface.0.App\Controller\ProductController" class="App\Controller\ProductController" autowire="true" abstract="true"/>
     <service id=".instanceof.Symfony\Bundle\FrameworkBundle\Controller\AbstractController.0.App\Controller\ProductController" class="App\Controller\ProductController" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Controller\ProductController" class="App\Controller\ProductController" autowire="true" autoconfigure="true" abstract="true"/>
@@ -3548,6 +3587,9 @@
     <service id=".instanceof.Symfony\Contracts\Service\ServiceSubscriberInterface.0.App\Controller\ReservationController" class="App\Controller\ReservationController" autowire="true" abstract="true"/>
     <service id=".instanceof.Symfony\Bundle\FrameworkBundle\Controller\AbstractController.0.App\Controller\ReservationController" class="App\Controller\ReservationController" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Controller\ReservationController" class="App\Controller\ReservationController" autowire="true" autoconfigure="true" abstract="true"/>
+    <service id=".instanceof.Symfony\Contracts\Service\ServiceSubscriberInterface.0.App\Controller\ReviewController" class="App\Controller\ReviewController" autowire="true" abstract="true"/>
+    <service id=".instanceof.Symfony\Bundle\FrameworkBundle\Controller\AbstractController.0.App\Controller\ReviewController" class="App\Controller\ReviewController" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\Controller\ReviewController" class="App\Controller\ReviewController" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Symfony\Contracts\Service\ServiceSubscriberInterface.0.App\Controller\SettingsController" class="App\Controller\SettingsController" autowire="true" abstract="true"/>
     <service id=".instanceof.Symfony\Bundle\FrameworkBundle\Controller\AbstractController.0.App\Controller\SettingsController" class="App\Controller\SettingsController" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Controller\SettingsController" class="App\Controller\SettingsController" autowire="true" autoconfigure="true" abstract="true"/>
@@ -3567,10 +3609,16 @@
     <service id=".abstract.instanceof.App\Repository\BookRepository" class="App\Repository\BookRepository" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepositoryInterface.0.App\Repository\CategoryRepository" class="App\Repository\CategoryRepository" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Repository\CategoryRepository" class="App\Repository\CategoryRepository" autowire="true" autoconfigure="true" abstract="true"/>
+    <service id=".instanceof.Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepositoryInterface.0.App\Repository\FavoriteRepository" class="App\Repository\FavoriteRepository" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\Repository\FavoriteRepository" class="App\Repository\FavoriteRepository" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepositoryInterface.0.App\Repository\FineRepository" class="App\Repository\FineRepository" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Repository\FineRepository" class="App\Repository\FineRepository" autowire="true" autoconfigure="true" abstract="true"/>
+    <service id=".instanceof.Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepositoryInterface.0.App\Repository\OrderRequestRepository" class="App\Repository\OrderRequestRepository" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\Repository\OrderRequestRepository" class="App\Repository\OrderRequestRepository" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepositoryInterface.0.App\Repository\ReservationRepository" class="App\Repository\ReservationRepository" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Repository\ReservationRepository" class="App\Repository\ReservationRepository" autowire="true" autoconfigure="true" abstract="true"/>
+    <service id=".instanceof.Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepositoryInterface.0.App\Repository\ReviewRepository" class="App\Repository\ReviewRepository" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\Repository\ReviewRepository" class="App\Repository\ReviewRepository" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepositoryInterface.0.App\Repository\UserRepository" class="App\Repository\UserRepository" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Repository\UserRepository" class="App\Repository\UserRepository" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Doctrine\Bundle\FixturesBundle\ORMFixtureInterface.0.App\DataFixtures\AppFixtures" class="App\DataFixtures\AppFixtures" autowire="true" abstract="true"/>
@@ -4087,12 +4135,28 @@
         <argument key="security" type="service_closure" id="App\Service\SecurityService"/>
       </argument>
     </service>
+    <service id=".service_locator.z8H8Dc3" class="Symfony\Component\DependencyInjection\ServiceLocator">
+      <tag name="container.service_locator"/>
+      <argument type="collection">
+        <argument key="doctrine" type="service_closure" id="doctrine"/>
+        <argument key="security" type="service_closure" id="App\Service\SecurityService"/>
+        <argument key="bookService" type="service_closure" id="App\Service\BookService"/>
+      </argument>
+    </service>
     <service id=".service_locator.m1iKpUC" class="Symfony\Component\DependencyInjection\ServiceLocator">
       <tag name="container.service_locator"/>
       <argument type="collection">
         <argument key="doctrine" type="service_closure" id="doctrine"/>
         <argument key="security" type="service_closure" id="App\Service\SecurityService"/>
         <argument key="bus" type="service_closure" id="messenger.bus.default"/>
+      </argument>
+    </service>
+    <service id=".service_locator.RGWMk6E" class="Symfony\Component\DependencyInjection\ServiceLocator">
+      <tag name="container.service_locator"/>
+      <argument type="collection">
+        <argument key="doctrine" type="service_closure" id="doctrine"/>
+        <argument key="repo" type="service_closure" id="App\Repository\ReviewRepository"/>
+        <argument key="security" type="service_closure" id="App\Service\SecurityService"/>
       </argument>
     </service>
     <service id=".service_locator.fQV0aqS" class="Symfony\Component\DependencyInjection\ServiceLocator">
@@ -4103,7 +4167,7 @@
         <argument key="security" type="service_closure" id="App\Service\SecurityService"/>
       </argument>
     </service>
-    <service id=".service_locator.bbI6Izk" class="Symfony\Component\DependencyInjection\ServiceLocator">
+    <service id=".service_locator.NBIGnlz" class="Symfony\Component\DependencyInjection\ServiceLocator">
       <tag name="container.service_locator"/>
       <argument type="collection">
         <argument key="kernel::registerContainerConfiguration" type="service_closure" id=".service_locator.zHyJIs5"/>
@@ -4122,6 +4186,9 @@
         <argument key="App\Controller\BookController::update" type="service_closure" id=".service_locator.52eyy9l"/>
         <argument key="App\Controller\BookController::delete" type="service_closure" id=".service_locator.VsetaNL"/>
         <argument key="App\Controller\DashboardController::overview" type="service_closure" id=".service_locator.E7ajBy2"/>
+        <argument key="App\Controller\FavoriteController::list" type="service_closure" id=".service_locator.AbYyszh"/>
+        <argument key="App\Controller\FavoriteController::add" type="service_closure" id=".service_locator.AbYyszh"/>
+        <argument key="App\Controller\FavoriteController::remove" type="service_closure" id=".service_locator.AbYyszh"/>
         <argument key="App\Controller\FineController::list" type="service_closure" id=".service_locator.AbYyszh"/>
         <argument key="App\Controller\FineController::pay" type="service_closure" id=".service_locator.AbYyszh"/>
         <argument key="App\Controller\LoanController::list" type="service_closure" id=".service_locator.AbYyszh"/>
@@ -4129,14 +4196,21 @@
         <argument key="App\Controller\LoanController::create" type="service_closure" id=".service_locator.4aTJiDL"/>
         <argument key="App\Controller\LoanController::listByUser" type="service_closure" id=".service_locator.AbYyszh"/>
         <argument key="App\Controller\LoanController::returnLoan" type="service_closure" id=".service_locator.4aTJiDL"/>
+        <argument key="App\Controller\LoanController::extend" type="service_closure" id=".service_locator.AbYyszh"/>
         <argument key="App\Controller\LoanController::delete" type="service_closure" id=".service_locator.4aTJiDL"/>
         <argument key="App\Controller\NotificationController::list" type="service_closure" id=".service_locator.S_C3Dzl"/>
         <argument key="App\Controller\NotificationController::triggerTest" type="service_closure" id=".service_locator.S_C3Dzl"/>
+        <argument key="App\Controller\OrderController::list" type="service_closure" id=".service_locator.AbYyszh"/>
+        <argument key="App\Controller\OrderController::create" type="service_closure" id=".service_locator.z8H8Dc3"/>
+        <argument key="App\Controller\OrderController::cancel" type="service_closure" id=".service_locator.z8H8Dc3"/>
         <argument key="App\Controller\ReportController::usage" type="service_closure" id=".service_locator.AbYyszh"/>
         <argument key="App\Controller\ReportController::export" type="service_closure" id=".service_locator.S_C3Dzl"/>
         <argument key="App\Controller\ReservationController::list" type="service_closure" id=".service_locator.AbYyszh"/>
         <argument key="App\Controller\ReservationController::create" type="service_closure" id=".service_locator.m1iKpUC"/>
         <argument key="App\Controller\ReservationController::cancel" type="service_closure" id=".service_locator.AbYyszh"/>
+        <argument key="App\Controller\ReviewController::list" type="service_closure" id=".service_locator.RGWMk6E"/>
+        <argument key="App\Controller\ReviewController::upsert" type="service_closure" id=".service_locator.RGWMk6E"/>
+        <argument key="App\Controller\ReviewController::delete" type="service_closure" id=".service_locator.RGWMk6E"/>
         <argument key="App\Controller\SettingsController::getSettings" type="service_closure" id=".service_locator.S_C3Dzl"/>
         <argument key="App\Controller\SettingsController::updateSettings" type="service_closure" id=".service_locator.S_C3Dzl"/>
         <argument key="App\Controller\UserController::list" type="service_closure" id=".service_locator._8VsPQl"/>
@@ -4158,6 +4232,9 @@
         <argument key="App\Controller\BookController:update" type="service_closure" id=".service_locator.52eyy9l"/>
         <argument key="App\Controller\BookController:delete" type="service_closure" id=".service_locator.VsetaNL"/>
         <argument key="App\Controller\DashboardController:overview" type="service_closure" id=".service_locator.E7ajBy2"/>
+        <argument key="App\Controller\FavoriteController:list" type="service_closure" id=".service_locator.AbYyszh"/>
+        <argument key="App\Controller\FavoriteController:add" type="service_closure" id=".service_locator.AbYyszh"/>
+        <argument key="App\Controller\FavoriteController:remove" type="service_closure" id=".service_locator.AbYyszh"/>
         <argument key="App\Controller\FineController:list" type="service_closure" id=".service_locator.AbYyszh"/>
         <argument key="App\Controller\FineController:pay" type="service_closure" id=".service_locator.AbYyszh"/>
         <argument key="App\Controller\LoanController:list" type="service_closure" id=".service_locator.AbYyszh"/>
@@ -4165,14 +4242,21 @@
         <argument key="App\Controller\LoanController:create" type="service_closure" id=".service_locator.4aTJiDL"/>
         <argument key="App\Controller\LoanController:listByUser" type="service_closure" id=".service_locator.AbYyszh"/>
         <argument key="App\Controller\LoanController:returnLoan" type="service_closure" id=".service_locator.4aTJiDL"/>
+        <argument key="App\Controller\LoanController:extend" type="service_closure" id=".service_locator.AbYyszh"/>
         <argument key="App\Controller\LoanController:delete" type="service_closure" id=".service_locator.4aTJiDL"/>
         <argument key="App\Controller\NotificationController:list" type="service_closure" id=".service_locator.S_C3Dzl"/>
         <argument key="App\Controller\NotificationController:triggerTest" type="service_closure" id=".service_locator.S_C3Dzl"/>
+        <argument key="App\Controller\OrderController:list" type="service_closure" id=".service_locator.AbYyszh"/>
+        <argument key="App\Controller\OrderController:create" type="service_closure" id=".service_locator.z8H8Dc3"/>
+        <argument key="App\Controller\OrderController:cancel" type="service_closure" id=".service_locator.z8H8Dc3"/>
         <argument key="App\Controller\ReportController:usage" type="service_closure" id=".service_locator.AbYyszh"/>
         <argument key="App\Controller\ReportController:export" type="service_closure" id=".service_locator.S_C3Dzl"/>
         <argument key="App\Controller\ReservationController:list" type="service_closure" id=".service_locator.AbYyszh"/>
         <argument key="App\Controller\ReservationController:create" type="service_closure" id=".service_locator.m1iKpUC"/>
         <argument key="App\Controller\ReservationController:cancel" type="service_closure" id=".service_locator.AbYyszh"/>
+        <argument key="App\Controller\ReviewController:list" type="service_closure" id=".service_locator.RGWMk6E"/>
+        <argument key="App\Controller\ReviewController:upsert" type="service_closure" id=".service_locator.RGWMk6E"/>
+        <argument key="App\Controller\ReviewController:delete" type="service_closure" id=".service_locator.RGWMk6E"/>
         <argument key="App\Controller\SettingsController:getSettings" type="service_closure" id=".service_locator.S_C3Dzl"/>
         <argument key="App\Controller\SettingsController:updateSettings" type="service_closure" id=".service_locator.S_C3Dzl"/>
         <argument key="App\Controller\UserController:list" type="service_closure" id=".service_locator._8VsPQl"/>
@@ -4310,15 +4394,18 @@
         <argument key="doctrine.orm.default_listeners.attach_entity_listeners" type="service_closure" id="doctrine.orm.default_listeners.attach_entity_listeners"/>
       </argument>
     </service>
-    <service id=".service_locator.OYsDYnj" class="Symfony\Component\DependencyInjection\ServiceLocator">
+    <service id=".service_locator.d9OcmmT" class="Symfony\Component\DependencyInjection\ServiceLocator">
       <tag name="container.service_locator"/>
       <argument type="collection">
         <argument key="App\Repository\AuthorRepository" type="service_closure" id="App\Repository\AuthorRepository"/>
         <argument key="App\Repository\BookCopyRepository" type="service_closure" id="App\Repository\BookCopyRepository"/>
         <argument key="App\Repository\BookRepository" type="service_closure" id="App\Repository\BookRepository"/>
         <argument key="App\Repository\CategoryRepository" type="service_closure" id="App\Repository\CategoryRepository"/>
+        <argument key="App\Repository\FavoriteRepository" type="service_closure" id="App\Repository\FavoriteRepository"/>
         <argument key="App\Repository\FineRepository" type="service_closure" id="App\Repository\FineRepository"/>
+        <argument key="App\Repository\OrderRequestRepository" type="service_closure" id="App\Repository\OrderRequestRepository"/>
         <argument key="App\Repository\ReservationRepository" type="service_closure" id="App\Repository\ReservationRepository"/>
+        <argument key="App\Repository\ReviewRepository" type="service_closure" id="App\Repository\ReviewRepository"/>
         <argument key="App\Repository\UserRepository" type="service_closure" id="App\Repository\UserRepository"/>
       </argument>
     </service>
@@ -4396,6 +4483,12 @@
       <argument type="service" id="service_container"/>
       <factory service=".service_locator.ZyP9f7K" method="withContext"/>
     </service>
+    <service id=".service_locator.ZyP9f7K.App\Controller\FavoriteController" class="Symfony\Component\DependencyInjection\ServiceLocator">
+      <tag name="container.service_locator_context" id="App\Controller\FavoriteController"/>
+      <argument>App\Controller\FavoriteController</argument>
+      <argument type="service" id="service_container"/>
+      <factory service=".service_locator.ZyP9f7K" method="withContext"/>
+    </service>
     <service id=".service_locator.ZyP9f7K.App\Controller\FineController" class="Symfony\Component\DependencyInjection\ServiceLocator">
       <tag name="container.service_locator_context" id="App\Controller\FineController"/>
       <argument>App\Controller\FineController</argument>
@@ -4420,6 +4513,12 @@
       <argument type="service" id="service_container"/>
       <factory service=".service_locator.ZyP9f7K" method="withContext"/>
     </service>
+    <service id=".service_locator.ZyP9f7K.App\Controller\OrderController" class="Symfony\Component\DependencyInjection\ServiceLocator">
+      <tag name="container.service_locator_context" id="App\Controller\OrderController"/>
+      <argument>App\Controller\OrderController</argument>
+      <argument type="service" id="service_container"/>
+      <factory service=".service_locator.ZyP9f7K" method="withContext"/>
+    </service>
     <service id=".service_locator.ZyP9f7K.App\Controller\ProductController" class="Symfony\Component\DependencyInjection\ServiceLocator">
       <tag name="container.service_locator_context" id="App\Controller\ProductController"/>
       <argument>App\Controller\ProductController</argument>
@@ -4435,6 +4534,12 @@
     <service id=".service_locator.ZyP9f7K.App\Controller\ReservationController" class="Symfony\Component\DependencyInjection\ServiceLocator">
       <tag name="container.service_locator_context" id="App\Controller\ReservationController"/>
       <argument>App\Controller\ReservationController</argument>
+      <argument type="service" id="service_container"/>
+      <factory service=".service_locator.ZyP9f7K" method="withContext"/>
+    </service>
+    <service id=".service_locator.ZyP9f7K.App\Controller\ReviewController" class="Symfony\Component\DependencyInjection\ServiceLocator">
+      <tag name="container.service_locator_context" id="App\Controller\ReviewController"/>
+      <argument>App\Controller\ReviewController</argument>
       <argument type="service" id="service_container"/>
       <factory service=".service_locator.ZyP9f7K" method="withContext"/>
     </service>
@@ -4546,13 +4651,16 @@
           <argument>App\Controller\AuthController</argument>
           <argument>App\Controller\BookController</argument>
           <argument>App\Controller\DashboardController</argument>
+          <argument>App\Controller\FavoriteController</argument>
           <argument>App\Controller\FineController</argument>
           <argument>App\Controller\HealthController</argument>
           <argument>App\Controller\LoanController</argument>
           <argument>App\Controller\NotificationController</argument>
+          <argument>App\Controller\OrderController</argument>
           <argument>App\Controller\ProductController</argument>
           <argument>App\Controller\ReportController</argument>
           <argument>App\Controller\ReservationController</argument>
+          <argument>App\Controller\ReviewController</argument>
           <argument>App\Controller\SettingsController</argument>
           <argument>App\Controller\UserController</argument>
           <argument>App\Controller\UserManagementController</argument>
@@ -5376,7 +5484,7 @@
     <service id="nelmio_api_doc.controller.swagger" alias="nelmio_api_doc.controller.swagger_json" public="true"/>
     <service id="nelmio_api_doc.generator" alias="nelmio_api_doc.generator.default" public="true"/>
     <service id="container.env_var_processors_locator" alias=".service_locator.pRu6x_4" public="true"/>
-    <service id="argument_resolver.controller_locator" alias=".service_locator.bbI6Izk"/>
+    <service id="argument_resolver.controller_locator" alias=".service_locator.NBIGnlz"/>
     <service id="doctrine.id_generator_locator" alias=".service_locator.BxSdgVt"/>
     <service id="Psr\Log\LoggerInterface" alias="logger"/>
     <service id=".service_locator.oiB6xeU" alias="messenger.receiver_locator"/>
@@ -5399,7 +5507,9 @@
     <service id=".service_locator.Gu3qpkt" alias=".service_locator.AbYyszh"/>
     <service id=".service_locator.QLxwK0X" alias=".service_locator.4aTJiDL"/>
     <service id=".service_locator.YSjCaiw" alias=".service_locator.S_C3Dzl"/>
+    <service id=".service_locator.v2tBNUy" alias=".service_locator.z8H8Dc3"/>
     <service id=".service_locator.VuSo.jK" alias=".service_locator.m1iKpUC"/>
+    <service id=".service_locator.OcHHXfg" alias=".service_locator.RGWMk6E"/>
     <service id=".service_locator.TuBt.Pv" alias=".service_locator.fQV0aqS"/>
     <service id=".service_locator.i9yrr1E" alias=".service_locator.ZyP9f7K"/>
   </services>

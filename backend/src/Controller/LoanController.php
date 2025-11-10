@@ -12,6 +12,7 @@ use App\Entity\Book;
 use App\Entity\User;
 use App\Entity\Reservation;
 use App\Entity\BookCopy;
+use App\Entity\OrderRequest;
 
 class LoanController extends AbstractController
 {
@@ -75,8 +76,10 @@ class LoanController extends AbstractController
 
         $userRepo = $doctrine->getRepository(User::class);
         $bookRepo = $doctrine->getRepository(Book::class);
-        /** @var \App\Repository\ReservationRepository $reservationRepo */
-        $reservationRepo = $doctrine->getRepository(Reservation::class);
+    /** @var \App\Repository\ReservationRepository $reservationRepo */
+    $reservationRepo = $doctrine->getRepository(Reservation::class);
+    /** @var \App\Repository\OrderRequestRepository $orderRepo */
+    $orderRepo = $doctrine->getRepository(OrderRequest::class);
         $user = $userRepo->find((int)$userId);
         $book = $bookRepo->find((int)$bookId);
         if (!$user) return $this->json(['error' => 'User not found'], 404);
@@ -92,13 +95,20 @@ class LoanController extends AbstractController
         }
 
         $reservation = $reservationRepo->findFirstActiveForUserAndBook($user, $book);
+        $order = $orderRepo->findReadyForUserAndBook($user, $book);
+        $preferredCopy = $order ? $order->getBookCopy() : null;
 
         // attempt borrow
-        $copy = $bookService->borrow($book, $reservation);
+        $copy = $bookService->borrow($book, $reservation, $preferredCopy);
         if (!$copy) {
             $queue = $reservationRepo->findActiveByBook($book);
             if (!empty($queue) && (!$isLibrarian || $queue[0]->getUser()->getId() !== $user->getId())) {
                 return $this->json(['error' => 'Book reserved by another reader'], 409);
+            }
+
+            $ordersQueue = $orderRepo->findActiveByBook($book);
+            if (!empty($ordersQueue) && (!$isLibrarian || $ordersQueue[0]->getUser()->getId() !== $user->getId())) {
+                return $this->json(['error' => 'Book ordered by another reader'], 409);
             }
 
             return $this->json(['error' => 'No copies available'], 409);
@@ -113,6 +123,10 @@ class LoanController extends AbstractController
         $em->persist($loan);
         if ($reservation) {
             $em->persist($reservation);
+        }
+        if ($order) {
+            $order->markCollected()->setBookCopy($copy);
+            $em->persist($order);
         }
         $em->flush();
 
@@ -182,6 +196,66 @@ class LoanController extends AbstractController
             $em->persist($loan);
             $em->flush();
         }
+
+        return $this->json($loan, 200, [], ['groups' => ['loan:read']]);
+    }
+
+    public function extend(string $id, Request $request, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
+    {
+        if (!ctype_digit($id) || (int)$id <= 0) {
+            return $this->json(['error' => 'Invalid id parameter'], 400);
+        }
+
+        $loan = $doctrine->getRepository(Loan::class)->find((int)$id);
+        if (!$loan) {
+            return $this->json(['error' => 'Loan not found'], 404);
+        }
+
+        $payload = $security->getJwtPayload($request);
+        $isLibrarian = $security->hasRole($request, 'ROLE_LIBRARIAN');
+        $isOwner = $payload && isset($payload['sub']) && (int)$payload['sub'] === $loan->getUser()->getId();
+
+        if (!($isLibrarian || $isOwner)) {
+            return $this->json(['error' => 'Forbidden'], 403);
+        }
+
+        if ($loan->getReturnedAt() !== null) {
+            return $this->json(['error' => 'Nie można przedłużyć zwróconego wypożyczenia'], 400);
+        }
+
+        if (!$isLibrarian && $loan->getExtensionsCount() >= 1) {
+            return $this->json(['error' => 'Limit przedłużeń został wykorzystany'], 400);
+        }
+
+        $data = json_decode($request->getContent(), true) ?: [];
+        $days = isset($data['days']) ? (int)$data['days'] : 14;
+        $days = max(1, min(30, $days));
+
+        /** @var \App\Repository\ReservationRepository $reservationRepo */
+        $reservationRepo = $doctrine->getRepository(Reservation::class);
+        $queue = $reservationRepo->findActiveByBook($loan->getBook());
+        foreach ($queue as $reservation) {
+            if ($reservation->getUser()->getId() !== $loan->getUser()->getId()) {
+                return $this->json(['error' => 'Nie można przedłużyć: inny czytelnik oczekuje w kolejce'], 409);
+            }
+        }
+
+        /** @var \App\Repository\OrderRequestRepository $orderRepo */
+        $orderRepo = $doctrine->getRepository(OrderRequest::class);
+        $ordersQueue = $orderRepo->findActiveByBook($loan->getBook());
+        foreach ($ordersQueue as $order) {
+            if ($order->getUser()->getId() !== $loan->getUser()->getId()) {
+                return $this->json(['error' => 'Nie można przedłużyć: egzemplarz został zamówiony do odbioru'], 409);
+            }
+        }
+
+        $dueAt = \DateTimeImmutable::createFromInterface($loan->getDueAt());
+        $loan->setDueAt($dueAt->modify('+' . $days . ' days'));
+        $loan->incrementExtensions()->setLastExtendedAt(new \DateTimeImmutable());
+
+        $em = $doctrine->getManager();
+        $em->persist($loan);
+        $em->flush();
 
         return $this->json($loan, 200, [], ['groups' => ['loan:read']]);
     }

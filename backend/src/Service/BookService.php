@@ -16,16 +16,29 @@ class BookService
         $this->doctrine = $doctrine;
     }
 
-    public function borrow(Book $book, ?Reservation $reservation = null): ?BookCopy
+    public function borrow(Book $book, ?Reservation $reservation = null, ?BookCopy $preferredCopy = null): ?BookCopy
     {
         /** @var BookCopyRepository $repo */
         $repo = $this->doctrine->getRepository(BookCopy::class);
-        $available = $repo->findAvailableCopies($book, 1);
-        if (empty($available)) {
-            return null;
-        }
 
-        $copy = $available[0];
+        if ($preferredCopy !== null) {
+            if ($preferredCopy->getBook()->getId() !== $book->getId()) {
+                return null;
+            }
+
+            $status = $preferredCopy->getStatus();
+            if (!in_array($status, [BookCopy::STATUS_AVAILABLE, BookCopy::STATUS_RESERVED], true)) {
+                return null;
+            }
+
+            $copy = $preferredCopy;
+        } else {
+            $available = $repo->findAvailableCopies($book, 1);
+            if (empty($available)) {
+                return null;
+            }
+            $copy = $available[0];
+        }
         $copy->setStatus(BookCopy::STATUS_BORROWED);
         if ($reservation) {
             $reservation->assignBookCopy($copy)->markFulfilled();
@@ -42,6 +55,38 @@ class BookService
         $em->flush();
 
         return $copy;
+    }
+
+    public function reserveCopy(Book $book): ?BookCopy
+    {
+        /** @var BookCopyRepository $repo */
+        $repo = $this->doctrine->getRepository(BookCopy::class);
+        $available = $repo->findAvailableCopies($book, 1);
+        if (empty($available)) {
+            return null;
+        }
+
+        $copy = $available[0];
+        $copy->setStatus(BookCopy::STATUS_RESERVED);
+        $book->recalculateInventoryCounters();
+
+        $em = $this->doctrine->getManager();
+        $em->persist($copy);
+        $em->persist($book);
+        $em->flush();
+
+        return $copy;
+    }
+
+    public function releaseReservedCopy(Book $book, BookCopy $copy): void
+    {
+        $copy->setStatus(BookCopy::STATUS_AVAILABLE);
+        $book->recalculateInventoryCounters();
+
+        $em = $this->doctrine->getManager();
+        $em->persist($copy);
+        $em->persist($book);
+        $em->flush();
     }
 
     public function restore(Book $book, ?BookCopy $copy = null, bool $recalculate = true): void

@@ -16,7 +16,7 @@ class BookCopy
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
-    #[Groups(['inventory:read', 'loan:read', 'reservation:read'])]
+    #[Groups(['inventory:read', 'loan:read', 'reservation:read', 'order:read'])]
     private ?int $id = null;
 
     #[ORM\ManyToOne(targetEntity: Book::class, inversedBy: 'inventory')]
@@ -24,19 +24,19 @@ class BookCopy
     private Book $book;
 
     #[ORM\Column(type: 'string', length: 60, unique: true)]
-    #[Groups(['inventory:read', 'loan:read', 'reservation:read'])]
+    #[Groups(['inventory:read', 'loan:read', 'reservation:read', 'order:read'])]
     private string $inventoryCode;
 
     #[ORM\Column(type: 'string', length: 20)]
-    #[Groups(['inventory:read', 'reservation:read'])]
+    #[Groups(['inventory:read', 'reservation:read', 'order:read'])]
     private string $status = self::STATUS_AVAILABLE;
 
     #[ORM\Column(type: 'string', length: 120, nullable: true)]
-    #[Groups(['inventory:read', 'reservation:read'])]
+    #[Groups(['inventory:read', 'reservation:read', 'order:read'])]
     private ?string $location = null;
 
     #[ORM\Column(type: 'string', length: 120, nullable: true)]
-    #[Groups(['inventory:read', 'reservation:read'])]
+    #[Groups(['inventory:read', 'reservation:read', 'order:read'])]
     #[SerializedName('condition')]
     private ?string $conditionState = null;
 

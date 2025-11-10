@@ -5,7 +5,10 @@ import { useAuth } from '../context/AuthContext'
 
 export default function BookItem({ book, onBorrowed }) {
   const [loading, setLoading] = useState(false)
+  const [reserveLoading, setReserveLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [success, setSuccess] = useState(null)
+  const [reserved, setReserved] = useState(false)
   const { user } = useAuth()
   const isLoggedIn = Boolean(user?.id)
 
@@ -22,6 +25,7 @@ export default function BookItem({ book, onBorrowed }) {
       setError('Musisz być zalogowany, aby wypożyczyć książkę.')
       return
     }
+    setSuccess(null)
     setLoading(true)
     setError(null)
     try {
@@ -35,6 +39,29 @@ export default function BookItem({ book, onBorrowed }) {
       setError(err.message || 'Nie udało się zarejestrować wypożyczenia.')
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function reserve() {
+    if (!user?.id) {
+      setError('Musisz być zalogowany, aby zarezerwować książkę.')
+      return
+    }
+    setError(null)
+    setSuccess(null)
+    setReserveLoading(true)
+    try {
+      await apiFetch('/api/reservations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bookId: book.id })
+      })
+      setSuccess('Dodano do kolejki rezerwacji. Powiadomimy Cię, gdy egzemplarz będzie dostępny.')
+      setReserved(true)
+    } catch (err) {
+      setError(err.message || 'Nie udało się dodać rezerwacji.')
+    } finally {
+      setReserveLoading(false)
     }
   }
 
@@ -75,6 +102,15 @@ export default function BookItem({ book, onBorrowed }) {
             >
               {loading ? 'Wysyłanie...' : 'Wypożycz egzemplarz'}
             </button>
+            {!isAvailable && (
+              <button
+                className="btn btn-outline"
+                disabled={reserveLoading || reserved}
+                onClick={reserve}
+              >
+                {reserveLoading ? 'Przetwarzanie...' : reserved ? 'Zarezerwowano' : 'Dołącz do kolejki'}
+              </button>
+            )}
             <Link to={`/books/${book.id}`} className="btn btn-outline">Szczegóły</Link>
           </>
         ) : (
@@ -86,6 +122,7 @@ export default function BookItem({ book, onBorrowed }) {
       </div>
 
       {error && <div className="error">{error}</div>}
+      {success && <div className="success">{success}</div>}
     </article>
   )
 }

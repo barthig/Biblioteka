@@ -155,6 +155,13 @@ api_loans_return:
   requirements:
     id: '\\d+'
 
+api_loans_extend:
+  path: /api/loans/{id}/extend
+  controller: App\Controller\LoanController::extend
+  methods: [PUT]
+  requirements:
+    id: '\\d+'
+
 api_loans_delete:
   path: /api/loans/{id}
   controller: App\Controller\LoanController::delete
@@ -180,11 +187,69 @@ api_reservations_cancel:
   requirements:
     id: '\\d+'
 
+# Orders
+api_orders_list:
+  path: /api/orders
+  controller: App\Controller\OrderController::list
+  methods: [GET]
+
+api_orders_create:
+  path: /api/orders
+  controller: App\Controller\OrderController::create
+  methods: [POST]
+
+api_orders_cancel:
+  path: /api/orders/{id}
+  controller: App\Controller\OrderController::cancel
+  methods: [DELETE]
+  requirements:
+    id: '\\d+'
+
 # Fines
 api_fines_list:
   path: /api/fines
   controller: App\Controller\FineController::list
   methods: [GET]
+
+# Favorites
+api_favorites_list:
+  path: /api/favorites
+  controller: App\Controller\FavoriteController::list
+  methods: [GET]
+
+api_favorites_add:
+  path: /api/favorites
+  controller: App\Controller\FavoriteController::add
+  methods: [POST]
+
+api_favorites_remove:
+  path: /api/favorites/{bookId}
+  controller: App\Controller\FavoriteController::remove
+  methods: [DELETE]
+  requirements:
+    bookId: '\\d+'
+
+# Reviews
+api_reviews_list:
+  path: /api/books/{id}/reviews
+  controller: App\Controller\ReviewController::list
+  methods: [GET]
+  requirements:
+    id: '\\d+'
+
+api_reviews_upsert:
+  path: /api/books/{id}/reviews
+  controller: App\Controller\ReviewController::upsert
+  methods: [POST]
+  requirements:
+    id: '\\d+'
+
+api_reviews_delete:
+  path: /api/books/{id}/reviews
+  controller: App\Controller\ReviewController::delete
+  methods: [DELETE]
+  requirements:
+    id: '\\d+'
 
 api_fines_pay:
   path: /api/fines/{id}/pay

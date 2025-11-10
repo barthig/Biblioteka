@@ -12,15 +12,15 @@ class User
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
-    #[Groups(['loan:read', 'reservation:read'])]
+    #[Groups(['loan:read', 'reservation:read', 'order:read', 'review:read', 'favorite:read'])]
     private ?int $id = null;
 
     #[ORM\Column(type: 'string', length: 180, unique: true)]
-    #[Groups(['loan:read', 'reservation:read'])]
+    #[Groups(['loan:read', 'reservation:read', 'order:read', 'review:read', 'favorite:read'])]
     private string $email;
 
     #[ORM\Column(type: 'string', length: 255)]
-    #[Groups(['loan:read', 'reservation:read'])]
+    #[Groups(['loan:read', 'reservation:read', 'order:read', 'review:read', 'favorite:read'])]
     private string $name;
 
     #[ORM\Column(type: 'json')]

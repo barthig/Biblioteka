@@ -40,6 +40,14 @@ class Loan
     #[Groups(['loan:read'])]
     private ?\DateTimeInterface $returnedAt = null;
 
+    #[ORM\Column(type: 'integer')]
+    #[Groups(['loan:read'])]
+    private int $extensionsCount = 0;
+
+    #[ORM\Column(type: 'datetime', nullable: true)]
+    #[Groups(['loan:read'])]
+    private ?\DateTimeInterface $lastExtendedAt = null;
+
     public function __construct()
     {
         $this->borrowedAt = new \DateTimeImmutable();
@@ -57,4 +65,10 @@ class Loan
     public function setDueAt(\DateTimeInterface $d): self { $this->dueAt = $d; return $this; }
     public function getReturnedAt(): ?\DateTimeInterface { return $this->returnedAt; }
     public function setReturnedAt(?\DateTimeInterface $r): self { $this->returnedAt = $r; return $this; }
+
+    public function getExtensionsCount(): int { return $this->extensionsCount; }
+    public function setExtensionsCount(int $count): self { $this->extensionsCount = max(0, $count); return $this; }
+    public function incrementExtensions(): self { $this->extensionsCount = max(0, $this->extensionsCount) + 1; return $this; }
+    public function getLastExtendedAt(): ?\DateTimeInterface { return $this->lastExtendedAt; }
+    public function setLastExtendedAt(?\DateTimeInterface $moment): self { $this->lastExtendedAt = $moment; return $this; }
 }

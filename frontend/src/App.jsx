@@ -10,6 +10,8 @@ import MyLoans from './pages/MyLoans'
 import Register from './pages/Register'
 import Profile from './pages/Profile'
 import Reservations from './pages/Reservations'
+import Orders from './pages/Orders'
+import Favorites from './pages/Favorites'
 
 export default function App() {
   return (
@@ -23,6 +25,8 @@ export default function App() {
             <Route path="/books/:id" element={<BookDetails />} />
             <Route path="/my-loans" element={<MyLoans />} />
             <Route path="/reservations" element={<Reservations />} />
+            <Route path="/orders" element={<Orders />} />
+            <Route path="/favorites" element={<Favorites />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/profile" element={<Profile />} />

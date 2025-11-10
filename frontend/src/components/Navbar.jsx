@@ -16,7 +16,9 @@ export default function Navbar() {
         <NavLink to="/my-loans" className={navClass}>Wypożyczenia</NavLink>
         {token && (
           <>
+            <NavLink to="/orders" className={navClass}>Zamówienia</NavLink>
             <NavLink to="/reservations" className={navClass}>Rezerwacje</NavLink>
+            <NavLink to="/favorites" className={navClass}>Ulubione</NavLink>
             <NavLink to="/profile" className={navClass}>Profil</NavLink>
           </>
         )}
