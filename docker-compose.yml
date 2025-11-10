@@ -35,5 +35,21 @@ services:
     env_file:
       - ./backend/.env.worker
 
+  backend:
+    build:
+      context: .
+      dockerfile: docker/php-worker/Dockerfile
+    depends_on:
+      - db
+      - rabbitmq
+    volumes:
+      - ./backend:/app
+    working_dir: /app
+    env_file:
+      - ./backend/.env.worker
+    ports:
+      - "8000:8000"
+    command: php -S 0.0.0.0:8000 -t public
+
 volumes:
   db_data:

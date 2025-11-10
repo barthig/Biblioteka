@@ -22,6 +22,7 @@ class BookCopy extends \App\Entity\BookCopy implements \Doctrine\ORM\Proxy\Inter
     
 
     private const LAZY_OBJECT_PROPERTY_SCOPES = [
+        "\0".parent::class."\0".'accessType' => [parent::class, 'accessType', null, 16],
         "\0".parent::class."\0".'book' => [parent::class, 'book', null, 16],
         "\0".parent::class."\0".'conditionState' => [parent::class, 'conditionState', null, 16],
         "\0".parent::class."\0".'createdAt' => [parent::class, 'createdAt', null, 16],
@@ -30,6 +31,7 @@ class BookCopy extends \App\Entity\BookCopy implements \Doctrine\ORM\Proxy\Inter
         "\0".parent::class."\0".'location' => [parent::class, 'location', null, 16],
         "\0".parent::class."\0".'status' => [parent::class, 'status', null, 16],
         "\0".parent::class."\0".'updatedAt' => [parent::class, 'updatedAt', null, 16],
+        'accessType' => [parent::class, 'accessType', null, 16],
         'book' => [parent::class, 'book', null, 16],
         'conditionState' => [parent::class, 'conditionState', null, 16],
         'createdAt' => [parent::class, 'createdAt', null, 16],

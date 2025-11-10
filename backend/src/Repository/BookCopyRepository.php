@@ -13,6 +13,16 @@ class BookCopyRepository extends ServiceEntityRepository
         parent::__construct($registry, BookCopy::class);
     }
 
+    public function findOneByInventoryCode(string $inventoryCode): ?BookCopy
+    {
+        return $this->createQueryBuilder('c')
+            ->andWhere('UPPER(c.inventoryCode) = :code')
+            ->setParameter('code', strtoupper($inventoryCode))
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
     /**
      * @return BookCopy[]
      */

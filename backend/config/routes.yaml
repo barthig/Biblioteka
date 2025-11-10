@@ -64,6 +64,27 @@ api_users_delete:
   requirements:
     id: '[0-9]+'
 
+api_users_block:
+  path: /api/users/{id}/block
+  controller: App\Controller\UserManagementController::block
+  methods: [POST]
+  requirements:
+    id: '[0-9]+'
+
+api_users_unblock:
+  path: /api/users/{id}/block
+  controller: App\Controller\UserManagementController::unblock
+  methods: [DELETE]
+  requirements:
+    id: '[0-9]+'
+
+api_users_permissions_update:
+  path: /api/users/{id}/permissions
+  controller: App\Controller\UserManagementController::updatePermissions
+  methods: [PUT]
+  requirements:
+    id: '[0-9]+'
+
 # Authentication
 api_auth_register:
   path: /api/auth/register
@@ -106,6 +127,179 @@ api_books_delete:
   methods: [DELETE]
   requirements:
     id: '[0-9]+'
+
+# Book inventory management (staff)
+api_admin_book_copies_list:
+  path: /api/admin/books/{id}/copies
+  controller: App\Controller\BookInventoryController::list
+  methods: [GET]
+  requirements:
+    id: '[0-9]+'
+
+api_admin_book_copies_create:
+  path: /api/admin/books/{id}/copies
+  controller: App\Controller\BookInventoryController::create
+  methods: [POST]
+  requirements:
+    id: '[0-9]+'
+
+api_admin_book_copy_update:
+  path: /api/admin/books/{id}/copies/{copyId}
+  controller: App\Controller\BookInventoryController::update
+  methods: [PUT]
+  requirements:
+    id: '[0-9]+'
+    copyId: '[0-9]+'
+
+api_admin_book_copy_delete:
+  path: /api/admin/books/{id}/copies/{copyId}
+  controller: App\Controller\BookInventoryController::delete
+  methods: [DELETE]
+  requirements:
+    id: '[0-9]+'
+    copyId: '[0-9]+'
+
+# Digital asset management
+api_admin_book_assets_list:
+  path: /api/admin/books/{id}/assets
+  controller: App\Controller\BookAssetController::list
+  methods: [GET]
+  requirements:
+    id: '[0-9]+'
+
+api_admin_book_assets_upload:
+  path: /api/admin/books/{id}/assets
+  controller: App\Controller\BookAssetController::upload
+  methods: [POST]
+  requirements:
+    id: '[0-9]+'
+
+api_admin_book_assets_download:
+  path: /api/admin/books/{id}/assets/{assetId}
+  controller: App\Controller\BookAssetController::download
+  methods: [GET]
+  requirements:
+    id: '[0-9]+'
+    assetId: '[0-9]+'
+
+api_admin_book_assets_delete:
+  path: /api/admin/books/{id}/assets/{assetId}
+  controller: App\Controller\BookAssetController::delete
+  methods: [DELETE]
+  requirements:
+    id: '[0-9]+'
+    assetId: '[0-9]+'
+
+# Catalog import/export
+api_admin_catalog_export:
+  path: /api/admin/catalog/export
+  controller: App\Controller\CatalogAdminController::export
+  methods: [GET]
+
+api_admin_catalog_import:
+  path: /api/admin/catalog/import
+  controller: App\Controller\CatalogAdminController::import
+  methods: [POST]
+
+# Acquisitions - suppliers
+api_acquisitions_suppliers_list:
+  path: /api/admin/acquisitions/suppliers
+  controller: App\Controller\AcquisitionSupplierController::list
+  methods: [GET]
+
+api_acquisitions_suppliers_create:
+  path: /api/admin/acquisitions/suppliers
+  controller: App\Controller\AcquisitionSupplierController::create
+  methods: [POST]
+
+api_acquisitions_suppliers_update:
+  path: /api/admin/acquisitions/suppliers/{id}
+  controller: App\Controller\AcquisitionSupplierController::update
+  methods: [PUT]
+  requirements:
+    id: '[0-9]+'
+
+api_acquisitions_suppliers_deactivate:
+  path: /api/admin/acquisitions/suppliers/{id}
+  controller: App\Controller\AcquisitionSupplierController::deactivate
+  methods: [DELETE]
+  requirements:
+    id: '[0-9]+'
+
+# Acquisitions - orders
+api_acquisitions_orders_list:
+  path: /api/admin/acquisitions/orders
+  controller: App\Controller\AcquisitionOrderController::list
+  methods: [GET]
+
+api_acquisitions_orders_create:
+  path: /api/admin/acquisitions/orders
+  controller: App\Controller\AcquisitionOrderController::create
+  methods: [POST]
+
+api_acquisitions_orders_status:
+  path: /api/admin/acquisitions/orders/{id}/status
+  controller: App\Controller\AcquisitionOrderController::updateStatus
+  methods: [PUT]
+  requirements:
+    id: '[0-9]+'
+
+api_acquisitions_orders_receive:
+  path: /api/admin/acquisitions/orders/{id}/receive
+  controller: App\Controller\AcquisitionOrderController::receive
+  methods: [POST]
+  requirements:
+    id: '[0-9]+'
+
+api_acquisitions_orders_cancel:
+  path: /api/admin/acquisitions/orders/{id}/cancel
+  controller: App\Controller\AcquisitionOrderController::cancel
+  methods: [POST]
+  requirements:
+    id: '[0-9]+'
+
+# Acquisitions - budgets
+api_acquisitions_budgets_list:
+  path: /api/admin/acquisitions/budgets
+  controller: App\Controller\AcquisitionBudgetController::list
+  methods: [GET]
+
+api_acquisitions_budgets_create:
+  path: /api/admin/acquisitions/budgets
+  controller: App\Controller\AcquisitionBudgetController::create
+  methods: [POST]
+
+api_acquisitions_budgets_update:
+  path: /api/admin/acquisitions/budgets/{id}
+  controller: App\Controller\AcquisitionBudgetController::update
+  methods: [PUT]
+  requirements:
+    id: '[0-9]+'
+
+api_acquisitions_budgets_expense:
+  path: /api/admin/acquisitions/budgets/{id}/expenses
+  controller: App\Controller\AcquisitionBudgetController::addExpense
+  methods: [POST]
+  requirements:
+    id: '[0-9]+'
+
+api_acquisitions_budgets_summary:
+  path: /api/admin/acquisitions/budgets/{id}/summary
+  controller: App\Controller\AcquisitionBudgetController::summary
+  methods: [GET]
+  requirements:
+    id: '[0-9]+'
+
+# Acquisitions - weeding
+api_acquisitions_weeding_list:
+  path: /api/admin/acquisitions/weeding
+  controller: App\Controller\WeedingController::list
+  methods: [GET]
+
+api_acquisitions_weeding_create:
+  path: /api/admin/acquisitions/weeding
+  controller: App\Controller\WeedingController::create
+  methods: [POST]
 
 # Account management
 api_account_me:
@@ -211,6 +405,18 @@ api_fines_list:
   controller: App\Controller\FineController::list
   methods: [GET]
 
+api_fines_create:
+  path: /api/fines
+  controller: App\Controller\FineController::create
+  methods: [POST]
+
+api_fines_cancel:
+  path: /api/fines/{id}
+  controller: App\Controller\FineController::cancel
+  methods: [DELETE]
+  requirements:
+    id: '[0-9]+'
+
 # Favorites
 api_favorites_list:
   path: /api/favorites
@@ -278,6 +484,26 @@ api_reports_usage:
 api_reports_export:
   path: /api/reports/export
   controller: App\Controller\ReportController::export
+  methods: [GET]
+
+api_reports_popular_titles:
+  path: /api/reports/circulation/popular
+  controller: App\Controller\ReportController::popularTitles
+  methods: [GET]
+
+api_reports_patron_segments:
+  path: /api/reports/patrons/segments
+  controller: App\Controller\ReportController::patronSegments
+  methods: [GET]
+
+api_reports_financial:
+  path: /api/reports/financial
+  controller: App\Controller\ReportController::financialSummary
+  methods: [GET]
+
+api_reports_inventory:
+  path: /api/reports/inventory
+  controller: App\Controller\ReportController::inventoryOverview
   methods: [GET]
 
 # Settings

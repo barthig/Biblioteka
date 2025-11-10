@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { apiFetch } from '../api'
 import BookItem from '../components/BookItem'
+import { useResourceCache } from '../context/ResourceCacheContext'
 
 const initialFilters = {
   authorId: '',
@@ -30,12 +31,16 @@ export default function Books() {
   })
   const [showAdvanced, setShowAdvanced] = useState(false)
   const filtersRef = useRef(filters)
+  const lastCacheKeyRef = useRef(null)
+  const { getCachedResource, setCachedResource, invalidateResource } = useResourceCache()
+  const LIST_CACHE_TTL = 60000
+  const FACETS_CACHE_TTL = 300000
 
   useEffect(() => {
     filtersRef.current = filters
   }, [filters])
 
-  async function load(searchTerm, providedFilters = filtersRef.current) {
+  async function load(searchTerm, providedFilters = filtersRef.current, options = {}) {
     const rawTerm = typeof searchTerm === 'string' ? searchTerm : query
     const finalTerm = rawTerm.trim()
     const activeFilters = providedFilters ?? filters
@@ -78,9 +83,9 @@ export default function Books() {
     }
 
     const endpoint = params.toString() ? `/api/books?${params.toString()}` : '/api/books'
-    setLoading(true)
-    setError(null)
-    setHadNonQueryFilters(Boolean(
+    const cacheKey = `books:${endpoint}`
+    lastCacheKeyRef.current = cacheKey
+    const hasNonQueryFilters = Boolean(
       (activeFilters.authorId && activeFilters.authorId !== '') ||
       (activeFilters.categoryId && activeFilters.categoryId !== '') ||
       (activeFilters.publisher && activeFilters.publisher.trim() !== '') ||
@@ -89,11 +94,30 @@ export default function Books() {
       (activeFilters.yearFrom && activeFilters.yearFrom !== '') ||
       (activeFilters.yearTo && activeFilters.yearTo !== '') ||
       activeFilters.availableOnly
-    ))
+    )
+    const forceReload = Boolean(options.force)
+
+    if (!forceReload) {
+      const cached = getCachedResource(cacheKey, LIST_CACHE_TTL)
+      if (cached) {
+        setBooks(cached)
+        setLoading(false)
+        setError(null)
+        setLastQuery(finalTerm)
+        setHadNonQueryFilters(hasNonQueryFilters)
+        return
+      }
+    }
+
+    setLoading(true)
+    setError(null)
+    setHadNonQueryFilters(hasNonQueryFilters)
     setLastQuery(finalTerm)
     try {
       const data = await apiFetch(endpoint)
-      setBooks(data || [])
+      const list = data || []
+      setBooks(list)
+      setCachedResource(cacheKey, list)
     } catch (err) {
       setError(err.message || 'Nie udało się pobrać listy książek.')
     } finally {
@@ -102,15 +126,24 @@ export default function Books() {
   }
 
   async function loadFacets() {
+    const cacheKey = 'books:filters'
+    const cached = getCachedResource(cacheKey, FACETS_CACHE_TTL)
+    if (cached) {
+      setFacets(cached)
+      return
+    }
+
     try {
       const data = await apiFetch('/api/books/filters')
-      setFacets({
+      const normalized = {
         authors: Array.isArray(data?.authors) ? data.authors : [],
         categories: Array.isArray(data?.categories) ? data.categories : [],
         publishers: Array.isArray(data?.publishers) ? data.publishers : [],
         resourceTypes: Array.isArray(data?.resourceTypes) ? data.resourceTypes : [],
         years: data?.years ?? { min: null, max: null }
-      })
+      }
+      setFacets(normalized)
+      setCachedResource(cacheKey, normalized)
     } catch (err) {
       console.warn('Nie udało się pobrać metadanych filtrów książek:', err)
     }
@@ -123,7 +156,13 @@ export default function Books() {
   }, [])
 
   function onBorrowed(borrowedBook) {
-    setBooks(prev => prev.filter(b => b.id !== borrowedBook.id))
+    setBooks(prev => {
+      const next = prev.filter(b => b.id !== borrowedBook.id)
+      if (lastCacheKeyRef.current) {
+        setCachedResource(lastCacheKeyRef.current, next)
+      }
+      return next
+    })
   }
 
   function handleSearch(event) {
@@ -136,7 +175,8 @@ export default function Books() {
     const resetFilters = { ...initialFilters }
     setFilters(resetFilters)
     filtersRef.current = resetFilters
-    load('', resetFilters)
+    invalidateResource('books:/api/books*')
+    load('', resetFilters, { force: true })
   }
 
   function handleFilterChange(event) {
@@ -169,7 +209,7 @@ export default function Books() {
           <h1>Książki</h1>
           <p className="support-copy">Przeglądaj katalog i błyskawicznie wypożycz dostępne egzemplarze.</p>
         </div>
-        <button className="btn btn-outline" onClick={() => load()} disabled={loading}>
+        <button className="btn btn-outline" onClick={() => load(undefined, undefined, { force: true })} disabled={loading}>
           {loading ? 'Odświeżanie...' : 'Odśwież listę'}
         </button>
       </header>

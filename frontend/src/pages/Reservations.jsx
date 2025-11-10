@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { apiFetch } from '../api'
 import { useAuth } from '../context/AuthContext'
+import { useResourceCache } from '../context/ResourceCacheContext'
 
 function formatDate(value) {
   return value ? new Date(value).toLocaleString() : '—'
@@ -13,17 +14,30 @@ export default function Reservations() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [actionError, setActionError] = useState(null)
+  const { getCachedResource, setCachedResource, invalidateResource } = useResourceCache()
+  const CACHE_KEY = '/api/reservations?history=true'
+  const CACHE_TTL = 60000
 
   useEffect(() => {
     let active = true
 
     async function load() {
+      const cached = getCachedResource(`reservations:${CACHE_KEY}`, CACHE_TTL)
+      if (cached) {
+        setReservations(cached)
+        setLoading(false)
+        setError(null)
+        return
+      }
+
       setLoading(true)
       setError(null)
       try {
         const data = await apiFetch('/api/reservations?history=true')
         if (active) {
-          setReservations(Array.isArray(data) ? data : [])
+          const list = Array.isArray(data) ? data : []
+          setReservations(list)
+          setCachedResource(`reservations:${CACHE_KEY}`, list)
         }
       } catch (err) {
         if (active) {
@@ -41,12 +55,13 @@ export default function Reservations() {
     } else {
       setLoading(false)
       setReservations([])
+      invalidateResource('reservations:/api/reservations*')
     }
 
     return () => {
       active = false
     }
-  }, [user?.id])
+  }, [getCachedResource, invalidateResource, setCachedResource, user?.id])
 
   const activeReservations = useMemo(
     () => reservations.filter(reservation => reservation.status === 'ACTIVE'),
@@ -61,11 +76,15 @@ export default function Reservations() {
     setActionError(null)
     try {
       await apiFetch(`/api/reservations/${id}`, { method: 'DELETE' })
-      setReservations(prev => prev.map(item => (
-        item.id === id
-          ? { ...item, status: 'CANCELLED', cancelledAt: new Date().toISOString() }
-          : item
-      )))
+      setReservations(prev => {
+        const next = prev.map(item => (
+          item.id === id
+            ? { ...item, status: 'CANCELLED', cancelledAt: new Date().toISOString() }
+            : item
+        ))
+        setCachedResource(`reservations:${CACHE_KEY}`, next)
+        return next
+      })
     } catch (err) {
       setActionError(err.message || 'Nie udało się anulować rezerwacji')
     }

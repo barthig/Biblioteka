@@ -12,6 +12,7 @@ class BookCopy
     public const STATUS_RESERVED = 'RESERVED';
     public const STATUS_BORROWED = 'BORROWED';
     public const STATUS_MAINTENANCE = 'MAINTENANCE';
+    public const STATUS_WITHDRAWN = 'WITHDRAWN';
 
     public const ACCESS_OPEN_STACK = 'OPEN_STACK';
     public const ACCESS_STORAGE = 'STORAGE';
@@ -95,7 +96,7 @@ class BookCopy
 
     public function setStatus(string $status): self
     {
-        if (!in_array($status, [self::STATUS_AVAILABLE, self::STATUS_RESERVED, self::STATUS_BORROWED, self::STATUS_MAINTENANCE], true)) {
+        if (!in_array($status, [self::STATUS_AVAILABLE, self::STATUS_RESERVED, self::STATUS_BORROWED, self::STATUS_MAINTENANCE, self::STATUS_WITHDRAWN], true)) {
             throw new \InvalidArgumentException('Invalid book copy status: ' . $status);
         }
         $this->status = $status;

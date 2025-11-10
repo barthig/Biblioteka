@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { apiFetch } from '../api'
 import { useAuth } from '../context/AuthContext'
+import { useResourceCache } from '../context/ResourceCacheContext'
 
 const ACTIVE_STATUSES = ['PENDING', 'READY']
 
@@ -28,23 +29,36 @@ export default function Orders() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [actionError, setActionError] = useState(null)
+  const { getCachedResource, setCachedResource, invalidateResource } = useResourceCache()
+  const CACHE_KEY = '/api/orders?history=true'
+  const CACHE_TTL = 60000
 
   useEffect(() => {
     if (!user?.id) {
       setOrders([])
       setLoading(false)
+      invalidateResource(`orders:${CACHE_KEY}`)
       return
     }
 
     let isMounted = true
 
     async function load() {
+      const cached = getCachedResource(`orders:${CACHE_KEY}`, CACHE_TTL)
+      if (cached) {
+        setOrders(cached)
+        setLoading(false)
+        setError(null)
+        return
+      }
+
       setLoading(true)
       setError(null)
       try {
         const data = await apiFetch('/api/orders?history=true')
         if (isMounted) {
           setOrders(Array.isArray(data) ? data : [])
+          setCachedResource(`orders:${CACHE_KEY}`, Array.isArray(data) ? data : [])
         }
       } catch (err) {
         if (isMounted) {
@@ -59,7 +73,7 @@ export default function Orders() {
     return () => {
       isMounted = false
     }
-  }, [user?.id])
+  }, [getCachedResource, invalidateResource, setCachedResource, user?.id])
 
   const activeOrders = useMemo(
     () => orders.filter(order => ACTIVE_STATUSES.includes(order.status)),
@@ -74,11 +88,15 @@ export default function Orders() {
     setActionError(null)
     try {
       await apiFetch(`/api/orders/${id}`, { method: 'DELETE' })
-      setOrders(prev => prev.map(order => (
-        order.id === id
-          ? { ...order, status: 'CANCELLED', cancelledAt: new Date().toISOString(), bookCopy: null }
-          : order
-      )))
+      setOrders(prev => {
+        const updated = prev.map(order => (
+          order.id === id
+            ? { ...order, status: 'CANCELLED', cancelledAt: new Date().toISOString(), bookCopy: null }
+            : order
+        ))
+        setCachedResource(`orders:${CACHE_KEY}`, updated)
+        return updated
+      })
     } catch (err) {
       setActionError(err.message || 'Nie udało się anulować zamówienia')
     }

@@ -44,6 +44,55 @@ class FineController extends AbstractController
         return $this->json($fines, 200, [], ['groups' => ['fine:read', 'loan:read']]);
     }
 
+    public function create(Request $request, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
+    {
+        if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
+            return $this->json(['error' => 'Forbidden'], 403);
+        }
+
+        $data = json_decode($request->getContent(), true) ?: [];
+        $loanId = $data['loanId'] ?? null;
+        if (!$loanId || !ctype_digit((string) $loanId)) {
+            return $this->json(['error' => 'Missing or invalid loanId'], 400);
+        }
+
+        $reason = isset($data['reason']) ? trim((string) $data['reason']) : '';
+        if ($reason === '') {
+            return $this->json(['error' => 'Reason is required'], 400);
+        }
+
+        $amountValue = $data['amount'] ?? null;
+        if (!is_numeric($amountValue)) {
+            return $this->json(['error' => 'Invalid amount'], 400);
+        }
+        $amount = (float) $amountValue;
+        if ($amount <= 0) {
+            return $this->json(['error' => 'Amount must be greater than zero'], 400);
+        }
+
+        $currency = isset($data['currency']) ? strtoupper(trim((string) $data['currency'])) : 'PLN';
+        if (strlen($currency) !== 3) {
+            return $this->json(['error' => 'Currency should be a 3-letter code'], 400);
+        }
+
+        $loan = $doctrine->getRepository(Loan::class)->find((int) $loanId);
+        if (!$loan) {
+            return $this->json(['error' => 'Loan not found'], 404);
+        }
+
+        $fine = (new Fine())
+            ->setLoan($loan)
+            ->setAmount(number_format($amount, 2, '.', ''))
+            ->setCurrency($currency)
+            ->setReason($reason);
+
+        $em = $doctrine->getManager();
+        $em->persist($fine);
+        $em->flush();
+
+        return $this->json($fine, 201, [], ['groups' => ['fine:read', 'loan:read']]);
+    }
+
     public function pay(string $id, Request $request, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
     {
         if (!ctype_digit($id) || (int) $id <= 0) {
@@ -75,5 +124,32 @@ class FineController extends AbstractController
         $em->flush();
 
         return $this->json($fine, 200, [], ['groups' => ['fine:read', 'loan:read']]);
+    }
+
+    public function cancel(string $id, Request $request, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
+    {
+        if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
+            return $this->json(['error' => 'Forbidden'], 403);
+        }
+        if (!ctype_digit($id) || (int) $id <= 0) {
+            return $this->json(['error' => 'Invalid fine id'], 400);
+        }
+
+        /** @var FineRepository $repo */
+        $repo = $doctrine->getRepository(Fine::class);
+        $fine = $repo->find((int) $id);
+        if (!$fine) {
+            return $this->json(['error' => 'Fine not found'], 404);
+        }
+
+        if ($fine->getPaidAt() !== null) {
+            return $this->json(['error' => 'Cannot cancel a paid fine'], 400);
+        }
+
+        $em = $doctrine->getManager();
+        $em->remove($fine);
+        $em->flush();
+
+        return new JsonResponse(null, 204);
     }
 }

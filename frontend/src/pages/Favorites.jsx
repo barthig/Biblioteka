@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { apiFetch } from '../api'
 import { useAuth } from '../context/AuthContext'
+import { useResourceCache } from '../context/ResourceCacheContext'
 
 export default function Favorites() {
   const { user } = useAuth()
@@ -9,21 +10,37 @@ export default function Favorites() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [actionError, setActionError] = useState(null)
+  const { getCachedResource, setCachedResource, invalidateResource } = useResourceCache()
+  const CACHE_KEY = '/api/favorites'
+  const CACHE_TTL = 60000
 
   useEffect(() => {
     if (!user?.id) {
       setFavorites([])
       setLoading(false)
+      invalidateResource('favorites:/api/favorites')
       return
     }
 
     let active = true
     async function load() {
+      const cached = getCachedResource(`favorites:${CACHE_KEY}`, CACHE_TTL)
+      if (cached) {
+        setFavorites(cached)
+        setLoading(false)
+        setError(null)
+        return
+      }
+
       setLoading(true)
       setError(null)
       try {
         const data = await apiFetch('/api/favorites')
-        if (active) setFavorites(Array.isArray(data) ? data : [])
+        if (active) {
+          const list = Array.isArray(data) ? data : []
+          setFavorites(list)
+          setCachedResource(`favorites:${CACHE_KEY}`, list)
+        }
       } catch (err) {
         if (active) setError(err.message || 'Nie udało się pobrać półki ulubionych książek')
       } finally {
@@ -33,13 +50,17 @@ export default function Favorites() {
 
     load()
     return () => { active = false }
-  }, [user?.id])
+  }, [getCachedResource, invalidateResource, setCachedResource, user?.id])
 
   async function removeFavorite(bookId) {
     setActionError(null)
     try {
       await apiFetch(`/api/favorites/${bookId}`, { method: 'DELETE' })
-      setFavorites(prev => prev.filter(f => f.book?.id !== bookId))
+      setFavorites(prev => {
+        const next = prev.filter(f => f.book?.id !== bookId)
+        setCachedResource(`favorites:${CACHE_KEY}`, next)
+        return next
+      })
     } catch (err) {
       setActionError(err.message || 'Nie udało się usunąć pozycji z ulubionych')
     }

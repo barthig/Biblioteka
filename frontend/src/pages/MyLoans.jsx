@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { apiFetch } from '../api'
 import { useAuth } from '../context/AuthContext'
+import { useResourceCache } from '../context/ResourceCacheContext'
 
 function formatDate(value) {
   return value ? new Date(value).toLocaleDateString() : '—'
@@ -16,25 +17,39 @@ export default function MyLoans() {
   const [actionSuccess, setActionSuccess] = useState(null)
   const [extendDays, setExtendDays] = useState({})
   const [extendLoading, setExtendLoading] = useState({})
+  const { getCachedResource, setCachedResource, invalidateResource } = useResourceCache()
+  const CACHE_KEY = 'loans:/api/loans'
+  const CACHE_TTL = 60000
 
   useEffect(() => {
     if (!token) {
       setLoans([])
       setLoading(false)
+      invalidateResource('loans:*')
       return
     }
 
     let cancelled = false
 
     async function load() {
-      setLoading(true)
+      const cached = getCachedResource(CACHE_KEY, CACHE_TTL)
+      if (typeof cached !== 'undefined') {
+        setLoans(cached)
+        setLoading(false)
+        setError(null)
+      } else {
+        setLoading(true)
+      }
+
       setError(null)
       setActionError(null)
       setActionSuccess(null)
       try {
         const data = await apiFetch('/api/loans')
         if (!cancelled) {
-          setLoans(Array.isArray(data) ? data : [])
+          const list = Array.isArray(data) ? data : []
+          setLoans(list)
+          setCachedResource(CACHE_KEY, list)
         }
       } catch (err) {
         if (!cancelled) {
@@ -51,7 +66,7 @@ export default function MyLoans() {
     return () => {
       cancelled = true
     }
-  }, [token])
+  }, [CACHE_KEY, CACHE_TTL, getCachedResource, invalidateResource, setCachedResource, token])
 
   const activeLoans = useMemo(() => loans.filter(loan => !loan.returnedAt), [loans])
   const historyLoans = useMemo(
@@ -69,7 +84,11 @@ export default function MyLoans() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ days }),
       })
-      setLoans(prev => prev.map(loan => (loan.id === id ? updatedLoan : loan)))
+      setLoans(prev => {
+        const next = prev.map(loan => (loan.id === id ? updatedLoan : loan))
+        setCachedResource(CACHE_KEY, next)
+        return next
+      })
       setActionSuccess(`Termin wypożyczenia został przedłużony do ${formatDate(updatedLoan.dueAt)}.`)
       setExtendDays(prev => ({ ...prev, [id]: 14 }))
     } catch (err) {

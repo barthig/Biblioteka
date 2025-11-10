@@ -1,6 +1,7 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { apiFetch } from '../api'
 import { useAuth } from '../context/AuthContext'
+import { useResourceCache } from '../context/ResourceCacheContext'
 
 export default function Dashboard() {
   const [stats, setStats] = useState(null)
@@ -8,6 +9,8 @@ export default function Dashboard() {
   const [error, setError] = useState(null)
   const { token } = useAuth()
   const isAuthenticated = Boolean(token)
+  const { prefetchResource } = useResourceCache()
+  const prefetchScheduledRef = useRef(false)
 
   const publicHighlights = useMemo(() => ({
     facility: {
@@ -48,6 +51,7 @@ export default function Dashboard() {
       setStats(null)
       setError(null)
       setLoading(false)
+      prefetchScheduledRef.current = false
       return
     }
 
@@ -74,6 +78,23 @@ export default function Dashboard() {
       mounted = false
     }
   }, [isAuthenticated])
+
+  useEffect(() => {
+    if (!isAuthenticated || prefetchScheduledRef.current) {
+      return
+    }
+
+    prefetchScheduledRef.current = true
+
+    const tasks = [
+      prefetchResource('orders:/api/orders?history=true', () => apiFetch('/api/orders?history=true')),
+      prefetchResource('reservations:/api/reservations?history=true', () => apiFetch('/api/reservations?history=true')),
+      prefetchResource('favorites:/api/favorites', () => apiFetch('/api/favorites')),
+      prefetchResource('loans:/api/loans', () => apiFetch('/api/loans')),
+    ]
+
+    tasks.forEach(promise => promise.catch(() => {}))
+  }, [isAuthenticated, prefetchResource])
 
   if (!isAuthenticated) {
     return (

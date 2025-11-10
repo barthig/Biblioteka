@@ -1,7 +1,8 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { apiFetch } from '../api'
 import { useAuth } from '../context/AuthContext'
+import { useResourceCache } from '../context/ResourceCacheContext'
 
 function formatDate(value, withTime = false) {
   if (!value) return '—'
@@ -18,7 +19,7 @@ export default function BookDetails() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  const [favorite, setFavorite] = useState(null)
+  const [favorite, setFavorite] = useState(false)
   const [activeOrder, setActiveOrder] = useState(null)
   const [activeReservation, setActiveReservation] = useState(null)
 
@@ -27,6 +28,10 @@ export default function BookDetails() {
   const [ordering, setOrdering] = useState(false)
   const [reserving, setReserving] = useState(false)
   const [favoriteLoading, setFavoriteLoading] = useState(false)
+  const [engagementLoading, setEngagementLoading] = useState(false)
+  const [engagementFetched, setEngagementFetched] = useState(false)
+  const engagementFetchRef = useRef(false)
+  const aliveRef = useRef(true)
 
   const [reviewsState, setReviewsState] = useState({ summary: { average: null, total: 0 }, reviews: [], userReview: null })
   const [reviewsError, setReviewsError] = useState(null)
@@ -34,6 +39,9 @@ export default function BookDetails() {
   const [reviewPending, setReviewPending] = useState(false)
   const [reviewActionError, setReviewActionError] = useState(null)
   const [reviewActionSuccess, setReviewActionSuccess] = useState(null)
+  const { getCachedResource, setCachedResource, invalidateResource } = useResourceCache()
+  const REVIEWS_CACHE_TTL = 60000
+  const ORDERS_CACHE_TTL = 45000
 
   useEffect(() => {
     let active = true
@@ -43,7 +51,7 @@ export default function BookDetails() {
       setError(null)
       setActionError(null)
       setActionSuccess(null)
-      setFavorite(null)
+      setFavorite(false)
       setActiveOrder(null)
       setActiveReservation(null)
       try {
@@ -64,35 +72,18 @@ export default function BookDetails() {
     return () => { active = false }
   }, [id])
 
-  const loadEngagement = useCallback(async () => {
-    if (!token || !bookId) {
-      setFavorite(null)
-      setActiveOrder(null)
-      setActiveReservation(null)
-      return
-    }
-
-    try {
-      const [favorites, orders, reservations] = await Promise.all([
-        apiFetch('/api/favorites'),
-        apiFetch('/api/orders'),
-        apiFetch('/api/reservations'),
-      ])
-
-      const fav = Array.isArray(favorites) ? favorites.find(item => item.book?.id === bookId) : null
-      const order = Array.isArray(orders) ? orders.find(item => item.book?.id === bookId) : null
-      const reservation = Array.isArray(reservations) ? reservations.find(item => item.book?.id === bookId) : null
-
-      setFavorite(fav || null)
-      setActiveOrder(order || null)
-      setActiveReservation(reservation || null)
-    } catch (err) {
-      // silent failure for engagement metadata
-    }
-  }, [bookId, token])
-
   const loadReviews = useCallback(async () => {
     setReviewsError(null)
+    const cacheKey = `reviews:${bookId}`
+    const cached = getCachedResource(cacheKey, REVIEWS_CACHE_TTL)
+    if (cached) {
+      setReviewsState(cached)
+      setReviewForm({
+        rating: cached.userReview?.rating ?? 5,
+        comment: cached.userReview?.comment ?? '',
+      })
+      return
+    }
     try {
       const data = await apiFetch(`/api/books/${id}/reviews`)
       const summary = data?.summary ?? { average: null, total: 0 }
@@ -103,18 +94,125 @@ export default function BookDetails() {
         rating: userReview?.rating ?? 5,
         comment: userReview?.comment ?? '',
       })
+      setCachedResource(cacheKey, { summary, reviews, userReview })
     } catch (err) {
       setReviewsError(err.message || 'Nie udało się pobrać opinii czytelników')
     }
-  }, [id])
+  }, [bookId, getCachedResource, id, setCachedResource])
 
   useEffect(() => {
     loadReviews()
   }, [loadReviews])
 
   useEffect(() => {
-    loadEngagement()
-  }, [loadEngagement])
+    aliveRef.current = true
+    return () => {
+      aliveRef.current = false
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!book) return
+    setFavorite(Boolean(book.isFavorite))
+  }, [book])
+
+  useEffect(() => {
+    setActiveOrder(null)
+    setActiveReservation(null)
+    setEngagementFetched(false)
+    engagementFetchRef.current = false
+  }, [bookId, token])
+
+  const ensureEngagementLoaded = useCallback(async () => {
+    if (!token || engagementFetchRef.current || engagementFetched) {
+      return
+    }
+
+    engagementFetchRef.current = true
+    const ordersCacheKey = 'orders:/api/orders'
+    const reservationsCacheKey = 'reservations:/api/reservations'
+    const cachedOrders = getCachedResource(ordersCacheKey, ORDERS_CACHE_TTL)
+    const cachedReservations = getCachedResource(reservationsCacheKey, ORDERS_CACHE_TTL)
+
+    if (cachedOrders && Array.isArray(cachedOrders)) {
+      const orderMatch = cachedOrders.find(item => item?.book?.id === bookId)
+      if (orderMatch) {
+        setActiveOrder(orderMatch)
+      }
+    }
+
+    if (cachedReservations && Array.isArray(cachedReservations)) {
+      const reservationMatch = cachedReservations.find(item => item?.book?.id === bookId)
+      if (reservationMatch) {
+        setActiveReservation(reservationMatch)
+      }
+    }
+
+    if (cachedOrders && cachedReservations) {
+      engagementFetchRef.current = false
+      setEngagementFetched(true)
+      setEngagementLoading(false)
+      return
+    }
+
+    setEngagementLoading(true)
+
+    try {
+      const [ordersResult, reservationsResult] = await Promise.allSettled([
+        cachedOrders ? Promise.resolve(cachedOrders) : apiFetch('/api/orders'),
+        cachedReservations ? Promise.resolve(cachedReservations) : apiFetch('/api/reservations'),
+      ])
+
+      const ordersList = ordersResult.status === 'fulfilled' && Array.isArray(ordersResult.value)
+        ? ordersResult.value
+        : null
+      const reservationsList = reservationsResult.status === 'fulfilled' && Array.isArray(reservationsResult.value)
+        ? reservationsResult.value
+        : null
+
+      if (ordersList) {
+        setCachedResource(ordersCacheKey, ordersList)
+        if (aliveRef.current) {
+          const orderMatch = ordersList.find(item => item?.book?.id === bookId)
+          if (orderMatch) {
+            setActiveOrder(orderMatch)
+          }
+        }
+      }
+
+      if (reservationsList) {
+        setCachedResource(reservationsCacheKey, reservationsList)
+        if (aliveRef.current) {
+          const reservationMatch = reservationsList.find(item => item?.book?.id === bookId)
+          if (reservationMatch) {
+            setActiveReservation(reservationMatch)
+          }
+        }
+      }
+    } catch (err) {
+      // ignore engagement prefetch errors – buttons will rely on server validation
+    } finally {
+      engagementFetchRef.current = false
+      if (aliveRef.current) {
+        setEngagementLoading(false)
+        setEngagementFetched(true)
+      }
+    }
+  }, [bookId, engagementFetched, getCachedResource, setCachedResource, token])
+
+  useEffect(() => {
+    if (!token || engagementFetched) {
+      return
+    }
+
+    const timer = setTimeout(() => {
+      ensureEngagementLoaded()
+    }, 400)
+
+    return () => {
+      clearTimeout(timer)
+    }
+  }, [token, engagementFetched, ensureEngagementLoaded])
 
   const categories = useMemo(() => {
     if (!book || !Array.isArray(book.categories) || book.categories.length === 0) {
@@ -152,6 +250,8 @@ export default function BookDetails() {
 
       setActionSuccess(successMessage)
       setActiveOrder(order)
+      setEngagementFetched(true)
+      invalidateResource('orders:/api/orders*')
       setBook(prev => {
         if (!prev) return prev
         const copies = Math.max(0, (prev.copies ?? 0) - 1)
@@ -192,6 +292,8 @@ export default function BookDetails() {
       })
       setActionSuccess('Dodano do kolejki rezerwacji. Powiadomimy Cię, gdy egzemplarz będzie dostępny.')
       setActiveReservation(reservation)
+      setEngagementFetched(true)
+      invalidateResource('reservations:/api/reservations*')
     } catch (err) {
       setActionError(err.message || 'Nie udało się zarezerwować książki')
     } finally {
@@ -208,18 +310,20 @@ export default function BookDetails() {
     setActionError(null)
     setActionSuccess(null)
     try {
-      if (favorite && favorite.book?.id) {
-        await apiFetch(`/api/favorites/${favorite.book.id}`, { method: 'DELETE' })
-        setFavorite(null)
+      if (favorite) {
+        await apiFetch(`/api/favorites/${bookId}`, { method: 'DELETE' })
+        setFavorite(false)
         setActionSuccess('Usunięto książkę z ulubionych.')
+        invalidateResource('favorites:/api/favorites')
       } else {
         const created = await apiFetch('/api/favorites', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ bookId }),
         })
-        setFavorite(created)
+        setFavorite(Boolean(created))
         setActionSuccess('Dodano książkę do ulubionych.')
+        invalidateResource('favorites:/api/favorites')
       }
     } catch (err) {
       setActionError(err.message || 'Nie udało się zaktualizować ulubionych')
@@ -244,6 +348,7 @@ export default function BookDetails() {
         body: JSON.stringify({ rating: reviewForm.rating, comment: reviewForm.comment }),
       })
       setReviewActionSuccess('Opinia została zapisana.')
+      invalidateResource(`reviews:${bookId}`)
       await loadReviews()
     } catch (err) {
       setReviewActionError(err.message || 'Nie udało się zapisać opinii')
@@ -260,6 +365,7 @@ export default function BookDetails() {
     try {
       await apiFetch(`/api/books/${id}/reviews`, { method: 'DELETE' })
       setReviewActionSuccess('Opinia została usunięta.')
+      invalidateResource(`reviews:${bookId}`)
       await loadReviews()
     } catch (err) {
       setReviewActionError(err.message || 'Nie udało się usunąć opinii')
@@ -356,7 +462,11 @@ export default function BookDetails() {
         <h2>Działania</h2>
         {actionError && <p className="error">{actionError}</p>}
         {actionSuccess && <p className="success">{actionSuccess}</p>}
-        <div className="form-actions">
+        <div
+          className="form-actions"
+          onMouseEnter={ensureEngagementLoaded}
+          onFocusCapture={ensureEngagementLoaded}
+        >
           <button
             type="button"
             className="btn btn-primary"
@@ -393,6 +503,9 @@ export default function BookDetails() {
         <p className="support-copy">
           Egzemplarze magazynowe przygotuje dla Ciebie bibliotekarz. Jeżeli wybierzesz opcję półki, pracownik odłoży wybrany egzemplarz z wolnego dostępu do wypożyczalni.
         </p>
+        {token && engagementLoading && (
+          <p className="support-copy">Sprawdzam Twoje aktywne zamówienia i rezerwacje...</p>
+        )}
         {!storageAvailable && openStackAvailable && (
           <p className="support-copy">Brak egzemplarzy w magazynie — najłatwiej skorzystać z opcji „Poproś o odłożenie z półki” lub podejść osobiście.</p>
         )}

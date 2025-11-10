@@ -125,4 +125,21 @@ class BookService
         $em->persist($book);
         $em->flush();
     }
+
+    public function withdrawCopy(Book $book, BookCopy $copy, ?string $conditionNote = null, bool $flush = true): void
+    {
+        $copy->setStatus(BookCopy::STATUS_WITHDRAWN);
+        if ($conditionNote !== null) {
+            $copy->setConditionState($conditionNote);
+        }
+
+        $book->recalculateInventoryCounters();
+
+        $em = $this->doctrine->getManager();
+        $em->persist($copy);
+        $em->persist($book);
+        if ($flush) {
+            $em->flush();
+        }
+    }
 }

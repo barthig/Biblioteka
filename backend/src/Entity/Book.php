@@ -38,6 +38,10 @@ class Book
     #[Groups(['inventory:read'])]
     private Collection $inventory;
 
+    #[ORM\OneToMany(mappedBy: 'book', targetEntity: BookDigitalAsset::class, cascade: ['remove'], orphanRemoval: true)]
+    #[Groups(['book:read'])]
+    private Collection $digitalAssets;
+
     #[ORM\Column(type: 'integer')]
     #[Groups(['book:read', 'loan:read', 'reservation:read'])]
     private int $copies = 0;
@@ -87,6 +91,7 @@ class Book
         $this->createdAt = new \DateTimeImmutable();
         $this->categories = new ArrayCollection();
         $this->inventory = new ArrayCollection();
+        $this->digitalAssets = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -201,6 +206,29 @@ class Book
         return $this;
     }
 
+    /** @return Collection<int, BookDigitalAsset> */
+    public function getDigitalAssets(): Collection
+    {
+        return $this->digitalAssets;
+    }
+
+    public function addDigitalAsset(BookDigitalAsset $asset): self
+    {
+        if (!$this->digitalAssets->contains($asset)) {
+            $this->digitalAssets->add($asset);
+            $asset->setBook($this);
+        }
+
+        return $this;
+    }
+
+    public function removeDigitalAsset(BookDigitalAsset $asset): self
+    {
+        $this->digitalAssets->removeElement($asset);
+
+        return $this;
+    }
+
     public function removeInventoryCopy(BookCopy $copy): self
     {
         if ($this->inventory->removeElement($copy)) {
@@ -241,6 +269,10 @@ class Book
         $storageAvailable = 0;
         $openAvailable = 0;
         foreach ($this->inventory as $copy) {
+            if ($copy->getStatus() === BookCopy::STATUS_WITHDRAWN) {
+                continue;
+            }
+
             ++$total;
             if ($copy->getStatus() === BookCopy::STATUS_AVAILABLE) {
                 ++$available;

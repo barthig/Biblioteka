@@ -9,6 +9,11 @@ use App\Entity\Loan;
 use App\Entity\Reservation;
 use App\Entity\Fine;
 use App\Entity\User;
+use App\Entity\Supplier;
+use App\Entity\AcquisitionBudget;
+use App\Entity\AcquisitionOrder;
+use App\Entity\AcquisitionExpense;
+use App\Entity\WeedingRecord;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
 
@@ -43,17 +48,28 @@ class AppFixtures extends Fixture
         }
 
         $users = [];
+        $groupSequence = [
+            User::GROUP_STANDARD,
+            User::GROUP_STUDENT,
+            User::GROUP_RESEARCHER,
+            User::GROUP_CHILD,
+        ];
         for ($i = 1; $i <= 6; $i++) {
             $roles = $i === 1 ? ['ROLE_LIBRARIAN'] : ['ROLE_USER'];
             $user = (new User())
                 ->setName('User ' . $i)
                 ->setEmail('user' . $i . '@example.com')
                 ->setRoles($roles)
+                ->setMembershipGroup($groupSequence[($i - 1) % count($groupSequence)])
                 ->setPhoneNumber('+48 600 000 0' . $i)
                 ->setAddressLine('Ul. Biblioteczna ' . $i)
                 ->setCity('Miasto ' . $i)
                 ->setPostalCode('00-0' . $i)
                 ->setPassword(password_hash('password' . $i, PASSWORD_BCRYPT));
+
+            if ($i === 6) {
+                $user->block('Przykładowa blokada testowa');
+            }
 
             $manager->persist($user);
             $users[] = $user;
@@ -104,6 +120,33 @@ class AppFixtures extends Fixture
 
             $book->recalculateInventoryCounters();
         }
+
+        $manager->flush();
+
+        // Sample suppliers and budgets for acquisitions
+        $supplierA = (new Supplier())
+            ->setName('Księgarnia Główna')
+            ->setContactEmail('kontakt@ksiegarnia-glowna.pl')
+            ->setContactPhone('+48 22 123 45 67')
+            ->setCity('Warszawa')
+            ->setCountry('Polska');
+
+        $supplierB = (new Supplier())
+            ->setName('Digital Reads Sp. z o.o.')
+            ->setContactEmail('sales@digitalreads.pl')
+            ->setContactPhone('+48 58 987 65 43')
+            ->setCity('Gdańsk')
+            ->setCountry('Polska');
+
+        $budget2025 = (new AcquisitionBudget())
+            ->setName('Budżet podstawowy 2025')
+            ->setFiscalYear('2025')
+            ->setCurrency('PLN')
+            ->setAllocatedAmount('50000.00');
+
+        $manager->persist($supplierA);
+        $manager->persist($supplierB);
+        $manager->persist($budget2025);
 
         $manager->flush();
 
@@ -161,6 +204,64 @@ class AppFixtures extends Fixture
                     ->setReason('Przetrzymanie książki')
                     ->setCurrency('PLN');
                 $manager->persist($fine);
+            }
+        }
+
+        $manager->flush();
+
+        // Seed acquisition order and expense
+        if (!empty($books)) {
+            $order = (new AcquisitionOrder())
+                ->setSupplier($supplierA)
+                ->setBudget($budget2025)
+                ->setTitle('Nowości wydawnicze - styczeń')
+                ->setDescription('Zakup nowości do działu literatury pięknej i naukowej')
+                ->setItems([
+                    ['title' => 'Nowa era AI', 'quantity' => 10, 'unitPrice' => 45.50],
+                    ['title' => 'Historia regionu', 'quantity' => 6, 'unitPrice' => 52.00],
+                ])
+                ->setCurrency('PLN')
+                ->setTotalAmount('986.00')
+                ->markOrdered()
+                ->setExpectedAt((new \DateTimeImmutable())->modify('+14 days'));
+
+            $manager->persist($order);
+            $manager->flush();
+
+            $expense = (new AcquisitionExpense())
+                ->setBudget($budget2025)
+                ->setOrder($order)
+                ->setAmount('986.00')
+                ->setCurrency('PLN')
+                ->setDescription('Zakup nowości wydawniczych - faktura FV/01/2025')
+                ->setType(AcquisitionExpense::TYPE_ORDER);
+
+            $budget2025->registerExpense('986.00');
+
+            $manager->persist($expense);
+            $manager->persist($budget2025);
+            $manager->flush();
+        }
+
+        // Sample weeding record
+        if (!empty($books)) {
+            $firstBook = $books[0];
+            $firstCopy = $firstBook->getInventory()->first() ?: null;
+            if ($firstCopy instanceof BookCopy) {
+                $firstCopy->setStatus(BookCopy::STATUS_WITHDRAWN)->setConditionState('Zniszczony egzemplarz');
+                $firstBook->recalculateInventoryCounters();
+
+                $weeding = (new WeedingRecord())
+                    ->setBook($firstBook)
+                    ->setBookCopy($firstCopy)
+                    ->setProcessedBy($users[0] ?? null)
+                    ->setReason('Uszkodzenia uniemożliwiające wypożyczenia')
+                    ->setAction(WeedingRecord::ACTION_DISCARD)
+                    ->setNotes('Wycofano podczas przeglądu rocznego');
+
+                $manager->persist($firstCopy);
+                $manager->persist($firstBook);
+                $manager->persist($weeding);
             }
         }
 

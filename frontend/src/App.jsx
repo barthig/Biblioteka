@@ -1,6 +1,7 @@
 import React from 'react'
 import { Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
+import { ResourceCacheProvider } from './context/ResourceCacheContext'
 import Navbar from './components/Navbar'
 import Login from './pages/Login'
 import Books from './pages/Books'
@@ -16,10 +17,11 @@ import Favorites from './pages/Favorites'
 export default function App() {
   return (
     <AuthProvider>
-      <div className="app-shell">
-        <Navbar />
-        <main className="main">
-          <Routes>
+      <ResourceCacheProvider>
+        <div className="app-shell">
+          <Navbar />
+          <main className="main">
+            <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/books" element={<Books />} />
             <Route path="/books/:id" element={<BookDetails />} />
@@ -30,17 +32,18 @@ export default function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/profile" element={<Profile />} />
-          </Routes>
-          <footer className="footer">
-            <p>© 2025 Biblioteka. Wspieramy czytelników w odkrywaniu literatury i edukacji cyfrowej.</p>
-            <div className="footer__links">
-              <a href="#">Regulamin korzystania</a>
-              <a href="#">Polityka prywatności</a>
-              <a href="#">Kontakt</a>
-            </div>
-          </footer>
-        </main>
-      </div>
+            </Routes>
+            <footer className="footer">
+              <p>© 2025 Biblioteka. Wspieramy czytelników w odkrywaniu literatury i edukacji cyfrowej.</p>
+              <div className="footer__links">
+                <a href="#">Regulamin korzystania</a>
+                <a href="#">Polityka prywatności</a>
+                <a href="#">Kontakt</a>
+              </div>
+            </footer>
+          </main>
+        </div>
+      </ResourceCacheProvider>
     </AuthProvider>
   )
 }

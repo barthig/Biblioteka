@@ -4,6 +4,7 @@ namespace App\Repository;
 use App\Entity\Book;
 use App\Entity\Reservation;
 use App\Entity\User;
+use App\Entity\BookCopy;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -58,6 +59,18 @@ class ReservationRepository extends ServiceEntityRepository
             ->setParameter('book', $book)
             ->setParameter('status', Reservation::STATUS_ACTIVE)
             ->orderBy('r.reservedAt', 'ASC')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
+    public function findActiveByCopy(BookCopy $copy): ?Reservation
+    {
+        return $this->createQueryBuilder('r')
+            ->andWhere('r.bookCopy = :copy')
+            ->andWhere('r.status = :status')
+            ->setParameter('copy', $copy)
+            ->setParameter('status', Reservation::STATUS_ACTIVE)
             ->setMaxResults(1)
             ->getQuery()
             ->getOneOrNullResult();

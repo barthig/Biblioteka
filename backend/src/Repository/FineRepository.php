@@ -25,4 +25,17 @@ class FineRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    public function findActiveOverdueFine(Loan $loan): ?Fine
+    {
+        return $this->createQueryBuilder('f')
+            ->andWhere('f.loan = :loan')
+            ->andWhere('f.paidAt IS NULL')
+            ->andWhere('f.reason LIKE :reason')
+            ->setParameter('loan', $loan)
+            ->setParameter('reason', 'Przetrzymanie%')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
 }

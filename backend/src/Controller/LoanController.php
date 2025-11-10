@@ -61,54 +61,110 @@ class LoanController extends AbstractController
 
     public function create(Request $request, ManagerRegistry $doctrine, BookService $bookService, OrderLifecycleService $orderLifecycle, SecurityService $security): JsonResponse
     {
-        // require an authenticated user (JWT) or API secret
         $payload = $security->getJwtPayload($request);
         if ($payload === null) {
             return $this->json(['error' => 'Unauthorized'], 401);
         }
+
         $data = json_decode($request->getContent(), true) ?: [];
         $userId = $data['userId'] ?? null;
         $bookId = $data['bookId'] ?? null;
-        $days = isset($data['days']) ? (int)$data['days'] : 14;
+        $inventoryCode = isset($data['inventoryCode']) && is_string($data['inventoryCode']) ? strtoupper(trim($data['inventoryCode'])) : null;
+        $days = isset($data['days']) ? (int) $data['days'] : 14;
 
-        if (!$userId || !$bookId || !ctype_digit((string)$userId) || !ctype_digit((string)$bookId)) {
-            return $this->json(['error' => 'Missing or invalid userId/bookId'], 400);
+        if (!$userId || !ctype_digit((string) $userId)) {
+            return $this->json(['error' => 'Missing or invalid userId'], 400);
+        }
+
+        if ((!$inventoryCode || $inventoryCode === '') && (!$bookId || !ctype_digit((string) $bookId))) {
+            return $this->json(['error' => 'Missing bookId or inventoryCode'], 400);
         }
 
         $userRepo = $doctrine->getRepository(User::class);
         $bookRepo = $doctrine->getRepository(Book::class);
-    /** @var \App\Repository\ReservationRepository $reservationRepo */
-    $reservationRepo = $doctrine->getRepository(Reservation::class);
-    /** @var \App\Repository\OrderRequestRepository $orderRepo */
-    $orderRepo = $doctrine->getRepository(OrderRequest::class);
-        $user = $userRepo->find((int)$userId);
-        $book = $bookRepo->find((int)$bookId);
-        if (!$user) return $this->json(['error' => 'User not found'], 404);
-        if (!$book) return $this->json(['error' => 'Book not found'], 404);
+        /** @var \App\Repository\BookCopyRepository $copyRepo */
+        $copyRepo = $doctrine->getRepository(BookCopy::class);
+        /** @var \App\Repository\ReservationRepository $reservationRepo */
+        $reservationRepo = $doctrine->getRepository(Reservation::class);
+        /** @var \App\Repository\OrderRequestRepository $orderRepo */
+        $orderRepo = $doctrine->getRepository(OrderRequest::class);
+        /** @var \App\Repository\LoanRepository $loanRepo */
+        $loanRepo = $doctrine->getRepository(Loan::class);
 
-        // only allow creating a loan on behalf of another user when librarian
-        $payload = $security->getJwtPayload($request);
+        $user = $userRepo->find((int) $userId);
+        if (!$user) {
+            return $this->json(['error' => 'User not found'], 404);
+        }
+
+        if ($user->isBlocked()) {
+            return $this->json(['error' => 'Konto czytelnika jest zablokowane'], 423);
+        }
+
+        $activeLoans = $loanRepo->countActiveByUser($user);
+        $loanLimit = $user->getLoanLimit();
+        if ($loanLimit > 0 && $activeLoans >= $loanLimit) {
+            return $this->json(['error' => 'Limit wypożyczeń został osiągnięty'], 409);
+        }
+
+        $book = null;
+        $preferredCopy = null;
+        $assignedReservation = null;
+
+        if ($inventoryCode) {
+            $preferredCopy = $copyRepo->findOneByInventoryCode($inventoryCode);
+            if (!$preferredCopy) {
+                return $this->json(['error' => 'Egzemplarz o podanym kodzie nie istnieje'], 404);
+            }
+
+            if ($preferredCopy->getStatus() === BookCopy::STATUS_BORROWED) {
+                $activeLoan = $loanRepo->findActiveByInventoryCode($inventoryCode);
+                return $this->json([
+                    'error' => 'Egzemplarz jest już wypożyczony',
+                    'borrowerId' => $activeLoan ? $activeLoan->getUser()->getId() : null,
+                ], 409);
+            }
+
+            $assignedReservation = $reservationRepo->findActiveByCopy($preferredCopy);
+            if ($assignedReservation && $assignedReservation->getUser()->getId() !== $user->getId()) {
+                return $this->json(['error' => 'Egzemplarz jest zarezerwowany dla innego czytelnika'], 409);
+            }
+
+            $book = $preferredCopy->getBook();
+            if ($bookId !== null && ctype_digit((string) $bookId) && (int) $bookId !== $book->getId()) {
+                return $this->json(['error' => 'Podany bookId nie pasuje do wskazanego egzemplarza'], 400);
+            }
+            $bookId = (string) $book->getId();
+        }
+
+        if ($book === null) {
+            $book = $bookRepo->find((int) $bookId);
+        }
+
+        if (!$book) {
+            return $this->json(['error' => 'Book not found'], 404);
+        }
+
         $isLibrarian = $security->hasRole($request, 'ROLE_LIBRARIAN');
         if (!$isLibrarian) {
-            if (!$payload || !isset($payload['sub']) || (int)$payload['sub'] !== (int)$userId) {
+            if (!isset($payload['sub']) || (int) $payload['sub'] !== (int) $userId) {
                 return $this->json(['error' => 'Forbidden'], 403);
             }
         }
 
-        $reservation = $reservationRepo->findFirstActiveForUserAndBook($user, $book);
+        $reservation = $assignedReservation ?? $reservationRepo->findFirstActiveForUserAndBook($user, $book);
         $order = $orderRepo->findReadyForUserAndBook($user, $book);
-        $preferredCopy = null;
 
         if ($order) {
             $orderLifecycle->expireOrders([$order]);
-            if (in_array($order->getStatus(), [OrderRequest::STATUS_READY, OrderRequest::STATUS_PENDING], true)) {
-                $preferredCopy = $order->getBookCopy();
+            if (in_array($order->getStatus(), [OrderRequest::STATUS_READY, OrderRequest::STATUS_PENDING], true) && $order->getBookCopy()) {
+                if ($preferredCopy === null) {
+                    $preferredCopy = $order->getBookCopy();
+                }
             } else {
                 $order = null;
             }
         }
 
-        // attempt borrow
         $copy = $bookService->borrow($book, $reservation, $preferredCopy);
         if (!$copy) {
             $queue = $reservationRepo->findActiveByBook($book);
@@ -124,11 +180,12 @@ class LoanController extends AbstractController
             return $this->json(['error' => 'No copies available'], 409);
         }
 
-        $loan = new Loan();
-        $loan->setBook($book)
+        $loan = (new Loan())
+            ->setBook($book)
             ->setBookCopy($copy)
             ->setUser($user)
             ->setDueAt((new \DateTimeImmutable())->modify("+{$days} days"));
+
         $em = $doctrine->getManager();
         $em->persist($loan);
         if ($reservation) {

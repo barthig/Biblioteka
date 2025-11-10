@@ -1,11 +1,34 @@
-import React from 'react'
+import React, { useCallback } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { apiFetch } from '../api'
+import { useResourceCache } from '../context/ResourceCacheContext'
 
 const navClass = ({ isActive }) => isActive ? 'sidebar__link is-active' : 'sidebar__link'
 
 export default function Navbar() {
   const { token, logout } = useAuth()
+  const { prefetchResource } = useResourceCache()
+
+  const prefetchLoans = useCallback(() => {
+    if (!token) return
+    prefetchResource('loans:/api/loans', () => apiFetch('/api/loans')).catch(() => {})
+  }, [prefetchResource, token])
+
+  const prefetchOrders = useCallback(() => {
+    if (!token) return
+    prefetchResource('orders:/api/orders?history=true', () => apiFetch('/api/orders?history=true')).catch(() => {})
+  }, [prefetchResource, token])
+
+  const prefetchReservations = useCallback(() => {
+    if (!token) return
+    prefetchResource('reservations:/api/reservations?history=true', () => apiFetch('/api/reservations?history=true')).catch(() => {})
+  }, [prefetchResource, token])
+
+  const prefetchFavorites = useCallback(() => {
+    if (!token) return
+    prefetchResource('favorites:/api/favorites', () => apiFetch('/api/favorites')).catch(() => {})
+  }, [prefetchResource, token])
 
   return (
     <aside className="sidebar">
@@ -13,12 +36,12 @@ export default function Navbar() {
       <nav className="sidebar__menu">
         <NavLink to="/" end className={navClass}>Dashboard</NavLink>
         <NavLink to="/books" className={navClass}>Książki</NavLink>
-        <NavLink to="/my-loans" className={navClass}>Wypożyczenia</NavLink>
+        <NavLink to="/my-loans" className={navClass} onMouseEnter={prefetchLoans} onFocus={prefetchLoans}>Wypożyczenia</NavLink>
         {token && (
           <>
-            <NavLink to="/orders" className={navClass}>Zamówienia</NavLink>
-            <NavLink to="/reservations" className={navClass}>Rezerwacje</NavLink>
-            <NavLink to="/favorites" className={navClass}>Ulubione</NavLink>
+            <NavLink to="/orders" className={navClass} onMouseEnter={prefetchOrders} onFocus={prefetchOrders}>Zamówienia</NavLink>
+            <NavLink to="/reservations" className={navClass} onMouseEnter={prefetchReservations} onFocus={prefetchReservations}>Rezerwacje</NavLink>
+            <NavLink to="/favorites" className={navClass} onMouseEnter={prefetchFavorites} onFocus={prefetchFavorites}>Ulubione</NavLink>
             <NavLink to="/profile" className={navClass}>Profil</NavLink>
           </>
         )}
