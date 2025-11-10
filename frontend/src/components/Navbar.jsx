@@ -14,13 +14,22 @@ export default function Navbar() {
         <NavLink to="/" end className={navClass}>Dashboard</NavLink>
         <NavLink to="/books" className={navClass}>Książki</NavLink>
         <NavLink to="/my-loans" className={navClass}>Wypożyczenia</NavLink>
+        {token && (
+          <>
+            <NavLink to="/reservations" className={navClass}>Rezerwacje</NavLink>
+            <NavLink to="/profile" className={navClass}>Profil</NavLink>
+          </>
+        )}
       </nav>
 
       <div className="sidebar__footer">
         {token ? (
           <button className="btn btn-ghost" onClick={logout}>Wyloguj</button>
         ) : (
-          <NavLink to="/login" className="btn btn-primary">Zaloguj</NavLink>
+          <>
+            <NavLink to="/login" className="btn btn-primary">Zaloguj</NavLink>
+            <NavLink to="/register" className="btn btn-outline">Zarejestruj się</NavLink>
+          </>
         )}
       </div>
     </aside>

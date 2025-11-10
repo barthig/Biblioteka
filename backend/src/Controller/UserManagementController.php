@@ -50,6 +50,22 @@ class UserManagementController extends AbstractController
         if (!empty($data['name'])) $user->setName($data['name']);
         if (!empty($data['email'])) $user->setEmail($data['email']);
         if (isset($data['roles'])) $user->setRoles((array)$data['roles']);
+        if (array_key_exists('phoneNumber', $data)) {
+            $phone = trim((string) $data['phoneNumber']);
+            $user->setPhoneNumber($phone !== '' ? $phone : null);
+        }
+        if (array_key_exists('addressLine', $data)) {
+            $address = trim((string) $data['addressLine']);
+            $user->setAddressLine($address !== '' ? $address : null);
+        }
+        if (array_key_exists('city', $data)) {
+            $city = trim((string) $data['city']);
+            $user->setCity($city !== '' ? $city : null);
+        }
+        if (array_key_exists('postalCode', $data)) {
+            $postal = trim((string) $data['postalCode']);
+            $user->setPostalCode($postal !== '' ? $postal : null);
+        }
         $em = $doctrine->getManager();
         $em->persist($user);
         $em->flush();

@@ -9,7 +9,22 @@ export async function apiFetch(path, opts = {}) {
   if (!res.ok) {
     let body = ''
     try { body = await res.text() } catch (e) { /* noop */ }
-    const err = new Error(body || res.statusText)
+    let message = body || res.statusText
+    if (body) {
+      try {
+        const parsed = JSON.parse(body)
+        if (parsed && typeof parsed === 'object') {
+          if (typeof parsed.error === 'string' && parsed.error.trim() !== '') {
+            message = parsed.error
+          } else if (typeof parsed.message === 'string' && parsed.message.trim() !== '') {
+            message = parsed.message
+          }
+        }
+      } catch (parseErr) {
+        // ignore JSON parse failures, fall back to raw body
+      }
+    }
+    const err = new Error(message)
     err.status = res.status
     throw err
   }

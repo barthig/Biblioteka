@@ -311,6 +311,42 @@ a {
 	gap: var(--space-3);
 }
 
+.form-card > h2 {
+	margin: 0 0 .5rem;
+	font-size: 1.25rem;
+}
+
+.page-grid {
+	display: grid;
+	gap: var(--space-3);
+}
+
+.page-grid > * {
+	align-self: start;
+}
+
+@media (min-width: 960px) {
+	.page-grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+.form-grid {
+	display: grid;
+	gap: var(--space-2);
+}
+
+.form-grid--two {
+	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.form-actions {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	flex-wrap: wrap;
+}
+
 label {
 	display: block;
 	font-size: .85rem;
@@ -341,6 +377,11 @@ textarea:focus {
 
 .error {
 	color: var(--color-danger);
+	font-weight: 600;
+}
+
+.success {
+	color: var(--color-accent);
 	font-weight: 600;
 }
 

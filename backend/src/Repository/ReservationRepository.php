@@ -32,16 +32,20 @@ class ReservationRepository extends ServiceEntityRepository
     /**
      * @return Reservation[]
      */
-    public function findActiveByUser(User $user): array
+    public function findByUser(User $user, bool $includeHistory = false): array
     {
-        return $this->createQueryBuilder('r')
+        $qb = $this->createQueryBuilder('r')
             ->andWhere('r.user = :user')
-            ->andWhere('r.status = :status')
             ->setParameter('user', $user)
-            ->setParameter('status', Reservation::STATUS_ACTIVE)
-            ->orderBy('r.reservedAt', 'ASC')
-            ->getQuery()
-            ->getResult();
+            ->orderBy('r.reservedAt', 'DESC');
+
+        if (!$includeHistory) {
+            $qb->andWhere('r.status = :status')
+                ->setParameter('status', Reservation::STATUS_ACTIVE)
+                ->orderBy('r.reservedAt', 'ASC');
+        }
+
+        return $qb->getQuery()->getResult();
     }
 
     public function findFirstActiveForUserAndBook(User $user, Book $book): ?Reservation
@@ -54,8 +58,8 @@ class ReservationRepository extends ServiceEntityRepository
             ->setParameter('book', $book)
             ->setParameter('status', Reservation::STATUS_ACTIVE)
             ->orderBy('r.reservedAt', 'ASC')
-            ->getQuery()
             ->setMaxResults(1)
+            ->getQuery()
             ->getOneOrNullResult();
     }
 }

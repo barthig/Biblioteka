@@ -22,7 +22,24 @@ class ReservationController extends AbstractController
         $repo = $doctrine->getRepository(Reservation::class);
 
         if ($security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            $reservations = $repo->findAll();
+            $qb = $repo->createQueryBuilder('r')
+                ->orderBy('r.reservedAt', 'DESC');
+
+            $status = $request->query->get('status');
+            if ($status !== null && in_array(strtoupper($status), [
+                Reservation::STATUS_ACTIVE,
+                Reservation::STATUS_CANCELLED,
+                Reservation::STATUS_FULFILLED,
+                Reservation::STATUS_EXPIRED,
+            ], true)) {
+                $qb->andWhere('r.status = :status')->setParameter('status', strtoupper($status));
+            }
+
+            if ($request->query->has('userId') && ctype_digit((string) $request->query->get('userId'))) {
+                $qb->andWhere('r.user = :userId')->setParameter('userId', (int) $request->query->get('userId'));
+            }
+
+            $reservations = $qb->getQuery()->getResult();
             return $this->json($reservations, 200, [], ['groups' => ['reservation:read']]);
         }
 
@@ -36,7 +53,8 @@ class ReservationController extends AbstractController
             return $this->json(['error' => 'User not found'], 404);
         }
 
-        $reservations = $repo->findActiveByUser($user);
+        $includeHistory = $request->query->getBoolean('history', false);
+        $reservations = $repo->findByUser($user, $includeHistory);
         return $this->json($reservations, 200, [], ['groups' => ['reservation:read']]);
     }
 

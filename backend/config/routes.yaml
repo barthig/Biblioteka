@@ -64,6 +64,12 @@ api_users_delete:
   requirements:
     id: '\\d+'
 
+# Authentication
+api_auth_register:
+  path: /api/auth/register
+  controller: App\Controller\AuthController::register
+  methods: [POST]
+
 # Books catalogue management
 api_books_list:
   path: /api/books
@@ -100,6 +106,22 @@ api_books_delete:
   methods: [DELETE]
   requirements:
     id: '\\d+'
+
+# Account management
+api_account_me:
+  path: /api/me
+  controller: App\Controller\AccountController::me
+  methods: [GET]
+
+api_account_update:
+  path: /api/me
+  controller: App\Controller\AccountController::update
+  methods: [PUT]
+
+api_account_password:
+  path: /api/me/password
+  controller: App\Controller\AccountController::changePassword
+  methods: [PUT]
 
 # Loan operations
 api_loans_list:

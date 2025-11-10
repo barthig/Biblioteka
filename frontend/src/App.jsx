@@ -7,6 +7,9 @@ import Books from './pages/Books'
 import Dashboard from './pages/Dashboard'
 import BookDetails from './pages/BookDetails'
 import MyLoans from './pages/MyLoans'
+import Register from './pages/Register'
+import Profile from './pages/Profile'
+import Reservations from './pages/Reservations'
 
 export default function App() {
   return (
@@ -19,7 +22,10 @@ export default function App() {
             <Route path="/books" element={<Books />} />
             <Route path="/books/:id" element={<BookDetails />} />
             <Route path="/my-loans" element={<MyLoans />} />
+            <Route path="/reservations" element={<Reservations />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/profile" element={<Profile />} />
           </Routes>
           <footer className="footer">
             <p>© 2025 Biblioteka. Wspieramy czytelników w odkrywaniu literatury i edukacji cyfrowej.</p>

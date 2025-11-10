@@ -38,6 +38,7 @@ class ApiAuthSubscriber implements EventSubscriberInterface
         $publicRoutes = [
             // allow authentication bootstrap without token
             '/api/auth/login' => ['POST'],
+            '/api/auth/register' => ['POST'],
         ];
 
         if (isset($publicRoutes[$path]) && in_array($method, $publicRoutes[$path], true)) {

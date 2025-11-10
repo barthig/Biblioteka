@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { apiFetch } from '../api'
 
@@ -68,6 +69,9 @@ export default function Login() {
           <button className="btn btn-primary" disabled={loading}>
             {loading ? 'Logowanie...' : 'Zaloguj'}
           </button>
+          <span className="support-copy">
+            Nie masz jeszcze konta? <Link to="/register">Zarejestruj się</Link>
+          </span>
           {error && <div className="error">{error}</div>}
         </form>
       </div>
