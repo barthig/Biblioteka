@@ -44,6 +44,17 @@ class ApiAuthSubscriber implements EventSubscriberInterface
             return;
         }
 
+        $publicPatterns = [
+            ['pattern' => '#^/api/books$#', 'methods' => ['GET']],
+            ['pattern' => '#^/api/books/\\d+$#', 'methods' => ['GET']],
+        ];
+
+        foreach ($publicPatterns as $entry) {
+            if (preg_match($entry['pattern'], $path) && in_array($method, $entry['methods'], true)) {
+                return;
+            }
+        }
+
         $headerSecret = $request->headers->get('x-api-secret');
         $auth = $request->headers->get('authorization');
         $bearer = null;

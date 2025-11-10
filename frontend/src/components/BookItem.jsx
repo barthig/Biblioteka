@@ -7,6 +7,7 @@ export default function BookItem({ book, onBorrowed }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const { user } = useAuth()
+  const isLoggedIn = Boolean(user?.id)
 
   const available = book?.copies ?? 0
   const total = book?.totalCopies ?? available
@@ -53,14 +54,23 @@ export default function BookItem({ book, onBorrowed }) {
       )}
 
       <div className="resource-item__actions">
-        <button
-          className="btn btn-primary"
-          disabled={!isAvailable || loading}
-          onClick={borrow}
-        >
-          {loading ? 'Wysyłanie...' : 'Wypożycz egzemplarz'}
-        </button>
-        <Link to={`/books/${book.id}`} className="btn btn-outline">Szczegóły</Link>
+        {isLoggedIn ? (
+          <>
+            <button
+              className="btn btn-primary"
+              disabled={!isAvailable || loading}
+              onClick={borrow}
+            >
+              {loading ? 'Wysyłanie...' : 'Wypożycz egzemplarz'}
+            </button>
+            <Link to={`/books/${book.id}`} className="btn btn-outline">Szczegóły</Link>
+          </>
+        ) : (
+          <>
+            <Link to={`/books/${book.id}`} className="btn btn-outline">Szczegóły</Link>
+            <Link to="/login" className="btn btn-primary">Zaloguj się, aby wypożyczyć</Link>
+          </>
+        )}
       </div>
 
       {error && <div className="error">{error}</div>}
