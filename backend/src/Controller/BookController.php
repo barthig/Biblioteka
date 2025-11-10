@@ -2,6 +2,8 @@
 namespace App\Controller;
 
 use App\Entity\Book;
+use App\Entity\Favorite;
+use App\Entity\User;
 use App\Repository\AuthorRepository;
 use App\Repository\BookRepository;
 use App\Repository\CategoryRepository;
@@ -14,7 +16,7 @@ use App\Entity\BookCopy;
 
 class BookController extends AbstractController
 {
-    public function list(Request $request, BookRepository $repo): JsonResponse
+    public function list(Request $request, BookRepository $repo, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
     {
         $filters = [
             'q' => $request->query->get('q'),
@@ -33,6 +35,24 @@ class BookController extends AbstractController
 
         $books = $repo->searchPublic($filters);
 
+        $payload = $security->getJwtPayload($request);
+        if ($payload && isset($payload['sub'])) {
+            $user = $doctrine->getRepository(User::class)->find((int) $payload['sub']);
+            if ($user) {
+                /** @var \App\Repository\FavoriteRepository $favoriteRepo */
+                $favoriteRepo = $doctrine->getRepository(Favorite::class);
+                $favoriteBookIds = $favoriteRepo->getBookIdsForUser($user);
+                if (!empty($favoriteBookIds)) {
+                    $favoriteLookup = array_flip($favoriteBookIds);
+                    foreach ($books as $book) {
+                        if ($book instanceof Book && $book->getId() !== null && isset($favoriteLookup[$book->getId()])) {
+                            $book->setIsFavorite(true);
+                        }
+                    }
+                }
+            }
+        }
+
         return $this->json($books, 200, [], ['groups' => ['book:read']]);
     }
 
@@ -41,10 +61,22 @@ class BookController extends AbstractController
         return $this->json($repo->getPublicFacets());
     }
 
-    public function getBook(int $id, BookRepository $repo): JsonResponse
+    public function getBook(int $id, Request $request, BookRepository $repo, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
     {
         $book = $repo->find($id);
         if (!$book) return $this->json(['error' => 'Book not found'], 404);
+        $payload = $security->getJwtPayload($request);
+        if ($payload && isset($payload['sub'])) {
+            $user = $doctrine->getRepository(User::class)->find((int) $payload['sub']);
+            if ($user) {
+                /** @var \App\Repository\FavoriteRepository $favoriteRepo */
+                $favoriteRepo = $doctrine->getRepository(Favorite::class);
+                $favoriteBookIds = $favoriteRepo->getBookIdsForUser($user);
+                if (in_array($book->getId(), $favoriteBookIds, true)) {
+                    $book->setIsFavorite(true);
+                }
+            }
+        }
         return $this->json($book, 200, [], ['groups' => ['book:read']]);
     }
 

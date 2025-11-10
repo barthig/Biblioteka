@@ -71,6 +71,9 @@ class Book
     #[Groups(['book:read', 'reservation:read'])]
     private \DateTimeInterface $createdAt;
 
+    #[Groups(['book:read'])]
+    private bool $isFavorite = false;
+
     public function __construct()
     {
         $this->createdAt = new \DateTimeImmutable();
@@ -306,5 +309,17 @@ class Book
     public function getCreatedAt(): \DateTimeInterface
     {
         return $this->createdAt;
+    }
+
+    public function isFavorite(): bool
+    {
+        return $this->isFavorite;
+    }
+
+    public function setIsFavorite(bool $isFavorite): self
+    {
+        $this->isFavorite = $isFavorite;
+
+        return $this;
     }
 }

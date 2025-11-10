@@ -39,4 +39,19 @@ class FavoriteRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    /**
+     * @return int[]
+     */
+    public function getBookIdsForUser(User $user): array
+    {
+        $rows = $this->createQueryBuilder('f')
+            ->select('IDENTITY(f.book) AS bookId')
+            ->andWhere('f.user = :user')
+            ->setParameter('user', $user)
+            ->getQuery()
+            ->getScalarResult();
+
+        return array_map(static fn (array $row) => (int) $row['bookId'], $rows);
+    }
 }

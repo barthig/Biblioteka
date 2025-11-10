@@ -14,6 +14,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Messenger\MessageBusInterface;
+use Psr\Log\LoggerInterface;
 
 class ReservationController extends AbstractController
 {
@@ -59,7 +60,7 @@ class ReservationController extends AbstractController
         return $this->json($reservations, 200, [], ['groups' => ['reservation:read']]);
     }
 
-    public function create(Request $request, ManagerRegistry $doctrine, SecurityService $security, MessageBusInterface $bus): JsonResponse
+    public function create(Request $request, ManagerRegistry $doctrine, SecurityService $security, MessageBusInterface $bus, LoggerInterface $logger): JsonResponse
     {
         $payload = $security->getJwtPayload($request);
         if (!$payload || !isset($payload['sub'])) {
@@ -108,11 +109,21 @@ class ReservationController extends AbstractController
         $em->persist($reservation);
         $em->flush();
 
-        $bus->dispatch(new ReservationQueuedNotification(
-            $reservation->getId(),
-            $book->getId(),
-            $user->getEmail()
-        ));
+        try {
+            $bus->dispatch(new ReservationQueuedNotification(
+                $reservation->getId(),
+                $book->getId(),
+                $user->getEmail()
+            ));
+        } catch (\Throwable $dispatchError) {
+            // Soft-fail notification dispatch when async transport is unavailable (e.g. missing AMQP PHP extension)
+            $logger->warning('Reservation notification dispatch failed', [
+                'reservationId' => $reservation->getId(),
+                'bookId' => $book->getId(),
+                'userId' => $user->getId(),
+                'error' => $dispatchError->getMessage(),
+            ]);
+        }
 
         return $this->json($reservation, 201, [], ['groups' => ['reservation:read']]);
     }

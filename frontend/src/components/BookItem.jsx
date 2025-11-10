@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { apiFetch } from '../api'
 import { useAuth } from '../context/AuthContext'
@@ -9,6 +9,8 @@ export default function BookItem({ book, onBorrowed }) {
   const [error, setError] = useState(null)
   const [success, setSuccess] = useState(null)
   const [reserved, setReserved] = useState(false)
+  const [favorite, setFavorite] = useState(Boolean(book?.isFavorite))
+  const [favoriteLoading, setFavoriteLoading] = useState(false)
   const { user } = useAuth()
   const isLoggedIn = Boolean(user?.id)
 
@@ -19,6 +21,10 @@ export default function BookItem({ book, onBorrowed }) {
   const publicationYear = book?.publicationYear
   const resourceType = book?.resourceType
   const signature = book?.signature
+
+  useEffect(() => {
+    setFavorite(Boolean(book?.isFavorite))
+  }, [book?.isFavorite])
 
   async function borrow() {
     if (!user?.id) {
@@ -62,6 +68,35 @@ export default function BookItem({ book, onBorrowed }) {
       setError(err.message || 'Nie udało się dodać rezerwacji.')
     } finally {
       setReserveLoading(false)
+    }
+  }
+
+  async function toggleFavorite() {
+    if (!user?.id) {
+      setError('Musisz być zalogowany, aby zarządzać ulubionymi.')
+      return
+    }
+    setError(null)
+    setSuccess(null)
+    setFavoriteLoading(true)
+    try {
+      if (favorite) {
+        await apiFetch(`/api/favorites/${book.id}`, { method: 'DELETE' })
+        setFavorite(false)
+        setSuccess('Usunięto książkę z ulubionych.')
+      } else {
+        await apiFetch('/api/favorites', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ bookId: book.id })
+        })
+        setFavorite(true)
+        setSuccess('Dodano książkę do ulubionych.')
+      }
+    } catch (err) {
+      setError(err.message || 'Nie udało się zaktualizować ulubionych.')
+    } finally {
+      setFavoriteLoading(false)
     }
   }
 
@@ -111,6 +146,13 @@ export default function BookItem({ book, onBorrowed }) {
                 {reserveLoading ? 'Przetwarzanie...' : reserved ? 'Zarezerwowano' : 'Dołącz do kolejki'}
               </button>
             )}
+            <button
+              className="btn btn-ghost"
+              disabled={favoriteLoading}
+              onClick={toggleFavorite}
+            >
+              {favoriteLoading ? 'Aktualizuję...' : favorite ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'}
+            </button>
             <Link to={`/books/${book.id}`} className="btn btn-outline">Szczegóły</Link>
           </>
         ) : (

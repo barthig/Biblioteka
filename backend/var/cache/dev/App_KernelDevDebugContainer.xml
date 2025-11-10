@@ -392,7 +392,7 @@
     </service>
     <service id="argument_resolver.service" class="Symfony\Component\HttpKernel\Controller\ArgumentResolver\ServiceValueResolver">
       <tag priority="-50" name="Symfony\Component\HttpKernel\Controller\ArgumentResolver\ServiceValueResolver">controller.argument_value_resolver</tag>
-      <argument type="service" id=".service_locator.NBIGnlz"/>
+      <argument type="service" id=".service_locator.WIDZm4H"/>
     </service>
     <service id="argument_resolver.default" class="Symfony\Component\HttpKernel\Controller\ArgumentResolver\DefaultValueResolver">
       <tag priority="-100" name="Symfony\Component\HttpKernel\Controller\ArgumentResolver\DefaultValueResolver">controller.argument_value_resolver</tag>
@@ -1666,7 +1666,7 @@
     </service>
     <service id="argument_resolver.not_tagged_controller" class="Symfony\Component\HttpKernel\Controller\ArgumentResolver\NotTaggedControllerValueResolver">
       <tag name="controller.argument_value_resolver" priority="-200"/>
-      <argument type="service" id=".service_locator.NBIGnlz"/>
+      <argument type="service" id=".service_locator.WIDZm4H"/>
     </service>
     <service id="routing.resolver" class="Symfony\Component\Config\Loader\LoaderResolver">
       <call method="addLoader">
@@ -4075,6 +4075,14 @@
         <argument key="repo" type="service_closure" id="App\Repository\UserRepository"/>
       </argument>
     </service>
+    <service id=".service_locator.VsetaNL" class="Symfony\Component\DependencyInjection\ServiceLocator">
+      <tag name="container.service_locator"/>
+      <argument type="collection">
+        <argument key="repo" type="service_closure" id="App\Repository\BookRepository"/>
+        <argument key="doctrine" type="service_closure" id="doctrine"/>
+        <argument key="security" type="service_closure" id="App\Service\SecurityService"/>
+      </argument>
+    </service>
     <service id=".service_locator.Ee7vKfC" class="Symfony\Component\DependencyInjection\ServiceLocator">
       <tag name="container.service_locator"/>
       <argument type="collection">
@@ -4098,14 +4106,6 @@
         <argument key="security" type="service_closure" id="App\Service\SecurityService"/>
         <argument key="authorRepository" type="service_closure" id="App\Repository\AuthorRepository"/>
         <argument key="categoryRepository" type="service_closure" id="App\Repository\CategoryRepository"/>
-      </argument>
-    </service>
-    <service id=".service_locator.VsetaNL" class="Symfony\Component\DependencyInjection\ServiceLocator">
-      <tag name="container.service_locator"/>
-      <argument type="collection">
-        <argument key="repo" type="service_closure" id="App\Repository\BookRepository"/>
-        <argument key="doctrine" type="service_closure" id="doctrine"/>
-        <argument key="security" type="service_closure" id="App\Service\SecurityService"/>
       </argument>
     </service>
     <service id=".service_locator.E7ajBy2" class="Symfony\Component\DependencyInjection\ServiceLocator">
@@ -4143,12 +4143,13 @@
         <argument key="bookService" type="service_closure" id="App\Service\BookService"/>
       </argument>
     </service>
-    <service id=".service_locator.m1iKpUC" class="Symfony\Component\DependencyInjection\ServiceLocator">
+    <service id=".service_locator.rs0UfCO" class="Symfony\Component\DependencyInjection\ServiceLocator">
       <tag name="container.service_locator"/>
       <argument type="collection">
         <argument key="doctrine" type="service_closure" id="doctrine"/>
         <argument key="security" type="service_closure" id="App\Service\SecurityService"/>
         <argument key="bus" type="service_closure" id="messenger.bus.default"/>
+        <argument key="logger" type="service_closure" id="logger"/>
       </argument>
     </service>
     <service id=".service_locator.RGWMk6E" class="Symfony\Component\DependencyInjection\ServiceLocator">
@@ -4167,7 +4168,7 @@
         <argument key="security" type="service_closure" id="App\Service\SecurityService"/>
       </argument>
     </service>
-    <service id=".service_locator.NBIGnlz" class="Symfony\Component\DependencyInjection\ServiceLocator">
+    <service id=".service_locator.WIDZm4H" class="Symfony\Component\DependencyInjection\ServiceLocator">
       <tag name="container.service_locator"/>
       <argument type="collection">
         <argument key="kernel::registerContainerConfiguration" type="service_closure" id=".service_locator.zHyJIs5"/>
@@ -4179,9 +4180,9 @@
         <argument key="App\Controller\AccountController::changePassword" type="service_closure" id=".service_locator.f6M_KXh"/>
         <argument key="App\Controller\AuthController::login" type="service_closure" id=".service_locator._8VsPQl"/>
         <argument key="App\Controller\AuthController::register" type="service_closure" id=".service_locator.dYRlw6Q"/>
-        <argument key="App\Controller\BookController::list" type="service_closure" id=".service_locator.Ee7vKfC"/>
+        <argument key="App\Controller\BookController::list" type="service_closure" id=".service_locator.VsetaNL"/>
         <argument key="App\Controller\BookController::filters" type="service_closure" id=".service_locator.Ee7vKfC"/>
-        <argument key="App\Controller\BookController::getBook" type="service_closure" id=".service_locator.Ee7vKfC"/>
+        <argument key="App\Controller\BookController::getBook" type="service_closure" id=".service_locator.VsetaNL"/>
         <argument key="App\Controller\BookController::create" type="service_closure" id=".service_locator.7ztJxY2"/>
         <argument key="App\Controller\BookController::update" type="service_closure" id=".service_locator.52eyy9l"/>
         <argument key="App\Controller\BookController::delete" type="service_closure" id=".service_locator.VsetaNL"/>
@@ -4206,7 +4207,7 @@
         <argument key="App\Controller\ReportController::usage" type="service_closure" id=".service_locator.AbYyszh"/>
         <argument key="App\Controller\ReportController::export" type="service_closure" id=".service_locator.S_C3Dzl"/>
         <argument key="App\Controller\ReservationController::list" type="service_closure" id=".service_locator.AbYyszh"/>
-        <argument key="App\Controller\ReservationController::create" type="service_closure" id=".service_locator.m1iKpUC"/>
+        <argument key="App\Controller\ReservationController::create" type="service_closure" id=".service_locator.rs0UfCO"/>
         <argument key="App\Controller\ReservationController::cancel" type="service_closure" id=".service_locator.AbYyszh"/>
         <argument key="App\Controller\ReviewController::list" type="service_closure" id=".service_locator.RGWMk6E"/>
         <argument key="App\Controller\ReviewController::upsert" type="service_closure" id=".service_locator.RGWMk6E"/>
@@ -4225,9 +4226,9 @@
         <argument key="App\Controller\AccountController:changePassword" type="service_closure" id=".service_locator.f6M_KXh"/>
         <argument key="App\Controller\AuthController:login" type="service_closure" id=".service_locator._8VsPQl"/>
         <argument key="App\Controller\AuthController:register" type="service_closure" id=".service_locator.dYRlw6Q"/>
-        <argument key="App\Controller\BookController:list" type="service_closure" id=".service_locator.Ee7vKfC"/>
+        <argument key="App\Controller\BookController:list" type="service_closure" id=".service_locator.VsetaNL"/>
         <argument key="App\Controller\BookController:filters" type="service_closure" id=".service_locator.Ee7vKfC"/>
-        <argument key="App\Controller\BookController:getBook" type="service_closure" id=".service_locator.Ee7vKfC"/>
+        <argument key="App\Controller\BookController:getBook" type="service_closure" id=".service_locator.VsetaNL"/>
         <argument key="App\Controller\BookController:create" type="service_closure" id=".service_locator.7ztJxY2"/>
         <argument key="App\Controller\BookController:update" type="service_closure" id=".service_locator.52eyy9l"/>
         <argument key="App\Controller\BookController:delete" type="service_closure" id=".service_locator.VsetaNL"/>
@@ -4252,7 +4253,7 @@
         <argument key="App\Controller\ReportController:usage" type="service_closure" id=".service_locator.AbYyszh"/>
         <argument key="App\Controller\ReportController:export" type="service_closure" id=".service_locator.S_C3Dzl"/>
         <argument key="App\Controller\ReservationController:list" type="service_closure" id=".service_locator.AbYyszh"/>
-        <argument key="App\Controller\ReservationController:create" type="service_closure" id=".service_locator.m1iKpUC"/>
+        <argument key="App\Controller\ReservationController:create" type="service_closure" id=".service_locator.rs0UfCO"/>
         <argument key="App\Controller\ReservationController:cancel" type="service_closure" id=".service_locator.AbYyszh"/>
         <argument key="App\Controller\ReviewController:list" type="service_closure" id=".service_locator.RGWMk6E"/>
         <argument key="App\Controller\ReviewController:upsert" type="service_closure" id=".service_locator.RGWMk6E"/>
@@ -5484,7 +5485,7 @@
     <service id="nelmio_api_doc.controller.swagger" alias="nelmio_api_doc.controller.swagger_json" public="true"/>
     <service id="nelmio_api_doc.generator" alias="nelmio_api_doc.generator.default" public="true"/>
     <service id="container.env_var_processors_locator" alias=".service_locator.pRu6x_4" public="true"/>
-    <service id="argument_resolver.controller_locator" alias=".service_locator.NBIGnlz"/>
+    <service id="argument_resolver.controller_locator" alias=".service_locator.WIDZm4H"/>
     <service id="doctrine.id_generator_locator" alias=".service_locator.BxSdgVt"/>
     <service id="Psr\Log\LoggerInterface" alias="logger"/>
     <service id=".service_locator.oiB6xeU" alias="messenger.receiver_locator"/>
@@ -5499,16 +5500,16 @@
     <service id=".service_locator.HjgWim3" alias=".service_locator.f6M_KXh"/>
     <service id=".service_locator.DHDj2Yc" alias=".service_locator._8VsPQl"/>
     <service id=".service_locator.rHXEMdb" alias=".service_locator.dYRlw6Q"/>
+    <service id=".service_locator.wt94lsD" alias=".service_locator.VsetaNL"/>
     <service id=".service_locator.YBFeevY" alias=".service_locator.Ee7vKfC"/>
     <service id=".service_locator.MAx5TjV" alias=".service_locator.7ztJxY2"/>
     <service id=".service_locator.2AVg6yn" alias=".service_locator.52eyy9l"/>
-    <service id=".service_locator.wt94lsD" alias=".service_locator.VsetaNL"/>
     <service id=".service_locator.8o9hjmt" alias=".service_locator.E7ajBy2"/>
     <service id=".service_locator.Gu3qpkt" alias=".service_locator.AbYyszh"/>
     <service id=".service_locator.QLxwK0X" alias=".service_locator.4aTJiDL"/>
     <service id=".service_locator.YSjCaiw" alias=".service_locator.S_C3Dzl"/>
     <service id=".service_locator.v2tBNUy" alias=".service_locator.z8H8Dc3"/>
-    <service id=".service_locator.VuSo.jK" alias=".service_locator.m1iKpUC"/>
+    <service id=".service_locator.m3kCcJ2" alias=".service_locator.rs0UfCO"/>
     <service id=".service_locator.OcHHXfg" alias=".service_locator.RGWMk6E"/>
     <service id=".service_locator.TuBt.Pv" alias=".service_locator.fQV0aqS"/>
     <service id=".service_locator.i9yrr1E" alias=".service_locator.ZyP9f7K"/>

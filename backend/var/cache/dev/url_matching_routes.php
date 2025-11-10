@@ -58,60 +58,60 @@ return [
     [ // $regexpList
         0 => '{^(?'
                 .'|/api/(?'
-                    .'|products/(\\\\d+)(*:30)'
-                    .'|users/(\\\\d+)(?'
-                        .'|(*:52)'
+                    .'|products/([0-9]+)(*:32)'
+                    .'|users/([0-9]+)(?'
+                        .'|(*:56)'
                     .')'
                     .'|books/(?'
-                        .'|(\\\\d+)(?'
-                            .'|(*:78)'
+                        .'|([0-9]+)(?'
+                            .'|(*:84)'
                         .')'
-                        .'|(\\\\d+)/reviews(?'
-                            .'|(*:103)'
+                        .'|([0-9]+)/reviews(?'
+                            .'|(*:111)'
                         .')'
                     .')'
                     .'|loans/(?'
-                        .'|(\\\\d+)(*:128)'
-                        .'|user/(\\\\d+)(*:147)'
-                        .'|(\\\\d+)/return(*:168)'
-                        .'|(\\\\d+)/extend(*:189)'
-                        .'|(\\\\d+)(*:203)'
+                        .'|([0-9]+)(*:138)'
+                        .'|user/([0-9]+)(*:159)'
+                        .'|([0-9]+)/return(*:182)'
+                        .'|([0-9]+)/extend(*:205)'
+                        .'|([0-9]+)(*:221)'
                     .')'
-                    .'|reservations/(\\\\d+)(*:231)'
-                    .'|orders/(\\\\d+)(*:252)'
+                    .'|reservations/([0-9]+)(*:251)'
+                    .'|orders/([0-9]+)(*:274)'
                     .'|f(?'
-                        .'|avorites/(\\\\d+)(*:279)'
-                        .'|ines/(\\\\d+)/pay(*:302)'
+                        .'|avorites/([0-9]+)(*:303)'
+                        .'|ines/([0-9]+)/pay(*:328)'
                     .')'
                 .')'
             .')/?$}sDu',
     ],
     [ // $dynamicRoutes
-        30 => [[['_route' => 'api_products_get', '_controller' => 'App\\Controller\\ProductController::getProduct'], ['id'], ['GET' => 0], null, false, true, null]],
-        52 => [
+        32 => [[['_route' => 'api_products_get', '_controller' => 'App\\Controller\\ProductController::getProduct'], ['id'], ['GET' => 0], null, false, true, null]],
+        56 => [
             [['_route' => 'api_users_get', '_controller' => 'App\\Controller\\UserController::getUserById'], ['id'], ['GET' => 0], null, false, true, null],
             [['_route' => 'api_users_update', '_controller' => 'App\\Controller\\UserManagementController::update'], ['id'], ['PUT' => 0], null, false, true, null],
             [['_route' => 'api_users_delete', '_controller' => 'App\\Controller\\UserManagementController::delete'], ['id'], ['DELETE' => 0], null, false, true, null],
         ],
-        78 => [
+        84 => [
             [['_route' => 'api_books_get', '_controller' => 'App\\Controller\\BookController::getBook'], ['id'], ['GET' => 0], null, false, true, null],
             [['_route' => 'api_books_update', '_controller' => 'App\\Controller\\BookController::update'], ['id'], ['PUT' => 0], null, false, true, null],
             [['_route' => 'api_books_delete', '_controller' => 'App\\Controller\\BookController::delete'], ['id'], ['DELETE' => 0], null, false, true, null],
         ],
-        103 => [
+        111 => [
             [['_route' => 'api_reviews_list', '_controller' => 'App\\Controller\\ReviewController::list'], ['id'], ['GET' => 0], null, false, false, null],
             [['_route' => 'api_reviews_upsert', '_controller' => 'App\\Controller\\ReviewController::upsert'], ['id'], ['POST' => 0], null, false, false, null],
             [['_route' => 'api_reviews_delete', '_controller' => 'App\\Controller\\ReviewController::delete'], ['id'], ['DELETE' => 0], null, false, false, null],
         ],
-        128 => [[['_route' => 'api_loans_get', '_controller' => 'App\\Controller\\LoanController::getLoan'], ['id'], ['GET' => 0], null, false, true, null]],
-        147 => [[['_route' => 'api_loans_by_user', '_controller' => 'App\\Controller\\LoanController::listByUser'], ['id'], ['GET' => 0], null, false, true, null]],
-        168 => [[['_route' => 'api_loans_return', '_controller' => 'App\\Controller\\LoanController::returnLoan'], ['id'], ['PUT' => 0], null, false, false, null]],
-        189 => [[['_route' => 'api_loans_extend', '_controller' => 'App\\Controller\\LoanController::extend'], ['id'], ['PUT' => 0], null, false, false, null]],
-        203 => [[['_route' => 'api_loans_delete', '_controller' => 'App\\Controller\\LoanController::delete'], ['id'], ['DELETE' => 0], null, false, true, null]],
-        231 => [[['_route' => 'api_reservations_cancel', '_controller' => 'App\\Controller\\ReservationController::cancel'], ['id'], ['DELETE' => 0], null, false, true, null]],
-        252 => [[['_route' => 'api_orders_cancel', '_controller' => 'App\\Controller\\OrderController::cancel'], ['id'], ['DELETE' => 0], null, false, true, null]],
-        279 => [[['_route' => 'api_favorites_remove', '_controller' => 'App\\Controller\\FavoriteController::remove'], ['bookId'], ['DELETE' => 0], null, false, true, null]],
-        302 => [
+        138 => [[['_route' => 'api_loans_get', '_controller' => 'App\\Controller\\LoanController::getLoan'], ['id'], ['GET' => 0], null, false, true, null]],
+        159 => [[['_route' => 'api_loans_by_user', '_controller' => 'App\\Controller\\LoanController::listByUser'], ['id'], ['GET' => 0], null, false, true, null]],
+        182 => [[['_route' => 'api_loans_return', '_controller' => 'App\\Controller\\LoanController::returnLoan'], ['id'], ['PUT' => 0], null, false, false, null]],
+        205 => [[['_route' => 'api_loans_extend', '_controller' => 'App\\Controller\\LoanController::extend'], ['id'], ['PUT' => 0], null, false, false, null]],
+        221 => [[['_route' => 'api_loans_delete', '_controller' => 'App\\Controller\\LoanController::delete'], ['id'], ['DELETE' => 0], null, false, true, null]],
+        251 => [[['_route' => 'api_reservations_cancel', '_controller' => 'App\\Controller\\ReservationController::cancel'], ['id'], ['DELETE' => 0], null, false, true, null]],
+        274 => [[['_route' => 'api_orders_cancel', '_controller' => 'App\\Controller\\OrderController::cancel'], ['id'], ['DELETE' => 0], null, false, true, null]],
+        303 => [[['_route' => 'api_favorites_remove', '_controller' => 'App\\Controller\\FavoriteController::remove'], ['bookId'], ['DELETE' => 0], null, false, true, null]],
+        328 => [
             [['_route' => 'api_fines_pay', '_controller' => 'App\\Controller\\FineController::pay'], ['id'], ['POST' => 0], null, false, false, null],
             [null, null, null, null, false, false, 0],
         ],

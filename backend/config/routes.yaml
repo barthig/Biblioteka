@@ -29,7 +29,7 @@ api_products_get:
   controller: App\Controller\ProductController::getProduct
   methods: [GET]
   requirements:
-    id: '\\d+'
+    id: '[0-9]+'
 
 # User facing queries
 api_users_list:
@@ -42,7 +42,7 @@ api_users_get:
   controller: App\Controller\UserController::getUserById
   methods: [GET]
   requirements:
-    id: '\\d+'
+    id: '[0-9]+'
 
 # User management (staff only)
 api_users_create:
@@ -55,14 +55,14 @@ api_users_update:
   controller: App\Controller\UserManagementController::update
   methods: [PUT]
   requirements:
-    id: '\\d+'
+    id: '[0-9]+'
 
 api_users_delete:
   path: /api/users/{id}
   controller: App\Controller\UserManagementController::delete
   methods: [DELETE]
   requirements:
-    id: '\\d+'
+    id: '[0-9]+'
 
 # Authentication
 api_auth_register:
@@ -86,7 +86,7 @@ api_books_get:
   controller: App\Controller\BookController::getBook
   methods: [GET]
   requirements:
-    id: '\\d+'
+    id: '[0-9]+'
 
 api_books_create:
   path: /api/books
@@ -98,14 +98,14 @@ api_books_update:
   controller: App\Controller\BookController::update
   methods: [PUT]
   requirements:
-    id: '\\d+'
+    id: '[0-9]+'
 
 api_books_delete:
   path: /api/books/{id}
   controller: App\Controller\BookController::delete
   methods: [DELETE]
   requirements:
-    id: '\\d+'
+    id: '[0-9]+'
 
 # Account management
 api_account_me:
@@ -134,7 +134,7 @@ api_loans_get:
   controller: App\Controller\LoanController::getLoan
   methods: [GET]
   requirements:
-    id: '\\d+'
+    id: '[0-9]+'
 
 api_loans_create:
   path: /api/loans
@@ -146,28 +146,28 @@ api_loans_by_user:
   controller: App\Controller\LoanController::listByUser
   methods: [GET]
   requirements:
-    id: '\\d+'
+    id: '[0-9]+'
 
 api_loans_return:
   path: /api/loans/{id}/return
   controller: App\Controller\LoanController::returnLoan
   methods: [PUT]
   requirements:
-    id: '\\d+'
+    id: '[0-9]+'
 
 api_loans_extend:
   path: /api/loans/{id}/extend
   controller: App\Controller\LoanController::extend
   methods: [PUT]
   requirements:
-    id: '\\d+'
+    id: '[0-9]+'
 
 api_loans_delete:
   path: /api/loans/{id}
   controller: App\Controller\LoanController::delete
   methods: [DELETE]
   requirements:
-    id: '\\d+'
+    id: '[0-9]+'
 
 # Reservations
 api_reservations_list:
@@ -185,7 +185,7 @@ api_reservations_cancel:
   controller: App\Controller\ReservationController::cancel
   methods: [DELETE]
   requirements:
-    id: '\\d+'
+    id: '[0-9]+'
 
 # Orders
 api_orders_list:
@@ -203,7 +203,7 @@ api_orders_cancel:
   controller: App\Controller\OrderController::cancel
   methods: [DELETE]
   requirements:
-    id: '\\d+'
+    id: '[0-9]+'
 
 # Fines
 api_fines_list:
@@ -227,7 +227,7 @@ api_favorites_remove:
   controller: App\Controller\FavoriteController::remove
   methods: [DELETE]
   requirements:
-    bookId: '\\d+'
+    bookId: '[0-9]+'
 
 # Reviews
 api_reviews_list:
@@ -235,28 +235,28 @@ api_reviews_list:
   controller: App\Controller\ReviewController::list
   methods: [GET]
   requirements:
-    id: '\\d+'
+    id: '[0-9]+'
 
 api_reviews_upsert:
   path: /api/books/{id}/reviews
   controller: App\Controller\ReviewController::upsert
   methods: [POST]
   requirements:
-    id: '\\d+'
+    id: '[0-9]+'
 
 api_reviews_delete:
   path: /api/books/{id}/reviews
   controller: App\Controller\ReviewController::delete
   methods: [DELETE]
   requirements:
-    id: '\\d+'
+    id: '[0-9]+'
 
 api_fines_pay:
   path: /api/fines/{id}/pay
   controller: App\Controller\FineController::pay
   methods: [POST]
   requirements:
-    id: '\\d+'
+    id: '[0-9]+'
 
 # Notifications
 api_notifications_list:
