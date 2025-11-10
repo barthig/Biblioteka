@@ -70,11 +70,14 @@ class ComposerStaticInit65ce50d89d4e417b146049a1d141d5ee
             'Symfony\\Component\\Filesystem\\' => 29,
             'Symfony\\Component\\EventDispatcher\\' => 34,
             'Symfony\\Component\\ErrorHandler\\' => 31,
+            'Symfony\\Component\\DomCrawler\\' => 29,
             'Symfony\\Component\\DependencyInjection\\' => 38,
+            'Symfony\\Component\\CssSelector\\' => 30,
             'Symfony\\Component\\Console\\' => 26,
             'Symfony\\Component\\Config\\' => 25,
             'Symfony\\Component\\Clock\\' => 24,
             'Symfony\\Component\\Cache\\' => 24,
+            'Symfony\\Component\\BrowserKit\\' => 29,
             'Symfony\\Bundle\\MakerBundle\\' => 27,
             'Symfony\\Bundle\\FrameworkBundle\\' => 31,
             'Symfony\\Bundle\\DebugBundle\\' => 27,
@@ -98,6 +101,10 @@ class ComposerStaticInit65ce50d89d4e417b146049a1d141d5ee
         'N' => 
         array (
             'Nelmio\\ApiDocBundle\\' => 20,
+        ),
+        'M' => 
+        array (
+            'Masterminds\\' => 12,
         ),
         'D' => 
         array (
@@ -260,9 +267,17 @@ class ComposerStaticInit65ce50d89d4e417b146049a1d141d5ee
         array (
             0 => __DIR__ . '/..' . '/symfony/error-handler',
         ),
+        'Symfony\\Component\\DomCrawler\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/symfony/dom-crawler',
+        ),
         'Symfony\\Component\\DependencyInjection\\' => 
         array (
             0 => __DIR__ . '/..' . '/symfony/dependency-injection',
+        ),
+        'Symfony\\Component\\CssSelector\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/symfony/css-selector',
         ),
         'Symfony\\Component\\Console\\' => 
         array (
@@ -279,6 +294,10 @@ class ComposerStaticInit65ce50d89d4e417b146049a1d141d5ee
         'Symfony\\Component\\Cache\\' => 
         array (
             0 => __DIR__ . '/..' . '/symfony/cache',
+        ),
+        'Symfony\\Component\\BrowserKit\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/symfony/browser-kit',
         ),
         'Symfony\\Bundle\\MakerBundle\\' => 
         array (
@@ -335,6 +354,10 @@ class ComposerStaticInit65ce50d89d4e417b146049a1d141d5ee
         'Nelmio\\ApiDocBundle\\' => 
         array (
             0 => __DIR__ . '/..' . '/nelmio/api-doc-bundle/src',
+        ),
+        'Masterminds\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/masterminds/html5/src',
         ),
         'Doctrine\\SqlFormatter\\' => 
         array (

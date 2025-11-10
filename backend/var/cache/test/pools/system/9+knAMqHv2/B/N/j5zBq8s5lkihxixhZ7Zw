@@ -1,0 +1,105 @@
+<?php //Proxies___CG___App_Entity_Supplier
+
+return [PHP_INT_MAX, new class() implements \Symfony\Component\Cache\Traits\CachedValueInterface { public function getValue(): mixed { return \Symfony\Component\VarExporter\Internal\Hydrator::hydrate(
+    $o = [
+        clone (($p = &\Symfony\Component\VarExporter\Internal\Registry::$prototypes)['Symfony\\Component\\Serializer\\Mapping\\ClassMetadata'] ?? \Symfony\Component\VarExporter\Internal\Registry::p('Symfony\\Component\\Serializer\\Mapping\\ClassMetadata')),
+        clone ($p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'] ?? \Symfony\Component\VarExporter\Internal\Registry::p('Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata')),
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+    ],
+    null,
+    [
+        'stdClass' => [
+            'name' => [
+                'Proxies\\__CG__\\App\\Entity\\Supplier',
+                'lazyObjectState',
+                'lazyObjectInitialized',
+                'lazyObjectAsInitialized',
+                'id',
+                'name',
+                'contactEmail',
+                'contactPhone',
+                'addressLine',
+                'city',
+                'country',
+                'taxIdentifier',
+                'notes',
+                'active',
+                'createdAt',
+                'updatedAt',
+            ],
+            'attributesMetadata' => [
+                [
+                    'lazyObjectState' => $o[1],
+                    'lazyObjectInitialized' => $o[2],
+                    'lazyObjectAsInitialized' => $o[3],
+                    'id' => $o[4],
+                    'name' => $o[5],
+                    'contactEmail' => $o[6],
+                    'contactPhone' => $o[7],
+                    'addressLine' => $o[8],
+                    'city' => $o[9],
+                    'country' => $o[10],
+                    'taxIdentifier' => $o[11],
+                    'notes' => $o[12],
+                    'active' => $o[13],
+                    'createdAt' => $o[14],
+                    'updatedAt' => $o[15],
+                ],
+            ],
+            'ignore' => [
+                1 => true,
+                true,
+                true,
+            ],
+            'groups' => [
+                4 => [
+                    'supplier:read',
+                    'acquisition:read',
+                ],
+                [
+                    'supplier:read',
+                    'acquisition:read',
+                ],
+                [
+                    'supplier:read',
+                ],
+                [
+                    'supplier:read',
+                ],
+                [
+                    'supplier:read',
+                ],
+                [
+                    'supplier:read',
+                ],
+                [
+                    'supplier:read',
+                ],
+                [
+                    'supplier:read',
+                ],
+                13 => [
+                    'supplier:read',
+                ],
+                [
+                    'supplier:read',
+                ],
+            ],
+        ],
+    ],
+    $o[0],
+    []
+); } }];

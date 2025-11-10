@@ -1,0 +1,76 @@
+<?php //App_Entity_AcquisitionExpense
+
+return [PHP_INT_MAX, new class() implements \Symfony\Component\Cache\Traits\CachedValueInterface { public function getValue(): mixed { return \Symfony\Component\VarExporter\Internal\Hydrator::hydrate(
+    $o = [
+        clone (($p = &\Symfony\Component\VarExporter\Internal\Registry::$prototypes)['Symfony\\Component\\Serializer\\Mapping\\ClassMetadata'] ?? \Symfony\Component\VarExporter\Internal\Registry::p('Symfony\\Component\\Serializer\\Mapping\\ClassMetadata')),
+        clone ($p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'] ?? \Symfony\Component\VarExporter\Internal\Registry::p('Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata')),
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+    ],
+    null,
+    [
+        'stdClass' => [
+            'name' => [
+                'App\\Entity\\AcquisitionExpense',
+                'id',
+                'budget',
+                'order',
+                'amount',
+                'currency',
+                'description',
+                'type',
+                'postedAt',
+            ],
+            'attributesMetadata' => [
+                [
+                    'id' => $o[1],
+                    'budget' => $o[2],
+                    'order' => $o[3],
+                    'amount' => $o[4],
+                    'currency' => $o[5],
+                    'description' => $o[6],
+                    'type' => $o[7],
+                    'postedAt' => $o[8],
+                ],
+            ],
+            'groups' => [
+                1 => [
+                    'budget:read',
+                    'acquisition:read',
+                ],
+                [
+                    'budget:read',
+                ],
+                [
+                    'acquisition:read',
+                ],
+                [
+                    'budget:read',
+                    'acquisition:read',
+                ],
+                [
+                    'budget:read',
+                    'acquisition:read',
+                ],
+                [
+                    'budget:read',
+                    'acquisition:read',
+                ],
+                [
+                    'budget:read',
+                ],
+                [
+                    'budget:read',
+                    'acquisition:read',
+                ],
+            ],
+        ],
+    ],
+    $o[0],
+    []
+); } }];

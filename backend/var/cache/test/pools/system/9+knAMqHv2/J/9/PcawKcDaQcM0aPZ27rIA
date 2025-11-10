@@ -1,0 +1,91 @@
+<?php //App_Entity_Supplier
+
+return [PHP_INT_MAX, new class() implements \Symfony\Component\Cache\Traits\CachedValueInterface { public function getValue(): mixed { return \Symfony\Component\VarExporter\Internal\Hydrator::hydrate(
+    $o = [
+        clone (($p = &\Symfony\Component\VarExporter\Internal\Registry::$prototypes)['Symfony\\Component\\Serializer\\Mapping\\ClassMetadata'] ?? \Symfony\Component\VarExporter\Internal\Registry::p('Symfony\\Component\\Serializer\\Mapping\\ClassMetadata')),
+        clone ($p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'] ?? \Symfony\Component\VarExporter\Internal\Registry::p('Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata')),
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+    ],
+    null,
+    [
+        'stdClass' => [
+            'name' => [
+                'App\\Entity\\Supplier',
+                'id',
+                'name',
+                'contactEmail',
+                'contactPhone',
+                'addressLine',
+                'city',
+                'country',
+                'taxIdentifier',
+                'notes',
+                'active',
+                'createdAt',
+                'updatedAt',
+            ],
+            'attributesMetadata' => [
+                [
+                    'id' => $o[1],
+                    'name' => $o[2],
+                    'contactEmail' => $o[3],
+                    'contactPhone' => $o[4],
+                    'addressLine' => $o[5],
+                    'city' => $o[6],
+                    'country' => $o[7],
+                    'taxIdentifier' => $o[8],
+                    'notes' => $o[9],
+                    'active' => $o[10],
+                    'createdAt' => $o[11],
+                    'updatedAt' => $o[12],
+                ],
+            ],
+            'groups' => [
+                1 => [
+                    'supplier:read',
+                    'acquisition:read',
+                ],
+                [
+                    'supplier:read',
+                    'acquisition:read',
+                ],
+                [
+                    'supplier:read',
+                ],
+                [
+                    'supplier:read',
+                ],
+                [
+                    'supplier:read',
+                ],
+                [
+                    'supplier:read',
+                ],
+                [
+                    'supplier:read',
+                ],
+                [
+                    'supplier:read',
+                ],
+                10 => [
+                    'supplier:read',
+                ],
+                [
+                    'supplier:read',
+                ],
+            ],
+        ],
+    ],
+    $o[0],
+    []
+); } }];

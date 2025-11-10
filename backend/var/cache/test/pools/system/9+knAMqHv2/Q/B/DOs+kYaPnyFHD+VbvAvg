@@ -1,0 +1,84 @@
+<?php //Proxies___CG___App_Entity_AcquisitionBudget
+
+return [PHP_INT_MAX, new class() implements \Symfony\Component\Cache\Traits\CachedValueInterface { public function getValue(): mixed { return \Symfony\Component\VarExporter\Internal\Hydrator::hydrate(
+    $o = [
+        clone (($p = &\Symfony\Component\VarExporter\Internal\Registry::$prototypes)['Symfony\\Component\\Serializer\\Mapping\\ClassMetadata'] ?? \Symfony\Component\VarExporter\Internal\Registry::p('Symfony\\Component\\Serializer\\Mapping\\ClassMetadata')),
+        clone ($p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'] ?? \Symfony\Component\VarExporter\Internal\Registry::p('Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata')),
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+    ],
+    null,
+    [
+        'stdClass' => [
+            'name' => [
+                'Proxies\\__CG__\\App\\Entity\\AcquisitionBudget',
+                'lazyObjectState',
+                'lazyObjectInitialized',
+                'lazyObjectAsInitialized',
+                'id',
+                'name',
+                'fiscalYear',
+                'allocatedAmount',
+                'spentAmount',
+                'currency',
+                'createdAt',
+                'updatedAt',
+            ],
+            'attributesMetadata' => [
+                [
+                    'lazyObjectState' => $o[1],
+                    'lazyObjectInitialized' => $o[2],
+                    'lazyObjectAsInitialized' => $o[3],
+                    'id' => $o[4],
+                    'name' => $o[5],
+                    'fiscalYear' => $o[6],
+                    'allocatedAmount' => $o[7],
+                    'spentAmount' => $o[8],
+                    'currency' => $o[9],
+                    'createdAt' => $o[10],
+                    'updatedAt' => $o[11],
+                ],
+            ],
+            'ignore' => [
+                1 => true,
+                true,
+                true,
+            ],
+            'groups' => [
+                4 => [
+                    'budget:read',
+                    'acquisition:read',
+                ],
+                [
+                    'budget:read',
+                    'acquisition:read',
+                ],
+                [
+                    'budget:read',
+                ],
+                [
+                    'budget:read',
+                ],
+                [
+                    'budget:read',
+                ],
+                [
+                    'budget:read',
+                ],
+                [
+                    'budget:read',
+                ],
+            ],
+        ],
+    ],
+    $o[0],
+    []
+); } }];

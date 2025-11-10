@@ -42,10 +42,38 @@ class BookServiceTest extends TestCase
         $borrowedCopy = $svc->borrow($book);
         $this->assertInstanceOf(BookCopy::class, $borrowedCopy);
         $this->assertSame(BookCopy::STATUS_BORROWED, $borrowedCopy->getStatus());
-        $this->assertEquals(0, $book->getCopies());
+    $this->assertSame(0, $book->getCopies());
 
         $svc->restore($book, $borrowedCopy);
-        $this->assertEquals(1, $book->getCopies());
+    $this->assertSame(1, $book->getCopies());
         $this->assertSame(BookCopy::STATUS_AVAILABLE, $borrowedCopy->getStatus());
+    }
+
+    public function testWithdrawCopyUpdatesStatusAndCounters(): void
+    {
+        $author = (new Author())->setName('Tester');
+        $book = (new Book())
+            ->setTitle('Withdraw Test')
+            ->setAuthor($author);
+
+        $copy = (new BookCopy())
+            ->setBook($book)
+            ->setInventoryCode('UNIT-002');
+        $book->addInventoryCopy($copy);
+
+    $em = $this->createMock(ObjectManager::class);
+    $em->expects($this->exactly(2))->method('persist')->with($this->logicalOr($copy, $book));
+        $em->expects($this->once())->method('flush');
+
+        /** @var ManagerRegistry&\PHPUnit\Framework\MockObject\MockObject $mr */
+        $mr = $this->createMock(ManagerRegistry::class);
+        $mr->method('getManager')->willReturn($em);
+
+        $service = new BookService($mr);
+        $service->withdrawCopy($book, $copy, 'torn pages');
+
+        $this->assertSame(BookCopy::STATUS_WITHDRAWN, $copy->getStatus());
+        $this->assertSame('torn pages', $copy->getConditionState());
+        $this->assertSame(0, $book->getCopies());
     }
 }

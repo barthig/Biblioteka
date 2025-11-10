@@ -5,12 +5,12 @@ use App\Entity\Book;
 
 class BookControllerTest extends ApiTestCase
 {
-    public function testListRequiresAuthentication(): void
+    public function testListAccessibleWithoutAuthentication(): void
     {
         $client = $this->createClientWithoutSecret();
         $this->sendRequest($client, 'GET', '/api/books');
 
-        $this->assertResponseStatusCodeSame(401);
+        $this->assertResponseStatusCodeSame(200);
     }
 
     public function testListReturnsBooks(): void

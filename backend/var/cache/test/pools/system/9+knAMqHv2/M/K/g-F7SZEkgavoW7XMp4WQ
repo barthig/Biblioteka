@@ -1,0 +1,91 @@
+<?php //Proxies___CG___App_Entity_Loan
+
+return [PHP_INT_MAX, new class() implements \Symfony\Component\Cache\Traits\CachedValueInterface { public function getValue(): mixed { return \Symfony\Component\VarExporter\Internal\Hydrator::hydrate(
+    $o = [
+        clone (($p = &\Symfony\Component\VarExporter\Internal\Registry::$prototypes)['Symfony\\Component\\Serializer\\Mapping\\ClassMetadata'] ?? \Symfony\Component\VarExporter\Internal\Registry::p('Symfony\\Component\\Serializer\\Mapping\\ClassMetadata')),
+        clone ($p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'] ?? \Symfony\Component\VarExporter\Internal\Registry::p('Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata')),
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+    ],
+    null,
+    [
+        'stdClass' => [
+            'name' => [
+                'Proxies\\__CG__\\App\\Entity\\Loan',
+                'lazyObjectState',
+                'lazyObjectInitialized',
+                'lazyObjectAsInitialized',
+                'id',
+                'book',
+                'bookCopy',
+                'user',
+                'borrowedAt',
+                'dueAt',
+                'returnedAt',
+                'extensionsCount',
+                'lastExtendedAt',
+            ],
+            'attributesMetadata' => [
+                [
+                    'lazyObjectState' => $o[1],
+                    'lazyObjectInitialized' => $o[2],
+                    'lazyObjectAsInitialized' => $o[3],
+                    'id' => $o[4],
+                    'book' => $o[5],
+                    'bookCopy' => $o[6],
+                    'user' => $o[7],
+                    'borrowedAt' => $o[8],
+                    'dueAt' => $o[9],
+                    'returnedAt' => $o[10],
+                    'extensionsCount' => $o[11],
+                    'lastExtendedAt' => $o[12],
+                ],
+            ],
+            'ignore' => [
+                1 => true,
+                true,
+                true,
+            ],
+            'groups' => [
+                4 => [
+                    'loan:read',
+                ],
+                [
+                    'loan:read',
+                ],
+                [
+                    'loan:read',
+                ],
+                [
+                    'loan:read',
+                ],
+                [
+                    'loan:read',
+                ],
+                [
+                    'loan:read',
+                ],
+                [
+                    'loan:read',
+                ],
+                [
+                    'loan:read',
+                ],
+                [
+                    'loan:read',
+                ],
+            ],
+        ],
+    ],
+    $o[0],
+    []
+); } }];

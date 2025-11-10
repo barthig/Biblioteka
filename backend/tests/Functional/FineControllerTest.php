@@ -18,6 +18,7 @@ class FineControllerTest extends ApiTestCase
             ->setReason('Opóźniony zwrot');
         $this->entityManager->persist($fine);
         $this->entityManager->flush();
+        self::assertSame('5.00', $fine->getAmount());
 
         $client = $this->createAuthenticatedClient($user);
         $this->sendRequest($client, 'GET', '/api/fines');

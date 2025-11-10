@@ -1,0 +1,113 @@
+<?php //App_Entity_AcquisitionOrder
+
+return [PHP_INT_MAX, new class() implements \Symfony\Component\Cache\Traits\CachedValueInterface { public function getValue(): mixed { return \Symfony\Component\VarExporter\Internal\Hydrator::hydrate(
+    $o = [
+        clone (($p = &\Symfony\Component\VarExporter\Internal\Registry::$prototypes)['Symfony\\Component\\Serializer\\Mapping\\ClassMetadata'] ?? \Symfony\Component\VarExporter\Internal\Registry::p('Symfony\\Component\\Serializer\\Mapping\\ClassMetadata')),
+        clone ($p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'] ?? \Symfony\Component\VarExporter\Internal\Registry::p('Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata')),
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+    ],
+    null,
+    [
+        'stdClass' => [
+            'name' => [
+                'App\\Entity\\AcquisitionOrder',
+                'id',
+                'supplier',
+                'budget',
+                'referenceNumber',
+                'title',
+                'description',
+                'items',
+                'totalAmount',
+                'currency',
+                'status',
+                'createdAt',
+                'updatedAt',
+                'orderedAt',
+                'expectedAt',
+                'receivedAt',
+                'cancelledAt',
+            ],
+            'attributesMetadata' => [
+                [
+                    'id' => $o[1],
+                    'supplier' => $o[2],
+                    'budget' => $o[3],
+                    'referenceNumber' => $o[4],
+                    'title' => $o[5],
+                    'description' => $o[6],
+                    'items' => $o[7],
+                    'totalAmount' => $o[8],
+                    'currency' => $o[9],
+                    'status' => $o[10],
+                    'createdAt' => $o[11],
+                    'updatedAt' => $o[12],
+                    'orderedAt' => $o[13],
+                    'expectedAt' => $o[14],
+                    'receivedAt' => $o[15],
+                    'cancelledAt' => $o[16],
+                ],
+            ],
+            'groups' => [
+                1 => [
+                    'acquisition:read',
+                ],
+                [
+                    'acquisition:read',
+                ],
+                [
+                    'acquisition:read',
+                ],
+                [
+                    'acquisition:read',
+                ],
+                [
+                    'acquisition:read',
+                ],
+                [
+                    'acquisition:read',
+                ],
+                [
+                    'acquisition:read',
+                ],
+                [
+                    'acquisition:read',
+                ],
+                [
+                    'acquisition:read',
+                ],
+                [
+                    'acquisition:read',
+                ],
+                [
+                    'acquisition:read',
+                ],
+                13 => [
+                    'acquisition:read',
+                ],
+                [
+                    'acquisition:read',
+                ],
+                [
+                    'acquisition:read',
+                ],
+            ],
+        ],
+    ],
+    $o[0],
+    []
+); } }];

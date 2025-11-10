@@ -54,7 +54,7 @@ class ReportController extends AbstractController
             'activeLoans' => $active,
             'from' => $from,
             'to' => $to,
-        ], 200);
+        ], 200, [], ['json_encode_options' => \JSON_PRESERVE_ZERO_FRACTION]);
     }
 
     public function export(Request $request, SecurityService $security): JsonResponse
@@ -86,7 +86,7 @@ class ReportController extends AbstractController
             'format' => $format,
             'content' => $content,
             'generatedAt' => (new \DateTimeImmutable())->format(DATE_ATOM),
-        ], 200);
+        ], 200, [], ['json_encode_options' => \JSON_PRESERVE_ZERO_FRACTION]);
     }
 
     public function popularTitles(Request $request, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
@@ -125,7 +125,7 @@ class ReportController extends AbstractController
             'limit' => $limit,
             'periodDays' => $days,
             'items' => $items,
-        ], 200);
+        ], 200, [], ['json_encode_options' => \JSON_PRESERVE_ZERO_FRACTION]);
     }
 
     public function patronSegments(Request $request, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
@@ -157,7 +157,7 @@ class ReportController extends AbstractController
             ];
         }, $qb->getQuery()->getResult());
 
-        return $this->json(['segments' => $segments], 200);
+        return $this->json(['segments' => $segments], 200, [], ['json_encode_options' => \JSON_PRESERVE_ZERO_FRACTION]);
     }
 
     public function financialSummary(Request $request, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
@@ -203,7 +203,7 @@ class ReportController extends AbstractController
                 'collected' => round((float) $fineTotals['collected'], 2),
                 'currency' => $fineTotals['currency'],
             ],
-        ], 200);
+        ], 200, [], ['json_encode_options' => \JSON_PRESERVE_ZERO_FRACTION]);
     }
 
     public function inventoryOverview(Request $request, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
@@ -243,6 +243,6 @@ class ReportController extends AbstractController
             'copies' => $breakdown,
             'totalCopies' => $totalCopies,
             'borrowedPercentage' => $utilization,
-        ], 200);
+        ], 200, [], ['json_encode_options' => \JSON_PRESERVE_ZERO_FRACTION]);
     }
 }

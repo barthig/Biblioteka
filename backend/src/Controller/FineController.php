@@ -19,7 +19,10 @@ class FineController extends AbstractController
 
         if ($security->hasRole($request, 'ROLE_LIBRARIAN')) {
             $fines = $repo->findAll();
-            return $this->json($fines, 200, [], ['groups' => ['fine:read', 'loan:read']]);
+            return $this->json($fines, 200, [], [
+                'groups' => ['fine:read', 'loan:read'],
+                'json_encode_options' => \JSON_PRESERVE_ZERO_FRACTION,
+            ]);
         }
 
         $payload = $security->getJwtPayload($request);
@@ -41,7 +44,10 @@ class FineController extends AbstractController
             ->getQuery()
             ->getResult();
 
-        return $this->json($fines, 200, [], ['groups' => ['fine:read', 'loan:read']]);
+        return $this->json($fines, 200, [], [
+            'groups' => ['fine:read', 'loan:read'],
+            'json_encode_options' => \JSON_PRESERVE_ZERO_FRACTION,
+        ]);
     }
 
     public function create(Request $request, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
@@ -90,7 +96,10 @@ class FineController extends AbstractController
         $em->persist($fine);
         $em->flush();
 
-        return $this->json($fine, 201, [], ['groups' => ['fine:read', 'loan:read']]);
+        return $this->json($fine, 201, [], [
+            'groups' => ['fine:read', 'loan:read'],
+            'json_encode_options' => \JSON_PRESERVE_ZERO_FRACTION,
+        ]);
     }
 
     public function pay(string $id, Request $request, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
@@ -123,7 +132,10 @@ class FineController extends AbstractController
         $em->persist($fine);
         $em->flush();
 
-        return $this->json($fine, 200, [], ['groups' => ['fine:read', 'loan:read']]);
+        return $this->json($fine, 200, [], [
+            'groups' => ['fine:read', 'loan:read'],
+            'json_encode_options' => \JSON_PRESERVE_ZERO_FRACTION,
+        ]);
     }
 
     public function cancel(string $id, Request $request, ManagerRegistry $doctrine, SecurityService $security): JsonResponse

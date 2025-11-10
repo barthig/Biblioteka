@@ -61,12 +61,16 @@ class Fine
 
     public function getAmount(): string
     {
-        return $this->amount;
+        return number_format((float) $this->amount, 2, '.', '');
     }
 
     public function setAmount(string $amount): self
     {
-        $this->amount = $amount;
+        if (!is_numeric($amount)) {
+            throw new \InvalidArgumentException('Amount must be numeric');
+        }
+
+        $this->amount = number_format((float) $amount, 2, '.', '');
         return $this;
     }
 

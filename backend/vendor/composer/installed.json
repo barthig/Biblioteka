@@ -1337,6 +1337,76 @@
             "install-path": "../doctrine/sql-formatter"
         },
         {
+            "name": "masterminds/html5",
+            "version": "2.10.0",
+            "version_normalized": "2.10.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Masterminds/html5-php.git",
+                "reference": "fcf91eb64359852f00d921887b219479b4f21251"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Masterminds/html5-php/zipball/fcf91eb64359852f00d921887b219479b4f21251",
+                "reference": "fcf91eb64359852f00d921887b219479b4f21251",
+                "shasum": ""
+            },
+            "require": {
+                "ext-dom": "*",
+                "php": ">=5.3.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^4.8.35 || ^5.7.21 || ^6 || ^7 || ^8 || ^9"
+            },
+            "time": "2025-07-25T09:04:22+00:00",
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "2.7-dev"
+                }
+            },
+            "installation-source": "dist",
+            "autoload": {
+                "psr-4": {
+                    "Masterminds\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Matt Butcher",
+                    "email": "technosophos@gmail.com"
+                },
+                {
+                    "name": "Matt Farina",
+                    "email": "matt@mattfarina.com"
+                },
+                {
+                    "name": "Asmir Mustafic",
+                    "email": "goetas@gmail.com"
+                }
+            ],
+            "description": "An HTML5 parser and serializer.",
+            "homepage": "http://masterminds.github.io/html5-php",
+            "keywords": [
+                "HTML5",
+                "dom",
+                "html",
+                "parser",
+                "querypath",
+                "serializer",
+                "xml"
+            ],
+            "support": {
+                "issues": "https://github.com/Masterminds/html5-php/issues",
+                "source": "https://github.com/Masterminds/html5-php/tree/2.10.0"
+            },
+            "install-path": "../masterminds/html5"
+        },
+        {
             "name": "myclabs/deep-copy",
             "version": "1.13.4",
             "version_normalized": "1.13.4.0",
@@ -3727,6 +3797,81 @@
             "install-path": "../symfony/amqp-messenger"
         },
         {
+            "name": "symfony/browser-kit",
+            "version": "v7.3.6",
+            "version_normalized": "7.3.6.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/browser-kit.git",
+                "reference": "e9a9fd604296b17bf90939c3647069f1f16ef04e"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/browser-kit/zipball/e9a9fd604296b17bf90939c3647069f1f16ef04e",
+                "reference": "e9a9fd604296b17bf90939c3647069f1f16ef04e",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.2",
+                "symfony/dom-crawler": "^6.4|^7.0"
+            },
+            "require-dev": {
+                "symfony/css-selector": "^6.4|^7.0",
+                "symfony/http-client": "^6.4|^7.0",
+                "symfony/mime": "^6.4|^7.0",
+                "symfony/process": "^6.4|^7.0"
+            },
+            "time": "2025-11-05T07:57:47+00:00",
+            "type": "library",
+            "installation-source": "dist",
+            "autoload": {
+                "psr-4": {
+                    "Symfony\\Component\\BrowserKit\\": ""
+                },
+                "exclude-from-classmap": [
+                    "/Tests/"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Fabien Potencier",
+                    "email": "fabien@symfony.com"
+                },
+                {
+                    "name": "Symfony Community",
+                    "homepage": "https://symfony.com/contributors"
+                }
+            ],
+            "description": "Simulates the behavior of a web browser, allowing you to make requests, click on links and submit forms programmatically",
+            "homepage": "https://symfony.com",
+            "support": {
+                "source": "https://github.com/symfony/browser-kit/tree/v7.3.6"
+            },
+            "funding": [
+                {
+                    "url": "https://symfony.com/sponsor",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/fabpot",
+                    "type": "github"
+                },
+                {
+                    "url": "https://github.com/nicolas-grekas",
+                    "type": "github"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
+                    "type": "tidelift"
+                }
+            ],
+            "install-path": "../symfony/browser-kit"
+        },
+        {
             "name": "symfony/cache",
             "version": "v7.3.5",
             "version_normalized": "7.3.5.0",
@@ -4171,6 +4316,78 @@
             "install-path": "../symfony/console"
         },
         {
+            "name": "symfony/css-selector",
+            "version": "v7.3.6",
+            "version_normalized": "7.3.6.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/css-selector.git",
+                "reference": "84321188c4754e64273b46b406081ad9b18e8614"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/css-selector/zipball/84321188c4754e64273b46b406081ad9b18e8614",
+                "reference": "84321188c4754e64273b46b406081ad9b18e8614",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.2"
+            },
+            "time": "2025-10-29T17:24:25+00:00",
+            "type": "library",
+            "installation-source": "dist",
+            "autoload": {
+                "psr-4": {
+                    "Symfony\\Component\\CssSelector\\": ""
+                },
+                "exclude-from-classmap": [
+                    "/Tests/"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Fabien Potencier",
+                    "email": "fabien@symfony.com"
+                },
+                {
+                    "name": "Jean-François Simon",
+                    "email": "jeanfrancois.simon@sensiolabs.com"
+                },
+                {
+                    "name": "Symfony Community",
+                    "homepage": "https://symfony.com/contributors"
+                }
+            ],
+            "description": "Converts CSS selectors to XPath expressions",
+            "homepage": "https://symfony.com",
+            "support": {
+                "source": "https://github.com/symfony/css-selector/tree/v7.3.6"
+            },
+            "funding": [
+                {
+                    "url": "https://symfony.com/sponsor",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/fabpot",
+                    "type": "github"
+                },
+                {
+                    "url": "https://github.com/nicolas-grekas",
+                    "type": "github"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
+                    "type": "tidelift"
+                }
+            ],
+            "install-path": "../symfony/css-selector"
+        },
+        {
             "name": "symfony/debug-bundle",
             "version": "v6.4.27",
             "version_normalized": "6.4.27.0",
@@ -4523,6 +4740,80 @@
                 }
             ],
             "install-path": "../symfony/doctrine-bridge"
+        },
+        {
+            "name": "symfony/dom-crawler",
+            "version": "v7.3.3",
+            "version_normalized": "7.3.3.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/dom-crawler.git",
+                "reference": "efa076ea0eeff504383ff0dcf827ea5ce15690ba"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/dom-crawler/zipball/efa076ea0eeff504383ff0dcf827ea5ce15690ba",
+                "reference": "efa076ea0eeff504383ff0dcf827ea5ce15690ba",
+                "shasum": ""
+            },
+            "require": {
+                "masterminds/html5": "^2.6",
+                "php": ">=8.2",
+                "symfony/polyfill-ctype": "~1.8",
+                "symfony/polyfill-mbstring": "~1.0"
+            },
+            "require-dev": {
+                "symfony/css-selector": "^6.4|^7.0"
+            },
+            "time": "2025-08-06T20:13:54+00:00",
+            "type": "library",
+            "installation-source": "dist",
+            "autoload": {
+                "psr-4": {
+                    "Symfony\\Component\\DomCrawler\\": ""
+                },
+                "exclude-from-classmap": [
+                    "/Tests/"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Fabien Potencier",
+                    "email": "fabien@symfony.com"
+                },
+                {
+                    "name": "Symfony Community",
+                    "homepage": "https://symfony.com/contributors"
+                }
+            ],
+            "description": "Eases DOM navigation for HTML and XML documents",
+            "homepage": "https://symfony.com",
+            "support": {
+                "source": "https://github.com/symfony/dom-crawler/tree/v7.3.3"
+            },
+            "funding": [
+                {
+                    "url": "https://symfony.com/sponsor",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/fabpot",
+                    "type": "github"
+                },
+                {
+                    "url": "https://github.com/nicolas-grekas",
+                    "type": "github"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
+                    "type": "tidelift"
+                }
+            ],
+            "install-path": "../symfony/dom-crawler"
         },
         {
             "name": "symfony/error-handler",
@@ -7674,6 +7965,7 @@
     ],
     "dev": true,
     "dev-package-names": [
+        "masterminds/html5",
         "myclabs/deep-copy",
         "phar-io/manifest",
         "phar-io/version",
@@ -7698,7 +7990,10 @@
         "sebastian/recursion-context",
         "sebastian/type",
         "sebastian/version",
+        "symfony/browser-kit",
+        "symfony/css-selector",
         "symfony/debug-bundle",
+        "symfony/dom-crawler",
         "symfony/translation-contracts",
         "symfony/twig-bridge",
         "theseer/tokenizer",

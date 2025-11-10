@@ -10,6 +10,8 @@ use App\Entity\BookCopy;
 use App\Entity\Reservation;
 use App\Entity\Fine;
 use App\Entity\User;
+use App\Entity\Supplier;
+use App\Entity\AcquisitionBudget;
 use App\Service\JwtService;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
@@ -33,8 +35,8 @@ abstract class ApiTestCase extends WebTestCase
         $_ENV['API_SECRET'] = self::API_SECRET;
         putenv('JWT_SECRET=' . self::JWT_SECRET);
         $_ENV['JWT_SECRET'] = self::JWT_SECRET;
-    putenv('MESSENGER_TRANSPORT_DSN=sync://');
-    $_ENV['MESSENGER_TRANSPORT_DSN'] = 'sync://';
+        putenv('MESSENGER_TRANSPORT_DSN=sync://');
+        $_ENV['MESSENGER_TRANSPORT_DSN'] = 'sync://';
 
         /** @var EntityManagerInterface $em */
         $em = static::getContainer()->get('doctrine')->getManager();
@@ -64,9 +66,12 @@ abstract class ApiTestCase extends WebTestCase
 
     protected function createApiClient(?string $token = null): HttpKernelBrowser
     {
-        $server = [
-            'HTTP_X_API_SECRET' => self::API_SECRET,
-        ];
+        static::ensureKernelShutdown();
+
+        $server = [];
+        if ($token === null) {
+            $server['HTTP_X_API_SECRET'] = self::API_SECRET;
+        }
 
         if ($token) {
             $server['HTTP_AUTHORIZATION'] = 'Bearer ' . $token;
@@ -77,6 +82,8 @@ abstract class ApiTestCase extends WebTestCase
 
     protected function createClientWithoutSecret(array $server = []): HttpKernelBrowser
     {
+        static::ensureKernelShutdown();
+
         return static::createClient([], $server);
     }
 
@@ -167,6 +174,12 @@ abstract class ApiTestCase extends WebTestCase
 
     protected function createCategory(string $name = 'General'): Category
     {
+        $repository = $this->entityManager->getRepository(Category::class);
+        $existing = $repository->findOneBy(['name' => $name]);
+        if ($existing instanceof Category) {
+            return $existing;
+        }
+
         $category = (new Category())->setName($name);
         $this->entityManager->persist($category);
         $this->entityManager->flush();
@@ -255,8 +268,72 @@ abstract class ApiTestCase extends WebTestCase
         return $loan;
     }
 
+    protected function createSupplier(string $name = 'Biblioteka Dostawca', bool $active = true, ?string $email = null): Supplier
+    {
+        $supplier = (new Supplier())
+            ->setName($name)
+            ->setActive($active);
+
+        if ($email !== null) {
+            $supplier->setContactEmail($email);
+        }
+
+        $this->entityManager->persist($supplier);
+        $this->entityManager->flush();
+
+        return $supplier;
+    }
+
+    protected function createBudget(
+        string $name = 'Budżet Zakupów',
+        string $fiscalYear = '2025',
+        string $allocatedAmount = '1000.00',
+        string $currency = 'PLN',
+        string $spentAmount = '0.00'
+    ): AcquisitionBudget {
+        $budget = (new AcquisitionBudget())
+            ->setName($name)
+            ->setFiscalYear($fiscalYear)
+            ->setCurrency($currency)
+            ->setAllocatedAmount($allocatedAmount)
+            ->setSpentAmount($spentAmount);
+
+        $this->entityManager->persist($budget);
+        $this->entityManager->flush();
+
+        return $budget;
+    }
+
+    protected function createFineForLoan(
+        Loan $loan,
+        string $amount = '5.00',
+        bool $markPaid = false,
+        string $reason = 'Testowa kara',
+        string $currency = 'PLN'
+    ): Fine {
+        $fine = (new Fine())
+            ->setLoan($loan)
+            ->setAmount($amount)
+            ->setCurrency($currency)
+            ->setReason($reason);
+
+        if ($markPaid) {
+            $fine->markAsPaid();
+        }
+
+        $this->entityManager->persist($fine);
+        $this->entityManager->flush();
+
+        return $fine;
+    }
+
     private function purgeDatabase(): void
     {
+        $this->entityManager->createQuery('DELETE FROM App\Entity\AcquisitionExpense ae')->execute();
+        $this->entityManager->createQuery('DELETE FROM App\Entity\AcquisitionOrder ao')->execute();
+        $this->entityManager->createQuery('DELETE FROM App\Entity\AcquisitionBudget ab')->execute();
+        $this->entityManager->createQuery('DELETE FROM App\Entity\Supplier s')->execute();
+        $this->entityManager->createQuery('DELETE FROM App\Entity\WeedingRecord wr')->execute();
         $this->entityManager->createQuery('DELETE FROM App\Entity\Fine f')->execute();
         $this->entityManager->createQuery('DELETE FROM App\Entity\Reservation r')->execute();
         $this->entityManager->createQuery('DELETE FROM App\Entity\Loan l')->execute();

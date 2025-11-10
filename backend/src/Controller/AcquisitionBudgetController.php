@@ -168,6 +168,6 @@ class AcquisitionBudgetController extends AbstractController
             'currency' => $budget->getCurrency(),
         ];
 
-        return $this->json($payload, 200);
+        return $this->json($payload, 200, [], ['json_encode_options' => \JSON_PRESERVE_ZERO_FRACTION]);
     }
 }
