@@ -14,9 +14,12 @@ use App\Entity\BookCopy;
 
 class BookController extends AbstractController
 {
-    public function list(BookRepository $repo): JsonResponse
+    public function list(Request $request, BookRepository $repo): JsonResponse
     {
-        $books = $repo->findAll();
+        $query = (string) $request->query->get('q', '');
+        $books = trim($query) !== ''
+            ? $repo->searchPublic($query)
+            : $repo->findAllForPublic();
         return $this->json($books, 200, [], ['groups' => ['book:read']]);
     }
 

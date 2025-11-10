@@ -16,7 +16,7 @@ if (!\class_exists(App_KernelDevDebugContainer::class, false)) {
 
 return new \ContainerCrs8Mem\App_KernelDevDebugContainer([
     'container.build_hash' => 'Crs8Mem',
-    'container.build_id' => 'a57b93af',
-    'container.build_time' => 1762731828,
+    'container.build_id' => '059f57b0',
+    'container.build_time' => 1762733377,
     'container.runtime_mode' => \in_array(\PHP_SAPI, ['cli', 'phpdbg', 'embed'], true) ? 'web=0' : 'web=1',
 ], __DIR__.\DIRECTORY_SEPARATOR.'ContainerCrs8Mem');

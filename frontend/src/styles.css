@@ -350,6 +350,24 @@ textarea:focus {
 	margin: 0;
 }
 
+.book-search {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-2);
+	align-items: stretch;
+	margin-bottom: var(--space-3);
+}
+
+.book-search__field {
+	flex: 1 1 260px;
+}
+
+.book-search__actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-2);
+}
+
 .books-grid {
 	display: grid;
 	gap: var(--space-3);
