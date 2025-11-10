@@ -49,10 +49,12 @@ class UserManagementController extends AbstractController
     public function update(string $id, Request $request, UserRepository $repo, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
     {
         // allow librarians to update any user, allow a user to update their own profile
+        $isAdmin = $security->hasRole($request, 'ROLE_ADMIN');
         $isLibrarian = $security->hasRole($request, 'ROLE_LIBRARIAN');
+        $canManage = $isLibrarian || $isAdmin;
         $payload = $security->getJwtPayload($request);
         $isOwner = $payload && isset($payload['sub']) && (int)$payload['sub'] === (int)$id;
-        if (!($isLibrarian || $isOwner)) {
+        if (!($canManage || $isOwner)) {
             return $this->json(['error' => 'Forbidden'], 403);
         }
         if (!ctype_digit($id) || (int)$id <= 0) {
@@ -64,10 +66,11 @@ class UserManagementController extends AbstractController
         if (!empty($data['name'])) $user->setName($data['name']);
         if (!empty($data['email'])) $user->setEmail($data['email']);
         if (isset($data['roles'])) {
-            if (!$isLibrarian) {
+            if (!$isAdmin) {
                 return $this->json(['error' => 'Forbidden to change roles'], 403);
             }
-            $user->setRoles((array)$data['roles']);
+            $roles = array_values(array_unique((array) $data['roles']));
+            $user->setRoles($roles);
         }
         if (array_key_exists('phoneNumber', $data)) {
             $phone = trim((string) $data['phoneNumber']);

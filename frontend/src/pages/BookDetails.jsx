@@ -10,6 +10,24 @@ function formatDate(value, withTime = false) {
   return withTime ? date.toLocaleString() : date.toLocaleDateString()
 }
 
+function resolveAvatarUrl(user) {
+  if (!user) return null
+  return user.avatarUrl ?? user.avatar ?? user.avatarPath ?? null
+}
+
+function getInitials(name) {
+  if (!name) return '?'
+  const trimmed = name.trim()
+  if (!trimmed) return '?'
+  const parts = trimmed.split(/\s+/)
+  const initials = parts
+    .filter(Boolean)
+    .slice(0, 2)
+    .map(part => part[0]?.toUpperCase() ?? '')
+    .join('')
+  return initials || '?'
+}
+
 export default function BookDetails() {
   const { id } = useParams()
   const bookId = Number(id)
@@ -578,18 +596,33 @@ export default function BookDetails() {
           <div className="empty-state">Brak opinii dla tej książki. Bądź pierwszą osobą, która ją oceni.</div>
         ) : (
           <ul className="review-list">
-            {reviewsState.reviews.map(review => (
-              <li key={review.id} className="review-item">
-                <div className="review-item__header">
-                  <strong>{review.user?.name ?? 'Czytelnik'}</strong>
-                  <span>Ocena: {review.rating}/5</span>
-                </div>
-                {review.comment && <p>{review.comment}</p>}
-                <div className="resource-item__meta">
-                  <span>Dodano: {formatDate(review.updatedAt)}</span>
-                </div>
-              </li>
-            ))}
+            {reviewsState.reviews.map(review => {
+              const reviewerName = (review.user?.name ?? 'Czytelnik').trim() || 'Czytelnik'
+              const avatarUrl = resolveAvatarUrl(review.user)
+              const initials = getInitials(reviewerName)
+
+              return (
+                <li key={review.id} className="review-item">
+                  <div className="review-item__header">
+                    <div className="review-item__user">
+                      {avatarUrl ? (
+                        <span className="avatar avatar--sm">
+                          <img src={avatarUrl} alt={`Zdjęcie użytkownika ${reviewerName}`} loading="lazy" />
+                        </span>
+                      ) : (
+                        <span className="avatar avatar--sm avatar--fallback" aria-hidden="true">{initials}</span>
+                      )}
+                      <strong>{reviewerName}</strong>
+                    </div>
+                    <span className="review-item__rating">Ocena: {review.rating}/5</span>
+                  </div>
+                  {review.comment && <p>{review.comment}</p>}
+                  <div className="resource-item__meta">
+                    <span>Dodano: {formatDate(review.updatedAt)}</span>
+                  </div>
+                </li>
+              )
+            })}
           </ul>
         )}
       </section>

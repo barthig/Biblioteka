@@ -201,6 +201,81 @@ api_admin_catalog_import:
   controller: App\Controller\CatalogAdminController::import
   methods: [POST]
 
+# System administration
+api_admin_system_settings_list:
+  path: /api/admin/system/settings
+  controller: App\Controller\Admin\SystemConfigController::list
+  methods: [GET]
+
+api_admin_system_settings_create:
+  path: /api/admin/system/settings
+  controller: App\Controller\Admin\SystemConfigController::create
+  methods: [POST]
+
+api_admin_system_settings_update:
+  path: /api/admin/system/settings/{key}
+  controller: App\Controller\Admin\SystemConfigController::update
+  methods: [PUT]
+
+api_admin_system_roles_list:
+  path: /api/admin/system/roles
+  controller: App\Controller\Admin\RoleAdminController::list
+  methods: [GET]
+
+api_admin_system_roles_create:
+  path: /api/admin/system/roles
+  controller: App\Controller\Admin\RoleAdminController::create
+  methods: [POST]
+
+api_admin_system_roles_update:
+  path: /api/admin/system/roles/{roleKey}
+  controller: App\Controller\Admin\RoleAdminController::update
+  methods: [PUT]
+
+api_admin_system_roles_assign:
+  path: /api/admin/system/roles/{roleKey}/assign
+  controller: App\Controller\Admin\RoleAdminController::assign
+  methods: [POST]
+
+api_admin_system_integrations_list:
+  path: /api/admin/system/integrations
+  controller: App\Controller\Admin\IntegrationAdminController::list
+  methods: [GET]
+
+api_admin_system_integrations_create:
+  path: /api/admin/system/integrations
+  controller: App\Controller\Admin\IntegrationAdminController::create
+  methods: [POST]
+
+api_admin_system_integrations_update:
+  path: /api/admin/system/integrations/{id}
+  controller: App\Controller\Admin\IntegrationAdminController::update
+  methods: [PUT]
+  requirements:
+    id: '[0-9]+'
+
+api_admin_system_integrations_test:
+  path: /api/admin/system/integrations/{id}/test
+  controller: App\Controller\Admin\IntegrationAdminController::testConnection
+  methods: [POST]
+  requirements:
+    id: '[0-9]+'
+
+api_admin_system_backups_list:
+  path: /api/admin/system/backups
+  controller: App\Controller\Admin\SecurityAdminController::listBackups
+  methods: [GET]
+
+api_admin_system_backups_create:
+  path: /api/admin/system/backups
+  controller: App\Controller\Admin\SecurityAdminController::createBackup
+  methods: [POST]
+
+api_admin_system_logs_view:
+  path: /api/admin/system/logs
+  controller: App\Controller\Admin\SecurityAdminController::viewLogs
+  methods: [GET]
+
 # Acquisitions - suppliers
 api_acquisitions_suppliers_list:
   path: /api/admin/acquisitions/suppliers

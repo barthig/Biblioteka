@@ -40,11 +40,28 @@ class UserManagementControllerTest extends ApiTestCase
         self::assertTrue(password_verify('secret123', $created->getPassword()));
     }
 
-    public function testUpdateUser(): void
+    public function testUpdateUserRolesRequiresAdmin(): void
     {
         $librarian = $this->createUser('librarian@example.com', ['ROLE_LIBRARIAN']);
         $user = $this->createUser('user@example.com', ['ROLE_USER'], 'secret', 'Original Name');
         $client = $this->createAuthenticatedClient($librarian);
+
+        $this->jsonRequest($client, 'PUT', '/api/users/' . $user->getId(), [
+            'name' => 'Updated Name',
+            'roles' => ['ROLE_USER', 'ROLE_MEMBER'],
+        ]);
+
+        $this->assertResponseStatusCodeSame(403);
+
+        $reload = $this->entityManager->getRepository(User::class)->find($user->getId());
+        self::assertSame(['ROLE_USER'], $reload->getRoles());
+    }
+
+    public function testUpdateUserAsAdminCanChangeRoles(): void
+    {
+        $admin = $this->createUser('admin@example.com', ['ROLE_ADMIN']);
+        $user = $this->createUser('user@example.com', ['ROLE_USER'], 'secret', 'Original Name');
+        $client = $this->createAuthenticatedClient($admin);
 
         $this->jsonRequest($client, 'PUT', '/api/users/' . $user->getId(), [
             'name' => 'Updated Name',

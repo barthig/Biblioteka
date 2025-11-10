@@ -1,3 +1,7 @@
 node_modules
 .env
 .DS_Store
+backend/var/
+backend/tmp/
+backend/vendor/
+backend/.phpunit.result.cache

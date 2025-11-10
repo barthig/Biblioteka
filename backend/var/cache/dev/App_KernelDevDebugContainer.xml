@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <container xmlns="http://symfony.com/schema/dic/services" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://symfony.com/schema/dic/services https://symfony.com/schema/dic/services/services-1.0.xsd">
   <parameters>
-    <parameter key="kernel.project_dir">/app</parameter>
+    <parameter key="kernel.project_dir">D:\Biblioteka-1\backend</parameter>
     <parameter key="kernel.environment">dev</parameter>
     <parameter key="kernel.runtime_environment">%env(default:kernel.environment:APP_RUNTIME_ENV)%</parameter>
     <parameter key="kernel.runtime_mode">%env(query_string:default:container.runtime_mode:APP_RUNTIME_MODE)%</parameter>
@@ -9,9 +9,9 @@
     <parameter key="kernel.runtime_mode.cli">%env(not:default:kernel.runtime_mode.web:)%</parameter>
     <parameter key="kernel.runtime_mode.worker">%env(bool:default::key:worker:default:kernel.runtime_mode:)%</parameter>
     <parameter key="kernel.debug">true</parameter>
-    <parameter key="kernel.build_dir">/app/var/cache/dev</parameter>
-    <parameter key="kernel.cache_dir">/app/var/cache/dev</parameter>
-    <parameter key="kernel.logs_dir">/app/var/log</parameter>
+    <parameter key="kernel.build_dir">D:\Biblioteka-1\backend\var\cache\dev</parameter>
+    <parameter key="kernel.cache_dir">D:\Biblioteka-1\backend\var\cache\dev</parameter>
+    <parameter key="kernel.logs_dir">D:\Biblioteka-1\backend\var\log</parameter>
     <parameter key="kernel.bundles" type="collection">
       <parameter key="FrameworkBundle">Symfony\Bundle\FrameworkBundle\FrameworkBundle</parameter>
       <parameter key="DoctrineBundle">Doctrine\Bundle\DoctrineBundle\DoctrineBundle</parameter>
@@ -22,27 +22,27 @@
     </parameter>
     <parameter key="kernel.bundles_metadata" type="collection">
       <parameter key="FrameworkBundle" type="collection">
-        <parameter key="path">/app/vendor/symfony/framework-bundle</parameter>
+        <parameter key="path">D:\Biblioteka-1\backend\vendor\symfony\framework-bundle</parameter>
         <parameter key="namespace">Symfony\Bundle\FrameworkBundle</parameter>
       </parameter>
       <parameter key="DoctrineBundle" type="collection">
-        <parameter key="path">/app/vendor/doctrine/doctrine-bundle</parameter>
+        <parameter key="path">D:\Biblioteka-1\backend\vendor\doctrine\doctrine-bundle</parameter>
         <parameter key="namespace">Doctrine\Bundle\DoctrineBundle</parameter>
       </parameter>
       <parameter key="DoctrineMigrationsBundle" type="collection">
-        <parameter key="path">/app/vendor/doctrine/doctrine-migrations-bundle</parameter>
+        <parameter key="path">D:\Biblioteka-1\backend\vendor\doctrine\doctrine-migrations-bundle</parameter>
         <parameter key="namespace">Doctrine\Bundle\MigrationsBundle</parameter>
       </parameter>
       <parameter key="DoctrineFixturesBundle" type="collection">
-        <parameter key="path">/app/vendor/doctrine/doctrine-fixtures-bundle</parameter>
+        <parameter key="path">D:\Biblioteka-1\backend\vendor\doctrine\doctrine-fixtures-bundle</parameter>
         <parameter key="namespace">Doctrine\Bundle\FixturesBundle</parameter>
       </parameter>
       <parameter key="MakerBundle" type="collection">
-        <parameter key="path">/app/vendor/symfony/maker-bundle</parameter>
+        <parameter key="path">D:\Biblioteka-1\backend\vendor\symfony\maker-bundle</parameter>
         <parameter key="namespace">Symfony\Bundle\MakerBundle</parameter>
       </parameter>
       <parameter key="NelmioApiDocBundle" type="collection">
-        <parameter key="path">/app/vendor/nelmio/api-doc-bundle</parameter>
+        <parameter key="path">D:\Biblioteka-1\backend\vendor\nelmio\api-doc-bundle</parameter>
         <parameter key="namespace">Nelmio\ApiDocBundle</parameter>
       </parameter>
     </parameter>
@@ -74,16 +74,16 @@
     <parameter key="kernel.error_controller">error_controller</parameter>
     <parameter key="debug.file_link_format">%env(default::SYMFONY_IDE)%</parameter>
     <parameter key="debug.error_handler.throw_at">-1</parameter>
-    <parameter key="debug.container.dump">/app/var/cache/dev/App_KernelDevDebugContainer.xml</parameter>
+    <parameter key="debug.container.dump">D:\Biblioteka-1\backend\var\cache\dev/App_KernelDevDebugContainer.xml</parameter>
     <parameter key="router.request_context.host">localhost</parameter>
     <parameter key="router.request_context.scheme">http</parameter>
     <parameter key="router.request_context.base_url"></parameter>
     <parameter key="router.resource">kernel::loadRoutes</parameter>
-    <parameter key="router.cache_dir">/app/var/cache/dev</parameter>
+    <parameter key="router.cache_dir">D:\Biblioteka-1\backend\var\cache\dev</parameter>
     <parameter key="request_listener.http_port">80</parameter>
     <parameter key="request_listener.https_port">443</parameter>
-    <parameter key="serializer.mapping.cache.file">/app/var/cache/dev/serialization.php</parameter>
-    <parameter key="cache.prefix.seed">_/app.App_KernelDevDebugContainer</parameter>
+    <parameter key="serializer.mapping.cache.file">D:\Biblioteka-1\backend\var\cache\dev/serialization.php</parameter>
+    <parameter key="cache.prefix.seed">_D:\Biblioteka-1\backend.App_KernelDevDebugContainer</parameter>
     <parameter key="session.metadata.storage_key">_sf2_meta</parameter>
     <parameter key="session.storage.options" type="collection">
       <parameter key="cache_limiter" type="string">0</parameter>
@@ -165,7 +165,7 @@
     <parameter key="doctrine.orm.auto_generate_proxy_classes">true</parameter>
     <parameter key="doctrine.orm.enable_lazy_ghost_objects">true</parameter>
     <parameter key="doctrine.orm.enable_native_lazy_objects">false</parameter>
-    <parameter key="doctrine.orm.proxy_dir">/app/var/cache/dev/doctrine/orm/Proxies</parameter>
+    <parameter key="doctrine.orm.proxy_dir">D:\Biblioteka-1\backend\var\cache\dev/doctrine/orm/Proxies</parameter>
     <parameter key="doctrine.orm.proxy_namespace">Proxies</parameter>
     <parameter key="doctrine.migrations.preferred_em">null</parameter>
     <parameter key="doctrine.migrations.preferred_connection">null</parameter>
@@ -225,6 +225,40 @@
       <tag name="container.service_subscriber"/>
       <call method="setContainer">
         <argument type="service" id=".service_locator.ZyP9f7K.App\Controller\AcquisitionSupplierController"/>
+      </call>
+    </service>
+    <service id="App\Controller\Admin\IntegrationAdminController" class="App\Controller\Admin\IntegrationAdminController" public="true" autowire="true" autoconfigure="true">
+      <tag name="controller.service_arguments"/>
+      <tag name="container.service_subscriber"/>
+      <argument type="service" id="App\Repository\IntegrationConfigRepository"/>
+      <call method="setContainer">
+        <argument type="service" id=".service_locator.ZyP9f7K.App\Controller\Admin\IntegrationAdminController"/>
+      </call>
+    </service>
+    <service id="App\Controller\Admin\RoleAdminController" class="App\Controller\Admin\RoleAdminController" public="true" autowire="true" autoconfigure="true">
+      <tag name="controller.service_arguments"/>
+      <tag name="container.service_subscriber"/>
+      <argument type="service" id="App\Repository\StaffRoleRepository"/>
+      <argument type="service" id="App\Repository\UserRepository"/>
+      <call method="setContainer">
+        <argument type="service" id=".service_locator.ZyP9f7K.App\Controller\Admin\RoleAdminController"/>
+      </call>
+    </service>
+    <service id="App\Controller\Admin\SecurityAdminController" class="App\Controller\Admin\SecurityAdminController" public="true" autowire="true" autoconfigure="true">
+      <tag name="controller.service_arguments"/>
+      <tag name="container.service_subscriber"/>
+      <argument type="service" id="App\Service\BackupService"/>
+      <argument type="service" id="App\Repository\BackupRecordRepository"/>
+      <call method="setContainer">
+        <argument type="service" id=".service_locator.ZyP9f7K.App\Controller\Admin\SecurityAdminController"/>
+      </call>
+    </service>
+    <service id="App\Controller\Admin\SystemConfigController" class="App\Controller\Admin\SystemConfigController" public="true" autowire="true" autoconfigure="true">
+      <tag name="controller.service_arguments"/>
+      <tag name="container.service_subscriber"/>
+      <argument type="service" id="App\Repository\SystemSettingRepository"/>
+      <call method="setContainer">
+        <argument type="service" id=".service_locator.ZyP9f7K.App\Controller\Admin\SystemConfigController"/>
       </call>
     </service>
     <service id="App\Controller\AuthController" class="App\Controller\AuthController" public="true" autowire="true" autoconfigure="true">
@@ -361,16 +395,23 @@
         <argument type="service" id=".service_locator.ZyP9f7K.App\Controller\UserManagementController"/>
       </call>
     </service>
+    <service id="App\Controller\WeedingController" class="App\Controller\WeedingController" public="true" autowire="true" autoconfigure="true">
+      <tag name="controller.service_arguments"/>
+      <tag name="container.service_subscriber"/>
+      <call method="setContainer">
+        <argument type="service" id=".service_locator.ZyP9f7K.App\Controller\WeedingController"/>
+      </call>
+    </service>
     <service id="App\EventSubscriber\ApiAuthSubscriber" class="App\EventSubscriber\ApiAuthSubscriber" autowire="true" autoconfigure="true">
       <tag name="kernel.event_subscriber"/>
       <tag name="container.hot_path"/>
     </service>
-    <service id="App\Message\ReservationQueuedNotification" class="App\Message\ReservationQueuedNotification" autowire="true" autoconfigure="true">
-      <tag name="container.error" message="Cannot autowire service &quot;App\Message\ReservationQueuedNotification&quot;: argument &quot;$reservationId&quot; of method &quot;__construct()&quot; is type-hinted &quot;int&quot;, you should configure its value explicitly."/>
-    </service>
     <service id="App\MessageHandler\ReservationQueuedNotificationHandler" class="App\MessageHandler\ReservationQueuedNotificationHandler" autowire="true" autoconfigure="true">
       <tag name="messenger.message_handler"/>
-      <argument>/app</argument>
+      <argument>D:\Biblioteka-1\backend</argument>
+    </service>
+    <service id="App\Message\ReservationQueuedNotification" class="App\Message\ReservationQueuedNotification" autowire="true" autoconfigure="true">
+      <tag name="container.error" message="Cannot autowire service &quot;App\Message\ReservationQueuedNotification&quot;: argument &quot;$reservationId&quot; of method &quot;__construct()&quot; is type-hinted &quot;int&quot;, you should configure its value explicitly."/>
     </service>
     <service id="App\Repository\AcquisitionBudgetRepository" class="App\Repository\AcquisitionBudgetRepository" autowire="true" autoconfigure="true">
       <tag name="doctrine.repository_service"/>
@@ -385,6 +426,10 @@
       <argument type="service" id="doctrine"/>
     </service>
     <service id="App\Repository\AuthorRepository" class="App\Repository\AuthorRepository" autowire="true" autoconfigure="true">
+      <tag name="doctrine.repository_service"/>
+      <argument type="service" id="doctrine"/>
+    </service>
+    <service id="App\Repository\BackupRecordRepository" class="App\Repository\BackupRecordRepository" autowire="true" autoconfigure="true">
       <tag name="doctrine.repository_service"/>
       <argument type="service" id="doctrine"/>
     </service>
@@ -412,6 +457,10 @@
       <tag name="doctrine.repository_service"/>
       <argument type="service" id="doctrine"/>
     </service>
+    <service id="App\Repository\IntegrationConfigRepository" class="App\Repository\IntegrationConfigRepository" autowire="true" autoconfigure="true">
+      <tag name="doctrine.repository_service"/>
+      <argument type="service" id="doctrine"/>
+    </service>
     <service id="App\Repository\LoanRepository" class="App\Repository\LoanRepository" autowire="true" autoconfigure="true">
       <tag name="doctrine.repository_service"/>
       <argument type="service" id="doctrine"/>
@@ -428,7 +477,15 @@
       <tag name="doctrine.repository_service"/>
       <argument type="service" id="doctrine"/>
     </service>
+    <service id="App\Repository\StaffRoleRepository" class="App\Repository\StaffRoleRepository" autowire="true" autoconfigure="true">
+      <tag name="doctrine.repository_service"/>
+      <argument type="service" id="doctrine"/>
+    </service>
     <service id="App\Repository\SupplierRepository" class="App\Repository\SupplierRepository" autowire="true" autoconfigure="true">
+      <tag name="doctrine.repository_service"/>
+      <argument type="service" id="doctrine"/>
+    </service>
+    <service id="App\Repository\SystemSettingRepository" class="App\Repository\SystemSettingRepository" autowire="true" autoconfigure="true">
       <tag name="doctrine.repository_service"/>
       <argument type="service" id="doctrine"/>
     </service>
@@ -439,6 +496,10 @@
     <service id="App\Repository\WeedingRecordRepository" class="App\Repository\WeedingRecordRepository" autowire="true" autoconfigure="true">
       <tag name="doctrine.repository_service"/>
       <argument type="service" id="doctrine"/>
+    </service>
+    <service id="App\Service\BackupService" class="App\Service\BackupService" autowire="true" autoconfigure="true">
+      <argument type="service" id="doctrine.orm.default_entity_manager"/>
+      <argument>D:\Biblioteka-1\backend</argument>
     </service>
     <service id="App\Service\BookService" class="App\Service\BookService" autowire="true" autoconfigure="true">
       <argument type="service" id="doctrine"/>
@@ -478,7 +539,7 @@
     </service>
     <service id="argument_resolver.service" class="Symfony\Component\HttpKernel\Controller\ArgumentResolver\ServiceValueResolver">
       <tag priority="-50" name="Symfony\Component\HttpKernel\Controller\ArgumentResolver\ServiceValueResolver">controller.argument_value_resolver</tag>
-      <argument type="service" id=".service_locator.QnvCC_P"/>
+      <argument type="service" id=".service_locator.ZQSoNr1"/>
     </service>
     <service id="argument_resolver.default" class="Symfony\Component\HttpKernel\Controller\ArgumentResolver\DefaultValueResolver">
       <tag priority="-100" name="Symfony\Component\HttpKernel\Controller\ArgumentResolver\DefaultValueResolver">controller.argument_value_resolver</tag>
@@ -561,7 +622,7 @@
       </argument>
     </service>
     <service id="http_cache.store" class="Symfony\Component\HttpKernel\HttpCache\Store">
-      <argument>/app/var/cache/dev/http_cache</argument>
+      <argument>D:\Biblioteka-1\backend\var\cache\dev/http_cache</argument>
     </service>
     <service id="url_helper" class="Symfony\Component\HttpFoundation\UrlHelper">
       <argument type="service" id="request_stack"/>
@@ -571,7 +632,7 @@
       <tag name="container.no_preload"/>
       <argument type="tagged_iterator" tag="kernel.cache_warmer"/>
       <argument>true</argument>
-      <argument>/app/var/cache/dev/App_KernelDevDebugContainerDeprecations.log</argument>
+      <argument>D:\Biblioteka-1\backend\var\cache\dev/App_KernelDevDebugContainerDeprecations.log</argument>
     </service>
     <service id="cache_clearer" class="Symfony\Component\HttpKernel\CacheClearer\ChainCacheClearer">
       <argument type="tagged_iterator" tag="kernel.cache_clearer"/>
@@ -742,7 +803,7 @@
       </argument>
       <argument>UTF-8</argument>
       <argument type="service" id="debug.file_link_formatter" on-invalid="null"/>
-      <argument>/app</argument>
+      <argument>D:\Biblioteka-1\backend</argument>
       <argument type="service">
         <service>
           <argument type="service" id="request_stack"/>
@@ -778,7 +839,7 @@
       <tag name="console.command"/>
       <tag name="container.no_preload"/>
       <argument type="service" id="filesystem"/>
-      <argument>/app</argument>
+      <argument>D:\Biblioteka-1\backend</argument>
       <call method="setName">
         <argument>assets:install</argument>
       </call>
@@ -1192,9 +1253,9 @@
     <service id="cache.app" class="Symfony\Component\Cache\Adapter\FilesystemAdapter" public="true">
       <tag name="cache.pool"/>
       <tag name="kernel.reset" method="reset"/>
-      <argument>wcaiNNPWIR</argument>
+      <argument>iJWFzsoZNO</argument>
       <argument>0</argument>
-      <argument>/app/var/cache/dev/pools/app</argument>
+      <argument>D:\Biblioteka-1\backend\var\cache\dev/pools/app</argument>
       <argument type="service" id="cache.default_marshaller" on-invalid="ignore"/>
       <call method="setLogger">
         <argument type="service" id="logger" on-invalid="ignore"/>
@@ -1207,59 +1268,59 @@
     <service id="cache.system" class="Symfony\Component\Cache\Adapter\AdapterInterface" public="true">
       <tag name="cache.pool"/>
       <tag name="kernel.reset" method="reset"/>
-      <argument>9QlckI19so</argument>
+      <argument>8-02gBbyQW</argument>
       <argument>0</argument>
       <argument>%container.build_id%</argument>
-      <argument>/app/var/cache/dev/pools/system</argument>
+      <argument>D:\Biblioteka-1\backend\var\cache\dev/pools/system</argument>
       <argument type="service" id="logger" on-invalid="ignore"/>
       <factory class="Symfony\Component\Cache\Adapter\AbstractAdapter" method="createSystemCache"/>
     </service>
     <service id="cache.validator" class="Symfony\Component\Cache\Adapter\AdapterInterface">
       <tag name="cache.pool"/>
       <tag name="kernel.reset" method="reset"/>
-      <argument>uNLnsq5tA3</argument>
+      <argument>LGykbYBBB-</argument>
       <argument>0</argument>
       <argument>%container.build_id%</argument>
-      <argument>/app/var/cache/dev/pools/system</argument>
+      <argument>D:\Biblioteka-1\backend\var\cache\dev/pools/system</argument>
       <argument type="service" id="logger" on-invalid="ignore"/>
       <factory class="Symfony\Component\Cache\Adapter\AbstractAdapter" method="createSystemCache"/>
     </service>
     <service id="cache.serializer" class="Symfony\Component\Cache\Adapter\AdapterInterface">
       <tag name="cache.pool"/>
       <tag name="kernel.reset" method="reset"/>
-      <argument>5HJVh9TCVv</argument>
+      <argument>jE5tzLf-hs</argument>
       <argument>0</argument>
       <argument>%container.build_id%</argument>
-      <argument>/app/var/cache/dev/pools/system</argument>
+      <argument>D:\Biblioteka-1\backend\var\cache\dev/pools/system</argument>
       <argument type="service" id="logger" on-invalid="ignore"/>
       <factory class="Symfony\Component\Cache\Adapter\AbstractAdapter" method="createSystemCache"/>
     </service>
     <service id="cache.annotations" class="Symfony\Component\Cache\Adapter\AdapterInterface">
       <tag name="cache.pool"/>
       <tag name="kernel.reset" method="reset"/>
-      <argument>iasBrpHyIf</argument>
+      <argument>bN2G1Kr+61</argument>
       <argument>0</argument>
       <argument>%container.build_id%</argument>
-      <argument>/app/var/cache/dev/pools/system</argument>
+      <argument>D:\Biblioteka-1\backend\var\cache\dev/pools/system</argument>
       <argument type="service" id="logger" on-invalid="ignore"/>
       <factory class="Symfony\Component\Cache\Adapter\AbstractAdapter" method="createSystemCache"/>
     </service>
     <service id="cache.property_info" class="Symfony\Component\Cache\Adapter\AdapterInterface">
       <tag name="cache.pool"/>
       <tag name="kernel.reset" method="reset"/>
-      <argument>7psGI0enus</argument>
+      <argument>-MaxQds1xp</argument>
       <argument>0</argument>
       <argument>%container.build_id%</argument>
-      <argument>/app/var/cache/dev/pools/system</argument>
+      <argument>D:\Biblioteka-1\backend\var\cache\dev/pools/system</argument>
       <argument type="service" id="logger" on-invalid="ignore"/>
       <factory class="Symfony\Component\Cache\Adapter\AbstractAdapter" method="createSystemCache"/>
     </service>
     <service id="cache.messenger.restart_workers_signal" class="Symfony\Component\Cache\Adapter\FilesystemAdapter">
       <tag name="cache.pool"/>
       <tag name="kernel.reset" method="reset"/>
-      <argument>P0bcfFER+t</argument>
+      <argument>a-As-SpxO7</argument>
       <argument>0</argument>
-      <argument>/app/var/cache/dev/pools/app</argument>
+      <argument>D:\Biblioteka-1\backend\var\cache\dev/pools/app</argument>
       <argument type="service" id="cache.default_marshaller" on-invalid="ignore"/>
       <call method="setLogger">
         <argument type="service" id="logger" on-invalid="ignore"/>
@@ -1271,7 +1332,7 @@
       <argument></argument>
       <argument>0</argument>
       <argument>%container.build_id%</argument>
-      <argument>/app/var/cache/dev/pools/system</argument>
+      <argument>D:\Biblioteka-1\backend\var\cache\dev/pools/system</argument>
       <argument type="service" id="logger" on-invalid="ignore"/>
       <factory class="Symfony\Component\Cache\Adapter\AbstractAdapter" method="createSystemCache"/>
     </service>
@@ -1290,7 +1351,7 @@
       <tag name="monolog.logger" channel="cache"/>
       <argument></argument>
       <argument>0</argument>
-      <argument>/app/var/cache/dev/pools/app</argument>
+      <argument>D:\Biblioteka-1\backend\var\cache\dev/pools/app</argument>
       <argument type="service" id="cache.default_marshaller" on-invalid="ignore"/>
       <call method="setLogger">
         <argument type="service" id="logger" on-invalid="ignore"/>
@@ -1752,7 +1813,7 @@
     </service>
     <service id="argument_resolver.not_tagged_controller" class="Symfony\Component\HttpKernel\Controller\ArgumentResolver\NotTaggedControllerValueResolver">
       <tag name="controller.argument_value_resolver" priority="-200"/>
-      <argument type="service" id=".service_locator.QnvCC_P"/>
+      <argument type="service" id=".service_locator.ZQSoNr1"/>
     </service>
     <service id="routing.resolver" class="Symfony\Component\Config\Loader\LoaderResolver">
       <call method="addLoader">
@@ -1847,7 +1908,7 @@
       <argument type="service" id=".service_locator.RTjHFcp.router.default"/>
       <argument>kernel::loadRoutes</argument>
       <argument type="collection">
-        <argument key="cache_dir">/app/var/cache/dev</argument>
+        <argument key="cache_dir">D:\Biblioteka-1\backend\var\cache\dev</argument>
         <argument key="debug">true</argument>
         <argument key="generator_class">Symfony\Component\Routing\Generator\CompiledUrlGenerator</argument>
         <argument key="generator_dumper_class">Symfony\Component\Routing\Generator\Dumper\CompiledUrlGeneratorDumper</argument>
@@ -1885,7 +1946,7 @@
       <argument type="service" id="request_stack"/>
       <argument type="service" id="router.request_context" on-invalid="ignore"/>
       <argument type="service" id="logger" on-invalid="ignore"/>
-      <argument>/app</argument>
+      <argument>D:\Biblioteka-1\backend</argument>
       <argument>true</argument>
     </service>
     <service id="Symfony\Bundle\FrameworkBundle\Controller\RedirectController" class="Symfony\Bundle\FrameworkBundle\Controller\RedirectController" public="true">
@@ -1913,7 +1974,7 @@
     </service>
     <service id="secrets.vault" class="Symfony\Bundle\FrameworkBundle\Secrets\SodiumVault">
       <tag name="container.env_var_loader"/>
-      <argument>/app/config/secrets/%env(default:kernel.environment:APP_RUNTIME_ENV)%</argument>
+      <argument>D:\Biblioteka-1\backend/config/secrets/%env(default:kernel.environment:APP_RUNTIME_ENV)%</argument>
       <argument type="service" id="secrets.decryption_key" on-invalid="ignore"/>
     </service>
     <service id="secrets.decryption_key" class="Symfony\Component\String\LazyString" constructor="fromCallable">
@@ -1921,7 +1982,7 @@
       <argument>base64:default::SYMFONY_DECRYPTION_SECRET</argument>
     </service>
     <service id="secrets.local_vault" class="Symfony\Bundle\FrameworkBundle\Secrets\DotenvVault">
-      <argument>/app/.env.%env(default:kernel.environment:APP_RUNTIME_ENV)%.local</argument>
+      <argument>D:\Biblioteka-1\backend/.env.%env(default:kernel.environment:APP_RUNTIME_ENV)%.local</argument>
     </service>
     <service id="serializer" class="Symfony\Component\Serializer\Serializer">
       <argument type="collection">
@@ -2049,10 +2110,10 @@
           </service>
         </argument>
       </argument>
-      <argument>/app/var/cache/dev/serialization.php</argument>
+      <argument>D:\Biblioteka-1\backend\var\cache\dev/serialization.php</argument>
     </service>
     <service id="serializer.mapping.cache.symfony" class="Psr\Cache\CacheItemPoolInterface">
-      <argument>/app/var/cache/dev/serialization.php</argument>
+      <argument>D:\Biblioteka-1\backend\var\cache\dev/serialization.php</argument>
       <argument type="service" id="cache.serializer"/>
       <factory class="Symfony\Component\Cache\Adapter\PhpArrayAdapter" method="create"/>
     </service>
@@ -2191,7 +2252,7 @@
       <argument>true</argument>
     </service>
     <service id="session.storage.factory.mock_file" class="Symfony\Component\HttpFoundation\Session\Storage\MockFileSessionStorageFactory">
-      <argument>/app/var/cache/dev/sessions</argument>
+      <argument>D:\Biblioteka-1\backend\var\cache\dev/sessions</argument>
       <argument>MOCKSESSID</argument>
       <argument type="service">
         <service class="Symfony\Component\HttpFoundation\Session\Storage\MetadataBag">
@@ -2619,7 +2680,7 @@
     <service id="doctrine.orm.configuration" class="Doctrine\ORM\Configuration" abstract="true"/>
     <service id="doctrine.orm.entity_manager.abstract" class="Doctrine\ORM\EntityManager" lazy="true" abstract="true"/>
     <service id="doctrine.orm.container_repository_factory" class="Doctrine\Bundle\DoctrineBundle\Repository\ContainerRepositoryFactory">
-      <argument type="service" id=".service_locator.kpW5aZt"/>
+      <argument type="service" id=".service_locator.1Zo8nLD"/>
     </service>
     <service id="doctrine.orm.manager_configurator.abstract" class="Doctrine\Bundle\DoctrineBundle\ManagerConfigurator" abstract="true">
       <argument type="collection"/>
@@ -2816,7 +2877,7 @@
         <argument type="service" id=".doctrine.orm.default_metadata_driver"/>
       </call>
       <call method="setProxyDir">
-        <argument>/app/var/cache/dev/doctrine/orm/Proxies</argument>
+        <argument>D:\Biblioteka-1\backend\var\cache\dev/doctrine/orm/Proxies</argument>
       </call>
       <call method="setProxyNamespace">
         <argument>Proxies</argument>
@@ -2857,7 +2918,7 @@
     </service>
     <service id="doctrine.orm.default_attribute_metadata_driver" class="Doctrine\ORM\Mapping\Driver\AttributeDriver">
       <argument type="collection">
-        <argument>/app/src/Entity</argument>
+        <argument>D:\Biblioteka-1\backend\src\Entity</argument>
       </argument>
       <argument>true</argument>
     </service>
@@ -2914,7 +2975,7 @@
     <service id="doctrine.migrations.configuration" class="Doctrine\Migrations\Configuration\Configuration">
       <call method="addMigrationsDirectory">
         <argument>DoctrineMigrations</argument>
-        <argument>/app/migrations</argument>
+        <argument>D:\Biblioteka-1\backend/migrations</argument>
       </call>
       <call method="setAllOrNothing">
         <argument>false</argument>
@@ -3124,7 +3185,7 @@
       <argument type="service" id="filesystem"/>
       <argument type="service" id="maker.autoloader_util"/>
       <argument type="service" id="maker.file_link_formatter"/>
-      <argument>/app</argument>
+      <argument>D:\Biblioteka-1\backend</argument>
       <argument>null</argument>
     </service>
     <service id="maker.autoloader_finder" class="Symfony\Bundle\MakerBundle\Util\ComposerAutoloaderFinder">
@@ -3302,7 +3363,7 @@
     </service>
     <service id="maker.maker.make_migration" class="Symfony\Bundle\MakerBundle\Maker\MakeMigration">
       <tag name="maker.command"/>
-      <argument>/app</argument>
+      <argument>D:\Biblioteka-1\backend</argument>
       <argument type="service" id="maker.file_link_formatter"/>
     </service>
     <service id="maker.maker.make_stimulus_controller" class="Symfony\Bundle\MakerBundle\Maker\MakeStimulusController">
@@ -3648,6 +3709,18 @@
     <service id=".instanceof.Symfony\Contracts\Service\ServiceSubscriberInterface.0.App\Controller\AcquisitionSupplierController" class="App\Controller\AcquisitionSupplierController" autowire="true" abstract="true"/>
     <service id=".instanceof.Symfony\Bundle\FrameworkBundle\Controller\AbstractController.0.App\Controller\AcquisitionSupplierController" class="App\Controller\AcquisitionSupplierController" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Controller\AcquisitionSupplierController" class="App\Controller\AcquisitionSupplierController" autowire="true" autoconfigure="true" abstract="true"/>
+    <service id=".instanceof.Symfony\Contracts\Service\ServiceSubscriberInterface.0.App\Controller\Admin\IntegrationAdminController" class="App\Controller\Admin\IntegrationAdminController" autowire="true" abstract="true"/>
+    <service id=".instanceof.Symfony\Bundle\FrameworkBundle\Controller\AbstractController.0.App\Controller\Admin\IntegrationAdminController" class="App\Controller\Admin\IntegrationAdminController" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\Controller\Admin\IntegrationAdminController" class="App\Controller\Admin\IntegrationAdminController" autowire="true" autoconfigure="true" abstract="true"/>
+    <service id=".instanceof.Symfony\Contracts\Service\ServiceSubscriberInterface.0.App\Controller\Admin\RoleAdminController" class="App\Controller\Admin\RoleAdminController" autowire="true" abstract="true"/>
+    <service id=".instanceof.Symfony\Bundle\FrameworkBundle\Controller\AbstractController.0.App\Controller\Admin\RoleAdminController" class="App\Controller\Admin\RoleAdminController" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\Controller\Admin\RoleAdminController" class="App\Controller\Admin\RoleAdminController" autowire="true" autoconfigure="true" abstract="true"/>
+    <service id=".instanceof.Symfony\Contracts\Service\ServiceSubscriberInterface.0.App\Controller\Admin\SecurityAdminController" class="App\Controller\Admin\SecurityAdminController" autowire="true" abstract="true"/>
+    <service id=".instanceof.Symfony\Bundle\FrameworkBundle\Controller\AbstractController.0.App\Controller\Admin\SecurityAdminController" class="App\Controller\Admin\SecurityAdminController" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\Controller\Admin\SecurityAdminController" class="App\Controller\Admin\SecurityAdminController" autowire="true" autoconfigure="true" abstract="true"/>
+    <service id=".instanceof.Symfony\Contracts\Service\ServiceSubscriberInterface.0.App\Controller\Admin\SystemConfigController" class="App\Controller\Admin\SystemConfigController" autowire="true" abstract="true"/>
+    <service id=".instanceof.Symfony\Bundle\FrameworkBundle\Controller\AbstractController.0.App\Controller\Admin\SystemConfigController" class="App\Controller\Admin\SystemConfigController" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\Controller\Admin\SystemConfigController" class="App\Controller\Admin\SystemConfigController" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Symfony\Contracts\Service\ServiceSubscriberInterface.0.App\Controller\AuthController" class="App\Controller\AuthController" autowire="true" abstract="true"/>
     <service id=".instanceof.Symfony\Bundle\FrameworkBundle\Controller\AbstractController.0.App\Controller\AuthController" class="App\Controller\AuthController" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Controller\AuthController" class="App\Controller\AuthController" autowire="true" autoconfigure="true" abstract="true"/>
@@ -3705,6 +3778,9 @@
     <service id=".instanceof.Symfony\Contracts\Service\ServiceSubscriberInterface.0.App\Controller\UserManagementController" class="App\Controller\UserManagementController" autowire="true" abstract="true"/>
     <service id=".instanceof.Symfony\Bundle\FrameworkBundle\Controller\AbstractController.0.App\Controller\UserManagementController" class="App\Controller\UserManagementController" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Controller\UserManagementController" class="App\Controller\UserManagementController" autowire="true" autoconfigure="true" abstract="true"/>
+    <service id=".instanceof.Symfony\Contracts\Service\ServiceSubscriberInterface.0.App\Controller\WeedingController" class="App\Controller\WeedingController" autowire="true" abstract="true"/>
+    <service id=".instanceof.Symfony\Bundle\FrameworkBundle\Controller\AbstractController.0.App\Controller\WeedingController" class="App\Controller\WeedingController" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\Controller\WeedingController" class="App\Controller\WeedingController" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Symfony\Component\EventDispatcher\EventSubscriberInterface.0.App\EventSubscriber\ApiAuthSubscriber" class="App\EventSubscriber\ApiAuthSubscriber" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\EventSubscriber\ApiAuthSubscriber" class="App\EventSubscriber\ApiAuthSubscriber" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepositoryInterface.0.App\Repository\AcquisitionBudgetRepository" class="App\Repository\AcquisitionBudgetRepository" autowire="true" abstract="true"/>
@@ -3715,6 +3791,8 @@
     <service id=".abstract.instanceof.App\Repository\AcquisitionOrderRepository" class="App\Repository\AcquisitionOrderRepository" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepositoryInterface.0.App\Repository\AuthorRepository" class="App\Repository\AuthorRepository" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Repository\AuthorRepository" class="App\Repository\AuthorRepository" autowire="true" autoconfigure="true" abstract="true"/>
+    <service id=".instanceof.Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepositoryInterface.0.App\Repository\BackupRecordRepository" class="App\Repository\BackupRecordRepository" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\Repository\BackupRecordRepository" class="App\Repository\BackupRecordRepository" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepositoryInterface.0.App\Repository\BookCopyRepository" class="App\Repository\BookCopyRepository" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Repository\BookCopyRepository" class="App\Repository\BookCopyRepository" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepositoryInterface.0.App\Repository\BookDigitalAssetRepository" class="App\Repository\BookDigitalAssetRepository" autowire="true" abstract="true"/>
@@ -3727,6 +3805,8 @@
     <service id=".abstract.instanceof.App\Repository\FavoriteRepository" class="App\Repository\FavoriteRepository" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepositoryInterface.0.App\Repository\FineRepository" class="App\Repository\FineRepository" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Repository\FineRepository" class="App\Repository\FineRepository" autowire="true" autoconfigure="true" abstract="true"/>
+    <service id=".instanceof.Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepositoryInterface.0.App\Repository\IntegrationConfigRepository" class="App\Repository\IntegrationConfigRepository" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\Repository\IntegrationConfigRepository" class="App\Repository\IntegrationConfigRepository" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepositoryInterface.0.App\Repository\LoanRepository" class="App\Repository\LoanRepository" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Repository\LoanRepository" class="App\Repository\LoanRepository" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepositoryInterface.0.App\Repository\OrderRequestRepository" class="App\Repository\OrderRequestRepository" autowire="true" abstract="true"/>
@@ -3735,8 +3815,12 @@
     <service id=".abstract.instanceof.App\Repository\ReservationRepository" class="App\Repository\ReservationRepository" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepositoryInterface.0.App\Repository\ReviewRepository" class="App\Repository\ReviewRepository" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Repository\ReviewRepository" class="App\Repository\ReviewRepository" autowire="true" autoconfigure="true" abstract="true"/>
+    <service id=".instanceof.Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepositoryInterface.0.App\Repository\StaffRoleRepository" class="App\Repository\StaffRoleRepository" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\Repository\StaffRoleRepository" class="App\Repository\StaffRoleRepository" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepositoryInterface.0.App\Repository\SupplierRepository" class="App\Repository\SupplierRepository" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Repository\SupplierRepository" class="App\Repository\SupplierRepository" autowire="true" autoconfigure="true" abstract="true"/>
+    <service id=".instanceof.Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepositoryInterface.0.App\Repository\SystemSettingRepository" class="App\Repository\SystemSettingRepository" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\Repository\SystemSettingRepository" class="App\Repository\SystemSettingRepository" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepositoryInterface.0.App\Repository\UserRepository" class="App\Repository\UserRepository" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Repository\UserRepository" class="App\Repository\UserRepository" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepositoryInterface.0.App\Repository\WeedingRecordRepository" class="App\Repository\WeedingRecordRepository" autowire="true" abstract="true"/>
@@ -4189,6 +4273,26 @@
         <argument key="security" type="service_closure" id="App\Service\SecurityService"/>
       </argument>
     </service>
+    <service id=".service_locator.S_C3Dzl" class="Symfony\Component\DependencyInjection\ServiceLocator">
+      <tag name="container.service_locator"/>
+      <argument type="collection">
+        <argument key="security" type="service_closure" id="App\Service\SecurityService"/>
+      </argument>
+    </service>
+    <service id=".service_locator.8ZTCuUF" class="Symfony\Component\DependencyInjection\ServiceLocator">
+      <tag name="container.service_locator"/>
+      <argument type="collection">
+        <argument key="security" type="service_closure" id="App\Service\SecurityService"/>
+        <argument key="doctrine" type="service_closure" id="doctrine"/>
+      </argument>
+    </service>
+    <service id=".service_locator.6nghiUy" class="Symfony\Component\DependencyInjection\ServiceLocator">
+      <tag name="container.service_locator"/>
+      <argument type="collection">
+        <argument key="security" type="service_closure" id="App\Service\SecurityService"/>
+        <argument key="kernel" type="service_closure" id="kernel"/>
+      </argument>
+    </service>
     <service id=".service_locator._8VsPQl" class="Symfony\Component\DependencyInjection\ServiceLocator">
       <tag name="container.service_locator"/>
       <argument type="collection">
@@ -4308,12 +4412,6 @@
         <argument key="security" type="service_closure" id="App\Service\SecurityService"/>
       </argument>
     </service>
-    <service id=".service_locator.S_C3Dzl" class="Symfony\Component\DependencyInjection\ServiceLocator">
-      <tag name="container.service_locator"/>
-      <argument type="collection">
-        <argument key="security" type="service_closure" id="App\Service\SecurityService"/>
-      </argument>
-    </service>
     <service id=".service_locator.bRJvpbq" class="Symfony\Component\DependencyInjection\ServiceLocator">
       <tag name="container.service_locator"/>
       <argument type="collection">
@@ -4355,7 +4453,7 @@
         <argument key="security" type="service_closure" id="App\Service\SecurityService"/>
       </argument>
     </service>
-    <service id=".service_locator.QnvCC_P" class="Symfony\Component\DependencyInjection\ServiceLocator">
+    <service id=".service_locator.ZQSoNr1" class="Symfony\Component\DependencyInjection\ServiceLocator">
       <tag name="container.service_locator"/>
       <argument type="collection">
         <argument key="kernel::registerContainerConfiguration" type="service_closure" id=".service_locator.zHyJIs5"/>
@@ -4379,6 +4477,20 @@
         <argument key="App\Controller\AcquisitionSupplierController::create" type="service_closure" id=".service_locator.AbYyszh"/>
         <argument key="App\Controller\AcquisitionSupplierController::update" type="service_closure" id=".service_locator.AbYyszh"/>
         <argument key="App\Controller\AcquisitionSupplierController::deactivate" type="service_closure" id=".service_locator.AbYyszh"/>
+        <argument key="App\Controller\Admin\IntegrationAdminController::list" type="service_closure" id=".service_locator.S_C3Dzl"/>
+        <argument key="App\Controller\Admin\IntegrationAdminController::create" type="service_closure" id=".service_locator.8ZTCuUF"/>
+        <argument key="App\Controller\Admin\IntegrationAdminController::update" type="service_closure" id=".service_locator.8ZTCuUF"/>
+        <argument key="App\Controller\Admin\IntegrationAdminController::testConnection" type="service_closure" id=".service_locator.8ZTCuUF"/>
+        <argument key="App\Controller\Admin\RoleAdminController::list" type="service_closure" id=".service_locator.S_C3Dzl"/>
+        <argument key="App\Controller\Admin\RoleAdminController::create" type="service_closure" id=".service_locator.8ZTCuUF"/>
+        <argument key="App\Controller\Admin\RoleAdminController::update" type="service_closure" id=".service_locator.8ZTCuUF"/>
+        <argument key="App\Controller\Admin\RoleAdminController::assign" type="service_closure" id=".service_locator.8ZTCuUF"/>
+        <argument key="App\Controller\Admin\SecurityAdminController::createBackup" type="service_closure" id=".service_locator.S_C3Dzl"/>
+        <argument key="App\Controller\Admin\SecurityAdminController::listBackups" type="service_closure" id=".service_locator.S_C3Dzl"/>
+        <argument key="App\Controller\Admin\SecurityAdminController::viewLogs" type="service_closure" id=".service_locator.6nghiUy"/>
+        <argument key="App\Controller\Admin\SystemConfigController::list" type="service_closure" id=".service_locator.8ZTCuUF"/>
+        <argument key="App\Controller\Admin\SystemConfigController::create" type="service_closure" id=".service_locator.8ZTCuUF"/>
+        <argument key="App\Controller\Admin\SystemConfigController::update" type="service_closure" id=".service_locator.8ZTCuUF"/>
         <argument key="App\Controller\AuthController::login" type="service_closure" id=".service_locator._8VsPQl"/>
         <argument key="App\Controller\AuthController::register" type="service_closure" id=".service_locator.dYRlw6Q"/>
         <argument key="App\Controller\BookAssetController::list" type="service_closure" id=".service_locator.ClYVSdV"/>
@@ -4419,6 +4531,10 @@
         <argument key="App\Controller\OrderController::cancel" type="service_closure" id=".service_locator.bRJvpbq"/>
         <argument key="App\Controller\ReportController::usage" type="service_closure" id=".service_locator.AbYyszh"/>
         <argument key="App\Controller\ReportController::export" type="service_closure" id=".service_locator.S_C3Dzl"/>
+        <argument key="App\Controller\ReportController::popularTitles" type="service_closure" id=".service_locator.AbYyszh"/>
+        <argument key="App\Controller\ReportController::patronSegments" type="service_closure" id=".service_locator.AbYyszh"/>
+        <argument key="App\Controller\ReportController::financialSummary" type="service_closure" id=".service_locator.AbYyszh"/>
+        <argument key="App\Controller\ReportController::inventoryOverview" type="service_closure" id=".service_locator.AbYyszh"/>
         <argument key="App\Controller\ReservationController::list" type="service_closure" id=".service_locator.AbYyszh"/>
         <argument key="App\Controller\ReservationController::create" type="service_closure" id=".service_locator.rs0UfCO"/>
         <argument key="App\Controller\ReservationController::cancel" type="service_closure" id=".service_locator.AbYyszh"/>
@@ -4435,6 +4551,8 @@
         <argument key="App\Controller\UserManagementController::block" type="service_closure" id=".service_locator.fQV0aqS"/>
         <argument key="App\Controller\UserManagementController::unblock" type="service_closure" id=".service_locator.fQV0aqS"/>
         <argument key="App\Controller\UserManagementController::updatePermissions" type="service_closure" id=".service_locator.fQV0aqS"/>
+        <argument key="App\Controller\WeedingController::list" type="service_closure" id=".service_locator.AbYyszh"/>
+        <argument key="App\Controller\WeedingController::create" type="service_closure" id=".service_locator.4aTJiDL"/>
         <argument key="kernel:registerContainerConfiguration" type="service_closure" id=".service_locator.zHyJIs5"/>
         <argument key="kernel:loadRoutes" type="service_closure" id=".service_locator.zHyJIs5"/>
         <argument key="App\Controller\AccountController:me" type="service_closure" id=".service_locator.jjRPY31"/>
@@ -4454,6 +4572,20 @@
         <argument key="App\Controller\AcquisitionSupplierController:create" type="service_closure" id=".service_locator.AbYyszh"/>
         <argument key="App\Controller\AcquisitionSupplierController:update" type="service_closure" id=".service_locator.AbYyszh"/>
         <argument key="App\Controller\AcquisitionSupplierController:deactivate" type="service_closure" id=".service_locator.AbYyszh"/>
+        <argument key="App\Controller\Admin\IntegrationAdminController:list" type="service_closure" id=".service_locator.S_C3Dzl"/>
+        <argument key="App\Controller\Admin\IntegrationAdminController:create" type="service_closure" id=".service_locator.8ZTCuUF"/>
+        <argument key="App\Controller\Admin\IntegrationAdminController:update" type="service_closure" id=".service_locator.8ZTCuUF"/>
+        <argument key="App\Controller\Admin\IntegrationAdminController:testConnection" type="service_closure" id=".service_locator.8ZTCuUF"/>
+        <argument key="App\Controller\Admin\RoleAdminController:list" type="service_closure" id=".service_locator.S_C3Dzl"/>
+        <argument key="App\Controller\Admin\RoleAdminController:create" type="service_closure" id=".service_locator.8ZTCuUF"/>
+        <argument key="App\Controller\Admin\RoleAdminController:update" type="service_closure" id=".service_locator.8ZTCuUF"/>
+        <argument key="App\Controller\Admin\RoleAdminController:assign" type="service_closure" id=".service_locator.8ZTCuUF"/>
+        <argument key="App\Controller\Admin\SecurityAdminController:createBackup" type="service_closure" id=".service_locator.S_C3Dzl"/>
+        <argument key="App\Controller\Admin\SecurityAdminController:listBackups" type="service_closure" id=".service_locator.S_C3Dzl"/>
+        <argument key="App\Controller\Admin\SecurityAdminController:viewLogs" type="service_closure" id=".service_locator.6nghiUy"/>
+        <argument key="App\Controller\Admin\SystemConfigController:list" type="service_closure" id=".service_locator.8ZTCuUF"/>
+        <argument key="App\Controller\Admin\SystemConfigController:create" type="service_closure" id=".service_locator.8ZTCuUF"/>
+        <argument key="App\Controller\Admin\SystemConfigController:update" type="service_closure" id=".service_locator.8ZTCuUF"/>
         <argument key="App\Controller\AuthController:login" type="service_closure" id=".service_locator._8VsPQl"/>
         <argument key="App\Controller\AuthController:register" type="service_closure" id=".service_locator.dYRlw6Q"/>
         <argument key="App\Controller\BookAssetController:list" type="service_closure" id=".service_locator.ClYVSdV"/>
@@ -4494,6 +4626,10 @@
         <argument key="App\Controller\OrderController:cancel" type="service_closure" id=".service_locator.bRJvpbq"/>
         <argument key="App\Controller\ReportController:usage" type="service_closure" id=".service_locator.AbYyszh"/>
         <argument key="App\Controller\ReportController:export" type="service_closure" id=".service_locator.S_C3Dzl"/>
+        <argument key="App\Controller\ReportController:popularTitles" type="service_closure" id=".service_locator.AbYyszh"/>
+        <argument key="App\Controller\ReportController:patronSegments" type="service_closure" id=".service_locator.AbYyszh"/>
+        <argument key="App\Controller\ReportController:financialSummary" type="service_closure" id=".service_locator.AbYyszh"/>
+        <argument key="App\Controller\ReportController:inventoryOverview" type="service_closure" id=".service_locator.AbYyszh"/>
         <argument key="App\Controller\ReservationController:list" type="service_closure" id=".service_locator.AbYyszh"/>
         <argument key="App\Controller\ReservationController:create" type="service_closure" id=".service_locator.rs0UfCO"/>
         <argument key="App\Controller\ReservationController:cancel" type="service_closure" id=".service_locator.AbYyszh"/>
@@ -4510,6 +4646,8 @@
         <argument key="App\Controller\UserManagementController:block" type="service_closure" id=".service_locator.fQV0aqS"/>
         <argument key="App\Controller\UserManagementController:unblock" type="service_closure" id=".service_locator.fQV0aqS"/>
         <argument key="App\Controller\UserManagementController:updatePermissions" type="service_closure" id=".service_locator.fQV0aqS"/>
+        <argument key="App\Controller\WeedingController:list" type="service_closure" id=".service_locator.AbYyszh"/>
+        <argument key="App\Controller\WeedingController:create" type="service_closure" id=".service_locator.4aTJiDL"/>
       </argument>
     </service>
     <service id=".service_locator.va_rxC4" class="Symfony\Component\DependencyInjection\ServiceLocator">
@@ -4640,24 +4778,28 @@
         <argument key="doctrine.orm.default_listeners.attach_entity_listeners" type="service_closure" id="doctrine.orm.default_listeners.attach_entity_listeners"/>
       </argument>
     </service>
-    <service id=".service_locator.kpW5aZt" class="Symfony\Component\DependencyInjection\ServiceLocator">
+    <service id=".service_locator.1Zo8nLD" class="Symfony\Component\DependencyInjection\ServiceLocator">
       <tag name="container.service_locator"/>
       <argument type="collection">
         <argument key="App\Repository\AcquisitionBudgetRepository" type="service_closure" id="App\Repository\AcquisitionBudgetRepository"/>
         <argument key="App\Repository\AcquisitionExpenseRepository" type="service_closure" id="App\Repository\AcquisitionExpenseRepository"/>
         <argument key="App\Repository\AcquisitionOrderRepository" type="service_closure" id="App\Repository\AcquisitionOrderRepository"/>
         <argument key="App\Repository\AuthorRepository" type="service_closure" id="App\Repository\AuthorRepository"/>
+        <argument key="App\Repository\BackupRecordRepository" type="service_closure" id="App\Repository\BackupRecordRepository"/>
         <argument key="App\Repository\BookCopyRepository" type="service_closure" id="App\Repository\BookCopyRepository"/>
         <argument key="App\Repository\BookDigitalAssetRepository" type="service_closure" id="App\Repository\BookDigitalAssetRepository"/>
         <argument key="App\Repository\BookRepository" type="service_closure" id="App\Repository\BookRepository"/>
         <argument key="App\Repository\CategoryRepository" type="service_closure" id="App\Repository\CategoryRepository"/>
         <argument key="App\Repository\FavoriteRepository" type="service_closure" id="App\Repository\FavoriteRepository"/>
         <argument key="App\Repository\FineRepository" type="service_closure" id="App\Repository\FineRepository"/>
+        <argument key="App\Repository\IntegrationConfigRepository" type="service_closure" id="App\Repository\IntegrationConfigRepository"/>
         <argument key="App\Repository\LoanRepository" type="service_closure" id="App\Repository\LoanRepository"/>
         <argument key="App\Repository\OrderRequestRepository" type="service_closure" id="App\Repository\OrderRequestRepository"/>
         <argument key="App\Repository\ReservationRepository" type="service_closure" id="App\Repository\ReservationRepository"/>
         <argument key="App\Repository\ReviewRepository" type="service_closure" id="App\Repository\ReviewRepository"/>
+        <argument key="App\Repository\StaffRoleRepository" type="service_closure" id="App\Repository\StaffRoleRepository"/>
         <argument key="App\Repository\SupplierRepository" type="service_closure" id="App\Repository\SupplierRepository"/>
+        <argument key="App\Repository\SystemSettingRepository" type="service_closure" id="App\Repository\SystemSettingRepository"/>
         <argument key="App\Repository\UserRepository" type="service_closure" id="App\Repository\UserRepository"/>
         <argument key="App\Repository\WeedingRecordRepository" type="service_closure" id="App\Repository\WeedingRecordRepository"/>
       </argument>
@@ -4733,6 +4875,30 @@
     <service id=".service_locator.ZyP9f7K.App\Controller\AcquisitionSupplierController" class="Symfony\Component\DependencyInjection\ServiceLocator">
       <tag name="container.service_locator_context" id="App\Controller\AcquisitionSupplierController"/>
       <argument>App\Controller\AcquisitionSupplierController</argument>
+      <argument type="service" id="service_container"/>
+      <factory service=".service_locator.ZyP9f7K" method="withContext"/>
+    </service>
+    <service id=".service_locator.ZyP9f7K.App\Controller\Admin\IntegrationAdminController" class="Symfony\Component\DependencyInjection\ServiceLocator">
+      <tag name="container.service_locator_context" id="App\Controller\Admin\IntegrationAdminController"/>
+      <argument>App\Controller\Admin\IntegrationAdminController</argument>
+      <argument type="service" id="service_container"/>
+      <factory service=".service_locator.ZyP9f7K" method="withContext"/>
+    </service>
+    <service id=".service_locator.ZyP9f7K.App\Controller\Admin\RoleAdminController" class="Symfony\Component\DependencyInjection\ServiceLocator">
+      <tag name="container.service_locator_context" id="App\Controller\Admin\RoleAdminController"/>
+      <argument>App\Controller\Admin\RoleAdminController</argument>
+      <argument type="service" id="service_container"/>
+      <factory service=".service_locator.ZyP9f7K" method="withContext"/>
+    </service>
+    <service id=".service_locator.ZyP9f7K.App\Controller\Admin\SecurityAdminController" class="Symfony\Component\DependencyInjection\ServiceLocator">
+      <tag name="container.service_locator_context" id="App\Controller\Admin\SecurityAdminController"/>
+      <argument>App\Controller\Admin\SecurityAdminController</argument>
+      <argument type="service" id="service_container"/>
+      <factory service=".service_locator.ZyP9f7K" method="withContext"/>
+    </service>
+    <service id=".service_locator.ZyP9f7K.App\Controller\Admin\SystemConfigController" class="Symfony\Component\DependencyInjection\ServiceLocator">
+      <tag name="container.service_locator_context" id="App\Controller\Admin\SystemConfigController"/>
+      <argument>App\Controller\Admin\SystemConfigController</argument>
       <argument type="service" id="service_container"/>
       <factory service=".service_locator.ZyP9f7K" method="withContext"/>
     </service>
@@ -4850,6 +5016,12 @@
       <argument type="service" id="service_container"/>
       <factory service=".service_locator.ZyP9f7K" method="withContext"/>
     </service>
+    <service id=".service_locator.ZyP9f7K.App\Controller\WeedingController" class="Symfony\Component\DependencyInjection\ServiceLocator">
+      <tag name="container.service_locator_context" id="App\Controller\WeedingController"/>
+      <argument>App\Controller\WeedingController</argument>
+      <argument type="service" id="service_container"/>
+      <factory service=".service_locator.ZyP9f7K" method="withContext"/>
+    </service>
     <service id=".service_locator.RTjHFcp" class="Symfony\Component\DependencyInjection\ServiceLocator">
       <tag name="container.service_locator"/>
       <argument type="collection">
@@ -4940,6 +5112,10 @@
           <argument>App\Controller\AcquisitionBudgetController</argument>
           <argument>App\Controller\AcquisitionOrderController</argument>
           <argument>App\Controller\AcquisitionSupplierController</argument>
+          <argument>App\Controller\Admin\IntegrationAdminController</argument>
+          <argument>App\Controller\Admin\RoleAdminController</argument>
+          <argument>App\Controller\Admin\SecurityAdminController</argument>
+          <argument>App\Controller\Admin\SystemConfigController</argument>
           <argument>App\Controller\AuthController</argument>
           <argument>App\Controller\BookAssetController</argument>
           <argument>App\Controller\BookController</argument>
@@ -4959,6 +5135,7 @@
           <argument>App\Controller\SettingsController</argument>
           <argument>App\Controller\UserController</argument>
           <argument>App\Controller\UserManagementController</argument>
+          <argument>App\Controller\WeedingController</argument>
           <argument>Doctrine\Bundle\DoctrineBundle\Controller\ProfilerController</argument>
         </argument>
       </call>
@@ -5788,7 +5965,7 @@
     <service id="nelmio_api_doc.controller.swagger" alias="nelmio_api_doc.controller.swagger_json" public="true"/>
     <service id="nelmio_api_doc.generator" alias="nelmio_api_doc.generator.default" public="true"/>
     <service id="container.env_var_processors_locator" alias=".service_locator.pRu6x_4" public="true"/>
-    <service id="argument_resolver.controller_locator" alias=".service_locator.QnvCC_P"/>
+    <service id="argument_resolver.controller_locator" alias=".service_locator.ZQSoNr1"/>
     <service id="doctrine.id_generator_locator" alias=".service_locator.BxSdgVt"/>
     <service id="Psr\Log\LoggerInterface" alias="logger"/>
     <service id=".service_locator.oiB6xeU" alias="messenger.receiver_locator"/>
@@ -5802,6 +5979,9 @@
     <service id=".service_locator.1KAEq8B" alias=".service_locator.jjRPY31"/>
     <service id=".service_locator.HjgWim3" alias=".service_locator.f6M_KXh"/>
     <service id=".service_locator.Gu3qpkt" alias=".service_locator.AbYyszh"/>
+    <service id=".service_locator.YSjCaiw" alias=".service_locator.S_C3Dzl"/>
+    <service id=".service_locator.O33qp4a" alias=".service_locator.8ZTCuUF"/>
+    <service id=".service_locator._XkFWFd" alias=".service_locator.6nghiUy"/>
     <service id=".service_locator.DHDj2Yc" alias=".service_locator._8VsPQl"/>
     <service id=".service_locator.rHXEMdb" alias=".service_locator.dYRlw6Q"/>
     <service id=".service_locator.fFD1B5Y" alias=".service_locator.ClYVSdV"/>
@@ -5817,7 +5997,6 @@
     <service id=".service_locator.8o9hjmt" alias=".service_locator.E7ajBy2"/>
     <service id=".service_locator.3R6sbWM" alias=".service_locator.agQIWDh"/>
     <service id=".service_locator.QLxwK0X" alias=".service_locator.4aTJiDL"/>
-    <service id=".service_locator.YSjCaiw" alias=".service_locator.S_C3Dzl"/>
     <service id=".service_locator.QjpQdxG" alias=".service_locator.bRJvpbq"/>
     <service id=".service_locator.v2tBNUy" alias=".service_locator.z8H8Dc3"/>
     <service id=".service_locator.m3kCcJ2" alias=".service_locator.rs0UfCO"/>

@@ -329,19 +329,23 @@ abstract class ApiTestCase extends WebTestCase
 
     private function purgeDatabase(): void
     {
-        $this->entityManager->createQuery('DELETE FROM App\Entity\AcquisitionExpense ae')->execute();
-        $this->entityManager->createQuery('DELETE FROM App\Entity\AcquisitionOrder ao')->execute();
-        $this->entityManager->createQuery('DELETE FROM App\Entity\AcquisitionBudget ab')->execute();
-        $this->entityManager->createQuery('DELETE FROM App\Entity\Supplier s')->execute();
-        $this->entityManager->createQuery('DELETE FROM App\Entity\WeedingRecord wr')->execute();
-        $this->entityManager->createQuery('DELETE FROM App\Entity\Fine f')->execute();
-        $this->entityManager->createQuery('DELETE FROM App\Entity\Reservation r')->execute();
-        $this->entityManager->createQuery('DELETE FROM App\Entity\Loan l')->execute();
-        $this->entityManager->createQuery('DELETE FROM App\Entity\BookCopy bc')->execute();
-        $this->entityManager->createQuery('DELETE FROM App\Entity\Book b')->execute();
-        $this->entityManager->createQuery('DELETE FROM App\Entity\Category c')->execute();
-        $this->entityManager->createQuery('DELETE FROM App\Entity\Author a')->execute();
-        $this->entityManager->createQuery('DELETE FROM App\Entity\User u')->execute();
+    $this->entityManager->createQuery('DELETE FROM App\Entity\BackupRecord br')->execute();
+    $this->entityManager->createQuery('DELETE FROM App\Entity\IntegrationConfig ic')->execute();
+    $this->entityManager->createQuery('DELETE FROM App\Entity\SystemSetting ss')->execute();
+    $this->entityManager->createQuery('DELETE FROM App\Entity\StaffRole sr')->execute();
+    $this->entityManager->createQuery('DELETE FROM App\Entity\AcquisitionExpense ae')->execute();
+    $this->entityManager->createQuery('DELETE FROM App\Entity\AcquisitionOrder ao')->execute();
+    $this->entityManager->createQuery('DELETE FROM App\Entity\AcquisitionBudget ab')->execute();
+    $this->entityManager->createQuery('DELETE FROM App\Entity\Supplier s')->execute();
+    $this->entityManager->createQuery('DELETE FROM App\Entity\WeedingRecord wr')->execute();
+    $this->entityManager->createQuery('DELETE FROM App\Entity\Fine f')->execute();
+    $this->entityManager->createQuery('DELETE FROM App\Entity\Reservation r')->execute();
+    $this->entityManager->createQuery('DELETE FROM App\Entity\Loan l')->execute();
+    $this->entityManager->createQuery('DELETE FROM App\Entity\BookCopy bc')->execute();
+    $this->entityManager->createQuery('DELETE FROM App\Entity\Book b')->execute();
+    $this->entityManager->createQuery('DELETE FROM App\Entity\Category c')->execute();
+    $this->entityManager->createQuery('DELETE FROM App\Entity\Author a')->execute();
+    $this->entityManager->createQuery('DELETE FROM App\Entity\User u')->execute();
         $this->entityManager->clear();
     }
 }

@@ -16,15 +16,34 @@ class SecurityService
     }
 
     /**
+     * Check whether the request identity has any of the expected roles.
+     */
+    public function hasAnyRole(Request $request, array $roles): bool
+    {
+        $payload = $this->getJwtPayload($request);
+        if (!$payload || !isset($payload['roles']) || !is_array($payload['roles'])) {
+            return false;
+        }
+
+        $granted = $payload['roles'];
+        foreach ($roles as $role) {
+            if (in_array($role, $granted, true)) {
+                return true;
+            }
+
+            if ($role === 'ROLE_LIBRARIAN' && in_array('ROLE_ADMIN', $granted, true)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Check whether the request identity has given role.
      */
     public function hasRole(Request $request, string $role): bool
     {
-        $payload = $this->getJwtPayload($request);
-        if ($payload && isset($payload['roles']) && is_array($payload['roles'])) {
-            return in_array($role, $payload['roles'], true);
-        }
-        // allow if x-api-secret header matched? we don't set separate flag, so default deny
-        return false;
+        return $this->hasAnyRole($request, [$role]);
     }
 }
