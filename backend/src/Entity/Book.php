@@ -47,6 +47,14 @@ class Book
     #[SerializedName('totalCopies')]
     private int $totalCopies = 0;
 
+    #[ORM\Column(type: 'integer')]
+    #[Groups(['book:read', 'reservation:read'])]
+    private int $storageCopies = 0;
+
+    #[ORM\Column(type: 'integer')]
+    #[Groups(['book:read', 'reservation:read'])]
+    private int $openStackCopies = 0;
+
     #[ORM\Column(type: 'text', nullable: true)]
     #[Groups(['book:read', 'reservation:read'])]
     private ?string $description = null;
@@ -230,15 +238,24 @@ class Book
     {
         $total = 0;
         $available = 0;
+        $storageAvailable = 0;
+        $openAvailable = 0;
         foreach ($this->inventory as $copy) {
             ++$total;
             if ($copy->getStatus() === BookCopy::STATUS_AVAILABLE) {
                 ++$available;
+                if ($copy->getAccessType() === BookCopy::ACCESS_STORAGE) {
+                    ++$storageAvailable;
+                } elseif ($copy->getAccessType() === BookCopy::ACCESS_OPEN_STACK) {
+                    ++$openAvailable;
+                }
             }
         }
 
         $this->totalCopies = $total;
         $this->copies = $available;
+        $this->storageCopies = $storageAvailable;
+        $this->openStackCopies = $openAvailable;
 
         return $this;
     }
@@ -309,6 +326,30 @@ class Book
     public function getCreatedAt(): \DateTimeInterface
     {
         return $this->createdAt;
+    }
+
+    public function getStorageCopies(): int
+    {
+        return $this->storageCopies;
+    }
+
+    public function setStorageCopies(int $storageCopies): self
+    {
+        $this->storageCopies = max(0, $storageCopies);
+
+        return $this;
+    }
+
+    public function getOpenStackCopies(): int
+    {
+        return $this->openStackCopies;
+    }
+
+    public function setOpenStackCopies(int $openStackCopies): self
+    {
+        $this->openStackCopies = max(0, $openStackCopies);
+
+        return $this;
     }
 
     public function isFavorite(): bool

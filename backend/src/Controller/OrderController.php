@@ -2,11 +2,13 @@
 namespace App\Controller;
 
 use App\Entity\Book;
+use App\Entity\BookCopy;
 use App\Entity\OrderRequest;
 use App\Entity\Reservation;
 use App\Entity\User;
 use App\Repository\OrderRequestRepository;
 use App\Service\BookService;
+use App\Service\OrderLifecycleService;
 use App\Service\SecurityService;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -15,7 +17,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 class OrderController extends AbstractController
 {
-    public function list(Request $request, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
+    public function list(Request $request, ManagerRegistry $doctrine, SecurityService $security, OrderLifecycleService $orderLifecycle): JsonResponse
     {
         /** @var OrderRequestRepository $repo */
         $repo = $doctrine->getRepository(OrderRequest::class);
@@ -40,6 +42,7 @@ class OrderController extends AbstractController
             }
 
             $orders = $qb->getQuery()->getResult();
+            $orderLifecycle->expireOrders($orders);
             return $this->json($orders, 200, [], ['groups' => ['order:read', 'book:read']]);
         }
 
@@ -66,6 +69,15 @@ class OrderController extends AbstractController
         }
 
         $orders = $qb->getQuery()->getResult();
+        $expiredCount = $orderLifecycle->expireOrders($orders);
+
+        if (!$includeHistory && $expiredCount > 0) {
+            $orders = array_values(array_filter(
+                $orders,
+                static fn (OrderRequest $order): bool => in_array($order->getStatus(), [OrderRequest::STATUS_PENDING, OrderRequest::STATUS_READY], true)
+            ));
+        }
+
         return $this->json($orders, 200, [], ['groups' => ['order:read', 'book:read']]);
     }
 
@@ -78,19 +90,23 @@ class OrderController extends AbstractController
 
         $data = json_decode($request->getContent(), true) ?: [];
         $bookId = $data['bookId'] ?? null;
-        $pickupType = $data['pickupType'] ?? 'SHELF';
+        $pickupType = strtoupper(trim($data['pickupType'] ?? OrderRequest::PICKUP_STORAGE_DESK));
         $holdDays = isset($data['days']) ? max(1, (int) $data['days']) : 2;
 
         if (!$bookId || !ctype_digit((string) $bookId)) {
             return $this->json(['error' => 'Invalid bookId'], 400);
         }
 
-    $userRepo = $doctrine->getRepository(User::class);
-    $bookRepo = $doctrine->getRepository(Book::class);
+        if (!in_array($pickupType, OrderRequest::PICKUP_TYPES, true)) {
+            return $this->json(['error' => 'Invalid pickup type'], 400);
+        }
+
+        $userRepo = $doctrine->getRepository(User::class);
+        $bookRepo = $doctrine->getRepository(Book::class);
         /** @var OrderRequestRepository $orderRepo */
         $orderRepo = $doctrine->getRepository(OrderRequest::class);
-    /** @var \App\Repository\ReservationRepository $reservationRepo */
-    $reservationRepo = $doctrine->getRepository(Reservation::class);
+        /** @var \App\Repository\ReservationRepository $reservationRepo */
+        $reservationRepo = $doctrine->getRepository(Reservation::class);
 
         $user = $userRepo->find((int) $payload['sub']);
         $book = $bookRepo->find((int) $bookId);
@@ -106,11 +122,19 @@ class OrderController extends AbstractController
             return $this->json(['error' => 'Masz już aktywną rezerwację na tę książkę'], 409);
         }
 
-        if ($book->getCopies() <= 0) {
-            return $this->json(['error' => 'Brak dostępnych egzemplarzy do zamówienia'], 409);
+        $accessFilter = $pickupType === OrderRequest::PICKUP_OPEN_SHELF
+            ? [BookCopy::ACCESS_OPEN_STACK]
+            : [BookCopy::ACCESS_STORAGE];
+
+        if ($pickupType === OrderRequest::PICKUP_STORAGE_DESK && $book->getStorageCopies() <= 0) {
+            return $this->json(['error' => 'Brak egzemplarzy w magazynie. Spróbuj wypożyczyć z wolnego dostępu.'], 409);
         }
 
-        $reservedCopy = $bookService->reserveCopy($book);
+        if ($pickupType === OrderRequest::PICKUP_OPEN_SHELF && $book->getOpenStackCopies() <= 0) {
+            return $this->json(['error' => 'Brak egzemplarzy na półce, spróbuj wypożyczyć bezpośrednio lub zamów z magazynu.'], 409);
+        }
+
+        $reservedCopy = $bookService->reserveCopy($book, $accessFilter);
         if (!$reservedCopy) {
             return $this->json(['error' => 'Nie udało się zabezpieczyć egzemplarza, spróbuj ponownie'], 409);
         }
@@ -129,7 +153,7 @@ class OrderController extends AbstractController
         return $this->json($order, 201, [], ['groups' => ['order:read', 'book:read']]);
     }
 
-    public function cancel(string $id, Request $request, ManagerRegistry $doctrine, SecurityService $security, BookService $bookService): JsonResponse
+    public function cancel(string $id, Request $request, ManagerRegistry $doctrine, SecurityService $security, OrderLifecycleService $orderLifecycle): JsonResponse
     {
         if (!ctype_digit($id) || (int) $id <= 0) {
             return $this->json(['error' => 'Invalid order id'], 400);
@@ -150,20 +174,15 @@ class OrderController extends AbstractController
             return $this->json(['error' => 'Forbidden'], 403);
         }
 
-        if ($order->getStatus() === OrderRequest::STATUS_CANCELLED || $order->getStatus() === OrderRequest::STATUS_COLLECTED) {
+        if (in_array($order->getStatus(), [OrderRequest::STATUS_CANCELLED, OrderRequest::STATUS_COLLECTED, OrderRequest::STATUS_EXPIRED], true)) {
             return $this->json(['error' => 'Zamówienie jest już zamknięte'], 400);
         }
 
-        $copy = $order->getBookCopy();
-        $order->cancel();
-
         $em = $doctrine->getManager();
+        $orderLifecycle->releaseCopy($order);
+        $order->cancel();
         $em->persist($order);
         $em->flush();
-
-        if ($copy && $copy->getStatus() === \App\Entity\BookCopy::STATUS_RESERVED) {
-            $bookService->releaseReservedCopy($order->getBook(), $copy);
-        }
 
         return new JsonResponse(null, 204);
     }

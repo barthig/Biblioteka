@@ -187,6 +187,18 @@
     <service id="App\Entity" class="App\Entity" abstract="true">
       <tag name="container.excluded" source="in &quot;config/services.yaml&quot;"/>
     </service>
+    <service id="App\Command\ExpireOrdersCommand" class="App\Command\ExpireOrdersCommand" autowire="true" autoconfigure="true">
+      <tag name="console.command"/>
+      <tag name="container.no_preload"/>
+      <argument type="service" id="App\Repository\OrderRequestRepository"/>
+      <argument type="service" id="App\Service\OrderLifecycleService"/>
+      <call method="setName">
+        <argument>app:orders:expire</argument>
+      </call>
+      <call method="setDescription">
+        <argument>Marks overdue pickup orders as expired and releases reserved copies</argument>
+      </call>
+    </service>
     <service id="App\Controller\AccountController" class="App\Controller\AccountController" public="true" autowire="true" autoconfigure="true">
       <tag name="controller.service_arguments"/>
       <tag name="container.service_subscriber"/>
@@ -361,6 +373,9 @@
       <argument type="service" id="doctrine"/>
     </service>
     <service id="App\Service\JwtService" class="App\Service\JwtService" autowire="true" autoconfigure="true"/>
+    <service id="App\Service\OrderLifecycleService" class="App\Service\OrderLifecycleService" autowire="true" autoconfigure="true">
+      <argument type="service" id="doctrine"/>
+    </service>
     <service id="App\Service\SecurityService" class="App\Service\SecurityService" autowire="true" autoconfigure="true"/>
     <service id="App\DataFixtures\AppFixtures" class="App\DataFixtures\AppFixtures" autowire="true" autoconfigure="true">
       <tag name="doctrine.fixture.orm"/>
@@ -392,7 +407,7 @@
     </service>
     <service id="argument_resolver.service" class="Symfony\Component\HttpKernel\Controller\ArgumentResolver\ServiceValueResolver">
       <tag priority="-50" name="Symfony\Component\HttpKernel\Controller\ArgumentResolver\ServiceValueResolver">controller.argument_value_resolver</tag>
-      <argument type="service" id=".service_locator.WIDZm4H"/>
+      <argument type="service" id=".service_locator.En8W5sz"/>
     </service>
     <service id="argument_resolver.default" class="Symfony\Component\HttpKernel\Controller\ArgumentResolver\DefaultValueResolver">
       <tag priority="-100" name="Symfony\Component\HttpKernel\Controller\ArgumentResolver\DefaultValueResolver">controller.argument_value_resolver</tag>
@@ -1666,7 +1681,7 @@
     </service>
     <service id="argument_resolver.not_tagged_controller" class="Symfony\Component\HttpKernel\Controller\ArgumentResolver\NotTaggedControllerValueResolver">
       <tag name="controller.argument_value_resolver" priority="-200"/>
-      <argument type="service" id=".service_locator.WIDZm4H"/>
+      <argument type="service" id=".service_locator.En8W5sz"/>
     </service>
     <service id="routing.resolver" class="Symfony\Component\Config\Loader\LoaderResolver">
       <call method="addLoader">
@@ -3548,6 +3563,8 @@
     <service id="nelmio_api_doc.route_argument_describer.map_query_parameter" class="Nelmio\ApiDocBundle\RouteDescriber\RouteArgumentDescriber\SymfonyMapQueryParameterDescriber">
       <tag name="nelmio_api_doc.route_argument_describer" priority="0"/>
     </service>
+    <service id=".instanceof.Symfony\Component\Console\Command\Command.0.App\Command\ExpireOrdersCommand" class="App\Command\ExpireOrdersCommand" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\Command\ExpireOrdersCommand" class="App\Command\ExpireOrdersCommand" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Symfony\Contracts\Service\ServiceSubscriberInterface.0.App\Controller\AccountController" class="App\Controller\AccountController" autowire="true" abstract="true"/>
     <service id=".instanceof.Symfony\Bundle\FrameworkBundle\Controller\AbstractController.0.App\Controller\AccountController" class="App\Controller\AccountController" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Controller\AccountController" class="App\Controller\AccountController" autowire="true" autoconfigure="true" abstract="true"/>
@@ -4121,6 +4138,15 @@
         <argument key="security" type="service_closure" id="App\Service\SecurityService"/>
       </argument>
     </service>
+    <service id=".service_locator.agQIWDh" class="Symfony\Component\DependencyInjection\ServiceLocator">
+      <tag name="container.service_locator"/>
+      <argument type="collection">
+        <argument key="doctrine" type="service_closure" id="doctrine"/>
+        <argument key="bookService" type="service_closure" id="App\Service\BookService"/>
+        <argument key="orderLifecycle" type="service_closure" id="App\Service\OrderLifecycleService"/>
+        <argument key="security" type="service_closure" id="App\Service\SecurityService"/>
+      </argument>
+    </service>
     <service id=".service_locator.4aTJiDL" class="Symfony\Component\DependencyInjection\ServiceLocator">
       <tag name="container.service_locator"/>
       <argument type="collection">
@@ -4133,6 +4159,14 @@
       <tag name="container.service_locator"/>
       <argument type="collection">
         <argument key="security" type="service_closure" id="App\Service\SecurityService"/>
+      </argument>
+    </service>
+    <service id=".service_locator.bRJvpbq" class="Symfony\Component\DependencyInjection\ServiceLocator">
+      <tag name="container.service_locator"/>
+      <argument type="collection">
+        <argument key="doctrine" type="service_closure" id="doctrine"/>
+        <argument key="security" type="service_closure" id="App\Service\SecurityService"/>
+        <argument key="orderLifecycle" type="service_closure" id="App\Service\OrderLifecycleService"/>
       </argument>
     </service>
     <service id=".service_locator.z8H8Dc3" class="Symfony\Component\DependencyInjection\ServiceLocator">
@@ -4168,7 +4202,7 @@
         <argument key="security" type="service_closure" id="App\Service\SecurityService"/>
       </argument>
     </service>
-    <service id=".service_locator.WIDZm4H" class="Symfony\Component\DependencyInjection\ServiceLocator">
+    <service id=".service_locator.En8W5sz" class="Symfony\Component\DependencyInjection\ServiceLocator">
       <tag name="container.service_locator"/>
       <argument type="collection">
         <argument key="kernel::registerContainerConfiguration" type="service_closure" id=".service_locator.zHyJIs5"/>
@@ -4194,16 +4228,16 @@
         <argument key="App\Controller\FineController::pay" type="service_closure" id=".service_locator.AbYyszh"/>
         <argument key="App\Controller\LoanController::list" type="service_closure" id=".service_locator.AbYyszh"/>
         <argument key="App\Controller\LoanController::getLoan" type="service_closure" id=".service_locator.AbYyszh"/>
-        <argument key="App\Controller\LoanController::create" type="service_closure" id=".service_locator.4aTJiDL"/>
+        <argument key="App\Controller\LoanController::create" type="service_closure" id=".service_locator.agQIWDh"/>
         <argument key="App\Controller\LoanController::listByUser" type="service_closure" id=".service_locator.AbYyszh"/>
         <argument key="App\Controller\LoanController::returnLoan" type="service_closure" id=".service_locator.4aTJiDL"/>
         <argument key="App\Controller\LoanController::extend" type="service_closure" id=".service_locator.AbYyszh"/>
         <argument key="App\Controller\LoanController::delete" type="service_closure" id=".service_locator.4aTJiDL"/>
         <argument key="App\Controller\NotificationController::list" type="service_closure" id=".service_locator.S_C3Dzl"/>
         <argument key="App\Controller\NotificationController::triggerTest" type="service_closure" id=".service_locator.S_C3Dzl"/>
-        <argument key="App\Controller\OrderController::list" type="service_closure" id=".service_locator.AbYyszh"/>
+        <argument key="App\Controller\OrderController::list" type="service_closure" id=".service_locator.bRJvpbq"/>
         <argument key="App\Controller\OrderController::create" type="service_closure" id=".service_locator.z8H8Dc3"/>
-        <argument key="App\Controller\OrderController::cancel" type="service_closure" id=".service_locator.z8H8Dc3"/>
+        <argument key="App\Controller\OrderController::cancel" type="service_closure" id=".service_locator.bRJvpbq"/>
         <argument key="App\Controller\ReportController::usage" type="service_closure" id=".service_locator.AbYyszh"/>
         <argument key="App\Controller\ReportController::export" type="service_closure" id=".service_locator.S_C3Dzl"/>
         <argument key="App\Controller\ReservationController::list" type="service_closure" id=".service_locator.AbYyszh"/>
@@ -4240,16 +4274,16 @@
         <argument key="App\Controller\FineController:pay" type="service_closure" id=".service_locator.AbYyszh"/>
         <argument key="App\Controller\LoanController:list" type="service_closure" id=".service_locator.AbYyszh"/>
         <argument key="App\Controller\LoanController:getLoan" type="service_closure" id=".service_locator.AbYyszh"/>
-        <argument key="App\Controller\LoanController:create" type="service_closure" id=".service_locator.4aTJiDL"/>
+        <argument key="App\Controller\LoanController:create" type="service_closure" id=".service_locator.agQIWDh"/>
         <argument key="App\Controller\LoanController:listByUser" type="service_closure" id=".service_locator.AbYyszh"/>
         <argument key="App\Controller\LoanController:returnLoan" type="service_closure" id=".service_locator.4aTJiDL"/>
         <argument key="App\Controller\LoanController:extend" type="service_closure" id=".service_locator.AbYyszh"/>
         <argument key="App\Controller\LoanController:delete" type="service_closure" id=".service_locator.4aTJiDL"/>
         <argument key="App\Controller\NotificationController:list" type="service_closure" id=".service_locator.S_C3Dzl"/>
         <argument key="App\Controller\NotificationController:triggerTest" type="service_closure" id=".service_locator.S_C3Dzl"/>
-        <argument key="App\Controller\OrderController:list" type="service_closure" id=".service_locator.AbYyszh"/>
+        <argument key="App\Controller\OrderController:list" type="service_closure" id=".service_locator.bRJvpbq"/>
         <argument key="App\Controller\OrderController:create" type="service_closure" id=".service_locator.z8H8Dc3"/>
-        <argument key="App\Controller\OrderController:cancel" type="service_closure" id=".service_locator.z8H8Dc3"/>
+        <argument key="App\Controller\OrderController:cancel" type="service_closure" id=".service_locator.bRJvpbq"/>
         <argument key="App\Controller\ReportController:usage" type="service_closure" id=".service_locator.AbYyszh"/>
         <argument key="App\Controller\ReportController:export" type="service_closure" id=".service_locator.S_C3Dzl"/>
         <argument key="App\Controller\ReservationController:list" type="service_closure" id=".service_locator.AbYyszh"/>
@@ -4693,6 +4727,13 @@
     </service>
     <service id=".errored..service_locator.zHyJIs5.Symfony\Component\Config\Loader\LoaderInterface" class="Symfony\Component\Config\Loader\LoaderInterface">
       <tag name="container.error" message="Cannot autowire service &quot;.service_locator.zHyJIs5&quot;: it needs an instance of &quot;Symfony\Component\Config\Loader\LoaderInterface&quot; but this type has been excluded from autowiring."/>
+    </service>
+    <service id=".App\Command\ExpireOrdersCommand.lazy" class="Symfony\Component\Console\Command\LazyCommand">
+      <argument>app:orders:expire</argument>
+      <argument type="collection"/>
+      <argument>Marks overdue pickup orders as expired and releases reserved copies</argument>
+      <argument>false</argument>
+      <argument type="service_closure" id="App\Command\ExpireOrdersCommand"/>
     </service>
     <service id=".console.command.about.lazy" class="Symfony\Component\Console\Command\LazyCommand">
       <argument>about</argument>
@@ -5191,8 +5232,9 @@
     </service>
     <service id="console.command_loader" class="Symfony\Component\Console\CommandLoader\ContainerCommandLoader" public="true">
       <tag name="container.no_preload"/>
-      <argument type="service" id=".service_locator.bzEIrB_"/>
+      <argument type="service" id=".service_locator.lpCK9VE"/>
       <argument type="collection">
+        <argument key="app:orders:expire">App\Command\ExpireOrdersCommand</argument>
         <argument key="about">console.command.about</argument>
         <argument key="assets:install">console.command.assets_install</argument>
         <argument key="cache:clear">console.command.cache_clear</argument>
@@ -5287,9 +5329,10 @@
         <argument key="make:webhook">maker.auto_command.make_webhook</argument>
       </argument>
     </service>
-    <service id=".service_locator.bzEIrB_" class="Symfony\Component\DependencyInjection\ServiceLocator">
+    <service id=".service_locator.lpCK9VE" class="Symfony\Component\DependencyInjection\ServiceLocator">
       <tag name="container.service_locator"/>
       <argument type="collection">
+        <argument key="App\Command\ExpireOrdersCommand" type="service_closure" id=".App\Command\ExpireOrdersCommand.lazy"/>
         <argument key="console.command.about" type="service_closure" id=".console.command.about.lazy"/>
         <argument key="console.command.assets_install" type="service_closure" id=".console.command.assets_install.lazy"/>
         <argument key="console.command.cache_clear" type="service_closure" id=".console.command.cache_clear.lazy"/>
@@ -5485,7 +5528,7 @@
     <service id="nelmio_api_doc.controller.swagger" alias="nelmio_api_doc.controller.swagger_json" public="true"/>
     <service id="nelmio_api_doc.generator" alias="nelmio_api_doc.generator.default" public="true"/>
     <service id="container.env_var_processors_locator" alias=".service_locator.pRu6x_4" public="true"/>
-    <service id="argument_resolver.controller_locator" alias=".service_locator.WIDZm4H"/>
+    <service id="argument_resolver.controller_locator" alias=".service_locator.En8W5sz"/>
     <service id="doctrine.id_generator_locator" alias=".service_locator.BxSdgVt"/>
     <service id="Psr\Log\LoggerInterface" alias="logger"/>
     <service id=".service_locator.oiB6xeU" alias="messenger.receiver_locator"/>
@@ -5506,8 +5549,10 @@
     <service id=".service_locator.2AVg6yn" alias=".service_locator.52eyy9l"/>
     <service id=".service_locator.8o9hjmt" alias=".service_locator.E7ajBy2"/>
     <service id=".service_locator.Gu3qpkt" alias=".service_locator.AbYyszh"/>
+    <service id=".service_locator.3R6sbWM" alias=".service_locator.agQIWDh"/>
     <service id=".service_locator.QLxwK0X" alias=".service_locator.4aTJiDL"/>
     <service id=".service_locator.YSjCaiw" alias=".service_locator.S_C3Dzl"/>
+    <service id=".service_locator.QjpQdxG" alias=".service_locator.bRJvpbq"/>
     <service id=".service_locator.v2tBNUy" alias=".service_locator.z8H8Dc3"/>
     <service id=".service_locator.m3kCcJ2" alias=".service_locator.rs0UfCO"/>
     <service id=".service_locator.OcHHXfg" alias=".service_locator.RGWMk6E"/>

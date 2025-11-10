@@ -16,16 +16,22 @@ class BookCopyRepository extends ServiceEntityRepository
     /**
      * @return BookCopy[]
      */
-    public function findAvailableCopies(Book $book, int $limit = 1): array
+    public function findAvailableCopies(Book $book, int $limit = 1, ?array $accessTypes = null): array
     {
-        return $this->createQueryBuilder('c')
+        $qb = $this->createQueryBuilder('c')
             ->andWhere('c.book = :book')
             ->andWhere('c.status = :status')
             ->setParameter('book', $book)
             ->setParameter('status', BookCopy::STATUS_AVAILABLE)
             ->setMaxResults($limit)
-            ->orderBy('c.id', 'ASC')
-            ->getQuery()
-            ->getResult();
+            ->orderBy('c.accessType', 'ASC')
+            ->addOrderBy('c.id', 'ASC');
+
+        if ($accessTypes !== null && $accessTypes !== []) {
+            $qb->andWhere('c.accessType IN (:accessTypes)')
+                ->setParameter('accessTypes', array_values($accessTypes));
+        }
+
+        return $qb->getQuery()->getResult();
     }
 }

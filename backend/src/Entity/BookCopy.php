@@ -13,6 +13,10 @@ class BookCopy
     public const STATUS_BORROWED = 'BORROWED';
     public const STATUS_MAINTENANCE = 'MAINTENANCE';
 
+    public const ACCESS_OPEN_STACK = 'OPEN_STACK';
+    public const ACCESS_STORAGE = 'STORAGE';
+    public const ACCESS_REFERENCE = 'REFERENCE';
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
@@ -34,6 +38,10 @@ class BookCopy
     #[ORM\Column(type: 'string', length: 120, nullable: true)]
     #[Groups(['inventory:read', 'reservation:read', 'order:read'])]
     private ?string $location = null;
+
+    #[ORM\Column(type: 'string', length: 30)]
+    #[Groups(['inventory:read', 'reservation:read', 'order:read'])]
+    private string $accessType = self::ACCESS_STORAGE;
 
     #[ORM\Column(type: 'string', length: 120, nullable: true)]
     #[Groups(['inventory:read', 'reservation:read', 'order:read'])]
@@ -116,6 +124,24 @@ class BookCopy
     {
         $this->conditionState = $conditionState;
         $this->touch();
+        return $this;
+    }
+
+    public function getAccessType(): string
+    {
+        return $this->accessType;
+    }
+
+    public function setAccessType(string $accessType): self
+    {
+        $accessType = strtoupper(trim($accessType));
+        if (!in_array($accessType, [self::ACCESS_OPEN_STACK, self::ACCESS_STORAGE, self::ACCESS_REFERENCE], true)) {
+            throw new \InvalidArgumentException('Invalid access type: ' . $accessType);
+        }
+
+        $this->accessType = $accessType;
+        $this->touch();
+
         return $this;
     }
 

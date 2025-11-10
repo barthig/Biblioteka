@@ -89,11 +89,14 @@ class AppFixtures extends Fixture
 
             $totalCopies = 2 + ($i % 4);
             for ($copyIndex = 1; $copyIndex <= $totalCopies; $copyIndex++) {
+                $accessType = $copyIndex === 1 ? BookCopy::ACCESS_OPEN_STACK : BookCopy::ACCESS_STORAGE;
+                $location = $accessType === BookCopy::ACCESS_OPEN_STACK ? 'Czytelnia główna' : 'Magazyn główny';
                 $copy = (new BookCopy())
                     ->setBook($book)
                     ->setInventoryCode(sprintf('BK%02d-%03d', $i, $copyIndex))
                     ->setStatus(BookCopy::STATUS_AVAILABLE)
-                    ->setLocation('Magazyn główny');
+                    ->setLocation($location)
+                    ->setAccessType($accessType);
 
                 $book->addInventoryCopy($copy);
                 $manager->persist($copy);

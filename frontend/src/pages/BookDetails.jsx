@@ -123,10 +123,15 @@ export default function BookDetails() {
     return book.categories.map(c => c.name).join(', ')
   }, [book])
 
-  const canOrder = Boolean(token && book && (book.copies ?? 0) > 0 && !activeOrder && !activeReservation)
-  const canReserve = Boolean(token && book && (book.copies ?? 0) === 0 && !activeReservation && !activeOrder)
+  const storageAvailable = book ? (book.storageCopies ?? 0) > 0 : false
+  const openStackAvailable = book ? (book.openStackCopies ?? 0) > 0 : false
+  const anyAvailable = book ? (book.copies ?? 0) > 0 : false
 
-  async function handleOrder() {
+  const canOrderStorage = Boolean(token && storageAvailable && !activeOrder && !activeReservation)
+  const canOrderOpenStack = Boolean(token && openStackAvailable && !activeOrder && !activeReservation)
+  const canReserve = Boolean(token && book && !anyAvailable && !activeReservation && !activeOrder)
+
+  async function handleOrder(pickupType) {
     if (!token) {
       setActionError('Zaloguj się, aby zamówić książkę do odbioru.')
       return
@@ -138,10 +143,32 @@ export default function BookDetails() {
       const order = await apiFetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ bookId, pickupType: 'SHELF', days: 2 }),
+        body: JSON.stringify({ bookId, pickupType, days: 2 }),
       })
-      setActionSuccess('Zamówienie zarejestrowane. Odbierz egzemplarz w ciągu 2 dni roboczych.')
+
+      const successMessage = pickupType === 'STORAGE_DESK'
+        ? 'Zamówienie z magazynu przyjęte. Książka będzie czekała w wypożyczalni.'
+        : 'Zlecono odłożenie egzemplarza z półki. Odbierz go w wypożyczalni w ciągu 2 dni.'
+
+      setActionSuccess(successMessage)
       setActiveOrder(order)
+      setBook(prev => {
+        if (!prev) return prev
+        const copies = Math.max(0, (prev.copies ?? 0) - 1)
+        const storageCopies = pickupType === 'STORAGE_DESK'
+          ? Math.max(0, (prev.storageCopies ?? 0) - 1)
+          : prev.storageCopies ?? 0
+        const openStackCopies = pickupType === 'OPEN_SHELF'
+          ? Math.max(0, (prev.openStackCopies ?? 0) - 1)
+          : prev.openStackCopies ?? 0
+
+        return {
+          ...prev,
+          copies,
+          storageCopies,
+          openStackCopies,
+        }
+      })
     } catch (err) {
       setActionError(err.message || 'Nie udało się złożyć zamówienia')
     } finally {
@@ -314,6 +341,14 @@ export default function BookDetails() {
             <dt>Dostępne egzemplarze</dt>
             <dd>{book.copies ?? 0} / {book.totalCopies ?? book.copies ?? 0}</dd>
           </div>
+          <div className="resource-item__meta">
+            <dt>Magazyn (zamknięty dostęp)</dt>
+            <dd>{book.storageCopies ?? 0}</dd>
+          </div>
+          <div className="resource-item__meta">
+            <dt>Półki w wolnym dostępie</dt>
+            <dd>{book.openStackCopies ?? 0}</dd>
+          </div>
         </dl>
       </article>
 
@@ -325,10 +360,18 @@ export default function BookDetails() {
           <button
             type="button"
             className="btn btn-primary"
-            onClick={handleOrder}
-            disabled={!canOrder || ordering}
+            onClick={() => handleOrder('STORAGE_DESK')}
+            disabled={!canOrderStorage || ordering}
           >
-            {ordering ? 'Przetwarzanie...' : 'Zamów do odbioru'}
+            {ordering ? 'Przetwarzanie...' : 'Zamów z magazynu'}
+          </button>
+          <button
+            type="button"
+            className="btn btn-outline"
+            onClick={() => handleOrder('OPEN_SHELF')}
+            disabled={!canOrderOpenStack || ordering}
+          >
+            {ordering ? 'Przetwarzanie...' : 'Poproś o odłożenie z półki'}
           </button>
           <button
             type="button"
@@ -347,6 +390,12 @@ export default function BookDetails() {
             {favorite ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'}
           </button>
         </div>
+        <p className="support-copy">
+          Egzemplarze magazynowe przygotuje dla Ciebie bibliotekarz. Jeżeli wybierzesz opcję półki, pracownik odłoży wybrany egzemplarz z wolnego dostępu do wypożyczalni.
+        </p>
+        {!storageAvailable && openStackAvailable && (
+          <p className="support-copy">Brak egzemplarzy w magazynie — najłatwiej skorzystać z opcji „Poproś o odłożenie z półki” lub podejść osobiście.</p>
+        )}
         {!token && (
           <p className="support-copy">Zaloguj się, aby zamawiać, rezerwować i dodawać książki do ulubionych.</p>
         )}

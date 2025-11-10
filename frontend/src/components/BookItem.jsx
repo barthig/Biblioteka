@@ -17,6 +17,8 @@ export default function BookItem({ book, onBorrowed }) {
   const available = book?.copies ?? 0
   const total = book?.totalCopies ?? available
   const isAvailable = available > 0
+  const storageAvailable = book?.storageCopies ?? 0
+  const openStackAvailable = book?.openStackCopies ?? 0
   const publisher = book?.publisher
   const publicationYear = book?.publicationYear
   const resourceType = book?.resourceType
@@ -115,6 +117,12 @@ export default function BookItem({ book, onBorrowed }) {
             <div className="book-card__meta">
               {publisher && <span>Wydawca: {publisher}</span>}
               {signature && <span>Sygnatura: {signature}</span>}
+            </div>
+          )}
+          {(storageAvailable !== null || openStackAvailable !== null) && (
+            <div className="book-card__meta">
+              <span>Magazyn: {storageAvailable}</span>
+              <span>Wolny dostęp: {openStackAvailable}</span>
             </div>
           )}
         </div>

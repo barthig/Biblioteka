@@ -57,11 +57,14 @@ class BookService
         return $copy;
     }
 
-    public function reserveCopy(Book $book): ?BookCopy
+    public function reserveCopy(Book $book, ?array $preferredAccessTypes = null, bool $allowFallback = false): ?BookCopy
     {
         /** @var BookCopyRepository $repo */
         $repo = $this->doctrine->getRepository(BookCopy::class);
-        $available = $repo->findAvailableCopies($book, 1);
+        $available = $repo->findAvailableCopies($book, 1, $preferredAccessTypes);
+        if (empty($available) && $allowFallback) {
+            $available = $repo->findAvailableCopies($book, 1);
+        }
         if (empty($available)) {
             return null;
         }

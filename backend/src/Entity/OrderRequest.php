@@ -12,6 +12,11 @@ class OrderRequest
     public const STATUS_READY = 'READY';
     public const STATUS_CANCELLED = 'CANCELLED';
     public const STATUS_COLLECTED = 'COLLECTED';
+    public const STATUS_EXPIRED = 'EXPIRED';
+
+    public const PICKUP_STORAGE_DESK = 'STORAGE_DESK';
+    public const PICKUP_OPEN_SHELF = 'OPEN_SHELF';
+    public const PICKUP_TYPES = [self::PICKUP_STORAGE_DESK, self::PICKUP_OPEN_SHELF];
 
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -38,9 +43,9 @@ class OrderRequest
     #[Groups(['order:read'])]
     private string $status = self::STATUS_PENDING;
 
-    #[ORM\Column(type: 'string', length: 20, nullable: true)]
+    #[ORM\Column(type: 'string', length: 30)]
     #[Groups(['order:read'])]
-    private ?string $pickupType = null;
+    private string $pickupType = self::PICKUP_STORAGE_DESK;
 
     #[ORM\Column(type: 'datetime_immutable')]
     #[Groups(['order:read'])]
@@ -57,6 +62,10 @@ class OrderRequest
     #[ORM\Column(type: 'datetime_immutable', nullable: true)]
     #[Groups(['order:read'])]
     private ?\DateTimeImmutable $collectedAt = null;
+
+    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
+    #[Groups(['order:read'])]
+    private ?\DateTimeImmutable $expiredAt = null;
 
     public function __construct()
     {
@@ -108,7 +117,7 @@ class OrderRequest
 
     public function setStatus(string $status): self
     {
-        if (!in_array($status, [self::STATUS_PENDING, self::STATUS_READY, self::STATUS_CANCELLED, self::STATUS_COLLECTED], true)) {
+        if (!in_array($status, [self::STATUS_PENDING, self::STATUS_READY, self::STATUS_CANCELLED, self::STATUS_COLLECTED, self::STATUS_EXPIRED], true)) {
             throw new \InvalidArgumentException('Invalid order status: ' . $status);
         }
         $this->status = $status;
@@ -136,6 +145,13 @@ class OrderRequest
         return $this;
     }
 
+    public function expire(): self
+    {
+        $this->status = self::STATUS_EXPIRED;
+        $this->expiredAt = new \DateTimeImmutable();
+        return $this;
+    }
+
     public function getPickupType(): ?string
     {
         return $this->pickupType;
@@ -143,7 +159,17 @@ class OrderRequest
 
     public function setPickupType(?string $pickupType): self
     {
-        $this->pickupType = $pickupType !== null ? strtoupper(trim($pickupType)) : null;
+        if ($pickupType === null) {
+            $this->pickupType = self::PICKUP_STORAGE_DESK;
+            return $this;
+        }
+
+        $normalized = strtoupper(trim($pickupType));
+        if (!in_array($normalized, self::PICKUP_TYPES, true)) {
+            throw new \InvalidArgumentException('Invalid pickup type: ' . $pickupType);
+        }
+
+        $this->pickupType = $normalized;
         return $this;
     }
 
@@ -171,5 +197,10 @@ class OrderRequest
     public function getCollectedAt(): ?\DateTimeImmutable
     {
         return $this->collectedAt;
+    }
+
+    public function getExpiredAt(): ?\DateTimeImmutable
+    {
+        return $this->expiredAt;
     }
 }

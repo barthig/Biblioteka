@@ -3,6 +3,7 @@ namespace App\Controller;
 
 use App\Entity\Loan;
 use App\Service\BookService;
+use App\Service\OrderLifecycleService;
 use App\Service\SecurityService;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -58,7 +59,7 @@ class LoanController extends AbstractController
         return $this->json($loan, 200, [], ['groups' => ['loan:read']]);
     }
 
-    public function create(Request $request, ManagerRegistry $doctrine, BookService $bookService, SecurityService $security): JsonResponse
+    public function create(Request $request, ManagerRegistry $doctrine, BookService $bookService, OrderLifecycleService $orderLifecycle, SecurityService $security): JsonResponse
     {
         // require an authenticated user (JWT) or API secret
         $payload = $security->getJwtPayload($request);
@@ -96,7 +97,16 @@ class LoanController extends AbstractController
 
         $reservation = $reservationRepo->findFirstActiveForUserAndBook($user, $book);
         $order = $orderRepo->findReadyForUserAndBook($user, $book);
-        $preferredCopy = $order ? $order->getBookCopy() : null;
+        $preferredCopy = null;
+
+        if ($order) {
+            $orderLifecycle->expireOrders([$order]);
+            if (in_array($order->getStatus(), [OrderRequest::STATUS_READY, OrderRequest::STATUS_PENDING], true)) {
+                $preferredCopy = $order->getBookCopy();
+            } else {
+                $order = null;
+            }
+        }
 
         // attempt borrow
         $copy = $bookService->borrow($book, $reservation, $preferredCopy);

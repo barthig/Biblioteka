@@ -13,6 +13,11 @@ const STATUS_LABELS = {
   EXPIRED: 'Wygasło',
 }
 
+const PICKUP_LABELS = {
+  STORAGE_DESK: 'Magazyn / odbiór w wypożyczalni',
+  OPEN_SHELF: 'Półka w wolnym dostępie / odbiór w wypożyczalni',
+}
+
 function formatDateTime(value) {
   return value ? new Date(value).toLocaleString() : '—'
 }
@@ -71,7 +76,7 @@ export default function Orders() {
       await apiFetch(`/api/orders/${id}`, { method: 'DELETE' })
       setOrders(prev => prev.map(order => (
         order.id === id
-          ? { ...order, status: 'CANCELLED', cancelledAt: new Date().toISOString() }
+          ? { ...order, status: 'CANCELLED', cancelledAt: new Date().toISOString(), bookCopy: null }
           : order
       )))
     } catch (err) {
@@ -131,10 +136,14 @@ export default function Orders() {
                     <div className="resource-item__meta">
                       <span>Zamówiono: {formatDateTime(order.createdAt)}</span>
                       <span>Termin odbioru: {formatDateTime(order.pickupDeadline)}</span>
+                      {order.pickupType && (
+                        <span>Odbiór: {PICKUP_LABELS[order.pickupType] ?? order.pickupType}</span>
+                      )}
                     </div>
                     {order.bookCopy?.inventoryCode && (
                       <div className="resource-item__meta">
                         <span>Egzemplarz: {order.bookCopy.inventoryCode}</span>
+                        {order.bookCopy.location && <span>Lokalizacja: {order.bookCopy.location}</span>}
                       </div>
                     )}
                   </div>
@@ -170,7 +179,17 @@ export default function Orders() {
                       <span>Zamówiono: {formatDateTime(order.createdAt)}</span>
                       {order.collectedAt && <span>Odebrano: {formatDateTime(order.collectedAt)}</span>}
                       {order.cancelledAt && <span>Anulowano: {formatDateTime(order.cancelledAt)}</span>}
+                      {order.expiredAt && <span>Wygasło: {formatDateTime(order.expiredAt)}</span>}
+                      {order.pickupType && (
+                        <span>Odbiór: {PICKUP_LABELS[order.pickupType] ?? order.pickupType}</span>
+                      )}
                     </div>
+                    {order.bookCopy?.inventoryCode && (
+                      <div className="resource-item__meta">
+                        <span>Egzemplarz: {order.bookCopy.inventoryCode}</span>
+                        {order.bookCopy.location && <span>Lokalizacja: {order.bookCopy.location}</span>}
+                      </div>
+                    )}
                   </div>
                   <span className={`status-pill ${order.status === 'COLLECTED' ? 'is-returned' : 'is-danger'}`}>
                     {STATUS_LABELS[order.status] ?? order.status}
