@@ -142,4 +142,54 @@ class BookControllerTest extends ApiTestCase
         $deleted = $this->entityManager->getRepository(Book::class)->find($book->getId());
         self::assertNull($deleted);
     }
+
+    public function testListCanFilterByAgeGroup(): void
+    {
+        $author = $this->createAuthor('Author One');
+        $category = $this->createCategory('Adventure');
+        $targetBook = $this->createBook('Youth Quest', $author, 2, [$category], 2, Book::AGE_GROUP_EARLY_SCHOOL);
+        $this->createBook('Adult Epic', null, 2, null, 2, Book::AGE_GROUP_YA_LATE);
+
+        $client = $this->createApiClient();
+        $this->sendRequest($client, 'GET', '/api/books?ageGroup=' . urlencode(Book::AGE_GROUP_EARLY_SCHOOL));
+
+        $this->assertResponseStatusCodeSame(200);
+        $data = $this->getJsonResponse($client);
+        $this->assertCount(1, $data);
+        $this->assertSame($targetBook->getTitle(), $data[0]['title']);
+        $this->assertSame(Book::AGE_GROUP_EARLY_SCHOOL, $data[0]['targetAgeGroup']);
+        $this->assertSame('7-9 lat', $data[0]['targetAgeGroupLabel']);
+    }
+
+    public function testFiltersEndpointReturnsAgeGroups(): void
+    {
+        $client = $this->createApiClient();
+        $this->sendRequest($client, 'GET', '/api/books/filters');
+
+        $this->assertResponseStatusCodeSame(200);
+        $data = $this->getJsonResponse($client);
+        $this->assertArrayHasKey('ageGroups', $data);
+        $this->assertNotEmpty($data['ageGroups']);
+        $first = $data['ageGroups'][0];
+        $this->assertArrayHasKey('value', $first);
+        $this->assertArrayHasKey('label', $first);
+    }
+
+    public function testRecommendedEndpointReturnsGroups(): void
+    {
+        $this->createBook('Tiny Hands', null, 3, null, 3, Book::AGE_GROUP_TODDLERS);
+        $this->createBook('School Secrets', null, 3, null, 3, Book::AGE_GROUP_MIDDLE_GRADE);
+
+        $client = $this->createApiClient();
+        $this->sendRequest($client, 'GET', '/api/books/recommended');
+
+        $this->assertResponseStatusCodeSame(200);
+        $data = $this->getJsonResponse($client);
+        $this->assertArrayHasKey('groups', $data);
+        $this->assertNotEmpty($data['groups']);
+        $group = $data['groups'][0];
+        $this->assertArrayHasKey('key', $group);
+        $this->assertArrayHasKey('label', $group);
+        $this->assertArrayHasKey('books', $group);
+    }
 }

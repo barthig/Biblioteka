@@ -10,6 +10,40 @@ use Symfony\Component\Serializer\Annotation\SerializedName;
 #[ORM\Entity]
 class Book
 {
+    public const AGE_GROUP_TODDLERS = '0-2';
+    public const AGE_GROUP_PRESCHOOL = '3-6';
+    public const AGE_GROUP_EARLY_SCHOOL = '7-9';
+    public const AGE_GROUP_MIDDLE_GRADE = '10-12';
+    public const AGE_GROUP_YA_EARLY = '13-15';
+    public const AGE_GROUP_YA_LATE = '16+';
+
+    private const AGE_GROUP_DEFINITIONS = [
+        self::AGE_GROUP_TODDLERS => [
+            'label' => '0-2 lata',
+            'description' => 'Niemowlęta i maluchy – książeczki sensoryczne, pierwsze słowa.'
+        ],
+        self::AGE_GROUP_PRESCHOOL => [
+            'label' => '3-6 lat',
+            'description' => 'Przedszkolaki – proste historie, intensywne ilustracje.'
+        ],
+        self::AGE_GROUP_EARLY_SCHOOL => [
+            'label' => '7-9 lat',
+            'description' => 'Wczesnoszkolne – pierwsze samodzielne czytanki i przygody.'
+        ],
+        self::AGE_GROUP_MIDDLE_GRADE => [
+            'label' => '10-12 lat',
+            'description' => 'Middle Grade – rozbudowane fabuły, bohaterowie w wieku czytelników.'
+        ],
+        self::AGE_GROUP_YA_EARLY => [
+            'label' => '13-15 lat',
+            'description' => 'Młodsze YA – odkrywanie tożsamości, relacje rówieśnicze.'
+        ],
+        self::AGE_GROUP_YA_LATE => [
+            'label' => '16+ lat',
+            'description' => 'Starsze YA / New Adult – tematy dojrzewania i pierwszych wyborów życiowych.'
+        ],
+    ];
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
@@ -78,6 +112,10 @@ class Book
     #[ORM\Column(type: 'string', length: 60, nullable: true)]
     #[Groups(['book:read', 'loan:read', 'reservation:read'])]
     private ?string $signature = null;
+
+    #[ORM\Column(type: 'string', length: 24, nullable: true)]
+    #[Groups(['book:read', 'reservation:read'])]
+    private ?string $targetAgeGroup = null;
 
     #[ORM\Column(type: 'datetime')]
     #[Groups(['book:read', 'reservation:read'])]
@@ -355,6 +393,41 @@ class Book
         return $this;
     }
 
+    public function getTargetAgeGroup(): ?string
+    {
+        return $this->targetAgeGroup;
+    }
+
+    public function setTargetAgeGroup(?string $ageGroup): self
+    {
+        if ($ageGroup !== null) {
+            $ageGroup = trim($ageGroup);
+            if ($ageGroup === '') {
+                $ageGroup = null;
+            }
+        }
+
+        if ($ageGroup !== null && !self::isValidAgeGroup($ageGroup)) {
+            throw new \InvalidArgumentException(sprintf('Invalid age group "%s" provided for book.', $ageGroup));
+        }
+
+        $this->targetAgeGroup = $ageGroup;
+
+        return $this;
+    }
+
+    #[Groups(['book:read', 'reservation:read'])]
+    public function getTargetAgeGroupLabel(): ?string
+    {
+        if ($this->targetAgeGroup === null) {
+            return null;
+        }
+
+        $definitions = self::getAgeGroupDefinitions();
+
+        return $definitions[$this->targetAgeGroup]['label'] ?? $this->targetAgeGroup;
+    }
+
     public function getCreatedAt(): \DateTimeInterface
     {
         return $this->createdAt;
@@ -394,5 +467,18 @@ class Book
         $this->isFavorite = $isFavorite;
 
         return $this;
+    }
+
+    /**
+     * @return array<string, array{label: string, description: string}>
+     */
+    public static function getAgeGroupDefinitions(): array
+    {
+        return self::AGE_GROUP_DEFINITIONS;
+    }
+
+    public static function isValidAgeGroup(string $ageGroup): bool
+    {
+        return isset(self::AGE_GROUP_DEFINITIONS[$ageGroup]);
     }
 }

@@ -38,12 +38,10 @@ export default function BookDetails() {
   const [error, setError] = useState(null)
 
   const [favorite, setFavorite] = useState(false)
-  const [activeOrder, setActiveOrder] = useState(null)
   const [activeReservation, setActiveReservation] = useState(null)
 
   const [actionError, setActionError] = useState(null)
   const [actionSuccess, setActionSuccess] = useState(null)
-  const [ordering, setOrdering] = useState(false)
   const [reserving, setReserving] = useState(false)
   const [favoriteLoading, setFavoriteLoading] = useState(false)
   const [engagementLoading, setEngagementLoading] = useState(false)
@@ -59,7 +57,7 @@ export default function BookDetails() {
   const [reviewActionSuccess, setReviewActionSuccess] = useState(null)
   const { getCachedResource, setCachedResource, invalidateResource } = useResourceCache()
   const REVIEWS_CACHE_TTL = 60000
-  const ORDERS_CACHE_TTL = 45000
+  const RESERVATIONS_CACHE_TTL = 45000
 
   useEffect(() => {
     let active = true
@@ -69,9 +67,8 @@ export default function BookDetails() {
       setError(null)
       setActionError(null)
       setActionSuccess(null)
-      setFavorite(false)
-      setActiveOrder(null)
-      setActiveReservation(null)
+  setFavorite(false)
+  setActiveReservation(null)
       try {
         const data = await apiFetch(`/api/books/${id}`)
         if (active) {
@@ -135,7 +132,6 @@ export default function BookDetails() {
   }, [book])
 
   useEffect(() => {
-    setActiveOrder(null)
     setActiveReservation(null)
     setEngagementFetched(false)
     engagementFetchRef.current = false
@@ -147,26 +143,14 @@ export default function BookDetails() {
     }
 
     engagementFetchRef.current = true
-    const ordersCacheKey = 'orders:/api/orders'
     const reservationsCacheKey = 'reservations:/api/reservations'
-    const cachedOrders = getCachedResource(ordersCacheKey, ORDERS_CACHE_TTL)
-    const cachedReservations = getCachedResource(reservationsCacheKey, ORDERS_CACHE_TTL)
-
-    if (cachedOrders && Array.isArray(cachedOrders)) {
-      const orderMatch = cachedOrders.find(item => item?.book?.id === bookId)
-      if (orderMatch) {
-        setActiveOrder(orderMatch)
-      }
-    }
+    const cachedReservations = getCachedResource(reservationsCacheKey, RESERVATIONS_CACHE_TTL)
 
     if (cachedReservations && Array.isArray(cachedReservations)) {
       const reservationMatch = cachedReservations.find(item => item?.book?.id === bookId)
       if (reservationMatch) {
         setActiveReservation(reservationMatch)
       }
-    }
-
-    if (cachedOrders && cachedReservations) {
       engagementFetchRef.current = false
       setEngagementFetched(true)
       setEngagementLoading(false)
@@ -176,32 +160,11 @@ export default function BookDetails() {
     setEngagementLoading(true)
 
     try {
-      const [ordersResult, reservationsResult] = await Promise.allSettled([
-        cachedOrders ? Promise.resolve(cachedOrders) : apiFetch('/api/orders'),
-        cachedReservations ? Promise.resolve(cachedReservations) : apiFetch('/api/reservations'),
-      ])
-
-      const ordersList = ordersResult.status === 'fulfilled' && Array.isArray(ordersResult.value)
-        ? ordersResult.value
-        : null
-      const reservationsList = reservationsResult.status === 'fulfilled' && Array.isArray(reservationsResult.value)
-        ? reservationsResult.value
-        : null
-
-      if (ordersList) {
-        setCachedResource(ordersCacheKey, ordersList)
+      const reservations = await apiFetch('/api/reservations')
+      if (Array.isArray(reservations)) {
+        setCachedResource(reservationsCacheKey, reservations)
         if (aliveRef.current) {
-          const orderMatch = ordersList.find(item => item?.book?.id === bookId)
-          if (orderMatch) {
-            setActiveOrder(orderMatch)
-          }
-        }
-      }
-
-      if (reservationsList) {
-        setCachedResource(reservationsCacheKey, reservationsList)
-        if (aliveRef.current) {
-          const reservationMatch = reservationsList.find(item => item?.book?.id === bookId)
+          const reservationMatch = reservations.find(item => item?.book?.id === bookId)
           if (reservationMatch) {
             setActiveReservation(reservationMatch)
           }
@@ -239,60 +202,11 @@ export default function BookDetails() {
     return book.categories.map(c => c.name).join(', ')
   }, [book])
 
-  const storageAvailable = book ? (book.storageCopies ?? 0) > 0 : false
-  const openStackAvailable = book ? (book.openStackCopies ?? 0) > 0 : false
+  const ageGroupLabel = book?.targetAgeGroupLabel ?? book?.targetAgeGroup ?? null
+
   const anyAvailable = book ? (book.copies ?? 0) > 0 : false
 
-  const canOrderStorage = Boolean(token && storageAvailable && !activeOrder && !activeReservation)
-  const canOrderOpenStack = Boolean(token && openStackAvailable && !activeOrder && !activeReservation)
-  const canReserve = Boolean(token && book && !anyAvailable && !activeReservation && !activeOrder)
-
-  async function handleOrder(pickupType) {
-    if (!token) {
-      setActionError('Zaloguj się, aby zamówić książkę do odbioru.')
-      return
-    }
-    setOrdering(true)
-    setActionError(null)
-    setActionSuccess(null)
-    try {
-      const order = await apiFetch('/api/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ bookId, pickupType, days: 2 }),
-      })
-
-      const successMessage = pickupType === 'STORAGE_DESK'
-        ? 'Zamówienie z magazynu przyjęte. Książka będzie czekała w wypożyczalni.'
-        : 'Zlecono odłożenie egzemplarza z półki. Odbierz go w wypożyczalni w ciągu 2 dni.'
-
-      setActionSuccess(successMessage)
-      setActiveOrder(order)
-      setEngagementFetched(true)
-      invalidateResource('orders:/api/orders*')
-      setBook(prev => {
-        if (!prev) return prev
-        const copies = Math.max(0, (prev.copies ?? 0) - 1)
-        const storageCopies = pickupType === 'STORAGE_DESK'
-          ? Math.max(0, (prev.storageCopies ?? 0) - 1)
-          : prev.storageCopies ?? 0
-        const openStackCopies = pickupType === 'OPEN_SHELF'
-          ? Math.max(0, (prev.openStackCopies ?? 0) - 1)
-          : prev.openStackCopies ?? 0
-
-        return {
-          ...prev,
-          copies,
-          storageCopies,
-          openStackCopies,
-        }
-      })
-    } catch (err) {
-      setActionError(err.message || 'Nie udało się złożyć zamówienia')
-    } finally {
-      setOrdering(false)
-    }
-  }
+  const canReserve = Boolean(token && book && !anyAvailable && !activeReservation)
 
   async function handleReservation() {
     if (!token) {
@@ -423,7 +337,7 @@ export default function BookDetails() {
       <header className="page-header">
         <div>
           <h1>{book.title}</h1>
-          <p className="support-copy">Sprawdź dostępność, zamów egzemplarz do odbioru i przeczytaj opinie czytelników.</p>
+          <p className="support-copy">Sprawdź dostępność, dołącz do kolejki rezerwacji i przeczytaj opinie czytelników.</p>
         </div>
       </header>
 
@@ -437,6 +351,12 @@ export default function BookDetails() {
             <dt>Kategorie</dt>
             <dd>{categories}</dd>
           </div>
+          {ageGroupLabel && (
+            <div className="resource-item__meta">
+              <dt>Przedział wiekowy</dt>
+              <dd>{ageGroupLabel}</dd>
+            </div>
+          )}
           <div className="resource-item__meta">
             <dt>ISBN</dt>
             <dd>{book.isbn ?? '—'}</dd>
@@ -488,26 +408,10 @@ export default function BookDetails() {
           <button
             type="button"
             className="btn btn-primary"
-            onClick={() => handleOrder('STORAGE_DESK')}
-            disabled={!canOrderStorage || ordering}
-          >
-            {ordering ? 'Przetwarzanie...' : 'Zamów z magazynu'}
-          </button>
-          <button
-            type="button"
-            className="btn btn-outline"
-            onClick={() => handleOrder('OPEN_SHELF')}
-            disabled={!canOrderOpenStack || ordering}
-          >
-            {ordering ? 'Przetwarzanie...' : 'Poproś o odłożenie z półki'}
-          </button>
-          <button
-            type="button"
-            className="btn btn-outline"
             onClick={handleReservation}
             disabled={!canReserve || reserving}
           >
-            {reserving ? 'Przetwarzanie...' : 'Dołącz do kolejki'}
+            {reserving ? 'Przetwarzanie...' : 'Dołącz do kolejki rezerwacji'}
           </button>
           <button
             type="button"
@@ -519,19 +423,16 @@ export default function BookDetails() {
           </button>
         </div>
         <p className="support-copy">
-          Egzemplarze magazynowe przygotuje dla Ciebie bibliotekarz. Jeżeli wybierzesz opcję półki, pracownik odłoży wybrany egzemplarz z wolnego dostępu do wypożyczalni.
+          Jeśli egzemplarze są aktualnie wypożyczone, dołącz do kolejki rezerwacji, aby otrzymać powiadomienie o dostępności.
         </p>
         {token && engagementLoading && (
-          <p className="support-copy">Sprawdzam Twoje aktywne zamówienia i rezerwacje...</p>
-        )}
-        {!storageAvailable && openStackAvailable && (
-          <p className="support-copy">Brak egzemplarzy w magazynie — najłatwiej skorzystać z opcji „Poproś o odłożenie z półki” lub podejść osobiście.</p>
+          <p className="support-copy">Sprawdzam Twoje aktywne rezerwacje...</p>
         )}
         {!token && (
-          <p className="support-copy">Zaloguj się, aby zamawiać, rezerwować i dodawać książki do ulubionych.</p>
+          <p className="support-copy">Zaloguj się, aby rezerwować i dodawać książki do ulubionych.</p>
         )}
-        {activeOrder && (
-          <p className="support-copy">Masz aktywne zamówienie na ten tytuł. Termin odbioru: {formatDate(activeOrder.pickupDeadline, true)}.</p>
+        {anyAvailable && (
+          <p className="support-copy">Egzemplarze są dostępne od ręki — odwiedź wypożyczalnię, aby wypożyczyć książkę bez oczekiwania.</p>
         )}
         {activeReservation && (
           <p className="support-copy">

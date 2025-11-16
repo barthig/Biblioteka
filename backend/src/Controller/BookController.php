@@ -27,6 +27,7 @@ class BookController extends AbstractController
             'signature' => $request->query->get('signature'),
             'yearFrom' => $request->query->has('yearFrom') ? $request->query->getInt('yearFrom') : null,
             'yearTo' => $request->query->has('yearTo') ? $request->query->getInt('yearTo') : null,
+            'ageGroup' => $request->query->get('ageGroup'),
         ];
 
         if ($request->query->has('available')) {
@@ -132,6 +133,17 @@ class BookController extends AbstractController
             ->setIsbn($data['isbn'] ?? null)
             ->setDescription($data['description'] ?? null);
 
+        if (array_key_exists('targetAgeGroup', $data)) {
+            $ageGroup = $data['targetAgeGroup'];
+            if ($ageGroup === null || $ageGroup === '') {
+                $book->setTargetAgeGroup(null);
+            } elseif (!is_string($ageGroup) || !Book::isValidAgeGroup($ageGroup)) {
+                return $this->json(['error' => 'Invalid targetAgeGroup'], 400);
+            } else {
+                $book->setTargetAgeGroup($ageGroup);
+            }
+        }
+
         foreach ($categories as $category) {
             $book->addCategory($category);
         }
@@ -218,6 +230,17 @@ class BookController extends AbstractController
             $book->setIsbn($data['isbn']);
         }
 
+        if (array_key_exists('targetAgeGroup', $data)) {
+            $ageGroup = $data['targetAgeGroup'];
+            if ($ageGroup === null || $ageGroup === '') {
+                $book->setTargetAgeGroup(null);
+            } elseif (!is_string($ageGroup) || !Book::isValidAgeGroup($ageGroup)) {
+                return $this->json(['error' => 'Invalid targetAgeGroup'], 400);
+            } else {
+                $book->setTargetAgeGroup($ageGroup);
+            }
+        }
+
         $em = $doctrine->getManager();
         $em->persist($book);
         $em->flush();
@@ -236,5 +259,52 @@ class BookController extends AbstractController
         $em->remove($book);
         $em->flush();
         return new JsonResponse(null, 204);
+    }
+
+    public function recommended(Request $request, BookRepository $repo, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
+    {
+        $limit = $request->query->getInt('limit', 6);
+        if ($limit < 1) {
+            $limit = 1;
+        } elseif ($limit > 24) {
+            $limit = 24;
+        }
+
+        $payload = $security->getJwtPayload($request);
+        $favoriteLookup = [];
+        if ($payload && isset($payload['sub'])) {
+            $user = $doctrine->getRepository(User::class)->find((int) $payload['sub']);
+            if ($user) {
+                /** @var \App\Repository\FavoriteRepository $favoriteRepo */
+                $favoriteRepo = $doctrine->getRepository(Favorite::class);
+                $favoriteBookIds = $favoriteRepo->getBookIdsForUser($user);
+                if (!empty($favoriteBookIds)) {
+                    $favoriteLookup = array_flip($favoriteBookIds);
+                }
+            }
+        }
+
+        $groupsPayload = [];
+        foreach (Book::getAgeGroupDefinitions() as $key => $definition) {
+            $books = $repo->findRecommendedByAgeGroup($key, $limit);
+            if (!empty($favoriteLookup)) {
+                foreach ($books as $book) {
+                    if ($book instanceof Book && $book->getId() !== null && isset($favoriteLookup[$book->getId()])) {
+                        $book->setIsFavorite(true);
+                    }
+                }
+            }
+
+            $groupsPayload[] = [
+                'key' => $key,
+                'label' => $definition['label'],
+                'description' => $definition['description'],
+                'books' => $books,
+            ];
+        }
+
+        return $this->json([
+            'groups' => $groupsPayload,
+        ], 200, [], ['groups' => ['book:read']]);
     }
 }

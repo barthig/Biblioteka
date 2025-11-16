@@ -15,11 +15,6 @@ export default function Navbar() {
     prefetchResource('loans:/api/loans', () => apiFetch('/api/loans')).catch(() => {})
   }, [prefetchResource, token])
 
-  const prefetchOrders = useCallback(() => {
-    if (!token) return
-    prefetchResource('orders:/api/orders?history=true', () => apiFetch('/api/orders?history=true')).catch(() => {})
-  }, [prefetchResource, token])
-
   const prefetchReservations = useCallback(() => {
     if (!token) return
     prefetchResource('reservations:/api/reservations?history=true', () => apiFetch('/api/reservations?history=true')).catch(() => {})
@@ -30,16 +25,20 @@ export default function Navbar() {
     prefetchResource('favorites:/api/favorites', () => apiFetch('/api/favorites')).catch(() => {})
   }, [prefetchResource, token])
 
+  const prefetchRecommended = useCallback(() => {
+    prefetchResource('recommended:/api/books/recommended', () => apiFetch('/api/books/recommended')).catch(() => {})
+  }, [prefetchResource])
+
   return (
     <aside className="sidebar">
       <div className="sidebar__brand">Biblioteka</div>
       <nav className="sidebar__menu">
         <NavLink to="/" end className={navClass}>Dashboard</NavLink>
         <NavLink to="/books" className={navClass}>Książki</NavLink>
+        <NavLink to="/recommended" className={navClass} onMouseEnter={prefetchRecommended} onFocus={prefetchRecommended}>Polecane</NavLink>
         <NavLink to="/my-loans" className={navClass} onMouseEnter={prefetchLoans} onFocus={prefetchLoans}>Wypożyczenia</NavLink>
         {token && (
           <>
-            <NavLink to="/orders" className={navClass} onMouseEnter={prefetchOrders} onFocus={prefetchOrders}>Zamówienia</NavLink>
             <NavLink to="/reservations" className={navClass} onMouseEnter={prefetchReservations} onFocus={prefetchReservations}>Rezerwacje</NavLink>
             <NavLink to="/favorites" className={navClass} onMouseEnter={prefetchFavorites} onFocus={prefetchFavorites}>Ulubione</NavLink>
             <NavLink to="/profile" className={navClass}>Profil</NavLink>

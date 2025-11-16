@@ -102,6 +102,11 @@ api_books_filters:
   controller: App\Controller\BookController::filters
   methods: [GET]
 
+api_books_recommended:
+  path: /api/books/recommended
+  controller: App\Controller\BookController::recommended
+  methods: [GET]
+
 api_books_get:
   path: /api/books/{id}
   controller: App\Controller\BookController::getBook
@@ -452,24 +457,6 @@ api_reservations_create:
 api_reservations_cancel:
   path: /api/reservations/{id}
   controller: App\Controller\ReservationController::cancel
-  methods: [DELETE]
-  requirements:
-    id: '[0-9]+'
-
-# Orders
-api_orders_list:
-  path: /api/orders
-  controller: App\Controller\OrderController::list
-  methods: [GET]
-
-api_orders_create:
-  path: /api/orders
-  controller: App\Controller\OrderController::create
-  methods: [POST]
-
-api_orders_cancel:
-  path: /api/orders/{id}
-  controller: App\Controller\OrderController::cancel
   methods: [DELETE]
   requirements:
     id: '[0-9]+'

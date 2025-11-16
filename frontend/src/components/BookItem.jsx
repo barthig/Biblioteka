@@ -23,6 +23,7 @@ export default function BookItem({ book, onBorrowed }) {
   const publicationYear = book?.publicationYear
   const resourceType = book?.resourceType
   const signature = book?.signature
+  const ageGroupLabel = book?.targetAgeGroupLabel ?? book?.targetAgeGroup ?? null
 
   useEffect(() => {
     setFavorite(Boolean(book?.isFavorite))
@@ -112,6 +113,7 @@ export default function BookItem({ book, onBorrowed }) {
             {publicationYear && <span>Rok wydania {publicationYear}</span>}
             {resourceType && <span>{resourceType}</span>}
             {book.isbn && <span>ISBN {book.isbn}</span>}
+            {ageGroupLabel && <span>Wiek: {ageGroupLabel}</span>}
           </div>
           {(publisher || signature) && (
             <div className="book-card__meta">

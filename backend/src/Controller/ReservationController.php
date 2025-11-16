@@ -4,7 +4,6 @@ namespace App\Controller;
 use App\Entity\Book;
 use App\Entity\Reservation;
 use App\Entity\BookCopy;
-use App\Entity\OrderRequest;
 use App\Entity\User;
 use App\Message\ReservationQueuedNotification;
 use App\Repository\ReservationRepository;
@@ -77,19 +76,13 @@ class ReservationController extends AbstractController
 
         $userRepo = $doctrine->getRepository(User::class);
         $bookRepo = $doctrine->getRepository(Book::class);
-    /** @var ReservationRepository $reservationRepo */
-    $reservationRepo = $doctrine->getRepository(Reservation::class);
-    /** @var \App\Repository\OrderRequestRepository $orderRepo */
-    $orderRepo = $doctrine->getRepository(OrderRequest::class);
+        /** @var ReservationRepository $reservationRepo */
+        $reservationRepo = $doctrine->getRepository(Reservation::class);
 
         $user = $userRepo->find((int) $payload['sub']);
         $book = $bookRepo->find((int) $bookId);
         if (!$user || !$book) {
             return $this->json(['error' => 'User or book not found'], 404);
-        }
-
-        if ($orderRepo->findActiveForUserAndBook($user, $book)) {
-            return $this->json(['error' => 'Masz już zamówienie na tę książkę'], 409);
         }
 
         if ($book->getCopies() > 0) {

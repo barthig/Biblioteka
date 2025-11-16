@@ -87,7 +87,6 @@ export default function Dashboard() {
     prefetchScheduledRef.current = true
 
     const tasks = [
-      prefetchResource('orders:/api/orders?history=true', () => apiFetch('/api/orders?history=true')),
       prefetchResource('reservations:/api/reservations?history=true', () => apiFetch('/api/reservations?history=true')),
       prefetchResource('favorites:/api/favorites', () => apiFetch('/api/favorites')),
       prefetchResource('loans:/api/loans', () => apiFetch('/api/loans')),

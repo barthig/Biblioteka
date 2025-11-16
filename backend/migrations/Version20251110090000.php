@@ -16,6 +16,9 @@ final class Version20251110090000 extends AbstractMigration
 
     public function up(Schema $schema): void
     {
+        $this->addSql('DROP TABLE IF EXISTS book_digital_asset CASCADE');
+        $this->addSql('DROP SEQUENCE IF EXISTS book_digital_asset_id_seq CASCADE');
+
         $this->addSql('CREATE TABLE book_digital_asset (
             id INT GENERATED ALWAYS AS IDENTITY NOT NULL,
             book_id INT NOT NULL,
@@ -34,6 +37,7 @@ final class Version20251110090000 extends AbstractMigration
 
     public function down(Schema $schema): void
     {
-        $this->addSql('DROP TABLE IF EXISTS book_digital_asset');
+        $this->addSql('DROP TABLE IF EXISTS book_digital_asset CASCADE');
+        $this->addSql('DROP SEQUENCE IF EXISTS book_digital_asset_id_seq CASCADE');
     }
 }

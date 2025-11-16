@@ -18,12 +18,13 @@ class BookRepository extends ServiceEntityRepository
      *     q?: string,
      *     authorId?: int|null,
      *     categoryId?: int|null,
-     *     publisher?: string|null,
-     *     resourceType?: string|null,
-     *     signature?: string|null,
-     *     yearFrom?: int|null,
-     *     yearTo?: int|null,
-     *     available?: bool|null
+    *     publisher?: string|null,
+    *     resourceType?: string|null,
+    *     signature?: string|null,
+    *     yearFrom?: int|null,
+    *     yearTo?: int|null,
+    *     available?: bool|null,
+    *     ageGroup?: string|null
      * } $filters
      * @return Book[]
      */
@@ -95,6 +96,11 @@ class BookRepository extends ServiceEntityRepository
             $parameters['yearTo'] = (int) $filters['yearTo'];
         }
 
+        if (isset($filters['ageGroup']) && $filters['ageGroup'] !== '' && $filters['ageGroup'] !== null) {
+            $qb->andWhere('b.targetAgeGroup = :ageGroup');
+            $parameters['ageGroup'] = (string) $filters['ageGroup'];
+        }
+
         if (array_key_exists('available', $filters)) {
             $value = $filters['available'];
             if ($value === true || $value === 1 || $value === '1' || $value === 'true') {
@@ -105,6 +111,23 @@ class BookRepository extends ServiceEntityRepository
         foreach ($parameters as $name => $value) {
             $qb->setParameter($name, $value);
         }
+
+        return $qb->getQuery()->getResult();
+    }
+
+    /**
+     * @return Book[]
+     */
+    public function findRecommendedByAgeGroup(string $ageGroup, int $limit = 8): array
+    {
+        $qb = $this->createQueryBuilder('b')
+            ->leftJoin('b.author', 'a')->addSelect('a')
+            ->leftJoin('b.categories', 'c')->addSelect('c')
+            ->where('b.targetAgeGroup = :ageGroup')
+            ->setParameter('ageGroup', $ageGroup)
+            ->orderBy('b.copies', 'DESC')
+            ->addOrderBy('b.createdAt', 'DESC')
+            ->setMaxResults(max(1, $limit));
 
         return $qb->getQuery()->getResult();
     }
@@ -174,6 +197,17 @@ class BookRepository extends ServiceEntityRepository
             }
         }
 
+        $ageGroupDefinitions = Book::getAgeGroupDefinitions();
+
+        $ageGroups = [];
+        foreach ($ageGroupDefinitions as $value => $definition) {
+            $ageGroups[] = [
+                'value' => $value,
+                'label' => $definition['label'],
+                'description' => $definition['description'],
+            ];
+        }
+
         return [
             'authors' => array_values(array_map(static fn (array $row) => [
                 'id' => (int) $row['id'],
@@ -189,6 +223,7 @@ class BookRepository extends ServiceEntityRepository
                 'min' => $minYear,
                 'max' => $maxYear,
             ],
+            'ageGroups' => $ageGroups,
         ];
     }
 }

@@ -538,6 +538,26 @@ select:focus {
 	font-size: .9rem;
 }
 
+.recommended-groups {
+	display: grid;
+	gap: var(--space-3);
+}
+
+.recommended-section {
+	display: grid;
+	gap: var(--space-3);
+}
+
+.recommended-section__header {
+	display: grid;
+	gap: .35rem;
+}
+
+.recommended-section__header h2 {
+	margin: 0;
+	font-size: 1.35rem;
+}
+
 .loans-grid {
 	display: grid;
 	gap: var(--space-3);

@@ -190,7 +190,14 @@ abstract class ApiTestCase extends WebTestCase
     /**
      * @param Category[] $categories
      */
-    protected function createBook(string $title = 'Sample Book', ?Author $author = null, int $copies = 3, ?array $categories = null, ?int $totalCopies = null): Book
+    protected function createBook(
+        string $title = 'Sample Book',
+        ?Author $author = null,
+        int $copies = 3,
+        ?array $categories = null,
+        ?int $totalCopies = null,
+        ?string $ageGroup = null
+    ): Book
     {
         $author ??= $this->createAuthor('Author ' . uniqid('', true));
         $categories = $categories ?? [$this->createCategory('General')];
@@ -201,6 +208,10 @@ abstract class ApiTestCase extends WebTestCase
             ->setTitle($title)
             ->setAuthor($author)
             ->setIsbn('ISBN-' . substr(md5($title . microtime()), 0, 8));
+
+        if ($ageGroup !== null) {
+            $book->setTargetAgeGroup($ageGroup);
+        }
 
         foreach ($categories as $category) {
             $book->addCategory($category);

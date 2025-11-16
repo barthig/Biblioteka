@@ -12,6 +12,7 @@ const initialFilters = {
   yearFrom: '',
   yearTo: '',
   availableOnly: false,
+  ageGroup: '',
 }
 
 export default function Books() {
@@ -27,7 +28,8 @@ export default function Books() {
     categories: [],
     publishers: [],
     resourceTypes: [],
-    years: { min: null, max: null }
+    years: { min: null, max: null },
+    ageGroups: [],
   })
   const [showAdvanced, setShowAdvanced] = useState(false)
   const filtersRef = useRef(filters)
@@ -70,6 +72,10 @@ export default function Books() {
       params.set('signature', activeFilters.signature.trim())
     }
 
+    if (activeFilters.ageGroup) {
+      params.set('ageGroup', activeFilters.ageGroup)
+    }
+
     if (activeFilters.yearFrom && `${activeFilters.yearFrom}`.trim() !== '') {
       params.set('yearFrom', `${activeFilters.yearFrom}`.trim())
     }
@@ -91,6 +97,7 @@ export default function Books() {
       (activeFilters.publisher && activeFilters.publisher.trim() !== '') ||
       (activeFilters.resourceType && activeFilters.resourceType !== '') ||
       (activeFilters.signature && activeFilters.signature.trim() !== '') ||
+      (activeFilters.ageGroup && activeFilters.ageGroup !== '') ||
       (activeFilters.yearFrom && activeFilters.yearFrom !== '') ||
       (activeFilters.yearTo && activeFilters.yearTo !== '') ||
       activeFilters.availableOnly
@@ -140,7 +147,8 @@ export default function Books() {
         categories: Array.isArray(data?.categories) ? data.categories : [],
         publishers: Array.isArray(data?.publishers) ? data.publishers : [],
         resourceTypes: Array.isArray(data?.resourceTypes) ? data.resourceTypes : [],
-        years: data?.years ?? { min: null, max: null }
+        years: data?.years ?? { min: null, max: null },
+        ageGroups: Array.isArray(data?.ageGroups) ? data.ageGroups : [],
       }
       setFacets(normalized)
       setCachedResource(cacheKey, normalized)
@@ -195,6 +203,7 @@ export default function Books() {
     (filters.publisher && filters.publisher.trim() !== '') ||
     (filters.resourceType && filters.resourceType !== '') ||
     (filters.signature && filters.signature.trim() !== '') ||
+    (filters.ageGroup && filters.ageGroup !== '') ||
     (filters.yearFrom && filters.yearFrom !== '') ||
     (filters.yearTo && filters.yearTo !== '') ||
     filters.availableOnly
@@ -300,6 +309,21 @@ export default function Books() {
                 <option value="">Dowolny</option>
                 {facets.resourceTypes.map(type => (
                   <option key={type} value={type}>{type}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="book-search__group">
+              <label htmlFor="filter-ageGroup">Przedział wiekowy</label>
+              <select
+                id="filter-ageGroup"
+                name="ageGroup"
+                value={filters.ageGroup}
+                onChange={handleFilterChange}
+              >
+                <option value="">Dowolny</option>
+                {facets.ageGroups.map(group => (
+                  <option key={group.value} value={group.value}>{group.label}</option>
                 ))}
               </select>
             </div>
