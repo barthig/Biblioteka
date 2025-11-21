@@ -188,6 +188,17 @@
     <service id="App\Entity" class="App\Entity" abstract="true">
       <tag name="container.excluded" source="in &quot;config/services.yaml&quot;"/>
     </service>
+    <service id="App\Command\AnonymizeInactivePatronsCommand" class="App\Command\AnonymizeInactivePatronsCommand" autowire="true" autoconfigure="true">
+      <tag name="console.command"/>
+      <tag name="container.no_preload"/>
+      <argument type="service" id="App\Service\Maintenance\PatronAnonymizer"/>
+      <call method="setName">
+        <argument>maintenance:anonymize-patrons</argument>
+      </call>
+      <call method="setDescription">
+        <argument>Anonimizuje dane czytelników nieaktywnych od wskazanego czasu</argument>
+      </call>
+    </service>
     <service id="App\Command\AssessOverdueFinesCommand" class="App\Command\AssessOverdueFinesCommand" autowire="true" autoconfigure="true">
       <tag name="console.command"/>
       <tag name="container.no_preload"/>
@@ -215,6 +226,17 @@
         <argument>Automatically block accounts that exceed fine or overdue thresholds.</argument>
       </call>
     </service>
+    <service id="App\Command\CreateBackupCommand" class="App\Command\CreateBackupCommand" autowire="true" autoconfigure="true">
+      <tag name="console.command"/>
+      <tag name="container.no_preload"/>
+      <argument type="service" id="App\Service\BackupService"/>
+      <call method="setName">
+        <argument>maintenance:create-backup</argument>
+      </call>
+      <call method="setDescription">
+        <argument>Wykonuje kopię zapasową wpisaną w tabeli backup_record</argument>
+      </call>
+    </service>
     <service id="App\Command\DispatchLoanDueRemindersCommand" class="App\Command\DispatchLoanDueRemindersCommand" autowire="true" autoconfigure="true">
       <tag name="console.command"/>
       <tag name="container.no_preload"/>
@@ -237,6 +259,21 @@
       </call>
       <call method="setDescription">
         <argument>Queue warnings for loans that are already overdue.</argument>
+      </call>
+    </service>
+    <service id="App\Command\DispatchNewsletterCommand" class="App\Command\DispatchNewsletterCommand" autowire="true" autoconfigure="true">
+      <tag name="console.command"/>
+      <tag name="container.no_preload"/>
+      <argument type="service" id="App\Repository\UserRepository"/>
+      <argument type="service" id="App\Repository\BookRepository"/>
+      <argument type="service" id="App\Service\Notification\NewsletterComposer"/>
+      <argument type="service" id="App\Service\Notification\NotificationSender"/>
+      <argument type="service" id="doctrine.orm.default_entity_manager"/>
+      <call method="setName">
+        <argument>notifications:dispatch-newsletter</argument>
+      </call>
+      <call method="setDescription">
+        <argument>Send a digest of recent arrivals to newsletter subscribers.</argument>
       </call>
     </service>
     <service id="App\Command\DispatchReservationReadyCommand" class="App\Command\DispatchReservationReadyCommand" autowire="true" autoconfigure="true">
@@ -263,6 +300,28 @@
       </call>
       <call method="setDescription">
         <argument>Expire reservations that were ready for pickup but were not collected on time.</argument>
+      </call>
+    </service>
+    <service id="App\Command\GenerateWeedingAnalyticsCommand" class="App\Command\GenerateWeedingAnalyticsCommand" autowire="true" autoconfigure="true">
+      <tag name="console.command"/>
+      <tag name="container.no_preload"/>
+      <argument type="service" id="App\Service\Maintenance\WeedingAnalyticsService"/>
+      <call method="setName">
+        <argument>maintenance:weeding-analyze</argument>
+      </call>
+      <call method="setDescription">
+        <argument>Generuje listę pozycji kwalifikujących się do wycofania</argument>
+      </call>
+    </service>
+    <service id="App\Command\ImportIsbnMetadataCommand" class="App\Command\ImportIsbnMetadataCommand" autowire="true" autoconfigure="true">
+      <tag name="console.command"/>
+      <tag name="container.no_preload"/>
+      <argument type="service" id="App\Service\Maintenance\IsbnImportService"/>
+      <call method="setName">
+        <argument>maintenance:import-isbn</argument>
+      </call>
+      <call method="setDescription">
+        <argument>Importuje metadane książek na podstawie listy ISBN</argument>
       </call>
     </service>
     <service id="App\Controller\AccountController" class="App\Controller\AccountController" public="true" autowire="true" autoconfigure="true">
@@ -595,6 +654,23 @@
       <argument type="service" id="doctrine"/>
     </service>
     <service id="App\Service\JwtService" class="App\Service\JwtService" autowire="true" autoconfigure="true"/>
+    <service id="App\Service\Maintenance\IsbnImportService" class="App\Service\Maintenance\IsbnImportService" autowire="true" autoconfigure="true">
+      <argument type="service" id="doctrine.orm.default_entity_manager"/>
+      <argument type="service" id="App\Repository\BookRepository"/>
+      <argument type="service" id="App\Repository\AuthorRepository"/>
+      <argument type="service" id="App\Repository\CategoryRepository"/>
+    </service>
+    <service id="App\Service\Maintenance\PatronAnonymizer" class="App\Service\Maintenance\PatronAnonymizer" autowire="true" autoconfigure="true">
+      <argument type="service" id="doctrine.orm.default_entity_manager"/>
+      <argument type="service" id="App\Repository\UserRepository"/>
+      <argument type="service" id="App\Repository\LoanRepository"/>
+      <argument type="service" id="App\Repository\ReservationRepository"/>
+      <argument type="service" id="App\Repository\FineRepository"/>
+    </service>
+    <service id="App\Service\Maintenance\WeedingAnalyticsService" class="App\Service\Maintenance\WeedingAnalyticsService" autowire="true" autoconfigure="true">
+      <argument type="service" id="App\Repository\BookRepository"/>
+    </service>
+    <service id="App\Service\Notification\NewsletterComposer" class="App\Service\Notification\NewsletterComposer" autowire="true" autoconfigure="true"/>
     <service id="App\Service\Notification\NotificationContent" class="App\Service\Notification\NotificationContent" autowire="true" autoconfigure="true">
       <tag name="container.error" message="Cannot autowire service &quot;App\Service\Notification\NotificationContent&quot;: argument &quot;$subject&quot; of method &quot;__construct()&quot; is type-hinted &quot;string&quot;, you should configure its value explicitly."/>
     </service>
@@ -4035,18 +4111,28 @@
     <service id="nelmio_api_doc.route_argument_describer.map_query_parameter" class="Nelmio\ApiDocBundle\RouteDescriber\RouteArgumentDescriber\SymfonyMapQueryParameterDescriber">
       <tag name="nelmio_api_doc.route_argument_describer" priority="0"/>
     </service>
+    <service id=".instanceof.Symfony\Component\Console\Command\Command.0.App\Command\AnonymizeInactivePatronsCommand" class="App\Command\AnonymizeInactivePatronsCommand" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\Command\AnonymizeInactivePatronsCommand" class="App\Command\AnonymizeInactivePatronsCommand" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Symfony\Component\Console\Command\Command.0.App\Command\AssessOverdueFinesCommand" class="App\Command\AssessOverdueFinesCommand" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Command\AssessOverdueFinesCommand" class="App\Command\AssessOverdueFinesCommand" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Symfony\Component\Console\Command\Command.0.App\Command\BlockDelinquentAccountsCommand" class="App\Command\BlockDelinquentAccountsCommand" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Command\BlockDelinquentAccountsCommand" class="App\Command\BlockDelinquentAccountsCommand" autowire="true" autoconfigure="true" abstract="true"/>
+    <service id=".instanceof.Symfony\Component\Console\Command\Command.0.App\Command\CreateBackupCommand" class="App\Command\CreateBackupCommand" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\Command\CreateBackupCommand" class="App\Command\CreateBackupCommand" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Symfony\Component\Console\Command\Command.0.App\Command\DispatchLoanDueRemindersCommand" class="App\Command\DispatchLoanDueRemindersCommand" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Command\DispatchLoanDueRemindersCommand" class="App\Command\DispatchLoanDueRemindersCommand" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Symfony\Component\Console\Command\Command.0.App\Command\DispatchLoanOverdueWarningsCommand" class="App\Command\DispatchLoanOverdueWarningsCommand" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Command\DispatchLoanOverdueWarningsCommand" class="App\Command\DispatchLoanOverdueWarningsCommand" autowire="true" autoconfigure="true" abstract="true"/>
+    <service id=".instanceof.Symfony\Component\Console\Command\Command.0.App\Command\DispatchNewsletterCommand" class="App\Command\DispatchNewsletterCommand" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\Command\DispatchNewsletterCommand" class="App\Command\DispatchNewsletterCommand" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Symfony\Component\Console\Command\Command.0.App\Command\DispatchReservationReadyCommand" class="App\Command\DispatchReservationReadyCommand" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Command\DispatchReservationReadyCommand" class="App\Command\DispatchReservationReadyCommand" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Symfony\Component\Console\Command\Command.0.App\Command\ExpireReadyReservationsCommand" class="App\Command\ExpireReadyReservationsCommand" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Command\ExpireReadyReservationsCommand" class="App\Command\ExpireReadyReservationsCommand" autowire="true" autoconfigure="true" abstract="true"/>
+    <service id=".instanceof.Symfony\Component\Console\Command\Command.0.App\Command\GenerateWeedingAnalyticsCommand" class="App\Command\GenerateWeedingAnalyticsCommand" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\Command\GenerateWeedingAnalyticsCommand" class="App\Command\GenerateWeedingAnalyticsCommand" autowire="true" autoconfigure="true" abstract="true"/>
+    <service id=".instanceof.Symfony\Component\Console\Command\Command.0.App\Command\ImportIsbnMetadataCommand" class="App\Command\ImportIsbnMetadataCommand" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\Command\ImportIsbnMetadataCommand" class="App\Command\ImportIsbnMetadataCommand" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Symfony\Contracts\Service\ServiceSubscriberInterface.0.App\Controller\AccountController" class="App\Controller\AccountController" autowire="true" abstract="true"/>
     <service id=".instanceof.Symfony\Bundle\FrameworkBundle\Controller\AbstractController.0.App\Controller\AccountController" class="App\Controller\AccountController" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Controller\AccountController" class="App\Controller\AccountController" autowire="true" autoconfigure="true" abstract="true"/>
@@ -5547,6 +5633,13 @@
     <service id=".errored..service_locator.zHyJIs5.Symfony\Component\Config\Loader\LoaderInterface" class="Symfony\Component\Config\Loader\LoaderInterface">
       <tag name="container.error" message="Cannot autowire service &quot;.service_locator.zHyJIs5&quot;: it needs an instance of &quot;Symfony\Component\Config\Loader\LoaderInterface&quot; but this type has been excluded from autowiring."/>
     </service>
+    <service id=".App\Command\AnonymizeInactivePatronsCommand.lazy" class="Symfony\Component\Console\Command\LazyCommand">
+      <argument>maintenance:anonymize-patrons</argument>
+      <argument type="collection"/>
+      <argument>Anonimizuje dane czytelników nieaktywnych od wskazanego czasu</argument>
+      <argument>false</argument>
+      <argument type="service_closure" id="App\Command\AnonymizeInactivePatronsCommand"/>
+    </service>
     <service id=".App\Command\AssessOverdueFinesCommand.lazy" class="Symfony\Component\Console\Command\LazyCommand">
       <argument>fines:assess-overdue</argument>
       <argument type="collection"/>
@@ -5560,6 +5653,13 @@
       <argument>Automatically block accounts that exceed fine or overdue thresholds.</argument>
       <argument>false</argument>
       <argument type="service_closure" id="App\Command\BlockDelinquentAccountsCommand"/>
+    </service>
+    <service id=".App\Command\CreateBackupCommand.lazy" class="Symfony\Component\Console\Command\LazyCommand">
+      <argument>maintenance:create-backup</argument>
+      <argument type="collection"/>
+      <argument>Wykonuje kopię zapasową wpisaną w tabeli backup_record</argument>
+      <argument>false</argument>
+      <argument type="service_closure" id="App\Command\CreateBackupCommand"/>
     </service>
     <service id=".App\Command\DispatchLoanDueRemindersCommand.lazy" class="Symfony\Component\Console\Command\LazyCommand">
       <argument>notifications:dispatch-due-reminders</argument>
@@ -5575,6 +5675,13 @@
       <argument>false</argument>
       <argument type="service_closure" id="App\Command\DispatchLoanOverdueWarningsCommand"/>
     </service>
+    <service id=".App\Command\DispatchNewsletterCommand.lazy" class="Symfony\Component\Console\Command\LazyCommand">
+      <argument>notifications:dispatch-newsletter</argument>
+      <argument type="collection"/>
+      <argument>Send a digest of recent arrivals to newsletter subscribers.</argument>
+      <argument>false</argument>
+      <argument type="service_closure" id="App\Command\DispatchNewsletterCommand"/>
+    </service>
     <service id=".App\Command\DispatchReservationReadyCommand.lazy" class="Symfony\Component\Console\Command\LazyCommand">
       <argument>notifications:dispatch-reservation-ready</argument>
       <argument type="collection"/>
@@ -5588,6 +5695,20 @@
       <argument>Expire reservations that were ready for pickup but were not collected on time.</argument>
       <argument>false</argument>
       <argument type="service_closure" id="App\Command\ExpireReadyReservationsCommand"/>
+    </service>
+    <service id=".App\Command\GenerateWeedingAnalyticsCommand.lazy" class="Symfony\Component\Console\Command\LazyCommand">
+      <argument>maintenance:weeding-analyze</argument>
+      <argument type="collection"/>
+      <argument>Generuje listę pozycji kwalifikujących się do wycofania</argument>
+      <argument>false</argument>
+      <argument type="service_closure" id="App\Command\GenerateWeedingAnalyticsCommand"/>
+    </service>
+    <service id=".App\Command\ImportIsbnMetadataCommand.lazy" class="Symfony\Component\Console\Command\LazyCommand">
+      <argument>maintenance:import-isbn</argument>
+      <argument type="collection"/>
+      <argument>Importuje metadane książek na podstawie listy ISBN</argument>
+      <argument>false</argument>
+      <argument type="service_closure" id="App\Command\ImportIsbnMetadataCommand"/>
     </service>
     <service id=".console.command.about.lazy" class="Symfony\Component\Console\Command\LazyCommand">
       <argument>about</argument>
@@ -6093,14 +6214,19 @@
     </service>
     <service id="console.command_loader" class="Symfony\Component\Console\CommandLoader\ContainerCommandLoader" public="true">
       <tag name="container.no_preload"/>
-      <argument type="service" id=".service_locator.37S3MzS"/>
+      <argument type="service" id=".service_locator.qI5lFFn"/>
       <argument type="collection">
+        <argument key="maintenance:anonymize-patrons">App\Command\AnonymizeInactivePatronsCommand</argument>
         <argument key="fines:assess-overdue">App\Command\AssessOverdueFinesCommand</argument>
         <argument key="users:block-delinquent">App\Command\BlockDelinquentAccountsCommand</argument>
+        <argument key="maintenance:create-backup">App\Command\CreateBackupCommand</argument>
         <argument key="notifications:dispatch-due-reminders">App\Command\DispatchLoanDueRemindersCommand</argument>
         <argument key="notifications:dispatch-overdue-warnings">App\Command\DispatchLoanOverdueWarningsCommand</argument>
+        <argument key="notifications:dispatch-newsletter">App\Command\DispatchNewsletterCommand</argument>
         <argument key="notifications:dispatch-reservation-ready">App\Command\DispatchReservationReadyCommand</argument>
         <argument key="reservations:expire-ready">App\Command\ExpireReadyReservationsCommand</argument>
+        <argument key="maintenance:weeding-analyze">App\Command\GenerateWeedingAnalyticsCommand</argument>
+        <argument key="maintenance:import-isbn">App\Command\ImportIsbnMetadataCommand</argument>
         <argument key="about">console.command.about</argument>
         <argument key="assets:install">console.command.assets_install</argument>
         <argument key="cache:clear">console.command.cache_clear</argument>
@@ -6196,15 +6322,20 @@
         <argument key="make:webhook">maker.auto_command.make_webhook</argument>
       </argument>
     </service>
-    <service id=".service_locator.37S3MzS" class="Symfony\Component\DependencyInjection\ServiceLocator">
+    <service id=".service_locator.qI5lFFn" class="Symfony\Component\DependencyInjection\ServiceLocator">
       <tag name="container.service_locator"/>
       <argument type="collection">
+        <argument key="App\Command\AnonymizeInactivePatronsCommand" type="service_closure" id=".App\Command\AnonymizeInactivePatronsCommand.lazy"/>
         <argument key="App\Command\AssessOverdueFinesCommand" type="service_closure" id=".App\Command\AssessOverdueFinesCommand.lazy"/>
         <argument key="App\Command\BlockDelinquentAccountsCommand" type="service_closure" id=".App\Command\BlockDelinquentAccountsCommand.lazy"/>
+        <argument key="App\Command\CreateBackupCommand" type="service_closure" id=".App\Command\CreateBackupCommand.lazy"/>
         <argument key="App\Command\DispatchLoanDueRemindersCommand" type="service_closure" id=".App\Command\DispatchLoanDueRemindersCommand.lazy"/>
         <argument key="App\Command\DispatchLoanOverdueWarningsCommand" type="service_closure" id=".App\Command\DispatchLoanOverdueWarningsCommand.lazy"/>
+        <argument key="App\Command\DispatchNewsletterCommand" type="service_closure" id=".App\Command\DispatchNewsletterCommand.lazy"/>
         <argument key="App\Command\DispatchReservationReadyCommand" type="service_closure" id=".App\Command\DispatchReservationReadyCommand.lazy"/>
         <argument key="App\Command\ExpireReadyReservationsCommand" type="service_closure" id=".App\Command\ExpireReadyReservationsCommand.lazy"/>
+        <argument key="App\Command\GenerateWeedingAnalyticsCommand" type="service_closure" id=".App\Command\GenerateWeedingAnalyticsCommand.lazy"/>
+        <argument key="App\Command\ImportIsbnMetadataCommand" type="service_closure" id=".App\Command\ImportIsbnMetadataCommand.lazy"/>
         <argument key="console.command.about" type="service_closure" id=".console.command.about.lazy"/>
         <argument key="console.command.assets_install" type="service_closure" id=".console.command.assets_install.lazy"/>
         <argument key="console.command.cache_clear" type="service_closure" id=".console.command.cache_clear.lazy"/>

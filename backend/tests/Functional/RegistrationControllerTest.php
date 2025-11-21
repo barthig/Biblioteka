@@ -38,6 +38,43 @@ class RegistrationControllerTest extends ApiTestCase
         $this->assertSame($user->getId(), $body['userId']);
     }
 
+    public function testRegisterDefaultsNewsletterSubscription(): void
+    {
+        $client = $this->createClientWithoutSecret();
+
+        $this->jsonRequest($client, 'POST', '/api/auth/register', [
+            'email' => 'newsletter-default@example.com',
+            'name' => 'Newsletter Default',
+            'password' => 'StrongPass1',
+            'privacyConsent' => true,
+        ]);
+
+        $this->assertResponseStatusCodeSame(201);
+
+        $user = $this->entityManager->getRepository(User::class)->findOneBy(['email' => 'newsletter-default@example.com']);
+        self::assertNotNull($user);
+        self::assertTrue($user->isNewsletterSubscribed(), 'Newsletter flag should default to TRUE');
+    }
+
+    public function testRegisterAllowsNewsletterOptOut(): void
+    {
+        $client = $this->createClientWithoutSecret();
+
+        $this->jsonRequest($client, 'POST', '/api/auth/register', [
+            'email' => 'newsletter-optout@example.com',
+            'name' => 'Newsletter OptOut',
+            'password' => 'StrongPass1',
+            'privacyConsent' => true,
+            'newsletterSubscribed' => false,
+        ]);
+
+        $this->assertResponseStatusCodeSame(201);
+
+        $user = $this->entityManager->getRepository(User::class)->findOneBy(['email' => 'newsletter-optout@example.com']);
+        self::assertNotNull($user);
+        self::assertFalse($user->isNewsletterSubscribed(), 'Explicit opt-out should persist');
+    }
+
     public function testRegisterDuplicateEmail(): void
     {
         $this->createUser('dup@example.com');

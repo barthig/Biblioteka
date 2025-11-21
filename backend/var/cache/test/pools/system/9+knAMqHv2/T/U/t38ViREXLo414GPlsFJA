@@ -22,6 +22,7 @@ return [PHP_INT_MAX, new class() implements \Symfony\Component\Cache\Traits\Cach
         clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
         clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
         clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
     ],
     null,
     [
@@ -47,6 +48,7 @@ return [PHP_INT_MAX, new class() implements \Symfony\Component\Cache\Traits\Cach
                 'createdAt',
                 'updatedAt',
                 'privacyConsentAt',
+                'newsletterSubscribed',
             ],
             'attributesMetadata' => [
                 [
@@ -69,6 +71,7 @@ return [PHP_INT_MAX, new class() implements \Symfony\Component\Cache\Traits\Cach
                     'createdAt' => $o[17],
                     'updatedAt' => $o[18],
                     'privacyConsentAt' => $o[19],
+                    'newsletterSubscribed' => $o[20],
                 ],
             ],
             'groups' => [

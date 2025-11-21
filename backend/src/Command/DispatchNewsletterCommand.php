@@ -1,12 +1,14 @@
 <?php
 namespace App\Command;
 
+use App\Entity\NotificationLog;
 use App\Entity\User;
 use App\Repository\BookRepository;
 use App\Repository\UserRepository;
 use App\Service\Notification\NewsletterComposer;
 use App\Service\Notification\NotificationContent;
 use App\Service\Notification\NotificationSender;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -18,12 +20,14 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 class DispatchNewsletterCommand extends Command
 {
     private const DEFAULT_BOOK_LIMIT = 10;
+    private const LOG_TYPE = 'newsletter_digest';
 
     public function __construct(
         private UserRepository $userRepository,
         private BookRepository $bookRepository,
         private NewsletterComposer $composer,
-        private NotificationSender $notificationSender
+        private NotificationSender $notificationSender,
+        private EntityManagerInterface $entityManager
     ) {
         parent::__construct();
     }
@@ -80,9 +84,12 @@ class DispatchNewsletterCommand extends Command
             $io->writeln(sprintf('Dispatching newsletter to %s (#%d)', $user->getEmail() ?? 'user without email', $user->getId()), OutputInterface::VERBOSITY_VERBOSE);
             foreach ($channels as $channel) {
                 $result = $this->sendForChannel($channel, $user, $content);
-                $stats[$result['status'] === 'sent' ? 'sent' : ($result['status'] === 'skipped' ? 'skipped' : 'failed')]++;
+                $stats[$this->mapStatusKey($result['status'] ?? 'sent')]++;
+                $this->recordLog($user, $channel, $content, $result, $daysWindow);
             }
         }
+
+        $this->entityManager->flush();
 
         $io->success(sprintf(
             'Newsletter dispatched. Sent: %d, skipped: %d, failed: %d.',
@@ -157,5 +164,38 @@ class DispatchNewsletterCommand extends Command
         if (count($recipients) > $listed) {
             $io->text(sprintf('...and %d more recipient(s).', count($recipients) - $listed));
         }
+    }
+
+    private function mapStatusKey(string $status): string
+    {
+        return match (strtolower($status)) {
+            'sent' => 'sent',
+            'skipped' => 'skipped',
+            default => 'failed',
+        };
+    }
+
+    private function recordLog(User $user, string $channel, NotificationContent $content, array $result, int $daysWindow): void
+    {
+        $log = (new NotificationLog())
+            ->setUser($user)
+            ->setType(self::LOG_TYPE)
+            ->setChannel($channel)
+            ->setFingerprint($this->buildFingerprint($user, $channel))
+            ->setPayload([
+                'subject' => $content->getSubject(),
+                'daysWindow' => $daysWindow,
+                'channels' => $content->getChannels(),
+            ])
+            ->setStatus(strtoupper($result['status'] ?? 'sent'))
+            ->setErrorMessage($result['error'] ?? null);
+
+        $this->entityManager->persist($log);
+    }
+
+    private function buildFingerprint(User $user, string $channel): string
+    {
+        $raw = implode('|', ['newsletter', $user->getId(), $channel, microtime(true), random_int(0, PHP_INT_MAX)]);
+        return substr(hash('sha256', $raw), 0, 64);
     }
 }
