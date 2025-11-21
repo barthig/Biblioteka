@@ -2,12 +2,15 @@
 namespace App\Controller;
 
 use App\Entity\Loan;
+use App\Message\ReservationReadyMessage;
 use App\Service\BookService;
 use App\Service\SecurityService;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Messenger\MessageBusInterface;
+use Psr\Log\LoggerInterface;
 use App\Entity\Book;
 use App\Entity\User;
 use App\Entity\Reservation;
@@ -199,7 +202,7 @@ class LoanController extends AbstractController
         return $this->json($loans, 200, [], ['groups' => ['loan:read']]);
     }
 
-    public function returnLoan(string $id, Request $request, ManagerRegistry $doctrine, BookService $bookService, SecurityService $security): JsonResponse
+    public function returnLoan(string $id, Request $request, ManagerRegistry $doctrine, BookService $bookService, SecurityService $security, MessageBusInterface $bus, LoggerInterface $logger): JsonResponse
     {
         if (!ctype_digit($id) || (int)$id <= 0) return $this->json(['error' => 'Invalid id parameter'], 400);
         $repo = $doctrine->getRepository(Loan::class);
@@ -221,11 +224,13 @@ class LoanController extends AbstractController
         $reservationRepo = $doctrine->getRepository(Reservation::class);
         $queue = $reservationRepo->findActiveByBook($loan->getBook());
         $copy = $loan->getBookCopy();
+        $reservationForNotification = null;
         if ($copy && !empty($queue)) {
             $nextReservation = $queue[0];
             $copy->setStatus(BookCopy::STATUS_RESERVED);
             $nextReservation->assignBookCopy($copy);
             $nextReservation->setExpiresAt((new \DateTimeImmutable())->modify('+2 days'));
+            $reservationForNotification = $nextReservation;
             $em = $doctrine->getManager();
             $loan->getBook()->recalculateInventoryCounters();
             $em->persist($copy);
@@ -237,6 +242,22 @@ class LoanController extends AbstractController
             $em = $doctrine->getManager();
             $em->persist($loan);
             $em->flush();
+        }
+
+        if ($reservationForNotification) {
+            try {
+                $bus->dispatch(new ReservationReadyMessage(
+                    $reservationForNotification->getId(),
+                    $reservationForNotification->getUser()->getId(),
+                    $reservationForNotification->getExpiresAt()->format(DATE_ATOM)
+                ));
+            } catch (\Throwable $dispatchError) {
+                $logger->warning('Reservation ready notification dispatch failed', [
+                    'reservationId' => $reservationForNotification->getId(),
+                    'userId' => $reservationForNotification->getUser()->getId(),
+                    'error' => $dispatchError->getMessage(),
+                ]);
+            }
         }
 
         return $this->json($loan, 200, [], ['groups' => ['loan:read']]);

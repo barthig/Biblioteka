@@ -37,9 +37,36 @@ class UserManagementController extends AbstractController
             $reason = isset($data['blockedReason']) ? (string) $data['blockedReason'] : null;
             $user->block($reason);
         }
-        // hash and set password
+
         $hashed = password_hash($data['password'], PASSWORD_BCRYPT);
         $user->setPassword($hashed);
+
+        if (array_key_exists('pendingApproval', $data)) {
+            $user->setPendingApproval((bool) $data['pendingApproval']);
+        } else {
+
+        if (array_key_exists('pendingApproval', $data)) {
+            if (!$isLibrarian) {
+                return $this->json(['error' => 'Forbidden to change approval status'], 403);
+            }
+            $user->setPendingApproval((bool) $data['pendingApproval']);
+        }
+
+        if (array_key_exists('verified', $data)) {
+            if (!$isLibrarian) {
+                return $this->json(['error' => 'Forbidden to change verification status'], 403);
+            }
+            if ($data['verified']) {
+                $user->markVerified();
+            } else {
+                $user->requireVerification();
+            }
+        }
+            $user->setPendingApproval(false);
+        }
+
+        $user->markVerified();
+        $user->recordPrivacyConsent();
         $em = $doctrine->getManager();
         $em->persist($user);
         $em->flush();

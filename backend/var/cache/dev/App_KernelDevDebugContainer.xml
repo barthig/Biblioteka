@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <container xmlns="http://symfony.com/schema/dic/services" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://symfony.com/schema/dic/services https://symfony.com/schema/dic/services/services-1.0.xsd">
   <parameters>
-    <parameter key="kernel.project_dir">/app</parameter>
+    <parameter key="kernel.project_dir">D:\Biblioteka-1\backend</parameter>
     <parameter key="kernel.environment">dev</parameter>
     <parameter key="kernel.runtime_environment">%env(default:kernel.environment:APP_RUNTIME_ENV)%</parameter>
     <parameter key="kernel.runtime_mode">%env(query_string:default:container.runtime_mode:APP_RUNTIME_MODE)%</parameter>
@@ -9,9 +9,9 @@
     <parameter key="kernel.runtime_mode.cli">%env(not:default:kernel.runtime_mode.web:)%</parameter>
     <parameter key="kernel.runtime_mode.worker">%env(bool:default::key:worker:default:kernel.runtime_mode:)%</parameter>
     <parameter key="kernel.debug">true</parameter>
-    <parameter key="kernel.build_dir">/app/var/cache/dev</parameter>
-    <parameter key="kernel.cache_dir">/app/var/cache/dev</parameter>
-    <parameter key="kernel.logs_dir">/app/var/log</parameter>
+    <parameter key="kernel.build_dir">D:\Biblioteka-1\backend\var\cache\dev</parameter>
+    <parameter key="kernel.cache_dir">D:\Biblioteka-1\backend\var\cache\dev</parameter>
+    <parameter key="kernel.logs_dir">D:\Biblioteka-1\backend\var\log</parameter>
     <parameter key="kernel.bundles" type="collection">
       <parameter key="FrameworkBundle">Symfony\Bundle\FrameworkBundle\FrameworkBundle</parameter>
       <parameter key="DoctrineBundle">Doctrine\Bundle\DoctrineBundle\DoctrineBundle</parameter>
@@ -22,33 +22,34 @@
     </parameter>
     <parameter key="kernel.bundles_metadata" type="collection">
       <parameter key="FrameworkBundle" type="collection">
-        <parameter key="path">/app/vendor/symfony/framework-bundle</parameter>
+        <parameter key="path">D:\Biblioteka-1\backend\vendor\symfony\framework-bundle</parameter>
         <parameter key="namespace">Symfony\Bundle\FrameworkBundle</parameter>
       </parameter>
       <parameter key="DoctrineBundle" type="collection">
-        <parameter key="path">/app/vendor/doctrine/doctrine-bundle</parameter>
+        <parameter key="path">D:\Biblioteka-1\backend\vendor\doctrine\doctrine-bundle</parameter>
         <parameter key="namespace">Doctrine\Bundle\DoctrineBundle</parameter>
       </parameter>
       <parameter key="DoctrineMigrationsBundle" type="collection">
-        <parameter key="path">/app/vendor/doctrine/doctrine-migrations-bundle</parameter>
+        <parameter key="path">D:\Biblioteka-1\backend\vendor\doctrine\doctrine-migrations-bundle</parameter>
         <parameter key="namespace">Doctrine\Bundle\MigrationsBundle</parameter>
       </parameter>
       <parameter key="DoctrineFixturesBundle" type="collection">
-        <parameter key="path">/app/vendor/doctrine/doctrine-fixtures-bundle</parameter>
+        <parameter key="path">D:\Biblioteka-1\backend\vendor\doctrine\doctrine-fixtures-bundle</parameter>
         <parameter key="namespace">Doctrine\Bundle\FixturesBundle</parameter>
       </parameter>
       <parameter key="MakerBundle" type="collection">
-        <parameter key="path">/app/vendor/symfony/maker-bundle</parameter>
+        <parameter key="path">D:\Biblioteka-1\backend\vendor\symfony\maker-bundle</parameter>
         <parameter key="namespace">Symfony\Bundle\MakerBundle</parameter>
       </parameter>
       <parameter key="NelmioApiDocBundle" type="collection">
-        <parameter key="path">/app/vendor/nelmio/api-doc-bundle</parameter>
+        <parameter key="path">D:\Biblioteka-1\backend\vendor\nelmio\api-doc-bundle</parameter>
         <parameter key="namespace">Nelmio\ApiDocBundle</parameter>
       </parameter>
     </parameter>
     <parameter key="kernel.charset">UTF-8</parameter>
     <parameter key="kernel.container_class">App_KernelDevDebugContainer</parameter>
     <parameter key="locale">pl</parameter>
+    <parameter key="app.notifications.from">no-reply@biblioteka.local</parameter>
     <parameter key="event_dispatcher.event_aliases" type="collection">
       <parameter key="Symfony\Component\Console\Event\ConsoleCommandEvent">console.command</parameter>
       <parameter key="Symfony\Component\Console\Event\ConsoleErrorEvent">console.error</parameter>
@@ -74,16 +75,16 @@
     <parameter key="kernel.error_controller">error_controller</parameter>
     <parameter key="debug.file_link_format">%env(default::SYMFONY_IDE)%</parameter>
     <parameter key="debug.error_handler.throw_at">-1</parameter>
-    <parameter key="debug.container.dump">/app/var/cache/dev/App_KernelDevDebugContainer.xml</parameter>
+    <parameter key="debug.container.dump">D:\Biblioteka-1\backend\var\cache\dev/App_KernelDevDebugContainer.xml</parameter>
     <parameter key="router.request_context.host">localhost</parameter>
     <parameter key="router.request_context.scheme">http</parameter>
     <parameter key="router.request_context.base_url"></parameter>
     <parameter key="router.resource">kernel::loadRoutes</parameter>
-    <parameter key="router.cache_dir">/app/var/cache/dev</parameter>
+    <parameter key="router.cache_dir">D:\Biblioteka-1\backend\var\cache\dev</parameter>
     <parameter key="request_listener.http_port">80</parameter>
     <parameter key="request_listener.https_port">443</parameter>
-    <parameter key="serializer.mapping.cache.file">/app/var/cache/dev/serialization.php</parameter>
-    <parameter key="cache.prefix.seed">_/app.App_KernelDevDebugContainer</parameter>
+    <parameter key="serializer.mapping.cache.file">D:\Biblioteka-1\backend\var\cache\dev/serialization.php</parameter>
+    <parameter key="cache.prefix.seed">_D:\Biblioteka-1\backend.App_KernelDevDebugContainer</parameter>
     <parameter key="session.metadata.storage_key">_sf2_meta</parameter>
     <parameter key="session.storage.options" type="collection">
       <parameter key="cache_limiter" type="string">0</parameter>
@@ -165,7 +166,7 @@
     <parameter key="doctrine.orm.auto_generate_proxy_classes">true</parameter>
     <parameter key="doctrine.orm.enable_lazy_ghost_objects">true</parameter>
     <parameter key="doctrine.orm.enable_native_lazy_objects">false</parameter>
-    <parameter key="doctrine.orm.proxy_dir">/app/var/cache/dev/doctrine/orm/Proxies</parameter>
+    <parameter key="doctrine.orm.proxy_dir">D:\Biblioteka-1\backend\var\cache\dev/doctrine/orm/Proxies</parameter>
     <parameter key="doctrine.orm.proxy_namespace">Proxies</parameter>
     <parameter key="doctrine.migrations.preferred_em">null</parameter>
     <parameter key="doctrine.migrations.preferred_connection">null</parameter>
@@ -187,16 +188,40 @@
     <service id="App\Entity" class="App\Entity" abstract="true">
       <tag name="container.excluded" source="in &quot;config/services.yaml&quot;"/>
     </service>
-    <service id="App\Command\ExpireOrdersCommand" class="App\Command\ExpireOrdersCommand" autowire="true" autoconfigure="true">
+    <service id="App\Command\DispatchLoanDueRemindersCommand" class="App\Command\DispatchLoanDueRemindersCommand" autowire="true" autoconfigure="true">
       <tag name="console.command"/>
       <tag name="container.no_preload"/>
-      <argument type="service" id="App\Repository\OrderRequestRepository"/>
-      <argument type="service" id="App\Service\OrderLifecycleService"/>
+      <argument type="service" id="App\Repository\LoanRepository"/>
+      <argument type="service" id="messenger.bus.default"/>
       <call method="setName">
-        <argument>app:orders:expire</argument>
+        <argument>notifications:dispatch-due-reminders</argument>
       </call>
       <call method="setDescription">
-        <argument>Marks overdue pickup orders as expired and releases reserved copies</argument>
+        <argument>Queue reminders for loans that are due soon.</argument>
+      </call>
+    </service>
+    <service id="App\Command\DispatchLoanOverdueWarningsCommand" class="App\Command\DispatchLoanOverdueWarningsCommand" autowire="true" autoconfigure="true">
+      <tag name="console.command"/>
+      <tag name="container.no_preload"/>
+      <argument type="service" id="App\Repository\LoanRepository"/>
+      <argument type="service" id="messenger.bus.default"/>
+      <call method="setName">
+        <argument>notifications:dispatch-overdue-warnings</argument>
+      </call>
+      <call method="setDescription">
+        <argument>Queue warnings for loans that are already overdue.</argument>
+      </call>
+    </service>
+    <service id="App\Command\DispatchReservationReadyCommand" class="App\Command\DispatchReservationReadyCommand" autowire="true" autoconfigure="true">
+      <tag name="console.command"/>
+      <tag name="container.no_preload"/>
+      <argument type="service" id="App\Repository\ReservationRepository"/>
+      <argument type="service" id="messenger.bus.default"/>
+      <call method="setName">
+        <argument>notifications:dispatch-reservation-ready</argument>
+      </call>
+      <call method="setDescription">
+        <argument>Queue notifications for reservations that are ready for pickup.</argument>
       </call>
     </service>
     <service id="App\Controller\AccountController" class="App\Controller\AccountController" public="true" autowire="true" autoconfigure="true">
@@ -339,18 +364,18 @@
         <argument type="service" id=".service_locator.ZyP9f7K.App\Controller\NotificationController"/>
       </call>
     </service>
-    <service id="App\Controller\OrderController" class="App\Controller\OrderController" public="true" autowire="true" autoconfigure="true">
-      <tag name="controller.service_arguments"/>
-      <tag name="container.service_subscriber"/>
-      <call method="setContainer">
-        <argument type="service" id=".service_locator.ZyP9f7K.App\Controller\OrderController"/>
-      </call>
-    </service>
     <service id="App\Controller\ProductController" class="App\Controller\ProductController" public="true" autowire="true" autoconfigure="true">
       <tag name="controller.service_arguments"/>
       <tag name="container.service_subscriber"/>
       <call method="setContainer">
         <argument type="service" id=".service_locator.ZyP9f7K.App\Controller\ProductController"/>
+      </call>
+    </service>
+    <service id="App\Controller\RegistrationController" class="App\Controller\RegistrationController" public="true" autowire="true" autoconfigure="true">
+      <tag name="controller.service_arguments"/>
+      <tag name="container.service_subscriber"/>
+      <call method="setContainer">
+        <argument type="service" id=".service_locator.ZyP9f7K.App\Controller\RegistrationController"/>
       </call>
     </service>
     <service id="App\Controller\ReportController" class="App\Controller\ReportController" public="true" autowire="true" autoconfigure="true">
@@ -406,12 +431,32 @@
       <tag name="kernel.event_subscriber"/>
       <tag name="container.hot_path"/>
     </service>
-    <service id="App\Message\ReservationQueuedNotification" class="App\Message\ReservationQueuedNotification" autowire="true" autoconfigure="true">
-      <tag name="container.error" message="Cannot autowire service &quot;App\Message\ReservationQueuedNotification&quot;: argument &quot;$reservationId&quot; of method &quot;__construct()&quot; is type-hinted &quot;int&quot;, you should configure its value explicitly."/>
+    <service id="App\MessageHandler\NotificationMessageHandler" class="App\MessageHandler\NotificationMessageHandler" autowire="true" autoconfigure="true">
+      <tag name="messenger.message_handler" bus="" handles="" method="" priority="0" from_transport=""/>
+      <argument type="service" id="App\Repository\UserRepository"/>
+      <argument type="service" id="App\Repository\LoanRepository"/>
+      <argument type="service" id="App\Repository\ReservationRepository"/>
+      <argument type="service" id="App\Repository\NotificationLogRepository"/>
+      <argument type="service" id="App\Service\Notification\NotificationContentBuilder"/>
+      <argument type="service" id="App\Service\Notification\NotificationSender"/>
+      <argument type="service" id="doctrine.orm.default_entity_manager"/>
+      <argument type="service" id="logger"/>
     </service>
     <service id="App\MessageHandler\ReservationQueuedNotificationHandler" class="App\MessageHandler\ReservationQueuedNotificationHandler" autowire="true" autoconfigure="true">
       <tag name="messenger.message_handler"/>
-      <argument>/app</argument>
+      <argument>D:\Biblioteka-1\backend</argument>
+    </service>
+    <service id="App\Message\LoanDueReminderMessage" class="App\Message\LoanDueReminderMessage" autowire="true" autoconfigure="true">
+      <tag name="container.error" message="Cannot autowire service &quot;App\Message\LoanDueReminderMessage&quot;: argument &quot;$loanId&quot; of method &quot;__construct()&quot; is type-hinted &quot;int&quot;, you should configure its value explicitly."/>
+    </service>
+    <service id="App\Message\LoanOverdueMessage" class="App\Message\LoanOverdueMessage" autowire="true" autoconfigure="true">
+      <tag name="container.error" message="Cannot autowire service &quot;App\Message\LoanOverdueMessage&quot;: argument &quot;$loanId&quot; of method &quot;__construct()&quot; is type-hinted &quot;int&quot;, you should configure its value explicitly."/>
+    </service>
+    <service id="App\Message\ReservationQueuedNotification" class="App\Message\ReservationQueuedNotification" autowire="true" autoconfigure="true">
+      <tag name="container.error" message="Cannot autowire service &quot;App\Message\ReservationQueuedNotification&quot;: argument &quot;$reservationId&quot; of method &quot;__construct()&quot; is type-hinted &quot;int&quot;, you should configure its value explicitly."/>
+    </service>
+    <service id="App\Message\ReservationReadyMessage" class="App\Message\ReservationReadyMessage" autowire="true" autoconfigure="true">
+      <tag name="container.error" message="Cannot autowire service &quot;App\Message\ReservationReadyMessage&quot;: argument &quot;$reservationId&quot; of method &quot;__construct()&quot; is type-hinted &quot;int&quot;, you should configure its value explicitly."/>
     </service>
     <service id="App\Repository\AcquisitionBudgetRepository" class="App\Repository\AcquisitionBudgetRepository" autowire="true" autoconfigure="true">
       <tag name="doctrine.repository_service"/>
@@ -465,7 +510,11 @@
       <tag name="doctrine.repository_service"/>
       <argument type="service" id="doctrine"/>
     </service>
-    <service id="App\Repository\OrderRequestRepository" class="App\Repository\OrderRequestRepository" autowire="true" autoconfigure="true">
+    <service id="App\Repository\NotificationLogRepository" class="App\Repository\NotificationLogRepository" autowire="true" autoconfigure="true">
+      <tag name="doctrine.repository_service"/>
+      <argument type="service" id="doctrine"/>
+    </service>
+    <service id="App\Repository\RegistrationTokenRepository" class="App\Repository\RegistrationTokenRepository" autowire="true" autoconfigure="true">
       <tag name="doctrine.repository_service"/>
       <argument type="service" id="doctrine"/>
     </service>
@@ -499,14 +548,26 @@
     </service>
     <service id="App\Service\BackupService" class="App\Service\BackupService" autowire="true" autoconfigure="true">
       <argument type="service" id="doctrine.orm.default_entity_manager"/>
-      <argument>/app</argument>
+      <argument>D:\Biblioteka-1\backend</argument>
     </service>
     <service id="App\Service\BookService" class="App\Service\BookService" autowire="true" autoconfigure="true">
       <argument type="service" id="doctrine"/>
     </service>
     <service id="App\Service\JwtService" class="App\Service\JwtService" autowire="true" autoconfigure="true"/>
-    <service id="App\Service\OrderLifecycleService" class="App\Service\OrderLifecycleService" autowire="true" autoconfigure="true">
-      <argument type="service" id="doctrine"/>
+    <service id="App\Service\Notification\NotificationContent" class="App\Service\Notification\NotificationContent" autowire="true" autoconfigure="true">
+      <tag name="container.error" message="Cannot autowire service &quot;App\Service\Notification\NotificationContent&quot;: argument &quot;$subject&quot; of method &quot;__construct()&quot; is type-hinted &quot;string&quot;, you should configure its value explicitly."/>
+    </service>
+    <service id="App\Service\Notification\NotificationContentBuilder" class="App\Service\Notification\NotificationContentBuilder" autowire="true" autoconfigure="true"/>
+    <service id="App\Service\Notification\NotificationSender" class="App\Service\Notification\NotificationSender" autowire="true" autoconfigure="true">
+      <argument type="service" id="mailer.mailer"/>
+      <argument type="service" id="logger"/>
+      <argument>no-reply@biblioteka.local</argument>
+    </service>
+    <service id="App\Service\RegistrationException" class="App\Service\RegistrationException" autowire="true" autoconfigure="true"/>
+    <service id="App\Service\RegistrationService" class="App\Service\RegistrationService" autowire="true" autoconfigure="true">
+      <argument type="service" id="doctrine.orm.default_entity_manager"/>
+      <argument type="service" id="App\Repository\UserRepository"/>
+      <argument type="service" id="App\Repository\RegistrationTokenRepository"/>
     </service>
     <service id="App\Service\SecurityService" class="App\Service\SecurityService" autowire="true" autoconfigure="true"/>
     <service id="App\DataFixtures\AppFixtures" class="App\DataFixtures\AppFixtures" autowire="true" autoconfigure="true">
@@ -539,7 +600,7 @@
     </service>
     <service id="argument_resolver.service" class="Symfony\Component\HttpKernel\Controller\ArgumentResolver\ServiceValueResolver">
       <tag priority="-50" name="Symfony\Component\HttpKernel\Controller\ArgumentResolver\ServiceValueResolver">controller.argument_value_resolver</tag>
-      <argument type="service" id=".service_locator.wDFQk.D"/>
+      <argument type="service" id=".service_locator.xcv5YG5"/>
     </service>
     <service id="argument_resolver.default" class="Symfony\Component\HttpKernel\Controller\ArgumentResolver\DefaultValueResolver">
       <tag priority="-100" name="Symfony\Component\HttpKernel\Controller\ArgumentResolver\DefaultValueResolver">controller.argument_value_resolver</tag>
@@ -622,7 +683,7 @@
       </argument>
     </service>
     <service id="http_cache.store" class="Symfony\Component\HttpKernel\HttpCache\Store">
-      <argument>/app/var/cache/dev/http_cache</argument>
+      <argument>D:\Biblioteka-1\backend\var\cache\dev/http_cache</argument>
     </service>
     <service id="url_helper" class="Symfony\Component\HttpFoundation\UrlHelper">
       <argument type="service" id="request_stack"/>
@@ -632,7 +693,7 @@
       <tag name="container.no_preload"/>
       <argument type="tagged_iterator" tag="kernel.cache_warmer"/>
       <argument>true</argument>
-      <argument>/app/var/cache/dev/App_KernelDevDebugContainerDeprecations.log</argument>
+      <argument>D:\Biblioteka-1\backend\var\cache\dev/App_KernelDevDebugContainerDeprecations.log</argument>
     </service>
     <service id="cache_clearer" class="Symfony\Component\HttpKernel\CacheClearer\ChainCacheClearer">
       <argument type="tagged_iterator" tag="kernel.cache_clearer"/>
@@ -664,6 +725,7 @@
         <argument key="cache.annotations" type="service" id="cache.annotations" on-invalid="ignore_uninitialized"/>
         <argument key="cache.property_info" type="service" id="cache.property_info" on-invalid="ignore_uninitialized"/>
         <argument key="cache.messenger.restart_workers_signal" type="service" id="cache.messenger.restart_workers_signal" on-invalid="ignore_uninitialized"/>
+        <argument key="mailer.message_logger_listener" type="service" id="mailer.message_logger_listener" on-invalid="ignore_uninitialized"/>
         <argument key="debug.stopwatch" type="service" id="debug.stopwatch" on-invalid="ignore_uninitialized"/>
         <argument key="debug.event_dispatcher" type="service" id="debug.event_dispatcher" on-invalid="ignore_uninitialized"/>
         <argument key="session_listener" type="service" id="session_listener" on-invalid="ignore_uninitialized"/>
@@ -694,6 +756,9 @@
           <argument>reset</argument>
         </argument>
         <argument key="cache.messenger.restart_workers_signal" type="collection">
+          <argument>reset</argument>
+        </argument>
+        <argument key="mailer.message_logger_listener" type="collection">
           <argument>reset</argument>
         </argument>
         <argument key="debug.stopwatch" type="collection">
@@ -803,7 +868,7 @@
       </argument>
       <argument>UTF-8</argument>
       <argument type="service" id="debug.file_link_formatter" on-invalid="null"/>
-      <argument>/app</argument>
+      <argument>D:\Biblioteka-1\backend</argument>
       <argument type="service">
         <service>
           <argument type="service" id="request_stack"/>
@@ -839,7 +904,7 @@
       <tag name="console.command"/>
       <tag name="container.no_preload"/>
       <argument type="service" id="filesystem"/>
-      <argument>/app</argument>
+      <argument>D:\Biblioteka-1\backend</argument>
       <call method="setName">
         <argument>assets:install</argument>
       </call>
@@ -1064,6 +1129,12 @@
       <tag name="container.no_preload"/>
       <argument type="collection">
         <argument key="messenger.bus.default" type="collection">
+          <argument key="App\Message\NotificationMessageInterface" type="collection">
+            <argument type="collection">
+              <argument>App\MessageHandler\NotificationMessageHandler</argument>
+              <argument type="collection"/>
+            </argument>
+          </argument>
           <argument key="App\Message\ReservationQueuedNotification" type="collection">
             <argument type="collection">
               <argument>App\MessageHandler\ReservationQueuedNotificationHandler</argument>
@@ -1082,9 +1153,33 @@
               <argument type="collection"/>
             </argument>
           </argument>
+          <argument key="Symfony\Component\Mailer\Messenger\SendEmailMessage" type="collection">
+            <argument type="collection">
+              <argument>mailer.messenger.message_handler</argument>
+              <argument type="collection"/>
+            </argument>
+          </argument>
           <argument key="Symfony\Component\Messenger\Message\RedispatchMessage" type="collection">
             <argument type="collection">
               <argument>messenger.redispatch_message_handler</argument>
+              <argument type="collection"/>
+            </argument>
+          </argument>
+          <argument key="Symfony\Component\Notifier\Message\ChatMessage" type="collection">
+            <argument type="collection">
+              <argument>chatter.messenger.chat_handler</argument>
+              <argument type="collection"/>
+            </argument>
+          </argument>
+          <argument key="Symfony\Component\Notifier\Message\SmsMessage" type="collection">
+            <argument type="collection">
+              <argument>texter.messenger.sms_handler</argument>
+              <argument type="collection"/>
+            </argument>
+          </argument>
+          <argument key="Symfony\Component\Notifier\Message\PushMessage" type="collection">
+            <argument type="collection">
+              <argument>texter.messenger.push_handler</argument>
               <argument type="collection"/>
             </argument>
           </argument>
@@ -1253,9 +1348,9 @@
     <service id="cache.app" class="Symfony\Component\Cache\Adapter\FilesystemAdapter" public="true">
       <tag name="cache.pool"/>
       <tag name="kernel.reset" method="reset"/>
-      <argument>wcaiNNPWIR</argument>
+      <argument>iJWFzsoZNO</argument>
       <argument>0</argument>
-      <argument>/app/var/cache/dev/pools/app</argument>
+      <argument>D:\Biblioteka-1\backend\var\cache\dev/pools/app</argument>
       <argument type="service" id="cache.default_marshaller" on-invalid="ignore"/>
       <call method="setLogger">
         <argument type="service" id="logger" on-invalid="ignore"/>
@@ -1268,59 +1363,59 @@
     <service id="cache.system" class="Symfony\Component\Cache\Adapter\AdapterInterface" public="true">
       <tag name="cache.pool"/>
       <tag name="kernel.reset" method="reset"/>
-      <argument>9QlckI19so</argument>
+      <argument>8-02gBbyQW</argument>
       <argument>0</argument>
       <argument>%container.build_id%</argument>
-      <argument>/app/var/cache/dev/pools/system</argument>
+      <argument>D:\Biblioteka-1\backend\var\cache\dev/pools/system</argument>
       <argument type="service" id="logger" on-invalid="ignore"/>
       <factory class="Symfony\Component\Cache\Adapter\AbstractAdapter" method="createSystemCache"/>
     </service>
     <service id="cache.validator" class="Symfony\Component\Cache\Adapter\AdapterInterface">
       <tag name="cache.pool"/>
       <tag name="kernel.reset" method="reset"/>
-      <argument>uNLnsq5tA3</argument>
+      <argument>LGykbYBBB-</argument>
       <argument>0</argument>
       <argument>%container.build_id%</argument>
-      <argument>/app/var/cache/dev/pools/system</argument>
+      <argument>D:\Biblioteka-1\backend\var\cache\dev/pools/system</argument>
       <argument type="service" id="logger" on-invalid="ignore"/>
       <factory class="Symfony\Component\Cache\Adapter\AbstractAdapter" method="createSystemCache"/>
     </service>
     <service id="cache.serializer" class="Symfony\Component\Cache\Adapter\AdapterInterface">
       <tag name="cache.pool"/>
       <tag name="kernel.reset" method="reset"/>
-      <argument>5HJVh9TCVv</argument>
+      <argument>jE5tzLf-hs</argument>
       <argument>0</argument>
       <argument>%container.build_id%</argument>
-      <argument>/app/var/cache/dev/pools/system</argument>
+      <argument>D:\Biblioteka-1\backend\var\cache\dev/pools/system</argument>
       <argument type="service" id="logger" on-invalid="ignore"/>
       <factory class="Symfony\Component\Cache\Adapter\AbstractAdapter" method="createSystemCache"/>
     </service>
     <service id="cache.annotations" class="Symfony\Component\Cache\Adapter\AdapterInterface">
       <tag name="cache.pool"/>
       <tag name="kernel.reset" method="reset"/>
-      <argument>iasBrpHyIf</argument>
+      <argument>bN2G1Kr+61</argument>
       <argument>0</argument>
       <argument>%container.build_id%</argument>
-      <argument>/app/var/cache/dev/pools/system</argument>
+      <argument>D:\Biblioteka-1\backend\var\cache\dev/pools/system</argument>
       <argument type="service" id="logger" on-invalid="ignore"/>
       <factory class="Symfony\Component\Cache\Adapter\AbstractAdapter" method="createSystemCache"/>
     </service>
     <service id="cache.property_info" class="Symfony\Component\Cache\Adapter\AdapterInterface">
       <tag name="cache.pool"/>
       <tag name="kernel.reset" method="reset"/>
-      <argument>7psGI0enus</argument>
+      <argument>-MaxQds1xp</argument>
       <argument>0</argument>
       <argument>%container.build_id%</argument>
-      <argument>/app/var/cache/dev/pools/system</argument>
+      <argument>D:\Biblioteka-1\backend\var\cache\dev/pools/system</argument>
       <argument type="service" id="logger" on-invalid="ignore"/>
       <factory class="Symfony\Component\Cache\Adapter\AbstractAdapter" method="createSystemCache"/>
     </service>
     <service id="cache.messenger.restart_workers_signal" class="Symfony\Component\Cache\Adapter\FilesystemAdapter">
       <tag name="cache.pool"/>
       <tag name="kernel.reset" method="reset"/>
-      <argument>P0bcfFER+t</argument>
+      <argument>a-As-SpxO7</argument>
       <argument>0</argument>
-      <argument>/app/var/cache/dev/pools/app</argument>
+      <argument>D:\Biblioteka-1\backend\var\cache\dev/pools/app</argument>
       <argument type="service" id="cache.default_marshaller" on-invalid="ignore"/>
       <call method="setLogger">
         <argument type="service" id="logger" on-invalid="ignore"/>
@@ -1332,7 +1427,7 @@
       <argument></argument>
       <argument>0</argument>
       <argument>%container.build_id%</argument>
-      <argument>/app/var/cache/dev/pools/system</argument>
+      <argument>D:\Biblioteka-1\backend\var\cache\dev/pools/system</argument>
       <argument type="service" id="logger" on-invalid="ignore"/>
       <factory class="Symfony\Component\Cache\Adapter\AbstractAdapter" method="createSystemCache"/>
     </service>
@@ -1351,7 +1446,7 @@
       <tag name="monolog.logger" channel="cache"/>
       <argument></argument>
       <argument>0</argument>
-      <argument>/app/var/cache/dev/pools/app</argument>
+      <argument>D:\Biblioteka-1\backend\var\cache\dev/pools/app</argument>
       <argument type="service" id="cache.default_marshaller" on-invalid="ignore"/>
       <call method="setLogger">
         <argument type="service" id="logger" on-invalid="ignore"/>
@@ -1462,6 +1557,77 @@
         <argument key="cache.doctrine.orm.default.result" type="service" id="cache.doctrine.orm.default.result" on-invalid="ignore_uninitialized"/>
         <argument key="cache.doctrine.orm.default.query" type="service" id="cache.doctrine.orm.default.query" on-invalid="ignore_uninitialized"/>
       </argument>
+    </service>
+    <service id="mailer.mailer" class="Symfony\Component\Mailer\Mailer">
+      <argument type="service" id="mailer.transports"/>
+      <argument type="service" id="messenger.bus.default" on-invalid="null"/>
+      <argument type="service" id="debug.event_dispatcher" on-invalid="ignore"/>
+    </service>
+    <service id="mailer.transports" class="Symfony\Component\Mailer\Transport\Transports">
+      <argument type="collection">
+        <argument key="main">%env(MAILER_DSN)%</argument>
+      </argument>
+      <factory service="mailer.transport_factory" method="fromStrings"/>
+    </service>
+    <service id="mailer.transport_factory" class="Symfony\Component\Mailer\Transport">
+      <argument type="tagged_iterator" tag="mailer.transport_factory"/>
+    </service>
+    <service id="mailer.messenger.message_handler" class="Symfony\Component\Mailer\Messenger\MessageHandler">
+      <tag name="messenger.message_handler"/>
+      <argument type="service" id="mailer.transports"/>
+    </service>
+    <service id="mailer.envelope_listener" class="Symfony\Component\Mailer\EventListener\EnvelopeListener">
+      <tag name="kernel.event_subscriber"/>
+      <argument>null</argument>
+      <argument>null</argument>
+    </service>
+    <service id="mailer.message_logger_listener" class="Symfony\Component\Mailer\EventListener\MessageLoggerListener">
+      <tag name="kernel.event_subscriber"/>
+      <tag name="kernel.reset" method="reset"/>
+    </service>
+    <service id="mailer.messenger_transport_listener" class="Symfony\Component\Mailer\EventListener\MessengerTransportListener">
+      <tag name="kernel.event_subscriber"/>
+    </service>
+    <service id="console.command.mailer_test" class="Symfony\Component\Mailer\Command\MailerTestCommand">
+      <tag name="console.command"/>
+      <tag name="container.no_preload"/>
+      <argument type="service" id="mailer.transports"/>
+      <call method="setName">
+        <argument>mailer:test</argument>
+      </call>
+      <call method="setDescription">
+        <argument>Test Mailer transports by sending an email</argument>
+      </call>
+    </service>
+    <service id="mailer.transport_factory.abstract" class="Symfony\Component\Mailer\Transport\AbstractTransportFactory" abstract="true">
+      <tag name="monolog.logger" channel="mailer"/>
+      <argument type="service" id="debug.event_dispatcher"/>
+      <argument type="service" id="http_client" on-invalid="ignore"/>
+      <argument type="service" id="logger" on-invalid="ignore"/>
+    </service>
+    <service id="mailer.transport_factory.null" class="Symfony\Component\Mailer\Transport\NullTransportFactory">
+      <tag name="mailer.transport_factory"/>
+      <argument type="service" id="debug.event_dispatcher"/>
+      <argument>null</argument>
+      <argument type="service" id="logger" on-invalid="ignore"/>
+    </service>
+    <service id="mailer.transport_factory.sendmail" class="Symfony\Component\Mailer\Transport\SendmailTransportFactory">
+      <tag name="mailer.transport_factory"/>
+      <argument type="service" id="debug.event_dispatcher"/>
+      <argument>null</argument>
+      <argument type="service" id="logger" on-invalid="ignore"/>
+    </service>
+    <service id="mailer.transport_factory.smtp" class="Symfony\Component\Mailer\Transport\Smtp\EsmtpTransportFactory">
+      <tag name="mailer.transport_factory" priority="-100"/>
+      <argument type="service" id="debug.event_dispatcher"/>
+      <argument>null</argument>
+      <argument type="service" id="logger" on-invalid="ignore"/>
+    </service>
+    <service id="mailer.transport_factory.native" class="Symfony\Component\Mailer\Transport\NativeTransportFactory">
+      <tag name="mailer.transport_factory"/>
+      <argument type="service" id="debug.event_dispatcher"/>
+      <argument>null</argument>
+      <argument type="service" id="logger" on-invalid="ignore"/>
     </service>
     <service id="debug.error_handler_configurator" class="Symfony\Component\HttpKernel\Debug\ErrorHandlerConfigurator" public="true">
       <tag name="monolog.logger" channel="php"/>
@@ -1656,6 +1822,30 @@
         <argument>0</argument>
       </call>
       <call method="addListener">
+        <argument>Symfony\Component\Mailer\Event\MessageEvent</argument>
+        <argument type="collection">
+          <argument type="service_closure" id="mailer.envelope_listener"/>
+          <argument>onMessage</argument>
+        </argument>
+        <argument>-255</argument>
+      </call>
+      <call method="addListener">
+        <argument>Symfony\Component\Mailer\Event\MessageEvent</argument>
+        <argument type="collection">
+          <argument type="service_closure" id="mailer.message_logger_listener"/>
+          <argument>onMessage</argument>
+        </argument>
+        <argument>-255</argument>
+      </call>
+      <call method="addListener">
+        <argument>Symfony\Component\Mailer\Event\MessageEvent</argument>
+        <argument type="collection">
+          <argument type="service_closure" id="mailer.messenger_transport_listener"/>
+          <argument>onMessage</argument>
+        </argument>
+        <argument>0</argument>
+      </call>
+      <call method="addListener">
         <argument>kernel.request</argument>
         <argument type="collection">
           <argument type="service_closure" id="debug.debug_handlers_listener"/>
@@ -1760,6 +1950,14 @@
         <argument>0</argument>
       </call>
       <call method="addListener">
+        <argument>Symfony\Component\Notifier\Event\MessageEvent</argument>
+        <argument type="collection">
+          <argument type="service_closure" id="notifier.notification_logger_listener"/>
+          <argument>onNotification</argument>
+        </argument>
+        <argument>-255</argument>
+      </call>
+      <call method="addListener">
         <argument>kernel.request</argument>
         <argument type="collection">
           <argument type="service_closure" id="doctrine.dbal.idle_connection_listener"/>
@@ -1813,7 +2011,7 @@
     </service>
     <service id="argument_resolver.not_tagged_controller" class="Symfony\Component\HttpKernel\Controller\ArgumentResolver\NotTaggedControllerValueResolver">
       <tag name="controller.argument_value_resolver" priority="-200"/>
-      <argument type="service" id=".service_locator.wDFQk.D"/>
+      <argument type="service" id=".service_locator.xcv5YG5"/>
     </service>
     <service id="routing.resolver" class="Symfony\Component\Config\Loader\LoaderResolver">
       <call method="addLoader">
@@ -1908,7 +2106,7 @@
       <argument type="service" id=".service_locator.RTjHFcp.router.default"/>
       <argument>kernel::loadRoutes</argument>
       <argument type="collection">
-        <argument key="cache_dir">/app/var/cache/dev</argument>
+        <argument key="cache_dir">D:\Biblioteka-1\backend\var\cache\dev</argument>
         <argument key="debug">true</argument>
         <argument key="generator_class">Symfony\Component\Routing\Generator\CompiledUrlGenerator</argument>
         <argument key="generator_dumper_class">Symfony\Component\Routing\Generator\Dumper\CompiledUrlGeneratorDumper</argument>
@@ -1946,7 +2144,7 @@
       <argument type="service" id="request_stack"/>
       <argument type="service" id="router.request_context" on-invalid="ignore"/>
       <argument type="service" id="logger" on-invalid="ignore"/>
-      <argument>/app</argument>
+      <argument>D:\Biblioteka-1\backend</argument>
       <argument>true</argument>
     </service>
     <service id="Symfony\Bundle\FrameworkBundle\Controller\RedirectController" class="Symfony\Bundle\FrameworkBundle\Controller\RedirectController" public="true">
@@ -1974,7 +2172,7 @@
     </service>
     <service id="secrets.vault" class="Symfony\Bundle\FrameworkBundle\Secrets\SodiumVault">
       <tag name="container.env_var_loader"/>
-      <argument>/app/config/secrets/%env(default:kernel.environment:APP_RUNTIME_ENV)%</argument>
+      <argument>D:\Biblioteka-1\backend/config/secrets/%env(default:kernel.environment:APP_RUNTIME_ENV)%</argument>
       <argument type="service" id="secrets.decryption_key" on-invalid="ignore"/>
     </service>
     <service id="secrets.decryption_key" class="Symfony\Component\String\LazyString" constructor="fromCallable">
@@ -1982,7 +2180,7 @@
       <argument>base64:default::SYMFONY_DECRYPTION_SECRET</argument>
     </service>
     <service id="secrets.local_vault" class="Symfony\Bundle\FrameworkBundle\Secrets\DotenvVault">
-      <argument>/app/.env.%env(default:kernel.environment:APP_RUNTIME_ENV)%.local</argument>
+      <argument>D:\Biblioteka-1\backend/.env.%env(default:kernel.environment:APP_RUNTIME_ENV)%.local</argument>
     </service>
     <service id="serializer" class="Symfony\Component\Serializer\Serializer">
       <argument type="collection">
@@ -1992,6 +2190,7 @@
         <argument type="service" id="serializer.normalizer.uid"/>
         <argument type="service" id="serializer.normalizer.datetime"/>
         <argument type="service" id="serializer.normalizer.constraint_violation_list"/>
+        <argument type="service" id="serializer.normalizer.mime_message"/>
         <argument type="service" id="serializer.normalizer.datetimezone"/>
         <argument type="service" id="serializer.normalizer.dateinterval"/>
         <argument type="service" id="serializer.normalizer.form_error"/>
@@ -2018,6 +2217,11 @@
       <argument type="collection"/>
       <argument type="service" id="serializer.name_converter.metadata_aware"/>
     </service>
+    <service id="serializer.normalizer.mime_message" class="Symfony\Component\Serializer\Normalizer\MimeMessageNormalizer">
+      <tag name="serializer.normalizer" priority="-915"/>
+      <tag name="serializer.normalizer.default" priority="-915"/>
+      <argument type="service" id="serializer.normalizer.property"/>
+    </service>
     <service id="serializer.normalizer.datetimezone" class="Symfony\Component\Serializer\Normalizer\DateTimeZoneNormalizer">
       <tag name="serializer.normalizer" priority="-915"/>
       <tag name="serializer.normalizer.default" priority="-915"/>
@@ -2030,7 +2234,7 @@
     <service id="serializer.normalizer.data_uri" class="Symfony\Component\Serializer\Normalizer\DataUriNormalizer">
       <tag name="serializer.normalizer" priority="-920"/>
       <tag name="serializer.normalizer.default" priority="-920"/>
-      <argument>null</argument>
+      <argument type="service" id="mime_types" on-invalid="null"/>
     </service>
     <service id="serializer.normalizer.datetime" class="Symfony\Component\Serializer\Normalizer\DateTimeNormalizer">
       <tag name="serializer.normalizer" priority="-910"/>
@@ -2110,10 +2314,10 @@
           </service>
         </argument>
       </argument>
-      <argument>/app/var/cache/dev/serialization.php</argument>
+      <argument>D:\Biblioteka-1\backend\var\cache\dev/serialization.php</argument>
     </service>
     <service id="serializer.mapping.cache.symfony" class="Psr\Cache\CacheItemPoolInterface">
-      <argument>/app/var/cache/dev/serialization.php</argument>
+      <argument>D:\Biblioteka-1\backend\var\cache\dev/serialization.php</argument>
       <argument type="service" id="cache.serializer"/>
       <factory class="Symfony\Component\Cache\Adapter\PhpArrayAdapter" method="create"/>
     </service>
@@ -2252,7 +2456,7 @@
       <argument>true</argument>
     </service>
     <service id="session.storage.factory.mock_file" class="Symfony\Component\HttpFoundation\Session\Storage\MockFileSessionStorageFactory">
-      <argument>/app/var/cache/dev/sessions</argument>
+      <argument>D:\Biblioteka-1\backend\var\cache\dev/sessions</argument>
       <argument>MOCKSESSID</argument>
       <argument type="service">
         <service class="Symfony\Component\HttpFoundation\Session\Storage\MetadataBag">
@@ -2291,6 +2495,15 @@
     <service id="messenger.senders_locator" class="Symfony\Component\Messenger\Transport\Sender\SendersLocator">
       <argument type="collection">
         <argument key="App\Message\ReservationQueuedNotification" type="collection">
+          <argument>async</argument>
+        </argument>
+        <argument key="App\Message\LoanDueReminderMessage" type="collection">
+          <argument>async</argument>
+        </argument>
+        <argument key="App\Message\LoanOverdueMessage" type="collection">
+          <argument>async</argument>
+        </argument>
+        <argument key="App\Message\ReservationReadyMessage" type="collection">
           <argument>async</argument>
         </argument>
       </argument>
@@ -2466,6 +2679,92 @@
         <argument key="messenger.transport.async" type="service_closure" id="messenger.transport.async"/>
         <argument key="messenger.transport.sync" type="service_closure" id="messenger.transport.sync"/>
       </argument>
+    </service>
+    <service id="notifier" class="Symfony\Component\Notifier\Notifier">
+      <argument type="service" id=".service_locator.S5Rers0"/>
+      <argument type="service" id="notifier.channel_policy" on-invalid="ignore"/>
+    </service>
+    <service id="notifier.channel_policy" class="Symfony\Component\Notifier\Channel\ChannelPolicy">
+      <argument type="collection"/>
+    </service>
+    <service id="notifier.flash_message_importance_mapper" class="Symfony\Component\Notifier\FlashMessage\DefaultFlashMessageImportanceMapper">
+      <argument type="collection"/>
+    </service>
+    <service id="notifier.channel.browser" class="Symfony\Component\Notifier\Channel\BrowserChannel">
+      <tag name="notifier.channel" channel="browser"/>
+      <argument type="service" id="request_stack"/>
+      <argument type="service" id="notifier.flash_message_importance_mapper"/>
+    </service>
+    <service id="notifier.channel.chat" class="Symfony\Component\Notifier\Channel\ChatChannel">
+      <tag name="notifier.channel" channel="chat"/>
+      <argument>null</argument>
+      <argument type="service" id="messenger.bus.default" on-invalid="null"/>
+    </service>
+    <service id="notifier.channel.sms" class="Symfony\Component\Notifier\Channel\SmsChannel">
+      <tag name="notifier.channel" channel="sms"/>
+      <argument>null</argument>
+      <argument type="service" id="messenger.bus.default" on-invalid="null"/>
+    </service>
+    <service id="notifier.channel.email" class="Symfony\Component\Notifier\Channel\EmailChannel">
+      <tag name="notifier.channel" channel="email"/>
+      <argument>null</argument>
+      <argument type="service" id="messenger.bus.default" on-invalid="null"/>
+      <argument>null</argument>
+    </service>
+    <service id="notifier.channel.push" class="Symfony\Component\Notifier\Channel\PushChannel">
+      <tag name="notifier.channel" channel="push"/>
+      <argument>null</argument>
+      <argument type="service" id="messenger.bus.default" on-invalid="null"/>
+    </service>
+    <service id="notifier.monolog_handler" class="Symfony\Bridge\Monolog\Handler\NotifierHandler">
+      <argument type="service" id="notifier"/>
+    </service>
+    <service id="notifier.failed_message_listener" class="Symfony\Component\Notifier\EventListener\SendFailedMessageToNotifierListener">
+      <argument type="service" id="notifier"/>
+    </service>
+    <service id="chatter.transports" class="Symfony\Component\Notifier\Transport\Transports">
+      <argument type="collection"/>
+      <factory service="chatter.transport_factory" method="fromStrings"/>
+    </service>
+    <service id="chatter.transport_factory" class="Symfony\Component\Notifier\Transport">
+      <argument type="tagged_iterator" tag="chatter.transport_factory"/>
+    </service>
+    <service id="chatter.messenger.chat_handler" class="Symfony\Component\Notifier\Messenger\MessageHandler">
+      <tag name="messenger.message_handler" handles="Symfony\Component\Notifier\Message\ChatMessage"/>
+      <argument type="service" id="chatter.transports"/>
+    </service>
+    <service id="texter.transports" class="Symfony\Component\Notifier\Transport\Transports">
+      <argument type="collection"/>
+      <factory service="texter.transport_factory" method="fromStrings"/>
+    </service>
+    <service id="texter.transport_factory" class="Symfony\Component\Notifier\Transport">
+      <argument type="tagged_iterator" tag="texter.transport_factory"/>
+    </service>
+    <service id="texter.messenger.sms_handler" class="Symfony\Component\Notifier\Messenger\MessageHandler">
+      <tag name="messenger.message_handler" handles="Symfony\Component\Notifier\Message\SmsMessage"/>
+      <argument type="service" id="texter.transports"/>
+    </service>
+    <service id="texter.messenger.push_handler" class="Symfony\Component\Notifier\Messenger\MessageHandler">
+      <tag name="messenger.message_handler" handles="Symfony\Component\Notifier\Message\PushMessage"/>
+      <argument type="service" id="texter.transports"/>
+    </service>
+    <service id="notifier.notification_logger_listener" class="Symfony\Component\Notifier\EventListener\NotificationLoggerListener">
+      <tag name="kernel.event_subscriber"/>
+    </service>
+    <service id="notifier.transport_factory.abstract" class="Symfony\Component\Notifier\Transport\AbstractTransportFactory" abstract="true">
+      <argument type="service" id="debug.event_dispatcher"/>
+      <argument type="service" id="http_client" on-invalid="ignore"/>
+    </service>
+    <service id="notifier.transport_factory.null" class="Symfony\Component\Notifier\Transport\NullTransportFactory">
+      <tag name="chatter.transport_factory"/>
+      <tag name="texter.transport_factory"/>
+      <argument type="service" id="debug.event_dispatcher"/>
+      <argument>null</argument>
+    </service>
+    <service id="mime_types" class="Symfony\Component\Mime\MimeTypes">
+      <call method="setDefault">
+        <argument type="service" id="mime_types"/>
+      </call>
     </service>
     <service id="data_collector.doctrine" class="Doctrine\Bundle\DoctrineBundle\DataCollector\DoctrineDataCollector">
       <tag name="data_collector" template="@Doctrine/Collector/db.html.twig" id="db" priority="250"/>
@@ -2680,7 +2979,7 @@
     <service id="doctrine.orm.configuration" class="Doctrine\ORM\Configuration" abstract="true"/>
     <service id="doctrine.orm.entity_manager.abstract" class="Doctrine\ORM\EntityManager" lazy="true" abstract="true"/>
     <service id="doctrine.orm.container_repository_factory" class="Doctrine\Bundle\DoctrineBundle\Repository\ContainerRepositoryFactory">
-      <argument type="service" id=".service_locator.1Zo8nLD"/>
+      <argument type="service" id=".service_locator.rmdL6P2"/>
     </service>
     <service id="doctrine.orm.manager_configurator.abstract" class="Doctrine\Bundle\DoctrineBundle\ManagerConfigurator" abstract="true">
       <argument type="collection"/>
@@ -2877,7 +3176,7 @@
         <argument type="service" id=".doctrine.orm.default_metadata_driver"/>
       </call>
       <call method="setProxyDir">
-        <argument>/app/var/cache/dev/doctrine/orm/Proxies</argument>
+        <argument>D:\Biblioteka-1\backend\var\cache\dev/doctrine/orm/Proxies</argument>
       </call>
       <call method="setProxyNamespace">
         <argument>Proxies</argument>
@@ -2918,7 +3217,7 @@
     </service>
     <service id="doctrine.orm.default_attribute_metadata_driver" class="Doctrine\ORM\Mapping\Driver\AttributeDriver">
       <argument type="collection">
-        <argument>/app/src/Entity</argument>
+        <argument>D:\Biblioteka-1\backend\src\Entity</argument>
       </argument>
       <argument>true</argument>
     </service>
@@ -2975,7 +3274,7 @@
     <service id="doctrine.migrations.configuration" class="Doctrine\Migrations\Configuration\Configuration">
       <call method="addMigrationsDirectory">
         <argument>DoctrineMigrations</argument>
-        <argument>/app/migrations</argument>
+        <argument>D:\Biblioteka-1\backend/migrations</argument>
       </call>
       <call method="setAllOrNothing">
         <argument>false</argument>
@@ -3185,7 +3484,7 @@
       <argument type="service" id="filesystem"/>
       <argument type="service" id="maker.autoloader_util"/>
       <argument type="service" id="maker.file_link_formatter"/>
-      <argument>/app</argument>
+      <argument>D:\Biblioteka-1\backend</argument>
       <argument>null</argument>
     </service>
     <service id="maker.autoloader_finder" class="Symfony\Bundle\MakerBundle\Util\ComposerAutoloaderFinder">
@@ -3363,7 +3662,7 @@
     </service>
     <service id="maker.maker.make_migration" class="Symfony\Bundle\MakerBundle\Maker\MakeMigration">
       <tag name="maker.command"/>
-      <argument>/app</argument>
+      <argument>D:\Biblioteka-1\backend</argument>
       <argument type="service" id="maker.file_link_formatter"/>
     </service>
     <service id="maker.maker.make_stimulus_controller" class="Symfony\Bundle\MakerBundle\Maker\MakeStimulusController">
@@ -3695,8 +3994,12 @@
     <service id="nelmio_api_doc.route_argument_describer.map_query_parameter" class="Nelmio\ApiDocBundle\RouteDescriber\RouteArgumentDescriber\SymfonyMapQueryParameterDescriber">
       <tag name="nelmio_api_doc.route_argument_describer" priority="0"/>
     </service>
-    <service id=".instanceof.Symfony\Component\Console\Command\Command.0.App\Command\ExpireOrdersCommand" class="App\Command\ExpireOrdersCommand" autowire="true" abstract="true"/>
-    <service id=".abstract.instanceof.App\Command\ExpireOrdersCommand" class="App\Command\ExpireOrdersCommand" autowire="true" autoconfigure="true" abstract="true"/>
+    <service id=".instanceof.Symfony\Component\Console\Command\Command.0.App\Command\DispatchLoanDueRemindersCommand" class="App\Command\DispatchLoanDueRemindersCommand" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\Command\DispatchLoanDueRemindersCommand" class="App\Command\DispatchLoanDueRemindersCommand" autowire="true" autoconfigure="true" abstract="true"/>
+    <service id=".instanceof.Symfony\Component\Console\Command\Command.0.App\Command\DispatchLoanOverdueWarningsCommand" class="App\Command\DispatchLoanOverdueWarningsCommand" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\Command\DispatchLoanOverdueWarningsCommand" class="App\Command\DispatchLoanOverdueWarningsCommand" autowire="true" autoconfigure="true" abstract="true"/>
+    <service id=".instanceof.Symfony\Component\Console\Command\Command.0.App\Command\DispatchReservationReadyCommand" class="App\Command\DispatchReservationReadyCommand" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\Command\DispatchReservationReadyCommand" class="App\Command\DispatchReservationReadyCommand" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Symfony\Contracts\Service\ServiceSubscriberInterface.0.App\Controller\AccountController" class="App\Controller\AccountController" autowire="true" abstract="true"/>
     <service id=".instanceof.Symfony\Bundle\FrameworkBundle\Controller\AbstractController.0.App\Controller\AccountController" class="App\Controller\AccountController" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Controller\AccountController" class="App\Controller\AccountController" autowire="true" autoconfigure="true" abstract="true"/>
@@ -3754,12 +4057,12 @@
     <service id=".instanceof.Symfony\Contracts\Service\ServiceSubscriberInterface.0.App\Controller\NotificationController" class="App\Controller\NotificationController" autowire="true" abstract="true"/>
     <service id=".instanceof.Symfony\Bundle\FrameworkBundle\Controller\AbstractController.0.App\Controller\NotificationController" class="App\Controller\NotificationController" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Controller\NotificationController" class="App\Controller\NotificationController" autowire="true" autoconfigure="true" abstract="true"/>
-    <service id=".instanceof.Symfony\Contracts\Service\ServiceSubscriberInterface.0.App\Controller\OrderController" class="App\Controller\OrderController" autowire="true" abstract="true"/>
-    <service id=".instanceof.Symfony\Bundle\FrameworkBundle\Controller\AbstractController.0.App\Controller\OrderController" class="App\Controller\OrderController" autowire="true" abstract="true"/>
-    <service id=".abstract.instanceof.App\Controller\OrderController" class="App\Controller\OrderController" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Symfony\Contracts\Service\ServiceSubscriberInterface.0.App\Controller\ProductController" class="App\Controller\ProductController" autowire="true" abstract="true"/>
     <service id=".instanceof.Symfony\Bundle\FrameworkBundle\Controller\AbstractController.0.App\Controller\ProductController" class="App\Controller\ProductController" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Controller\ProductController" class="App\Controller\ProductController" autowire="true" autoconfigure="true" abstract="true"/>
+    <service id=".instanceof.Symfony\Contracts\Service\ServiceSubscriberInterface.0.App\Controller\RegistrationController" class="App\Controller\RegistrationController" autowire="true" abstract="true"/>
+    <service id=".instanceof.Symfony\Bundle\FrameworkBundle\Controller\AbstractController.0.App\Controller\RegistrationController" class="App\Controller\RegistrationController" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\Controller\RegistrationController" class="App\Controller\RegistrationController" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Symfony\Contracts\Service\ServiceSubscriberInterface.0.App\Controller\ReportController" class="App\Controller\ReportController" autowire="true" abstract="true"/>
     <service id=".instanceof.Symfony\Bundle\FrameworkBundle\Controller\AbstractController.0.App\Controller\ReportController" class="App\Controller\ReportController" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Controller\ReportController" class="App\Controller\ReportController" autowire="true" autoconfigure="true" abstract="true"/>
@@ -3783,6 +4086,8 @@
     <service id=".abstract.instanceof.App\Controller\WeedingController" class="App\Controller\WeedingController" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Symfony\Component\EventDispatcher\EventSubscriberInterface.0.App\EventSubscriber\ApiAuthSubscriber" class="App\EventSubscriber\ApiAuthSubscriber" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\EventSubscriber\ApiAuthSubscriber" class="App\EventSubscriber\ApiAuthSubscriber" autowire="true" autoconfigure="true" abstract="true"/>
+    <service id=".instanceof.App\MessageHandler\NotificationMessageHandler.0.App\MessageHandler\NotificationMessageHandler" class="App\MessageHandler\NotificationMessageHandler" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\MessageHandler\NotificationMessageHandler" class="App\MessageHandler\NotificationMessageHandler" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepositoryInterface.0.App\Repository\AcquisitionBudgetRepository" class="App\Repository\AcquisitionBudgetRepository" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Repository\AcquisitionBudgetRepository" class="App\Repository\AcquisitionBudgetRepository" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepositoryInterface.0.App\Repository\AcquisitionExpenseRepository" class="App\Repository\AcquisitionExpenseRepository" autowire="true" abstract="true"/>
@@ -3809,8 +4114,10 @@
     <service id=".abstract.instanceof.App\Repository\IntegrationConfigRepository" class="App\Repository\IntegrationConfigRepository" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepositoryInterface.0.App\Repository\LoanRepository" class="App\Repository\LoanRepository" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Repository\LoanRepository" class="App\Repository\LoanRepository" autowire="true" autoconfigure="true" abstract="true"/>
-    <service id=".instanceof.Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepositoryInterface.0.App\Repository\OrderRequestRepository" class="App\Repository\OrderRequestRepository" autowire="true" abstract="true"/>
-    <service id=".abstract.instanceof.App\Repository\OrderRequestRepository" class="App\Repository\OrderRequestRepository" autowire="true" autoconfigure="true" abstract="true"/>
+    <service id=".instanceof.Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepositoryInterface.0.App\Repository\NotificationLogRepository" class="App\Repository\NotificationLogRepository" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\Repository\NotificationLogRepository" class="App\Repository\NotificationLogRepository" autowire="true" autoconfigure="true" abstract="true"/>
+    <service id=".instanceof.Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepositoryInterface.0.App\Repository\RegistrationTokenRepository" class="App\Repository\RegistrationTokenRepository" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\Repository\RegistrationTokenRepository" class="App\Repository\RegistrationTokenRepository" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepositoryInterface.0.App\Repository\ReservationRepository" class="App\Repository\ReservationRepository" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Repository\ReservationRepository" class="App\Repository\ReservationRepository" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepositoryInterface.0.App\Repository\ReviewRepository" class="App\Repository\ReviewRepository" autowire="true" abstract="true"/>
@@ -4299,13 +4606,6 @@
         <argument key="repo" type="service_closure" id="App\Repository\UserRepository"/>
       </argument>
     </service>
-    <service id=".service_locator.dYRlw6Q" class="Symfony\Component\DependencyInjection\ServiceLocator">
-      <tag name="container.service_locator"/>
-      <argument type="collection">
-        <argument key="doctrine" type="service_closure" id="doctrine"/>
-        <argument key="repo" type="service_closure" id="App\Repository\UserRepository"/>
-      </argument>
-    </service>
     <service id=".service_locator.ClYVSdV" class="Symfony\Component\DependencyInjection\ServiceLocator">
       <tag name="container.service_locator"/>
       <argument type="collection">
@@ -4395,15 +4695,6 @@
         <argument key="doctrine" type="service_closure" id="doctrine"/>
       </argument>
     </service>
-    <service id=".service_locator.agQIWDh" class="Symfony\Component\DependencyInjection\ServiceLocator">
-      <tag name="container.service_locator"/>
-      <argument type="collection">
-        <argument key="doctrine" type="service_closure" id="doctrine"/>
-        <argument key="bookService" type="service_closure" id="App\Service\BookService"/>
-        <argument key="orderLifecycle" type="service_closure" id="App\Service\OrderLifecycleService"/>
-        <argument key="security" type="service_closure" id="App\Service\SecurityService"/>
-      </argument>
-    </service>
     <service id=".service_locator.4aTJiDL" class="Symfony\Component\DependencyInjection\ServiceLocator">
       <tag name="container.service_locator"/>
       <argument type="collection">
@@ -4412,20 +4703,20 @@
         <argument key="security" type="service_closure" id="App\Service\SecurityService"/>
       </argument>
     </service>
-    <service id=".service_locator.bRJvpbq" class="Symfony\Component\DependencyInjection\ServiceLocator">
+    <service id=".service_locator.VF3xVsP" class="Symfony\Component\DependencyInjection\ServiceLocator">
       <tag name="container.service_locator"/>
       <argument type="collection">
         <argument key="doctrine" type="service_closure" id="doctrine"/>
+        <argument key="bookService" type="service_closure" id="App\Service\BookService"/>
         <argument key="security" type="service_closure" id="App\Service\SecurityService"/>
-        <argument key="orderLifecycle" type="service_closure" id="App\Service\OrderLifecycleService"/>
+        <argument key="bus" type="service_closure" id="messenger.bus.default"/>
+        <argument key="logger" type="service_closure" id="logger"/>
       </argument>
     </service>
-    <service id=".service_locator.z8H8Dc3" class="Symfony\Component\DependencyInjection\ServiceLocator">
+    <service id=".service_locator.zdorlGT" class="Symfony\Component\DependencyInjection\ServiceLocator">
       <tag name="container.service_locator"/>
       <argument type="collection">
-        <argument key="doctrine" type="service_closure" id="doctrine"/>
-        <argument key="security" type="service_closure" id="App\Service\SecurityService"/>
-        <argument key="bookService" type="service_closure" id="App\Service\BookService"/>
+        <argument key="registrationService" type="service_closure" id="App\Service\RegistrationService"/>
       </argument>
     </service>
     <service id=".service_locator.rs0UfCO" class="Symfony\Component\DependencyInjection\ServiceLocator">
@@ -4453,7 +4744,7 @@
         <argument key="security" type="service_closure" id="App\Service\SecurityService"/>
       </argument>
     </service>
-    <service id=".service_locator.wDFQk.D" class="Symfony\Component\DependencyInjection\ServiceLocator">
+    <service id=".service_locator.xcv5YG5" class="Symfony\Component\DependencyInjection\ServiceLocator">
       <tag name="container.service_locator"/>
       <argument type="collection">
         <argument key="kernel::registerContainerConfiguration" type="service_closure" id=".service_locator.zHyJIs5"/>
@@ -4492,7 +4783,6 @@
         <argument key="App\Controller\Admin\SystemConfigController::create" type="service_closure" id=".service_locator.8ZTCuUF"/>
         <argument key="App\Controller\Admin\SystemConfigController::update" type="service_closure" id=".service_locator.8ZTCuUF"/>
         <argument key="App\Controller\AuthController::login" type="service_closure" id=".service_locator._8VsPQl"/>
-        <argument key="App\Controller\AuthController::register" type="service_closure" id=".service_locator.dYRlw6Q"/>
         <argument key="App\Controller\BookAssetController::list" type="service_closure" id=".service_locator.ClYVSdV"/>
         <argument key="App\Controller\BookAssetController::upload" type="service_closure" id=".service_locator.ZepxUq3"/>
         <argument key="App\Controller\BookAssetController::download" type="service_closure" id=".service_locator.ClYVSdV"/>
@@ -4520,16 +4810,15 @@
         <argument key="App\Controller\FineController::cancel" type="service_closure" id=".service_locator.AbYyszh"/>
         <argument key="App\Controller\LoanController::list" type="service_closure" id=".service_locator.AbYyszh"/>
         <argument key="App\Controller\LoanController::getLoan" type="service_closure" id=".service_locator.AbYyszh"/>
-        <argument key="App\Controller\LoanController::create" type="service_closure" id=".service_locator.agQIWDh"/>
+        <argument key="App\Controller\LoanController::create" type="service_closure" id=".service_locator.4aTJiDL"/>
         <argument key="App\Controller\LoanController::listByUser" type="service_closure" id=".service_locator.AbYyszh"/>
-        <argument key="App\Controller\LoanController::returnLoan" type="service_closure" id=".service_locator.4aTJiDL"/>
+        <argument key="App\Controller\LoanController::returnLoan" type="service_closure" id=".service_locator.VF3xVsP"/>
         <argument key="App\Controller\LoanController::extend" type="service_closure" id=".service_locator.AbYyszh"/>
         <argument key="App\Controller\LoanController::delete" type="service_closure" id=".service_locator.4aTJiDL"/>
         <argument key="App\Controller\NotificationController::list" type="service_closure" id=".service_locator.S_C3Dzl"/>
         <argument key="App\Controller\NotificationController::triggerTest" type="service_closure" id=".service_locator.S_C3Dzl"/>
-        <argument key="App\Controller\OrderController::list" type="service_closure" id=".service_locator.bRJvpbq"/>
-        <argument key="App\Controller\OrderController::create" type="service_closure" id=".service_locator.z8H8Dc3"/>
-        <argument key="App\Controller\OrderController::cancel" type="service_closure" id=".service_locator.bRJvpbq"/>
+        <argument key="App\Controller\RegistrationController::register" type="service_closure" id=".service_locator.zdorlGT"/>
+        <argument key="App\Controller\RegistrationController::verify" type="service_closure" id=".service_locator.zdorlGT"/>
         <argument key="App\Controller\ReportController::usage" type="service_closure" id=".service_locator.AbYyszh"/>
         <argument key="App\Controller\ReportController::export" type="service_closure" id=".service_locator.S_C3Dzl"/>
         <argument key="App\Controller\ReportController::popularTitles" type="service_closure" id=".service_locator.AbYyszh"/>
@@ -4588,7 +4877,6 @@
         <argument key="App\Controller\Admin\SystemConfigController:create" type="service_closure" id=".service_locator.8ZTCuUF"/>
         <argument key="App\Controller\Admin\SystemConfigController:update" type="service_closure" id=".service_locator.8ZTCuUF"/>
         <argument key="App\Controller\AuthController:login" type="service_closure" id=".service_locator._8VsPQl"/>
-        <argument key="App\Controller\AuthController:register" type="service_closure" id=".service_locator.dYRlw6Q"/>
         <argument key="App\Controller\BookAssetController:list" type="service_closure" id=".service_locator.ClYVSdV"/>
         <argument key="App\Controller\BookAssetController:upload" type="service_closure" id=".service_locator.ZepxUq3"/>
         <argument key="App\Controller\BookAssetController:download" type="service_closure" id=".service_locator.ClYVSdV"/>
@@ -4616,16 +4904,15 @@
         <argument key="App\Controller\FineController:cancel" type="service_closure" id=".service_locator.AbYyszh"/>
         <argument key="App\Controller\LoanController:list" type="service_closure" id=".service_locator.AbYyszh"/>
         <argument key="App\Controller\LoanController:getLoan" type="service_closure" id=".service_locator.AbYyszh"/>
-        <argument key="App\Controller\LoanController:create" type="service_closure" id=".service_locator.agQIWDh"/>
+        <argument key="App\Controller\LoanController:create" type="service_closure" id=".service_locator.4aTJiDL"/>
         <argument key="App\Controller\LoanController:listByUser" type="service_closure" id=".service_locator.AbYyszh"/>
-        <argument key="App\Controller\LoanController:returnLoan" type="service_closure" id=".service_locator.4aTJiDL"/>
+        <argument key="App\Controller\LoanController:returnLoan" type="service_closure" id=".service_locator.VF3xVsP"/>
         <argument key="App\Controller\LoanController:extend" type="service_closure" id=".service_locator.AbYyszh"/>
         <argument key="App\Controller\LoanController:delete" type="service_closure" id=".service_locator.4aTJiDL"/>
         <argument key="App\Controller\NotificationController:list" type="service_closure" id=".service_locator.S_C3Dzl"/>
         <argument key="App\Controller\NotificationController:triggerTest" type="service_closure" id=".service_locator.S_C3Dzl"/>
-        <argument key="App\Controller\OrderController:list" type="service_closure" id=".service_locator.bRJvpbq"/>
-        <argument key="App\Controller\OrderController:create" type="service_closure" id=".service_locator.z8H8Dc3"/>
-        <argument key="App\Controller\OrderController:cancel" type="service_closure" id=".service_locator.bRJvpbq"/>
+        <argument key="App\Controller\RegistrationController:register" type="service_closure" id=".service_locator.zdorlGT"/>
+        <argument key="App\Controller\RegistrationController:verify" type="service_closure" id=".service_locator.zdorlGT"/>
         <argument key="App\Controller\ReportController:usage" type="service_closure" id=".service_locator.AbYyszh"/>
         <argument key="App\Controller\ReportController:export" type="service_closure" id=".service_locator.S_C3Dzl"/>
         <argument key="App\Controller\ReportController:popularTitles" type="service_closure" id=".service_locator.AbYyszh"/>
@@ -4738,6 +5025,10 @@
       <tag name="container.service_locator"/>
       <argument type="collection"/>
     </service>
+    <service id=".messenger.handler_descriptor.wKgGgMM" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
+      <argument type="service" id="App\MessageHandler\NotificationMessageHandler"/>
+      <argument type="collection"/>
+    </service>
     <service id=".messenger.handler_descriptor.4vlC4aY" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
       <argument type="service" id="App\MessageHandler\ReservationQueuedNotificationHandler"/>
       <argument type="collection"/>
@@ -4750,12 +5041,31 @@
       <argument type="service" id="console.messenger.execute_command_handler"/>
       <argument type="collection"/>
     </service>
+    <service id=".messenger.handler_descriptor.WG.oRBv" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
+      <argument type="service" id="mailer.messenger.message_handler"/>
+      <argument type="collection"/>
+    </service>
     <service id=".messenger.handler_descriptor.jyyWvHw" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
       <argument type="service" id="messenger.redispatch_message_handler"/>
       <argument type="collection"/>
     </service>
+    <service id=".messenger.handler_descriptor.gEx8y9a" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
+      <argument type="service" id="chatter.messenger.chat_handler"/>
+      <argument type="collection"/>
+    </service>
+    <service id=".messenger.handler_descriptor.UKIJHil" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
+      <argument type="service" id="texter.messenger.sms_handler"/>
+      <argument type="collection"/>
+    </service>
+    <service id=".messenger.handler_descriptor.EXsqOW5" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
+      <argument type="service" id="texter.messenger.push_handler"/>
+      <argument type="collection"/>
+    </service>
     <service id="messenger.bus.default.messenger.handlers_locator" class="Symfony\Component\Messenger\Handler\HandlersLocator">
       <argument type="collection">
+        <argument key="App\Message\NotificationMessageInterface" type="iterator">
+          <argument type="service" id=".messenger.handler_descriptor.wKgGgMM"/>
+        </argument>
         <argument key="App\Message\ReservationQueuedNotification" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor.4vlC4aY"/>
         </argument>
@@ -4765,8 +5075,20 @@
         <argument key="Symfony\Component\Console\Messenger\RunCommandMessage" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor.NumTeF8"/>
         </argument>
+        <argument key="Symfony\Component\Mailer\Messenger\SendEmailMessage" type="iterator">
+          <argument type="service" id=".messenger.handler_descriptor.WG.oRBv"/>
+        </argument>
         <argument key="Symfony\Component\Messenger\Message\RedispatchMessage" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor.jyyWvHw"/>
+        </argument>
+        <argument key="Symfony\Component\Notifier\Message\ChatMessage" type="iterator">
+          <argument type="service" id=".messenger.handler_descriptor.gEx8y9a"/>
+        </argument>
+        <argument key="Symfony\Component\Notifier\Message\SmsMessage" type="iterator">
+          <argument type="service" id=".messenger.handler_descriptor.UKIJHil"/>
+        </argument>
+        <argument key="Symfony\Component\Notifier\Message\PushMessage" type="iterator">
+          <argument type="service" id=".messenger.handler_descriptor.EXsqOW5"/>
         </argument>
       </argument>
     </service>
@@ -4780,7 +5102,7 @@
         <argument key="doctrine.orm.default_listeners.attach_entity_listeners" type="service_closure" id="doctrine.orm.default_listeners.attach_entity_listeners"/>
       </argument>
     </service>
-    <service id=".service_locator.1Zo8nLD" class="Symfony\Component\DependencyInjection\ServiceLocator">
+    <service id=".service_locator.rmdL6P2" class="Symfony\Component\DependencyInjection\ServiceLocator">
       <tag name="container.service_locator"/>
       <argument type="collection">
         <argument key="App\Repository\AcquisitionBudgetRepository" type="service_closure" id="App\Repository\AcquisitionBudgetRepository"/>
@@ -4796,7 +5118,8 @@
         <argument key="App\Repository\FineRepository" type="service_closure" id="App\Repository\FineRepository"/>
         <argument key="App\Repository\IntegrationConfigRepository" type="service_closure" id="App\Repository\IntegrationConfigRepository"/>
         <argument key="App\Repository\LoanRepository" type="service_closure" id="App\Repository\LoanRepository"/>
-        <argument key="App\Repository\OrderRequestRepository" type="service_closure" id="App\Repository\OrderRequestRepository"/>
+        <argument key="App\Repository\NotificationLogRepository" type="service_closure" id="App\Repository\NotificationLogRepository"/>
+        <argument key="App\Repository\RegistrationTokenRepository" type="service_closure" id="App\Repository\RegistrationTokenRepository"/>
         <argument key="App\Repository\ReservationRepository" type="service_closure" id="App\Repository\ReservationRepository"/>
         <argument key="App\Repository\ReviewRepository" type="service_closure" id="App\Repository\ReviewRepository"/>
         <argument key="App\Repository\StaffRoleRepository" type="service_closure" id="App\Repository\StaffRoleRepository"/>
@@ -4970,15 +5293,15 @@
       <argument type="service" id="service_container"/>
       <factory service=".service_locator.ZyP9f7K" method="withContext"/>
     </service>
-    <service id=".service_locator.ZyP9f7K.App\Controller\OrderController" class="Symfony\Component\DependencyInjection\ServiceLocator">
-      <tag name="container.service_locator_context" id="App\Controller\OrderController"/>
-      <argument>App\Controller\OrderController</argument>
-      <argument type="service" id="service_container"/>
-      <factory service=".service_locator.ZyP9f7K" method="withContext"/>
-    </service>
     <service id=".service_locator.ZyP9f7K.App\Controller\ProductController" class="Symfony\Component\DependencyInjection\ServiceLocator">
       <tag name="container.service_locator_context" id="App\Controller\ProductController"/>
       <argument>App\Controller\ProductController</argument>
+      <argument type="service" id="service_container"/>
+      <factory service=".service_locator.ZyP9f7K" method="withContext"/>
+    </service>
+    <service id=".service_locator.ZyP9f7K.App\Controller\RegistrationController" class="Symfony\Component\DependencyInjection\ServiceLocator">
+      <tag name="container.service_locator_context" id="App\Controller\RegistrationController"/>
+      <argument>App\Controller\RegistrationController</argument>
       <argument type="service" id="service_container"/>
       <factory service=".service_locator.ZyP9f7K" method="withContext"/>
     </service>
@@ -5097,6 +5420,16 @@
         <argument key="request_stack" type="service_closure" id="request_stack" on-invalid="ignore"/>
       </argument>
     </service>
+    <service id=".service_locator.S5Rers0" class="Symfony\Component\DependencyInjection\ServiceLocator">
+      <tag name="container.service_locator"/>
+      <argument type="collection">
+        <argument key="browser" type="service_closure" id="notifier.channel.browser"/>
+        <argument key="chat" type="service_closure" id="notifier.channel.chat"/>
+        <argument key="sms" type="service_closure" id="notifier.channel.sms"/>
+        <argument key="email" type="service_closure" id="notifier.channel.email"/>
+        <argument key="push" type="service_closure" id="notifier.channel.push"/>
+      </argument>
+    </service>
     <service id="debug.event_dispatcher.inner" class="Symfony\Component\EventDispatcher\EventDispatcher"/>
     <service id="debug.controller_resolver.inner" class="Symfony\Bundle\FrameworkBundle\Controller\ControllerResolver">
       <argument type="service" id="service_container"/>
@@ -5129,8 +5462,8 @@
           <argument>App\Controller\HealthController</argument>
           <argument>App\Controller\LoanController</argument>
           <argument>App\Controller\NotificationController</argument>
-          <argument>App\Controller\OrderController</argument>
           <argument>App\Controller\ProductController</argument>
+          <argument>App\Controller\RegistrationController</argument>
           <argument>App\Controller\ReportController</argument>
           <argument>App\Controller\ReservationController</argument>
           <argument>App\Controller\ReviewController</argument>
@@ -5167,12 +5500,26 @@
     <service id=".errored..service_locator.zHyJIs5.Symfony\Component\Config\Loader\LoaderInterface" class="Symfony\Component\Config\Loader\LoaderInterface">
       <tag name="container.error" message="Cannot autowire service &quot;.service_locator.zHyJIs5&quot;: it needs an instance of &quot;Symfony\Component\Config\Loader\LoaderInterface&quot; but this type has been excluded from autowiring."/>
     </service>
-    <service id=".App\Command\ExpireOrdersCommand.lazy" class="Symfony\Component\Console\Command\LazyCommand">
-      <argument>app:orders:expire</argument>
+    <service id=".App\Command\DispatchLoanDueRemindersCommand.lazy" class="Symfony\Component\Console\Command\LazyCommand">
+      <argument>notifications:dispatch-due-reminders</argument>
       <argument type="collection"/>
-      <argument>Marks overdue pickup orders as expired and releases reserved copies</argument>
+      <argument>Queue reminders for loans that are due soon.</argument>
       <argument>false</argument>
-      <argument type="service_closure" id="App\Command\ExpireOrdersCommand"/>
+      <argument type="service_closure" id="App\Command\DispatchLoanDueRemindersCommand"/>
+    </service>
+    <service id=".App\Command\DispatchLoanOverdueWarningsCommand.lazy" class="Symfony\Component\Console\Command\LazyCommand">
+      <argument>notifications:dispatch-overdue-warnings</argument>
+      <argument type="collection"/>
+      <argument>Queue warnings for loans that are already overdue.</argument>
+      <argument>false</argument>
+      <argument type="service_closure" id="App\Command\DispatchLoanOverdueWarningsCommand"/>
+    </service>
+    <service id=".App\Command\DispatchReservationReadyCommand.lazy" class="Symfony\Component\Console\Command\LazyCommand">
+      <argument>notifications:dispatch-reservation-ready</argument>
+      <argument type="collection"/>
+      <argument>Queue notifications for reservations that are ready for pickup.</argument>
+      <argument>false</argument>
+      <argument type="service_closure" id="App\Command\DispatchReservationReadyCommand"/>
     </service>
     <service id=".console.command.about.lazy" class="Symfony\Component\Console\Command\LazyCommand">
       <argument>about</argument>
@@ -5383,6 +5730,13 @@
       <argument>Encrypt all local secrets to the vault</argument>
       <argument>false</argument>
       <argument type="service_closure" id="console.command.secrets_encrypt_from_local"/>
+    </service>
+    <service id=".console.command.mailer_test.lazy" class="Symfony\Component\Console\Command\LazyCommand">
+      <argument>mailer:test</argument>
+      <argument type="collection"/>
+      <argument>Test Mailer transports by sending an email</argument>
+      <argument>false</argument>
+      <argument type="service_closure" id="console.command.mailer_test"/>
     </service>
     <service id=".doctrine_migrations.diff_command.lazy" class="Symfony\Component\Console\Command\LazyCommand">
       <argument>doctrine:migrations:diff</argument>
@@ -5671,9 +6025,11 @@
     </service>
     <service id="console.command_loader" class="Symfony\Component\Console\CommandLoader\ContainerCommandLoader" public="true">
       <tag name="container.no_preload"/>
-      <argument type="service" id=".service_locator.lpCK9VE"/>
+      <argument type="service" id=".service_locator.DbHU1_f"/>
       <argument type="collection">
-        <argument key="app:orders:expire">App\Command\ExpireOrdersCommand</argument>
+        <argument key="notifications:dispatch-due-reminders">App\Command\DispatchLoanDueRemindersCommand</argument>
+        <argument key="notifications:dispatch-overdue-warnings">App\Command\DispatchLoanOverdueWarningsCommand</argument>
+        <argument key="notifications:dispatch-reservation-ready">App\Command\DispatchReservationReadyCommand</argument>
         <argument key="about">console.command.about</argument>
         <argument key="assets:install">console.command.assets_install</argument>
         <argument key="cache:clear">console.command.cache_clear</argument>
@@ -5704,6 +6060,7 @@
         <argument key="secrets:list">console.command.secrets_list</argument>
         <argument key="secrets:decrypt-to-local">console.command.secrets_decrypt_to_local</argument>
         <argument key="secrets:encrypt-from-local">console.command.secrets_encrypt_from_local</argument>
+        <argument key="mailer:test">console.command.mailer_test</argument>
         <argument key="doctrine:database:create">doctrine.database_create_command</argument>
         <argument key="doctrine:database:drop">doctrine.database_drop_command</argument>
         <argument key="doctrine:query:sql">doctrine.query_sql_command</argument>
@@ -5768,10 +6125,12 @@
         <argument key="make:webhook">maker.auto_command.make_webhook</argument>
       </argument>
     </service>
-    <service id=".service_locator.lpCK9VE" class="Symfony\Component\DependencyInjection\ServiceLocator">
+    <service id=".service_locator.DbHU1_f" class="Symfony\Component\DependencyInjection\ServiceLocator">
       <tag name="container.service_locator"/>
       <argument type="collection">
-        <argument key="App\Command\ExpireOrdersCommand" type="service_closure" id=".App\Command\ExpireOrdersCommand.lazy"/>
+        <argument key="App\Command\DispatchLoanDueRemindersCommand" type="service_closure" id=".App\Command\DispatchLoanDueRemindersCommand.lazy"/>
+        <argument key="App\Command\DispatchLoanOverdueWarningsCommand" type="service_closure" id=".App\Command\DispatchLoanOverdueWarningsCommand.lazy"/>
+        <argument key="App\Command\DispatchReservationReadyCommand" type="service_closure" id=".App\Command\DispatchReservationReadyCommand.lazy"/>
         <argument key="console.command.about" type="service_closure" id=".console.command.about.lazy"/>
         <argument key="console.command.assets_install" type="service_closure" id=".console.command.assets_install.lazy"/>
         <argument key="console.command.cache_clear" type="service_closure" id=".console.command.cache_clear.lazy"/>
@@ -5802,6 +6161,7 @@
         <argument key="console.command.secrets_list" type="service_closure" id=".console.command.secrets_list.lazy"/>
         <argument key="console.command.secrets_decrypt_to_local" type="service_closure" id=".console.command.secrets_decrypt_to_local.lazy"/>
         <argument key="console.command.secrets_encrypt_from_local" type="service_closure" id=".console.command.secrets_encrypt_from_local.lazy"/>
+        <argument key="console.command.mailer_test" type="service_closure" id=".console.command.mailer_test.lazy"/>
         <argument key="doctrine.database_create_command" type="service_closure" id="doctrine.database_create_command"/>
         <argument key="doctrine.database_drop_command" type="service_closure" id="doctrine.database_drop_command"/>
         <argument key="doctrine.query_sql_command" type="service_closure" id="doctrine.query_sql_command"/>
@@ -5893,6 +6253,10 @@
     <service id="Psr\Cache\CacheItemPoolInterface" alias="cache.app"/>
     <service id="Symfony\Contracts\Cache\CacheInterface" alias="cache.app"/>
     <service id="Symfony\Contracts\Cache\TagAwareCacheInterface" alias="cache.app.taggable"/>
+    <service id="mailer" alias="mailer.mailer"/>
+    <service id="Symfony\Component\Mailer\MailerInterface" alias="mailer.mailer"/>
+    <service id="mailer.default_transport" alias="mailer.transports"/>
+    <service id="Symfony\Component\Mailer\Transport\TransportInterface" alias="mailer.transports"/>
     <service id="Symfony\Component\ErrorHandler\ErrorRenderer\FileLinkFormatter" alias="debug.file_link_formatter"/>
     <service id="Symfony\Component\Stopwatch\Stopwatch" alias="debug.stopwatch"/>
     <service id="routing.loader.annotation" alias="routing.loader.attribute">
@@ -5947,6 +6311,12 @@
     </service>
     <service id="messenger.default_bus" alias="messenger.bus.default" public="true"/>
     <service id="Symfony\Component\Messenger\MessageBusInterface" alias="messenger.bus.default"/>
+    <service id="Symfony\Component\Notifier\NotifierInterface" alias="notifier"/>
+    <service id="notifier.logger_notification_listener" alias="notifier.notification_logger_listener">
+      <deprecated package="symfony/framework-bundle" version="6.3">The "%alias_id%" service is deprecated, use "notifier.notification_logger_listener" instead.</deprecated>
+    </service>
+    <service id="Symfony\Component\Mime\MimeTypesInterface" alias="mime_types"/>
+    <service id="Symfony\Component\Mime\MimeTypeGuesserInterface" alias="mime_types"/>
     <service id="Doctrine\DBAL\Connection" alias="doctrine.dbal.default_connection"/>
     <service id="Doctrine\Persistence\ManagerRegistry" alias="doctrine"/>
     <service id="Doctrine\Common\Persistence\ManagerRegistry" alias="doctrine"/>
@@ -5967,7 +6337,7 @@
     <service id="nelmio_api_doc.controller.swagger" alias="nelmio_api_doc.controller.swagger_json" public="true"/>
     <service id="nelmio_api_doc.generator" alias="nelmio_api_doc.generator.default" public="true"/>
     <service id="container.env_var_processors_locator" alias=".service_locator.pRu6x_4" public="true"/>
-    <service id="argument_resolver.controller_locator" alias=".service_locator.wDFQk.D"/>
+    <service id="argument_resolver.controller_locator" alias=".service_locator.xcv5YG5"/>
     <service id="doctrine.id_generator_locator" alias=".service_locator.BxSdgVt"/>
     <service id="Psr\Log\LoggerInterface" alias="logger"/>
     <service id=".service_locator.oiB6xeU" alias="messenger.receiver_locator"/>
@@ -5985,7 +6355,6 @@
     <service id=".service_locator.O33qp4a" alias=".service_locator.8ZTCuUF"/>
     <service id=".service_locator._XkFWFd" alias=".service_locator.6nghiUy"/>
     <service id=".service_locator.DHDj2Yc" alias=".service_locator._8VsPQl"/>
-    <service id=".service_locator.rHXEMdb" alias=".service_locator.dYRlw6Q"/>
     <service id=".service_locator.fFD1B5Y" alias=".service_locator.ClYVSdV"/>
     <service id=".service_locator.auY8RH1" alias=".service_locator.ZepxUq3"/>
     <service id=".service_locator.FEkqU.N" alias=".service_locator.3XiwbLt"/>
@@ -5997,10 +6366,9 @@
     <service id=".service_locator.QLoEzu4" alias=".service_locator.GUMRX7C"/>
     <service id=".service_locator.qrxZKSf" alias=".service_locator.0tFntzx"/>
     <service id=".service_locator.8o9hjmt" alias=".service_locator.E7ajBy2"/>
-    <service id=".service_locator.3R6sbWM" alias=".service_locator.agQIWDh"/>
     <service id=".service_locator.QLxwK0X" alias=".service_locator.4aTJiDL"/>
-    <service id=".service_locator.QjpQdxG" alias=".service_locator.bRJvpbq"/>
-    <service id=".service_locator.v2tBNUy" alias=".service_locator.z8H8Dc3"/>
+    <service id=".service_locator.7.yhmtD" alias=".service_locator.VF3xVsP"/>
+    <service id=".service_locator.fVj1eyh" alias=".service_locator.zdorlGT"/>
     <service id=".service_locator.m3kCcJ2" alias=".service_locator.rs0UfCO"/>
     <service id=".service_locator.OcHHXfg" alias=".service_locator.RGWMk6E"/>
     <service id=".service_locator.TuBt.Pv" alias=".service_locator.fQV0aqS"/>

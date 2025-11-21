@@ -7,6 +7,7 @@ use Symfony\Component\Serializer\Annotation\Ignore;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'app_user')]
+#[ORM\HasLifecycleCallbacks]
 class User
 {
     public const GROUP_STANDARD = 'standard';
@@ -59,6 +60,15 @@ class User
     #[Groups(['loan:read'])]
     private bool $blocked = false;
 
+    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    private bool $verified = false;
+
+    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
+    private ?\DateTimeImmutable $verifiedAt = null;
+
+    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    private bool $pendingApproval = false;
+
     #[ORM\Column(type: 'string', length: 64, options: ['default' => self::GROUP_STANDARD])]
     #[Groups(['loan:read'])]
     private string $membershipGroup = self::GROUP_STANDARD;
@@ -69,6 +79,37 @@ class User
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private ?string $blockedReason = null;
+
+    #[ORM\Column(type: 'datetime_immutable')]
+    private \DateTimeImmutable $createdAt;
+
+    #[ORM\Column(type: 'datetime_immutable')]
+    private \DateTimeImmutable $updatedAt;
+
+    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
+    private ?\DateTimeImmutable $privacyConsentAt = null;
+
+    public function __construct()
+    {
+        $now = new \DateTimeImmutable();
+        $this->createdAt = $now;
+        $this->updatedAt = $now;
+        $this->applyDefaultLoanLimit();
+    }
+
+    #[ORM\PrePersist]
+    public function onPrePersist(): void
+    {
+        $now = new \DateTimeImmutable();
+        $this->createdAt = $now;
+        $this->updatedAt = $now;
+    }
+
+    #[ORM\PreUpdate]
+    public function onPreUpdate(): void
+    {
+        $this->updatedAt = new \DateTimeImmutable();
+    }
 
     public function getId(): ?int { return $this->id; }
     public function getEmail(): string { return $this->email; }
@@ -89,6 +130,41 @@ class User
     public function setCity(?string $city): self { $this->city = $city; return $this; }
     public function getPostalCode(): ?string { return $this->postalCode; }
     public function setPostalCode(?string $postalCode): self { $this->postalCode = $postalCode; return $this; }
+
+    public function isVerified(): bool
+    {
+        return $this->verified;
+    }
+
+    public function markVerified(?\DateTimeImmutable $verifiedAt = null): self
+    {
+        $this->verified = true;
+        $this->verifiedAt = $verifiedAt ?? new \DateTimeImmutable();
+        return $this;
+    }
+
+    public function requireVerification(): self
+    {
+        $this->verified = false;
+        $this->verifiedAt = null;
+        return $this;
+    }
+
+    public function getVerifiedAt(): ?\DateTimeImmutable
+    {
+        return $this->verifiedAt;
+    }
+
+    public function isPendingApproval(): bool
+    {
+        return $this->pendingApproval;
+    }
+
+    public function setPendingApproval(bool $pendingApproval): self
+    {
+        $this->pendingApproval = $pendingApproval;
+        return $this;
+    }
 
     public function isBlocked(): bool
     {
@@ -112,6 +188,27 @@ class User
     public function getBlockedReason(): ?string
     {
         return $this->blockedReason;
+    }
+
+    public function getCreatedAt(): \DateTimeImmutable
+    {
+        return $this->createdAt;
+    }
+
+    public function getUpdatedAt(): \DateTimeImmutable
+    {
+        return $this->updatedAt;
+    }
+
+    public function getPrivacyConsentAt(): ?\DateTimeImmutable
+    {
+        return $this->privacyConsentAt;
+    }
+
+    public function recordPrivacyConsent(?\DateTimeImmutable $consentAt = null): self
+    {
+        $this->privacyConsentAt = $consentAt ?? new \DateTimeImmutable();
+        return $this;
     }
 
     public function getMembershipGroup(): string

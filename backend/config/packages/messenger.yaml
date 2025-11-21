@@ -12,3 +12,6 @@ framework:
       sync: 'sync://'
     routing:
       App\Message\ReservationQueuedNotification: async
+      App\Message\LoanDueReminderMessage: async
+      App\Message\LoanOverdueMessage: async
+      App\Message\ReservationReadyMessage: async

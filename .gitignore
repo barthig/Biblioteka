@@ -5,3 +5,4 @@ backend/var/
 backend/tmp/
 backend/vendor/
 backend/.phpunit.result.cache
+frontend/.env.local

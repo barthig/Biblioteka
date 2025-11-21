@@ -16,6 +16,12 @@ return [PHP_INT_MAX, new class() implements \Symfony\Component\Cache\Traits\Cach
         clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
         clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
         clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
     ],
     null,
     [
@@ -32,9 +38,15 @@ return [PHP_INT_MAX, new class() implements \Symfony\Component\Cache\Traits\Cach
                 'city',
                 'postalCode',
                 'blocked',
+                'verified',
+                'verifiedAt',
+                'pendingApproval',
                 'membershipGroup',
                 'loanLimit',
                 'blockedReason',
+                'createdAt',
+                'updatedAt',
+                'privacyConsentAt',
             ],
             'attributesMetadata' => [
                 [
@@ -48,9 +60,15 @@ return [PHP_INT_MAX, new class() implements \Symfony\Component\Cache\Traits\Cach
                     'city' => $o[8],
                     'postalCode' => $o[9],
                     'blocked' => $o[10],
-                    'membershipGroup' => $o[11],
-                    'loanLimit' => $o[12],
-                    'blockedReason' => $o[13],
+                    'verified' => $o[11],
+                    'verifiedAt' => $o[12],
+                    'pendingApproval' => $o[13],
+                    'membershipGroup' => $o[14],
+                    'loanLimit' => $o[15],
+                    'blockedReason' => $o[16],
+                    'createdAt' => $o[17],
+                    'updatedAt' => $o[18],
+                    'privacyConsentAt' => $o[19],
                 ],
             ],
             'groups' => [
@@ -84,7 +102,7 @@ return [PHP_INT_MAX, new class() implements \Symfony\Component\Cache\Traits\Cach
                 10 => [
                     'loan:read',
                 ],
-                [
+                14 => [
                     'loan:read',
                 ],
                 [

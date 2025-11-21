@@ -38,6 +38,7 @@ class Book extends \App\Entity\Book implements \Doctrine\ORM\Proxy\InternalProxy
         "\0".parent::class."\0".'resourceType' => [parent::class, 'resourceType', null, 16],
         "\0".parent::class."\0".'signature' => [parent::class, 'signature', null, 16],
         "\0".parent::class."\0".'storageCopies' => [parent::class, 'storageCopies', null, 16],
+        "\0".parent::class."\0".'targetAgeGroup' => [parent::class, 'targetAgeGroup', null, 16],
         "\0".parent::class."\0".'title' => [parent::class, 'title', null, 16],
         "\0".parent::class."\0".'totalCopies' => [parent::class, 'totalCopies', null, 16],
         'author' => [parent::class, 'author', null, 16],
@@ -56,6 +57,7 @@ class Book extends \App\Entity\Book implements \Doctrine\ORM\Proxy\InternalProxy
         'resourceType' => [parent::class, 'resourceType', null, 16],
         'signature' => [parent::class, 'signature', null, 16],
         'storageCopies' => [parent::class, 'storageCopies', null, 16],
+        'targetAgeGroup' => [parent::class, 'targetAgeGroup', null, 16],
         'title' => [parent::class, 'title', null, 16],
         'totalCopies' => [parent::class, 'totalCopies', null, 16],
     ];

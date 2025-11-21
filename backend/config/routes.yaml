@@ -88,8 +88,13 @@ api_users_permissions_update:
 # Authentication
 api_auth_register:
   path: /api/auth/register
-  controller: App\Controller\AuthController::register
+  controller: App\Controller\RegistrationController::register
   methods: [POST]
+
+api_auth_verify:
+  path: /api/auth/verify/{token}
+  controller: App\Controller\RegistrationController::verify
+  methods: [GET]
 
 # Books catalogue management
 api_books_list:

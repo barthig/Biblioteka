@@ -37,4 +37,37 @@ class LoanRepository extends ServiceEntityRepository
             ->getQuery()
             ->getSingleScalarResult();
     }
+
+    /**
+     * @return Loan[]
+     */
+    public function findDueBetween(\DateTimeImmutable $from, \DateTimeImmutable $to): array
+    {
+        return $this->createQueryBuilder('l')
+            ->andWhere('l.returnedAt IS NULL')
+            ->andWhere('l.dueAt BETWEEN :from AND :to')
+            ->setParameter('from', $from)
+            ->setParameter('to', $to)
+            ->orderBy('l.dueAt', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * @return Loan[]
+     */
+    public function findOverdueSince(\DateTimeImmutable $since, ?int $maxResults = null): array
+    {
+        $qb = $this->createQueryBuilder('l')
+            ->andWhere('l.returnedAt IS NULL')
+            ->andWhere('l.dueAt <= :since')
+            ->setParameter('since', $since)
+            ->orderBy('l.dueAt', 'ASC');
+
+        if ($maxResults !== null && $maxResults > 0) {
+            $qb->setMaxResults($maxResults);
+        }
+
+        return $qb->getQuery()->getResult();
+    }
 }

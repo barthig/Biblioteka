@@ -155,7 +155,8 @@ abstract class ApiTestCase extends WebTestCase
         $user->setEmail($email)
             ->setName($name ?? ucfirst(strstr($email, '@', true) ?: 'User'))
             ->setRoles($roles)
-            ->setPassword(password_hash($password, PASSWORD_BCRYPT));
+            ->setPassword(password_hash($password, PASSWORD_BCRYPT))
+            ->markVerified();
 
         $this->entityManager->persist($user);
         $this->entityManager->flush();
@@ -350,6 +351,7 @@ abstract class ApiTestCase extends WebTestCase
     $this->entityManager->createQuery('DELETE FROM App\Entity\Supplier s')->execute();
     $this->entityManager->createQuery('DELETE FROM App\Entity\WeedingRecord wr')->execute();
     $this->entityManager->createQuery('DELETE FROM App\Entity\Fine f')->execute();
+    $this->entityManager->createQuery('DELETE FROM App\Entity\NotificationLog nl')->execute();
     $this->entityManager->createQuery('DELETE FROM App\Entity\Reservation r')->execute();
     $this->entityManager->createQuery('DELETE FROM App\Entity\Loan l')->execute();
     $this->entityManager->createQuery('DELETE FROM App\Entity\BookCopy bc')->execute();

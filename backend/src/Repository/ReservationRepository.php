@@ -75,4 +75,34 @@ class ReservationRepository extends ServiceEntityRepository
             ->getQuery()
             ->getOneOrNullResult();
     }
+
+    /**
+     * @return Reservation[]
+     */
+    public function findReadyForPickup(): array
+    {
+        return $this->createQueryBuilder('r')
+            ->andWhere('r.status = :status')
+            ->andWhere('r.bookCopy IS NOT NULL')
+            ->setParameter('status', Reservation::STATUS_ACTIVE)
+            ->orderBy('r.expiresAt', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * @return Reservation[]
+     */
+    public function findExpiringBetween(\DateTimeImmutable $from, \DateTimeImmutable $to): array
+    {
+        return $this->createQueryBuilder('r')
+            ->andWhere('r.status = :status')
+            ->andWhere('r.expiresAt BETWEEN :from AND :to')
+            ->setParameter('status', Reservation::STATUS_ACTIVE)
+            ->setParameter('from', $from)
+            ->setParameter('to', $to)
+            ->orderBy('r.expiresAt', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
 }

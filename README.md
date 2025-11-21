@@ -59,6 +59,7 @@ Kluczowe cechy:
 
 - **Warstwa API** – kontrolery Symfony (`backend/src/Controller`) wystawiają zasoby książek, egzemplarzy, rezerwacji, kar, wypożyczeń i autoryzacji.
 - **Warstwa logiki biznesowej** – serwisy (np. `BookService`) pilnują zasad dostępności egzemplarzy, rezerwacji i limitów wypożyczeń.
+- **Warstwa powiadomień** – dedykowane komunikaty (Messenger) oraz handler opisane w `docs/notifications.md` przygotowują przypomnienia o terminach i rezerwacjach (email/SMS) z logowaniem i deduplikacją.
 - **Warstwa danych** – encje Doctrine (`Author`, `Book`, `BookCopy`, `Category`, `Loan`, `Reservation`, `Fine`, `User`) oraz repozytoria dedykowane zapytaniom.
 - **Frontend** – kontekst autoryzacji (`AuthContext`), strony katalogu książek i wypożyczeń, komponenty prezentujące szczegóły.
 - **Zabezpieczenia** – `ApiAuthSubscriber` wymusza obecność tokena JWT lub sekretu API dla wszystkich tras `/api/*` poza wyjątkami.
@@ -107,6 +108,25 @@ Plik należy utworzyć manualnie – patrz instrukcja w sekcji 6.
 ---
 
 ## 6. Uruchomienie aplikacji
+
+### 6.0. Automatyczny start (Windows PowerShell)
+
+Jeśli pracujesz na Windowsie i chcesz jednym poleceniem uruchomić backend oraz frontend, skorzystaj ze skryptu `scripts/start-dev.ps1`:
+
+```powershell
+Set-Location Biblioteka
+Set-ExecutionPolicy -Scope Process Bypass -Force  # jeśli wcześniej nie zezwolono na skrypty
+./scripts/start-dev.ps1                          # pełny start (backend + frontend)
+```
+
+Skrypt:
+
+- Sprawdza obecność `php`, `composer` oraz `npm` i automatycznie zainstaluje zależności (`composer install`, `npm install`), jeśli jeszcze nie istnieją katalogi `vendor/` lub `node_modules/`.
+- Uruchamia backend na `http://127.0.0.1:8000` i frontend Vite na `http://127.0.0.1:5173` w oddzielnych oknach PowerShell, pozostawiając logi na ekranie.
+- Tworzy `frontend/.env.local` z wartościami domyślnymi, gdy plik nie istnieje (koniecznie zaktualizuj `VITE_API_SECRET`).
+- Przyjmuje opcjonalne parametry `-BackendOnly`, `-FrontendOnly` oraz `-NoBrowser` (nie otwiera przeglądarki).
+
+Możesz nadal wykonywać ręczne kroki z kolejnych sekcji – skrypt je tylko automatyzuje.
 
 ### 6.1. Szybki start (środowisko deweloperskie)
 
@@ -172,6 +192,16 @@ Plik należy utworzyć manualnie – patrz instrukcja w sekcji 6.
 
    Wysyłane rezerwacje trafiają do kolejki RabbitMQ i są zapisywane w `var/log/reservation_queue.log`. Kontener `php-worker` ma wbudowane rozszerzenie `ext-amqp`, dzięki czemu konsument działa bez dodatkowej konfiguracji lokalnego PHP.
 
+   Po wdrożeniu architektury z `docs/notifications.md` uruchom dodatkowo cyklicznie komendy (każda obsługuje przełącznik `--dry-run` do inspekcji bez wysyłki):
+
+   ```powershell
+   php bin/console notifications:dispatch-due-reminders --days=2
+   php bin/console notifications:dispatch-overdue-warnings --threshold=1
+   php bin/console notifications:dispatch-reservation-ready
+   ```
+
+   Komendy można dodać do Harmonogramu zadań (Windows) lub CRON-a i pozostawić `messenger:consume async` w tle — szczegóły w sekcji „Automatyczne powiadomienia”.
+
 8. Interfejs deweloperski React będzie dostępny pod `http://127.0.0.1:5173`. Zaloguj się kontem z sekcji 8.
 
 ### 6.2. Backend w trybie standalone (np. testy API)
@@ -183,6 +213,32 @@ Plik należy utworzyć manualnie – patrz instrukcja w sekcji 6.
 
 - Backend: `php bin/console cache:clear --env=prod`, konfiguracja serwera (Nginx/Apache) wskazująca katalog `backend/public`.
 - Frontend: `npm run build` tworzy statyczne pliki w `frontend/dist/` – gotowe do umieszczenia na serwerze HTTP lub w CDN.
+
+### 6.4. Automatyczne powiadomienia
+
+| Komenda | Cel | Zalecana częstotliwość |
+| :-- | :-- | :-- |
+| `php bin/console notifications:dispatch-due-reminders --days=2` | przypomnienia o zbliżających się terminach zwrotu | raz dziennie (np. 08:00) |
+| `php bin/console notifications:dispatch-overdue-warnings --threshold=1` | ostrzeżenia o spóźnionych wypożyczeniach | raz dziennie (np. 09:00) |
+| `php bin/console notifications:dispatch-reservation-ready` | informowanie o rezerwacjach gotowych do odbioru | co 10–15 minut |
+
+Każda komenda obsługuje `--dry-run`, dzięki czemu można sprawdzić, ile komunikatów zostanie wysłanych, bez faktycznego wrzucania ich do kolejki.
+
+- **Windows (Harmonogram zadań)** – uruchom PowerShell jako administrator i utwórz zadanie cykliczne:
+
+   ```powershell
+   schtasks /Create /SC HOURLY /MO 1 /TN "Biblioteka Reservation Ready" ^
+      /TR "powershell -NoProfile -Command \"cd /d D:\Biblioteka-1\backend; php bin/console notifications:dispatch-reservation-ready\""
+   ```
+
+- **Linux/macOS (cron)** – dopisz wpis do `crontab -e`:
+
+   ```cron
+   0 8 * * * cd /opt/biblioteka/backend && php bin/console notifications:dispatch-due-reminders --days=2 >> var/log/notifications.log 2>&1
+   */15 * * * * cd /opt/biblioteka/backend && php bin/console notifications:dispatch-reservation-ready >> var/log/notifications.log 2>&1
+   ```
+
+Pamiętaj, aby w tle działał konsument `php bin/console messenger:consume async`, który odbierze komunikaty i faktycznie wyśle e-maile/SMS-y.
 
 ---
 
@@ -223,6 +279,7 @@ Każde konto posiada przykładowe dane kontaktowe (telefon, adres, kod pocztowy)
 ## 10. Testy i kontrola jakości
 
 - Testy jednostkowe/funkcjonalne: `cd backend`, `vendor\bin\phpunit`.
+- Dedykowane testy komend powiadomień: `php vendor\bin\phpunit --filter NotificationCommandsTest`.
 - Sprawdzenie statusu migracji: `php bin/console doctrine:migrations:status`.
 - Budowa frontendu (test smoke): `cd frontend`, `npm run build`.
 - Zalecane (opcjonalne): konfiguracja lintów PHPStan/ESLint oraz testów e2e.
@@ -241,6 +298,7 @@ Każde konto posiada przykładowe dane kontaktowe (telefon, adres, kod pocztowy)
 | Uwierzytelnianie i role | Zrealizowane | JWT + role użytkowników.
 | Historia git (min. 40 commitów) | W toku / do weryfikacji | Sprawdź przed oddaniem pracy.
 | Kolejki asynchroniczne (RabbitMQ) | Zrealizowane | Symfony Messenger + RabbitMQ, konsument `messenger:consume async`.
+| Automatyczne powiadomienia (due/overdue/reservation) | Zrealizowane | Komendy `notifications:*` + testy w `tests/Functional/Command/NotificationCommandsTest.php` oraz opis w `docs/notifications.md`.
 | Dokumentacja API (Swagger/OpenAPI) | Zrealizowane | NelmioApiDocBundle, UI pod `/api/docs`.
 | Stany loading/error na froncie | W trakcie | Częściowo zaimplementowane.
 | Kompletny README + instrukcja startu | Zrealizowane | Niniejszy dokument.

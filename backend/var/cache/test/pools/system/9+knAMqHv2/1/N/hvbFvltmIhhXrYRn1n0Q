@@ -22,6 +22,10 @@ return [PHP_INT_MAX, new class() implements \Symfony\Component\Cache\Traits\Cach
         clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
         clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
         clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
+        clone $p['Symfony\\Component\\Serializer\\Mapping\\AttributeMetadata'],
     ],
     null,
     [
@@ -44,9 +48,13 @@ return [PHP_INT_MAX, new class() implements \Symfony\Component\Cache\Traits\Cach
                 'publicationYear',
                 'resourceType',
                 'signature',
+                'targetAgeGroup',
                 'createdAt',
                 'isFavorite',
+                'targetAgeGroupLabel',
                 'favorite',
+                'ageGroupDefinitions',
+                'validAgeGroup',
             ],
             'attributesMetadata' => [
                 [
@@ -66,9 +74,13 @@ return [PHP_INT_MAX, new class() implements \Symfony\Component\Cache\Traits\Cach
                     'publicationYear' => $o[14],
                     'resourceType' => $o[15],
                     'signature' => $o[16],
-                    'createdAt' => $o[17],
-                    'isFavorite' => $o[18],
-                    'favorite' => $o[19],
+                    'targetAgeGroup' => $o[17],
+                    'createdAt' => $o[18],
+                    'isFavorite' => $o[19],
+                    'targetAgeGroupLabel' => $o[20],
+                    'favorite' => $o[21],
+                    'ageGroupDefinitions' => $o[22],
+                    'validAgeGroup' => $o[23],
                 ],
             ],
             'groups' => [
@@ -148,6 +160,14 @@ return [PHP_INT_MAX, new class() implements \Symfony\Component\Cache\Traits\Cach
                 ],
                 [
                     'book:read',
+                    'reservation:read',
+                ],
+                [
+                    'book:read',
+                ],
+                [
+                    'book:read',
+                    'reservation:read',
                 ],
             ],
             'serializedName' => [

@@ -1,9 +1,22 @@
-// Small helper that attaches Authorization header when token present and returns parsed JSON or throws on error
+const ABSOLUTE_URL = /^https?:\/\//i
+const API_BASE = (import.meta.env?.VITE_API_URL || '').replace(/\/$/, '')
+const API_SECRET = import.meta.env?.VITE_API_SECRET || ''
+
+// Small helper that attaches Authorization/api-secret headers and returns parsed JSON or throws on error
 export async function apiFetch(path, opts = {}) {
-  const url = path.startsWith('http') ? path : path
+  const isAbsolute = ABSOLUTE_URL.test(path)
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`
+  const url = isAbsolute ? path : (API_BASE ? `${API_BASE}${normalizedPath}` : normalizedPath)
+
   const token = localStorage.getItem('token')
   const headers = opts.headers ? { ...opts.headers } : {}
-  if (token) headers['Authorization'] = `Bearer ${token}`
+  if (token && !headers['Authorization']) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+  if (API_SECRET && !headers['X-API-SECRET'] && !headers['x-api-secret']) {
+    headers['X-API-SECRET'] = API_SECRET
+  }
+
   const finalOpts = { ...opts, headers }
   const res = await fetch(url, finalOpts)
   if (!res.ok) {

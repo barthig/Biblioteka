@@ -49,6 +49,7 @@ class ApiAuthSubscriber implements EventSubscriberInterface
             ['pattern' => '#^/api/books$#', 'methods' => ['GET']],
             ['pattern' => '#^/api/books/filters$#', 'methods' => ['GET']],
             ['pattern' => '#^/api/books/\\d+$#', 'methods' => ['GET']],
+            ['pattern' => '#^/api/auth/verify/[A-Za-z0-9]+$#', 'methods' => ['GET']],
         ];
 
         foreach ($publicPatterns as $entry) {

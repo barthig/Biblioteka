@@ -1,5 +1,6 @@
 parameters:
   locale: 'pl'
+  app.notifications.from: 'no-reply@biblioteka.local'
 
 services:
   _defaults:
@@ -16,6 +17,10 @@ services:
   App\DataFixtures\:
     resource: '../src/DataFixtures/'
     tags: ['doctrine.fixture.orm']
+
+  App\Service\Notification\NotificationSender:
+    arguments:
+      $fromAddress: '%app.notifications.from%'
 
   App\MessageHandler\ReservationQueuedNotificationHandler:
     arguments:
