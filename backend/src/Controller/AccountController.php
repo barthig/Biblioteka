@@ -67,6 +67,10 @@ class AccountController extends AbstractController
             $user->setPostalCode($postal !== '' ? $postal : null);
         }
 
+        if (array_key_exists('newsletterSubscribed', $data)) {
+            $user->setNewsletterSubscribed($this->normalizeBoolean($data['newsletterSubscribed']));
+        }
+
         $em = $doctrine->getManager();
         $em->persist($user);
         $em->flush();
@@ -140,6 +144,25 @@ class AccountController extends AbstractController
             'addressLine' => $user->getAddressLine(),
             'city' => $user->getCity(),
             'postalCode' => $user->getPostalCode(),
+            'newsletterSubscribed' => $user->isNewsletterSubscribed(),
         ];
+    }
+
+    private function normalizeBoolean(mixed $value): bool
+    {
+        if (is_bool($value)) {
+            return $value;
+        }
+
+        if (is_int($value)) {
+            return $value === 1;
+        }
+
+        if (is_string($value)) {
+            $normalized = strtolower(trim($value));
+            return in_array($normalized, ['1', 'true', 'yes', 'on'], true);
+        }
+
+        return false;
     }
 }

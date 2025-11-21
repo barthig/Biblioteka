@@ -11,4 +11,24 @@ class UserRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, User::class);
     }
+
+    /**
+     * @return User[]
+     */
+    public function findNewsletterRecipients(int $limit = 0): array
+    {
+        $qb = $this->createQueryBuilder('u')
+            ->andWhere('u.newsletterSubscribed = :subscribed')
+            ->andWhere('u.blocked = false')
+            ->andWhere('u.verified = true')
+            ->andWhere('u.email IS NOT NULL')
+            ->setParameter('subscribed', true)
+            ->orderBy('u.updatedAt', 'DESC');
+
+        if ($limit > 0) {
+            $qb->setMaxResults($limit);
+        }
+
+        return $qb->getQuery()->getResult();
+    }
 }

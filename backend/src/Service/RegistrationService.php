@@ -33,7 +33,7 @@ class RegistrationService
     }
 
     /**
-     * @param array{email?: string, name?: string, password?: string, privacyConsent?: bool|string, phoneNumber?: string|null, addressLine?: string|null, city?: string|null, postalCode?: string|null} $data
+     * @param array{email?: string, name?: string, password?: string, privacyConsent?: bool|string, phoneNumber?: string|null, addressLine?: string|null, city?: string|null, postalCode?: string|null, newsletterSubscribed?: bool|string|null} $data
      */
     public function register(array $data): RegistrationToken
     {
@@ -86,6 +86,11 @@ class RegistrationService
             $postal = trim((string) $data['postalCode']);
             $user->setPostalCode($postal !== '' ? $postal : null);
         }
+
+        $newsletterPref = array_key_exists('newsletterSubscribed', $data)
+            ? $this->toBool($data['newsletterSubscribed'])
+            : true;
+        $user->setNewsletterSubscribed($newsletterPref);
 
         $user->recordPrivacyConsent();
 

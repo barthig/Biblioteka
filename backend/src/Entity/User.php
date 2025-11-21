@@ -89,12 +89,16 @@ class User
     #[ORM\Column(type: 'datetime_immutable', nullable: true)]
     private ?\DateTimeImmutable $privacyConsentAt = null;
 
+    #[ORM\Column(type: 'boolean', options: ['default' => true])]
+    private bool $newsletterSubscribed = true;
+
     public function __construct()
     {
         $now = new \DateTimeImmutable();
         $this->createdAt = $now;
         $this->updatedAt = $now;
         $this->applyDefaultLoanLimit();
+        $this->newsletterSubscribed = true;
     }
 
     #[ORM\PrePersist]
@@ -208,6 +212,17 @@ class User
     public function recordPrivacyConsent(?\DateTimeImmutable $consentAt = null): self
     {
         $this->privacyConsentAt = $consentAt ?? new \DateTimeImmutable();
+        return $this;
+    }
+
+    public function isNewsletterSubscribed(): bool
+    {
+        return $this->newsletterSubscribed;
+    }
+
+    public function setNewsletterSubscribed(bool $newsletterSubscribed): self
+    {
+        $this->newsletterSubscribed = $newsletterSubscribed;
         return $this;
     }
 

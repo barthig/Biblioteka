@@ -229,6 +229,7 @@ Możesz nadal wykonywać ręczne kroki z kolejnych sekcji – skrypt je tylko au
 | `php bin/console fines:assess-overdue --daily-rate=1.50` | naliczanie automatycznych kar za przetrzymania (1,50 zł/dzień domyślnie) | raz na dobę (np. 00:05) |
 | `php bin/console reservations:expire-ready --pickup-hours=48` | wygaszanie nieodebranych rezerwacji i przekazywanie egzemplarza kolejnym osobom | co godzinę |
 | `php bin/console users:block-delinquent --fine-limit=50 --overdue-days=30` | blokowanie kont z wysokimi karami lub długimi przetrzymaniami | raz dziennie (np. 06:00) |
+| `php bin/console notifications:dispatch-newsletter --days=7 --channel=email` | cykliczna wysyłka newslettera z nowościami (można łączyć kanały email/SMS) | raz w tygodniu (np. poniedziałek 07:30) |
 
 Każda komenda obsługuje `--dry-run`, dzięki czemu można sprawdzić, ile komunikatów zostanie wysłanych, bez faktycznego wrzucania ich do kolejki.
 

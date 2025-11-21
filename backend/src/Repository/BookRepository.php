@@ -230,6 +230,21 @@ class BookRepository extends ServiceEntityRepository
     }
 
     /**
+     * @return Book[]
+     */
+    public function findNewArrivals(\DateTimeImmutable $since, int $limit = 20): array
+    {
+        $qb = $this->createQueryBuilder('b')
+            ->andWhere('b.createdAt >= :since')
+            ->setParameter('since', $since)
+            ->orderBy('b.createdAt', 'DESC')
+            ->addOrderBy('b.id', 'DESC')
+            ->setMaxResults(max(1, $limit));
+
+        return $qb->getQuery()->getResult();
+    }
+
+    /**
      * @return array<int, array{
      *     bookId: int,
      *     title: string,
