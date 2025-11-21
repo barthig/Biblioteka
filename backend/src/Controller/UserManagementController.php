@@ -16,34 +16,99 @@ class UserManagementController extends AbstractController
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
             return $this->json(['error' => 'Forbidden'], 403);
         }
+
         $data = json_decode($request->getContent(), true) ?: [];
         if (empty($data['email']) || empty($data['name']) || empty($data['password'])) {
             return $this->json(['error' => 'Missing email, name or password'], 400);
         }
 
-        $user = new User();
-        $user->setEmail($data['email'])->setName($data['name'])->setRoles($data['roles'] ?? ['ROLE_USER']);
+        $user = (new User())
+            ->setEmail($data['email'])
+            ->setName($data['name'])
+            ->setRoles($data['roles'] ?? ['ROLE_USER']);
+
         $group = $data['membershipGroup'] ?? User::GROUP_STANDARD;
         try {
             $user->setMembershipGroup($group);
-        } catch (\InvalidArgumentException $e) {
+        } catch (\InvalidArgumentException $exception) {
             return $this->json(['error' => 'Unknown membership group'], 400);
         }
+
         if (isset($data['loanLimit'])) {
-            $user->setLoanLimit((int)$data['loanLimit']);
+            $user->setLoanLimit((int) $data['loanLimit']);
         }
 
+        $this->applyContactData($user, $data);
+
         if (!empty($data['blocked'])) {
-            $reason = isset($data['blockedReason']) ? (string) $data['blockedReason'] : null;
+            $reason = array_key_exists('blockedReason', $data) ? (string) $data['blockedReason'] : null;
             $user->block($reason);
         }
 
-        $hashed = password_hash($data['password'], PASSWORD_BCRYPT);
-        $user->setPassword($hashed);
+        $user->setPassword(password_hash($data['password'], PASSWORD_BCRYPT));
 
         if (array_key_exists('pendingApproval', $data)) {
             $user->setPendingApproval((bool) $data['pendingApproval']);
         } else {
+            $user->setPendingApproval(false);
+        }
+
+        if (array_key_exists('verified', $data)) {
+            if ((bool) $data['verified']) {
+                $user->markVerified();
+            } else {
+                $user->requireVerification();
+            }
+        } else {
+            $user->markVerified();
+        }
+
+        $user->recordPrivacyConsent();
+
+        $em = $doctrine->getManager();
+        $em->persist($user);
+        $em->flush();
+
+        return $this->json($user, 201);
+    }
+
+    public function update(string $id, Request $request, UserRepository $repo, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
+    {
+        $isAdmin = $security->hasRole($request, 'ROLE_ADMIN');
+        $isLibrarian = $security->hasRole($request, 'ROLE_LIBRARIAN');
+        $canManage = $isAdmin || $isLibrarian;
+        $payload = $security->getJwtPayload($request);
+        $isOwner = $payload && isset($payload['sub']) && (int) $payload['sub'] === (int) $id;
+
+        if (!($canManage || $isOwner)) {
+            return $this->json(['error' => 'Forbidden'], 403);
+        }
+
+        if (!ctype_digit($id) || (int) $id <= 0) {
+            return $this->json(['error' => 'Invalid id parameter'], 400);
+        }
+
+        $user = $repo->find((int) $id);
+        if (!$user) {
+            return $this->json(['error' => 'User not found'], 404);
+        }
+
+        $data = json_decode($request->getContent(), true) ?: [];
+
+        if (!empty($data['name'])) {
+            $user->setName($data['name']);
+        }
+        if (!empty($data['email'])) {
+            $user->setEmail($data['email']);
+        }
+        if (isset($data['roles'])) {
+            if (!$isAdmin) {
+                return $this->json(['error' => 'Forbidden to change roles'], 403);
+            }
+            $user->setRoles(array_values(array_unique((array) $data['roles'])));
+        }
+
+        $this->applyContactData($user, $data);
 
         if (array_key_exists('pendingApproval', $data)) {
             if (!$isLibrarian) {
@@ -56,81 +121,31 @@ class UserManagementController extends AbstractController
             if (!$isLibrarian) {
                 return $this->json(['error' => 'Forbidden to change verification status'], 403);
             }
-            if ($data['verified']) {
+            if ((bool) $data['verified']) {
                 $user->markVerified();
             } else {
                 $user->requireVerification();
             }
         }
-            $user->setPendingApproval(false);
-        }
 
-        $user->markVerified();
-        $user->recordPrivacyConsent();
-        $em = $doctrine->getManager();
-        $em->persist($user);
-        $em->flush();
-        return $this->json($user, 201);
-    }
-
-    public function update(string $id, Request $request, UserRepository $repo, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
-    {
-        // allow librarians to update any user, allow a user to update their own profile
-        $isAdmin = $security->hasRole($request, 'ROLE_ADMIN');
-        $isLibrarian = $security->hasRole($request, 'ROLE_LIBRARIAN');
-        $canManage = $isLibrarian || $isAdmin;
-        $payload = $security->getJwtPayload($request);
-        $isOwner = $payload && isset($payload['sub']) && (int)$payload['sub'] === (int)$id;
-        if (!($canManage || $isOwner)) {
-            return $this->json(['error' => 'Forbidden'], 403);
-        }
-        if (!ctype_digit($id) || (int)$id <= 0) {
-            return $this->json(['error' => 'Invalid id parameter'], 400);
-        }
-        $user = $repo->find((int)$id);
-        if (!$user) return $this->json(['error' => 'User not found'], 404);
-        $data = json_decode($request->getContent(), true) ?: [];
-        if (!empty($data['name'])) $user->setName($data['name']);
-        if (!empty($data['email'])) $user->setEmail($data['email']);
-        if (isset($data['roles'])) {
-            if (!$isAdmin) {
-                return $this->json(['error' => 'Forbidden to change roles'], 403);
-            }
-            $roles = array_values(array_unique((array) $data['roles']));
-            $user->setRoles($roles);
-        }
-        if (array_key_exists('phoneNumber', $data)) {
-            $phone = trim((string) $data['phoneNumber']);
-            $user->setPhoneNumber($phone !== '' ? $phone : null);
-        }
-        if (array_key_exists('addressLine', $data)) {
-            $address = trim((string) $data['addressLine']);
-            $user->setAddressLine($address !== '' ? $address : null);
-        }
-        if (array_key_exists('city', $data)) {
-            $city = trim((string) $data['city']);
-            $user->setCity($city !== '' ? $city : null);
-        }
-        if (array_key_exists('postalCode', $data)) {
-            $postal = trim((string) $data['postalCode']);
-            $user->setPostalCode($postal !== '' ? $postal : null);
-        }
         if (isset($data['membershipGroup'])) {
             if (!$isLibrarian) {
                 return $this->json(['error' => 'Forbidden to change membership group'], 403);
             }
             try {
                 $user->setMembershipGroup((string) $data['membershipGroup']);
-            } catch (\InvalidArgumentException $e) {
+            } catch (\InvalidArgumentException $exception) {
                 return $this->json(['error' => 'Unknown membership group'], 400);
             }
         }
+
         if (isset($data['loanLimit'])) {
             if (!$isLibrarian) {
                 return $this->json(['error' => 'Forbidden to change loan limit'], 403);
             }
             $user->setLoanLimit((int) $data['loanLimit']);
         }
+
         if (isset($data['blocked'])) {
             if (!$isLibrarian) {
                 return $this->json(['error' => 'Forbidden to change block status'], 403);
@@ -142,9 +157,11 @@ class UserManagementController extends AbstractController
                 $user->unblock();
             }
         }
+
         $em = $doctrine->getManager();
         $em->persist($user);
         $em->flush();
+
         return $this->json($user, 200);
     }
 
@@ -153,14 +170,19 @@ class UserManagementController extends AbstractController
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
             return $this->json(['error' => 'Forbidden'], 403);
         }
-        if (!ctype_digit($id) || (int)$id <= 0) {
+        if (!ctype_digit($id) || (int) $id <= 0) {
             return $this->json(['error' => 'Invalid id parameter'], 400);
         }
-        $user = $repo->find((int)$id);
-        if (!$user) return $this->json(['error' => 'User not found'], 404);
+
+        $user = $repo->find((int) $id);
+        if (!$user) {
+            return $this->json(['error' => 'User not found'], 404);
+        }
+
         $em = $doctrine->getManager();
         $em->remove($user);
         $em->flush();
+
         return $this->json(null, 204);
     }
 
@@ -204,6 +226,7 @@ class UserManagementController extends AbstractController
         }
 
         $user->unblock();
+
         $em = $doctrine->getManager();
         $em->persist($user);
         $em->flush();
@@ -233,7 +256,7 @@ class UserManagementController extends AbstractController
         if (isset($data['membershipGroup'])) {
             try {
                 $user->setMembershipGroup((string) $data['membershipGroup']);
-            } catch (\InvalidArgumentException $e) {
+            } catch (\InvalidArgumentException $exception) {
                 return $this->json(['error' => 'Unknown membership group'], 400);
             }
         }
@@ -247,5 +270,25 @@ class UserManagementController extends AbstractController
         $em->flush();
 
         return $this->json($user, 200);
+    }
+
+    private function applyContactData(User $user, array $data): void
+    {
+        if (array_key_exists('phoneNumber', $data)) {
+            $phone = trim((string) $data['phoneNumber']);
+            $user->setPhoneNumber($phone !== '' ? $phone : null);
+        }
+        if (array_key_exists('addressLine', $data)) {
+            $address = trim((string) $data['addressLine']);
+            $user->setAddressLine($address !== '' ? $address : null);
+        }
+        if (array_key_exists('city', $data)) {
+            $city = trim((string) $data['city']);
+            $user->setCity($city !== '' ? $city : null);
+        }
+        if (array_key_exists('postalCode', $data)) {
+            $postal = trim((string) $data['postalCode']);
+            $user->setPostalCode($postal !== '' ? $postal : null);
+        }
     }
 }

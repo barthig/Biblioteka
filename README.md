@@ -19,6 +19,8 @@ Kompleksowa aplikacja webowa umożliwiająca zarządzanie zasobami biblioteki: k
 11. Zgodność z wymaganiami projektu
 12. Rozwiązywanie problemów
 13. Przydatne linki
+14. Moduły administracyjne i zasoby cyfrowe
+15. Konserwacja i skrypty utrzymaniowe
 
 ---
 
@@ -30,6 +32,7 @@ Kluczowe cechy:
 - Dwuwarstwowa architektura (backend REST + frontend SPA).
 - Baza relacyjna w 3NF z ponad 30 rekordami startowymi.
 - Zarządzanie egzemplarzami (`BookCopy`), rezerwacjami kolejkowymi oraz karami finansowymi.
+- Rozbudowany panel backoffice: akwizycje (budżety, zamówienia, dostawcy), wycofania zbiorów, raporty oraz repozytorium aktywów cyfrowych dla książek.
 - JWT oraz `X-API-SECRET` zabezpieczające zasoby API.
 - Testy jednostkowe i funkcjonalne (PHPUnit) oraz budowanie frontendu (Vite).
 
@@ -70,7 +73,7 @@ Szczegółowe diagramy i dodatkowe materiały przechowywane są w katalogu `docs
 
 ## 4. Wymagania wstępne
 
-- PHP 8.2 z rozszerzeniami: `ctype`, `iconv`, `intl`, `pdo_pgsql`.
+- PHP 8.1+ (zalecane 8.2) z rozszerzeniami: `ctype`, `iconv`, `intl`, `pdo_pgsql`.
 - Composer w wersji 2.x.
 - Node.js 18+ wraz z npm.
 - Docker Desktop lub kompatybilny silnik kontenerów (dla PostgreSQL).
@@ -192,6 +195,8 @@ Możesz nadal wykonywać ręczne kroki z kolejnych sekcji – skrypt je tylko au
 
    Wysyłane rezerwacje trafiają do kolejki RabbitMQ i są zapisywane w `var/log/reservation_queue.log`. Kontener `php-worker` ma wbudowane rozszerzenie `ext-amqp`, dzięki czemu konsument działa bez dodatkowej konfiguracji lokalnego PHP.
 
+   > Uwaga: moduł SMS jest na razie symulowany – `NotificationSender::sendSms()` tylko loguje komunikaty. Aby wysyłać realne SMS-y, skonfiguruj Symfony Notifier i transport SMS opisany w `docs/notifications.md`.
+
    Po wdrożeniu architektury z `docs/notifications.md` uruchom dodatkowo cyklicznie komendy (każda obsługuje przełącznik `--dry-run` do inspekcji bez wysyłki):
 
    ```powershell
@@ -221,6 +226,9 @@ Możesz nadal wykonywać ręczne kroki z kolejnych sekcji – skrypt je tylko au
 | `php bin/console notifications:dispatch-due-reminders --days=2` | przypomnienia o zbliżających się terminach zwrotu | raz dziennie (np. 08:00) |
 | `php bin/console notifications:dispatch-overdue-warnings --threshold=1` | ostrzeżenia o spóźnionych wypożyczeniach | raz dziennie (np. 09:00) |
 | `php bin/console notifications:dispatch-reservation-ready` | informowanie o rezerwacjach gotowych do odbioru | co 10–15 minut |
+| `php bin/console fines:assess-overdue --daily-rate=1.50` | naliczanie automatycznych kar za przetrzymania (1,50 zł/dzień domyślnie) | raz na dobę (np. 00:05) |
+| `php bin/console reservations:expire-ready --pickup-hours=48` | wygaszanie nieodebranych rezerwacji i przekazywanie egzemplarza kolejnym osobom | co godzinę |
+| `php bin/console users:block-delinquent --fine-limit=50 --overdue-days=30` | blokowanie kont z wysokimi karami lub długimi przetrzymaniami | raz dziennie (np. 06:00) |
 
 Każda komenda obsługuje `--dry-run`, dzięki czemu można sprawdzić, ile komunikatów zostanie wysłanych, bez faktycznego wrzucania ich do kolejki.
 
@@ -239,6 +247,8 @@ Każda komenda obsługuje `--dry-run`, dzięki czemu można sprawdzić, ile komu
    ```
 
 Pamiętaj, aby w tle działał konsument `php bin/console messenger:consume async`, który odbierze komunikaty i faktycznie wyśle e-maile/SMS-y.
+
+Każda z powyższych komend przyjmuje przełącznik `--dry-run`, dzięki czemu możesz sprawdzić ilu użytkowników/rezervacji zostanie dotkniętych bez modyfikowania bazy. `fines:assess-overdue` pozwala też definiować kurs kary (`--daily-rate`, `--currency`, `--grace-days`), a `users:block-delinquent` umożliwia ustawienie progów (`--fine-limit`, `--overdue-days`).
 
 ---
 
@@ -268,8 +278,18 @@ Każde konto posiada przykładowe dane kontaktowe (telefon, adres, kod pocztowy)
 - Logowanie: `POST /api/auth/login` z parametrami `email`, `password` (JSON).
 - Po autoryzacji każdorazowo wysyłaj nagłówek `Authorization: Bearer <token>`.
 - Integracje systemowe mogą używać `X-API-SECRET` bez JWT (np. w procesach automatycznych).
-- Publiczne endpointy: `POST /api/auth/login`, `GET /api/health`, `GET /health`, wszystkie zapytania `OPTIONS`.
-- Weryfikacja tokena i sekretu realizowana jest w `backend/src/EventSubscriber/ApiAuthSubscriber.php`.
+
+### Publiczne endpointy (bez tokenu / sekretu)
+
+- `POST /api/auth/login`
+- `POST /api/auth/register`
+- `GET /api/auth/verify/{token}`
+- `GET /api/books`, `GET /api/books/filters`, `GET /api/books/{id}`
+- `GET /api/health`, `GET /health`
+- wszystkie żądania `OPTIONS`
+
+Lista powyżej odpowiada wyjątkom skonfigurowanym w `backend/src/EventSubscriber/ApiAuthSubscriber.php`. Każdy inny zasób `/api/*` wymaga poprawnego JWT lub nagłówka `X-API-SECRET`.
+
 - Rezerwacje: `GET /api/reservations`, `POST /api/reservations`, `DELETE /api/reservations/{id}` – zarządzanie kolejką oczekujących na egzemplarze.
 - Kary: `GET /api/fines`, `POST /api/fines/{id}/pay` – przegląd i opłacanie kar powiązanych z wypożyczeniami.
 - Dokumentacja OpenAPI: `GET /api/docs` (UI) oraz `GET /api/docs.json` (specyfikacja JSON przygotowana przez NelmioApiDocBundle).
@@ -324,3 +344,43 @@ Każde konto posiada przykładowe dane kontaktowe (telefon, adres, kod pocztowy)
 - PostgreSQL: https://www.postgresql.org/
 - Symfony Messenger: https://symfony.com/doc/current/messenger.html
 - Nelmio ApiDoc: https://symfony.com/bundles/NelmioApiDocBundle/current/index.html
+
+---
+
+## 14. Moduły administracyjne i zasoby cyfrowe
+
+- **Akwizycje i gospodarka zbiorami** – kontrolery w `backend/src/Controller/Acquisition*.php` oraz `WeedingController.php` obsługują budżety (`/api/admin/acquisitions/budgets`), zamówienia (`/api/admin/acquisitions/orders`), dostawców (`/api/admin/acquisitions/suppliers`) i proces wycofań egzemplarzy. Wszystkie endpointy wymagają roli `ROLE_LIBRARIAN`.
+- **Administracja systemem** – przestrzeń `backend/src/Controller/Admin` udostępnia zarządzanie integracjami, uprawnieniami, kopiami zapasowymi i ustawieniami (`/api/admin/system/*`).
+- **Zasoby cyfrowe książek** – `BookAssetController` pozwala na przesyłanie i pobieranie plików powiązanych z książką (`/api/admin/books/{id}/assets`). Pliki są przechowywane w katalogu `var/digital-assets`, który należy uwzględnić w backupach i zapewnić mu prawa zapisu.
+- **Rejestry i raporty** – `NotificationController`, `ReportController` oraz `BackupService` udostępniają dane operacyjne (np. logi powiadomień) oraz generowanie zestawień zgodnie z modułami opisanymi wyżej.
+
+> Tip: przed wdrożeniem na serwer sprawdź, czy katalog `var/digital-assets` istnieje i posiada prawa zapisu dla użytkownika uruchamiającego PHP/FPM. W środowisku produkcyjnym warto również podpiąć dedykowany storage (S3, dysk sieciowy) i wskazać go poprzez symlink.
+
+---
+
+## 15. Konserwacja i skrypty utrzymaniowe
+
+Biblioteka posiada dedykowane komendy CLI ułatwiające prace utrzymaniowe. Wszystkie przyjmują przełącznik `--help`, który opisuje dodatkowe opcje.
+
+| Komenda | Cel | Najważniejsze opcje |
+| :-- | :-- | :-- |
+| `php bin/console maintenance:import-isbn --source=var/import/isbn.csv` | hurtowy import lub uzupełnienie metadanych książek na podstawie listy ISBN | `--format=csv|json`, `--dry-run`, `--limit`, `--default-author`, `--default-category` |
+| `php bin/console maintenance:anonymize-patrons --inactive-days=730` | anonimizacja danych kontaktowych czytelników nieaktywnych i bez zaległości | `--limit`, `--dry-run` |
+| `php bin/console maintenance:weeding-analyze --cutoff-months=18` | raport kandydatów do wycofania (niska rotacja / brak wypożyczeń) | `--min-loans` (domyślnie 0), `--limit`, `--format=json` |
+| `php bin/console maintenance:create-backup --initiator="cron"` | szybka kopia zapasowa (wpis w `backup_record` + plik JSON w `var/backups`) | `--note` (opis snapshotu) |
+
+### Import ISBN
+
+Pliki CSV/JSON powinny zawierać przynajmniej kolumnę `isbn`. Opcjonalnie możesz dodać `title`, `author`, `publisher`, `year`, `description`, `category`, `resourceType`, `signature`. Tryb `--dry-run` pozwala sprawdzić ilu rekordów dotknie import bez modyfikowania bazy.
+
+### Anonimizacja nieaktywnych kont
+
+Komenda usuwa dane osobowe użytkowników, którzy od zadanej liczby dni nie aktualizowali konta i nie mają aktywnych wypożyczeń, rezerwacji ani zaległych kar. Pola kontaktowe są czyszczone, e‑mail zastępowany jest adresem w domenie `example.invalid`, a konto odblokowywane (jeśli było blokowane automatycznie). Regularne uruchamianie pomaga spełnić wymagania RODO.
+
+### Analiza ubytków (weeding)
+
+`maintenance:weeding-analyze` łączy dane książek, wypożyczeń oraz rezerwacji i pokazuje tytuły, które nie cieszą się popularnością (brak wypożyczeń od X miesięcy lub marginalna liczba wypożyczeń). Wynik można zserializować do JSON i zasilić panel BI.
+
+### Kopia zapasowa
+
+`maintenance:create-backup` wykorzystuje `BackupService` do zapisania lekkiego snapshotu (np. listy ustawień) i wpisu w tabeli `backup_record`. W praktyce warto podpiąć to polecenie do CRON-a oraz rozszerzyć `BackupService` o eksport bazy/postaci archiwum – komenda stanowi punkt wejścia i loguje metadane kopii.

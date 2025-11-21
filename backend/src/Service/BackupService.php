@@ -14,7 +14,7 @@ class BackupService
         $this->backupDir = $projectDir . DIRECTORY_SEPARATOR . 'var' . DIRECTORY_SEPARATOR . 'backups';
     }
 
-    public function createBackup(?string $initiator = null): BackupRecord
+    public function createBackup(?string $initiator = null, ?string $note = null): BackupRecord
     {
         if (!is_dir($this->backupDir)) {
             mkdir($this->backupDir, 0777, true);
@@ -26,7 +26,7 @@ class BackupService
         $payload = [
             'generatedAt' => (new \DateTimeImmutable())->format(DATE_ATOM),
             'initiator' => $initiator,
-            'note' => 'Snapshot placeholder created by BackupService',
+            'note' => $note ?? 'Snapshot placeholder created by BackupService',
         ];
         file_put_contents($filePath, json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 

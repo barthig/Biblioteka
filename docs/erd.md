@@ -1,6 +1,6 @@
 # Diagram ERD i model danych
 
-Dokument opisuje relacyjny model danych aplikacji **Biblioteka** wraz z diagramem ERD oraz analizą tego, czy aktualna struktura wspiera kluczowe procesy systemu bibliotecznego.
+Dokument opisuje aktualny model danych aplikacji **Biblioteka**. Diagram został zsynchronizowany z encjami Doctrine i odzwierciedla wszystkie kluczowe tabele wykorzystywane w systemie.
 
 ---
 
@@ -17,8 +17,17 @@ erDiagram
         string title
         string isbn
         text description
-        datetime created_at
+        string publisher
+        smallint publication_year
+        string resource_type
+        string signature
+        string target_age_group
         int author_id FK
+        int copies
+        int total_copies
+        int storage_copies
+        int open_stack_copies
+        datetime created_at
     }
     BOOK_COPY {
         int id PK
@@ -26,9 +35,18 @@ erDiagram
         string inventory_code
         string status
         string location
+        string access_type
         string condition_state
         datetime created_at
         datetime updated_at
+    }
+    BOOK_DIGITAL_ASSET {
+        int id PK
+        int book_id FK
+        string filename
+        string mime_type
+        bigint size_bytes
+        datetime created_at
     }
     CATEGORY {
         int id PK
@@ -48,20 +66,31 @@ erDiagram
         string address_line
         string city
         string postal_code
+        boolean blocked
+        string blocked_reason
+        boolean verified
+        boolean pending_approval
+        string membership_group
+        int loan_limit
+        datetime privacy_consent_at
+        datetime created_at
+        datetime updated_at
     }
     LOAN {
         int id PK
         int book_id FK
-        int book_copy_id FK
+        int book_copy_id FK NULLABLE
         int user_id FK
         datetime borrowed_at
         datetime due_at
         datetime returned_at
+        int extensions_count
+        datetime last_extended_at
     }
     RESERVATION {
         int id PK
         int book_id FK
-        int book_copy_id FK
+        int book_copy_id FK NULLABLE
         int user_id FK
         string status
         datetime reserved_at
@@ -78,60 +107,80 @@ erDiagram
         datetime created_at
         datetime paid_at
     }
+    NOTIFICATION_LOG {
+        int id PK
+        int user_id FK NULLABLE
+        int loan_id FK NULLABLE
+        int reservation_id FK NULLABLE
+        string type
+        string fingerprint
+        string channel
+        datetime created_at
+        datetime sent_at
+    }
+    REGISTRATION_TOKEN {
+        int id PK
+        int user_id FK
+        string token
+        datetime expires_at
+        datetime used_at
+        datetime created_at
+    }
 
     AUTHOR ||--o{ BOOK : "pisze"
     BOOK o{--o{ CATEGORY : "przynależy"
-    BOOK ||--o{ BOOK_COPY : "posiada egzem." 
-    BOOK_COPY ||--o{ LOAN : "jest_wypożyczana"
+    BOOK ||--o{ BOOK_COPY : "ma egz."
+    BOOK ||--o{ BOOK_DIGITAL_ASSET : "pliki"
+    BOOK_COPY |o..o{ LOAN : "wypożyczenia"
     APP_USER ||--o{ LOAN : "wypożycza"
     BOOK ||--o{ RESERVATION : "rezerwacje"
-    BOOK_COPY ||--o{ RESERVATION : "przypisana"
+    BOOK_COPY |o..o{ RESERVATION : "egzemplarz"
     APP_USER ||--o{ RESERVATION : "składa"
-    LOAN ||--o{ FINE : "może generować"
+    LOAN ||--o{ FINE : "generuje kary"
+    APP_USER ||--o{ NOTIFICATION_LOG : "powiadomienia"
+    LOAN ||--o{ NOTIFICATION_LOG : "dot. wypożyczeń"
+    RESERVATION ||--o{ NOTIFICATION_LOG : "dot. rezerwacji"
+    APP_USER ||--o{ REGISTRATION_TOKEN : "tokeny"
 ```
 
-> Diagram można wygenerować lokalnie np. przy pomocy rozszerzenia VS Code _Markdown Preview Mermaid Support_ lub narzędzi online takich jak [Mermaid Live Editor](https://mermaid.live/).
+> Diagram można podejrzeć w VS Code (Markdown Preview Mermaid Support) albo w [Mermaid Live Editor](https://mermaid.live/).
 
 ---
 
-## Opis relacji
+## Opis relacji i kluczowych pól
 
-- **Author → Book (1:N)** – każdy autor może mieć wiele książek, ale książka wskazuje jednego autora. Usunięcie autora jest blokowane (`RESTRICT`).
-- **Book ↔ Category (N:M)** – książka może posiadać wiele kategorii tematycznych, a kategoria grupuje wiele książek. Relację utrzymuje tabela pośrednia `book_category` z kluczem złożonym.
-- **Book → BookCopy (1:N)** – każda książka tworzy fizyczne egzemplarze (`BookCopy`). Usunięcie książki kaskadowo usuwa powiązane egzemplarze.
-- **BookCopy → Loan (1:N)** – pojedynczy egzemplarz może być wielokrotnie wypożyczany, dlatego `Loan` wskazuje zarówno na książkę, jak i na konkretny egzemplarz.
-- **User → Loan (1:N)** – użytkownik (czytelnik lub bibliotekarz) może mieć wiele wypożyczeń. Usunięcie użytkownika usuwa jego wypożyczenia (`CASCADE`).
-- **Book/User ↔ Reservation** – rezerwacja dotyczy książki, a po zwolnieniu egzemplarza przypisywany jest konkretny `BookCopy`. Statusy (`ACTIVE`, `FULFILLED`, `CANCELLED`, `EXPIRED`) śledzą cykl życia rezerwacji.
-- **Loan → Fine (1:N)** – każde wypożyczenie może wygenerować wiele kar, np. za przetrzymanie lub uszkodzenia.
+- **Author → Book (1:N)** – każdy autor ma wiele książek, książka wskazuje jednego autora.
+- **Book ↔ Category (N:M)** – klasyczne tagowanie katalogu przez tabelę `book_category`.
+- **Book → BookCopy (1:N)** – fizyczne egzemplarze przypisane do książki; usunięcie książki usuwa egzemplarze i cyfrowe zasoby.
+- **BookCopy → Loan (0..N)** – wypożyczenie może mieć przypisany egzemplarz, ale FK jest opcjonalny (`SET NULL`) dla historycznych rekordów.
+- **Book/User ↔ Reservation** – rezerwacja najpierw wskazuje książkę, a po przydziale egzemplarza ustawia `book_copy_id` (również `SET NULL`).
+- **User → Loan/Reservation/Fine** – użytkownicy są stroną wszystkich procesów; usunięcie użytkownika kaskadowo usuwa wypożyczenia, rezerwacje i logi.
+- **Loan → Fine (1:N)** – jedno wypożyczenie może wygenerować wiele kar.
+- **User/Loan/Reservation → NotificationLog** – logujemy każdy wysłany komunikat, co umożliwia deduplikację oraz audyt.
+- **User → RegistrationToken (1:N)** – proces weryfikacji kont zapisuje tokeny aktywacyjne z datą ważności oraz użycia.
 
-Kluczowe atrybuty biznesowe:
+### Najważniejsze atrybuty biznesowe
 
-- `book.totalCopies` i `book.copies` są synchronizowane automatycznie na podstawie encji `BookCopy` (status `AVAILABLE`/`RESERVED`/`BORROWED`/`MAINTENANCE`).
-- `book_copy.status` sygnalizuje stan egzemplarza, co pozwala odróżnić egzemplarze wypożyczone, zarezerwowane i wyłączone z użytku (np. uszkodzone).
-- `loan.returnedAt` pozwala odróżnić aktywne i zrealizowane wypożyczenia. Data zwrotu ustawiana jest po oddaniu egzemplarza.
-- `app_user.roles` (JSON) obsługuje role (`ROLE_LIBRARIAN`, `ROLE_USER`), które sterują uprawnieniami w API.
-- `reservation.expiresAt` definiuje termin odbioru egzemplarza, po którym rezerwacja automatycznie wygasa.
-- `fine.amount` oraz `fine.paidAt` umożliwiają obsługę kar finansowych, w tym oznaczanie spłat.
+- Liczniki `copies`, `total_copies`, `storage_copies`, `open_stack_copies` są celowo **zdenormalizowane** i aktualizowane w `Book::recalculateInventoryCounters()` przy każdej zmianie stanów `BookCopy`.
+- `book_copy.access_type` rozróżnia zasoby magazynowe, wolnego dostępu i tylko do czytelni.
+- `app_user.membership_group`, `loan_limit`, `pending_approval`, `blocked` oraz `blocked_reason` kontrolują limity i status konta.
+- `loan.extensions_count` i `last_extended_at` wspierają zasady przedłużeń i powiadomień.
+- `reservation.status` (`ACTIVE`, `FULFILLED`, `CANCELLED`, `EXPIRED`) opisuje cykl życia rezerwacji.
+- `notification_log.fingerprint` zabezpiecza przed wysłaniem duplikatów i jest powiązany z typem kanału (`channel`).
+- `registration_token.expires_at` i `used_at` umożliwiają automatyczne wygaszanie linków aktywacyjnych.
 
 ---
 
-## Ocena pokrycia potrzeb systemu bibliotecznego
+## Zgodność z wymaganiami
 
-Aktualny model realizuje wymagania podstawowe:
+- Model (z wyjątkiem świadomej denormalizacji liczników dostępności) zachowuje **3NF** i zgadza się z encjami Doctrine w katalogu `backend/src/Entity`.
+- Fixtures (`backend/src/DataFixtures/AppFixtures.php`) dostarczają ponad 30 rekordów obejmujących autorów, książki, egzemplarze, użytkowników, wypożyczenia, rezerwacje, kary i logi powiadomień.
+- Diagram obejmuje moduły wymagane w projekcie: katalog, zarządzanie egzemplarzami, wypożyczenia, rezerwacje, kary, rejestrację użytkowników oraz system powiadomień.
 
-- katalog książek z autorami, kategoriami, opisami i kontrolą dostępnych egzemplarzy,
-- fizyczne egzemplarze z indywidualnymi kodami inwentarzowymi, lokalizacją i stanem technicznym,
-- użytkowników z rolami (czytelnicy, bibliotekarze) oraz podstawowymi danymi kontaktowymi,
-- proces wypożyczeń powiązany z konkretnym egzemplarzem oraz rejestr kar,
-- zachowanie 3NF – brak zduplikowanych danych, relacje znormalizowane, klucze obce wymuszają spójność,
-- system rezerwacji obsługujący kolejkę oczekujących na egzemplarz,
-- ponad 30 rekordów startowych dostarcza `backend/src/DataFixtures/AppFixtures.php` (10 autorów, 7 kategorii, 30 książek, 6 użytkowników, 15 wypożyczeń, zestaw rezerwacji i kar).
+### Możliwe kierunki rozbudowy
 
-Elementy, które mogą być potrzebne w rozbudowanym systemie i warto rozważyć w dalszych etapach:
+1. **Audyt egzemplarzy** – dodatkowa tabela logująca zmiany statusów `BookCopy`.
+2. **Preferencje powiadomień** – magazynowanie wyboru kanału (np. e-mail/SMS) po stronie użytkownika.
+3. **Integracja płatności** – powiązanie `Fine` z modułem płatności online (np. identyfikator transakcji).
 
-1. **Historia zmian egzemplarzy** – audyt dostępności lub log działań (np. tabela `book_inventory_log`).
-2. **Powiadomienia/kolejki** – tabelaryczne monitorowanie stanu wysyłek (jeżeli zadania kolejkowe mają być rejestrowane w bazie).
-3. **Rozszerzone dane kontaktowe użytkowników** – np. preferencje powiadomień, adresy korespondencyjne.
-4. **Integracja z opłatami zewnętrznymi** – powiązanie tabeli `fine` z modułem płatności online.
-
-W kontekście bieżących celów aplikacji (CRUD książek, wypożyczenia, autoryzacja) obecny model jest kompletny. Dodatkowe tabele można dodać iteracyjnie wraz z implementacją kolejnych wymagań funkcjonalnych.
+Na potrzeby obecnego sprintu dokument wiernie odzwierciedla schemat bazy wykorzystywany przez aplikację.

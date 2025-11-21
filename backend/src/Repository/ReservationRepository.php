@@ -76,6 +76,18 @@ class ReservationRepository extends ServiceEntityRepository
             ->getOneOrNullResult();
     }
 
+    public function countActiveByUser(User $user): int
+    {
+        return (int) $this->createQueryBuilder('r')
+            ->select('COUNT(r.id)')
+            ->andWhere('r.user = :user')
+            ->andWhere('r.status = :status')
+            ->setParameter('user', $user)
+            ->setParameter('status', Reservation::STATUS_ACTIVE)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
     /**
      * @return Reservation[]
      */
@@ -88,6 +100,28 @@ class ReservationRepository extends ServiceEntityRepository
             ->orderBy('r.expiresAt', 'ASC')
             ->getQuery()
             ->getResult();
+    }
+
+    /**
+     * @return Reservation[]
+     */
+    public function findExpiredReady(
+        \DateTimeImmutable $cutoff,
+        ?int $maxResults = null
+    ): array {
+        $qb = $this->createQueryBuilder('r')
+            ->andWhere('r.status = :status')
+            ->andWhere('r.bookCopy IS NOT NULL')
+            ->andWhere('r.expiresAt <= :cutoff')
+            ->setParameter('status', Reservation::STATUS_ACTIVE)
+            ->setParameter('cutoff', $cutoff)
+            ->orderBy('r.expiresAt', 'ASC');
+
+        if ($maxResults !== null && $maxResults > 0) {
+            $qb->setMaxResults($maxResults);
+        }
+
+        return $qb->getQuery()->getResult();
     }
 
     /**

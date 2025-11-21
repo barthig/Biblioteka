@@ -70,4 +70,19 @@ class LoanRepository extends ServiceEntityRepository
 
         return $qb->getQuery()->getResult();
     }
+
+    public function hasOverdueLongerThan(User $user, \DateTimeImmutable $cutoff): bool
+    {
+        $count = $this->createQueryBuilder('l')
+            ->select('COUNT(l.id)')
+            ->andWhere('l.user = :user')
+            ->andWhere('l.returnedAt IS NULL')
+            ->andWhere('l.dueAt <= :cutoff')
+            ->setParameter('user', $user)
+            ->setParameter('cutoff', $cutoff)
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return ((int) $count) > 0;
+    }
 }

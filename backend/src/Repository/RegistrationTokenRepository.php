@@ -17,7 +17,6 @@ class RegistrationTokenRepository extends ServiceEntityRepository
         return $this->createQueryBuilder('rt')
             ->innerJoin('rt.user', 'u')->addSelect('u')
             ->where('rt.token = :token')
-            ->andWhere('rt.usedAt IS NULL')
             ->setParameter('token', $token)
             ->getQuery()
             ->getOneOrNullResult();

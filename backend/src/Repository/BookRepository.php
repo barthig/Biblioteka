@@ -2,6 +2,8 @@
 namespace App\Repository;
 
 use App\Entity\Book;
+use App\Entity\Loan;
+use App\Entity\Reservation;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -225,5 +227,58 @@ class BookRepository extends ServiceEntityRepository
             ],
             'ageGroups' => $ageGroups,
         ];
+    }
+
+    /**
+     * @return array<int, array{
+     *     bookId: int,
+     *     title: string,
+     *     totalCopies: int,
+     *     availableCopies: int,
+     *     totalLoans: int,
+     *     lastLoanAt: ?\DateTimeInterface,
+     *     activeReservations: int
+     * }>
+     */
+    public function findWeedingCandidates(
+        \DateTimeImmutable $cutoff,
+        int $minLoans,
+        int $limit
+    ): array {
+        $limit = max(1, $limit);
+        $minLoans = max(0, $minLoans);
+
+        $qb = $this->createQueryBuilder('b')
+            ->select('b.id AS bookId')
+            ->addSelect('b.title AS title')
+            ->addSelect('b.totalCopies AS totalCopies')
+            ->addSelect('b.copies AS availableCopies')
+            ->addSelect('COUNT(l.id) AS totalLoans')
+            ->addSelect('MAX(l.borrowedAt) AS lastLoanAt')
+            ->addSelect('SUM(CASE WHEN r.status = :activeStatus THEN 1 ELSE 0 END) AS activeReservations')
+            ->leftJoin(Loan::class, 'l', 'WITH', 'l.book = b')
+            ->leftJoin(Reservation::class, 'r', 'WITH', 'r.book = b')
+            ->groupBy('b.id')
+            ->having('(MAX(l.borrowedAt) IS NULL OR MAX(l.borrowedAt) <= :cutoff) OR COUNT(l.id) <= :minLoans')
+            ->orderBy('totalLoans', 'ASC')
+            ->addOrderBy('b.title', 'ASC')
+            ->setMaxResults($limit)
+            ->setParameter('cutoff', $cutoff)
+            ->setParameter('minLoans', $minLoans)
+            ->setParameter('activeStatus', Reservation::STATUS_ACTIVE);
+
+        $rows = $qb->getQuery()->getResult();
+
+        return array_map(static function (array $row): array {
+            return [
+                'bookId' => (int) $row['bookId'],
+                'title' => (string) $row['title'],
+                'totalCopies' => (int) $row['totalCopies'],
+                'availableCopies' => (int) $row['availableCopies'],
+                'totalLoans' => (int) $row['totalLoans'],
+                'lastLoanAt' => $row['lastLoanAt'] instanceof \DateTimeInterface ? $row['lastLoanAt'] : null,
+                'activeReservations' => (int) $row['activeReservations'],
+            ];
+        }, $rows);
     }
 }

@@ -188,6 +188,33 @@
     <service id="App\Entity" class="App\Entity" abstract="true">
       <tag name="container.excluded" source="in &quot;config/services.yaml&quot;"/>
     </service>
+    <service id="App\Command\AssessOverdueFinesCommand" class="App\Command\AssessOverdueFinesCommand" autowire="true" autoconfigure="true">
+      <tag name="console.command"/>
+      <tag name="container.no_preload"/>
+      <argument type="service" id="App\Repository\LoanRepository"/>
+      <argument type="service" id="App\Repository\FineRepository"/>
+      <argument type="service" id="doctrine.orm.default_entity_manager"/>
+      <call method="setName">
+        <argument>fines:assess-overdue</argument>
+      </call>
+      <call method="setDescription">
+        <argument>Automatically apply overdue fines for loans that are past due date.</argument>
+      </call>
+    </service>
+    <service id="App\Command\BlockDelinquentAccountsCommand" class="App\Command\BlockDelinquentAccountsCommand" autowire="true" autoconfigure="true">
+      <tag name="console.command"/>
+      <tag name="container.no_preload"/>
+      <argument type="service" id="App\Repository\UserRepository"/>
+      <argument type="service" id="App\Repository\FineRepository"/>
+      <argument type="service" id="App\Repository\LoanRepository"/>
+      <argument type="service" id="doctrine.orm.default_entity_manager"/>
+      <call method="setName">
+        <argument>users:block-delinquent</argument>
+      </call>
+      <call method="setDescription">
+        <argument>Automatically block accounts that exceed fine or overdue thresholds.</argument>
+      </call>
+    </service>
     <service id="App\Command\DispatchLoanDueRemindersCommand" class="App\Command\DispatchLoanDueRemindersCommand" autowire="true" autoconfigure="true">
       <tag name="console.command"/>
       <tag name="container.no_preload"/>
@@ -222,6 +249,20 @@
       </call>
       <call method="setDescription">
         <argument>Queue notifications for reservations that are ready for pickup.</argument>
+      </call>
+    </service>
+    <service id="App\Command\ExpireReadyReservationsCommand" class="App\Command\ExpireReadyReservationsCommand" autowire="true" autoconfigure="true">
+      <tag name="console.command"/>
+      <tag name="container.no_preload"/>
+      <argument type="service" id="App\Repository\ReservationRepository"/>
+      <argument type="service" id="doctrine.orm.default_entity_manager"/>
+      <argument type="service" id="messenger.bus.default"/>
+      <argument type="service" id="logger"/>
+      <call method="setName">
+        <argument>reservations:expire-ready</argument>
+      </call>
+      <call method="setDescription">
+        <argument>Expire reservations that were ready for pickup but were not collected on time.</argument>
       </call>
     </service>
     <service id="App\Controller\AccountController" class="App\Controller\AccountController" public="true" autowire="true" autoconfigure="true">
@@ -3994,12 +4035,18 @@
     <service id="nelmio_api_doc.route_argument_describer.map_query_parameter" class="Nelmio\ApiDocBundle\RouteDescriber\RouteArgumentDescriber\SymfonyMapQueryParameterDescriber">
       <tag name="nelmio_api_doc.route_argument_describer" priority="0"/>
     </service>
+    <service id=".instanceof.Symfony\Component\Console\Command\Command.0.App\Command\AssessOverdueFinesCommand" class="App\Command\AssessOverdueFinesCommand" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\Command\AssessOverdueFinesCommand" class="App\Command\AssessOverdueFinesCommand" autowire="true" autoconfigure="true" abstract="true"/>
+    <service id=".instanceof.Symfony\Component\Console\Command\Command.0.App\Command\BlockDelinquentAccountsCommand" class="App\Command\BlockDelinquentAccountsCommand" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\Command\BlockDelinquentAccountsCommand" class="App\Command\BlockDelinquentAccountsCommand" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Symfony\Component\Console\Command\Command.0.App\Command\DispatchLoanDueRemindersCommand" class="App\Command\DispatchLoanDueRemindersCommand" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Command\DispatchLoanDueRemindersCommand" class="App\Command\DispatchLoanDueRemindersCommand" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Symfony\Component\Console\Command\Command.0.App\Command\DispatchLoanOverdueWarningsCommand" class="App\Command\DispatchLoanOverdueWarningsCommand" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Command\DispatchLoanOverdueWarningsCommand" class="App\Command\DispatchLoanOverdueWarningsCommand" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Symfony\Component\Console\Command\Command.0.App\Command\DispatchReservationReadyCommand" class="App\Command\DispatchReservationReadyCommand" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Command\DispatchReservationReadyCommand" class="App\Command\DispatchReservationReadyCommand" autowire="true" autoconfigure="true" abstract="true"/>
+    <service id=".instanceof.Symfony\Component\Console\Command\Command.0.App\Command\ExpireReadyReservationsCommand" class="App\Command\ExpireReadyReservationsCommand" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\Command\ExpireReadyReservationsCommand" class="App\Command\ExpireReadyReservationsCommand" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Symfony\Contracts\Service\ServiceSubscriberInterface.0.App\Controller\AccountController" class="App\Controller\AccountController" autowire="true" abstract="true"/>
     <service id=".instanceof.Symfony\Bundle\FrameworkBundle\Controller\AbstractController.0.App\Controller\AccountController" class="App\Controller\AccountController" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Controller\AccountController" class="App\Controller\AccountController" autowire="true" autoconfigure="true" abstract="true"/>
@@ -5500,6 +5547,20 @@
     <service id=".errored..service_locator.zHyJIs5.Symfony\Component\Config\Loader\LoaderInterface" class="Symfony\Component\Config\Loader\LoaderInterface">
       <tag name="container.error" message="Cannot autowire service &quot;.service_locator.zHyJIs5&quot;: it needs an instance of &quot;Symfony\Component\Config\Loader\LoaderInterface&quot; but this type has been excluded from autowiring."/>
     </service>
+    <service id=".App\Command\AssessOverdueFinesCommand.lazy" class="Symfony\Component\Console\Command\LazyCommand">
+      <argument>fines:assess-overdue</argument>
+      <argument type="collection"/>
+      <argument>Automatically apply overdue fines for loans that are past due date.</argument>
+      <argument>false</argument>
+      <argument type="service_closure" id="App\Command\AssessOverdueFinesCommand"/>
+    </service>
+    <service id=".App\Command\BlockDelinquentAccountsCommand.lazy" class="Symfony\Component\Console\Command\LazyCommand">
+      <argument>users:block-delinquent</argument>
+      <argument type="collection"/>
+      <argument>Automatically block accounts that exceed fine or overdue thresholds.</argument>
+      <argument>false</argument>
+      <argument type="service_closure" id="App\Command\BlockDelinquentAccountsCommand"/>
+    </service>
     <service id=".App\Command\DispatchLoanDueRemindersCommand.lazy" class="Symfony\Component\Console\Command\LazyCommand">
       <argument>notifications:dispatch-due-reminders</argument>
       <argument type="collection"/>
@@ -5520,6 +5581,13 @@
       <argument>Queue notifications for reservations that are ready for pickup.</argument>
       <argument>false</argument>
       <argument type="service_closure" id="App\Command\DispatchReservationReadyCommand"/>
+    </service>
+    <service id=".App\Command\ExpireReadyReservationsCommand.lazy" class="Symfony\Component\Console\Command\LazyCommand">
+      <argument>reservations:expire-ready</argument>
+      <argument type="collection"/>
+      <argument>Expire reservations that were ready for pickup but were not collected on time.</argument>
+      <argument>false</argument>
+      <argument type="service_closure" id="App\Command\ExpireReadyReservationsCommand"/>
     </service>
     <service id=".console.command.about.lazy" class="Symfony\Component\Console\Command\LazyCommand">
       <argument>about</argument>
@@ -6025,11 +6093,14 @@
     </service>
     <service id="console.command_loader" class="Symfony\Component\Console\CommandLoader\ContainerCommandLoader" public="true">
       <tag name="container.no_preload"/>
-      <argument type="service" id=".service_locator.DbHU1_f"/>
+      <argument type="service" id=".service_locator.37S3MzS"/>
       <argument type="collection">
+        <argument key="fines:assess-overdue">App\Command\AssessOverdueFinesCommand</argument>
+        <argument key="users:block-delinquent">App\Command\BlockDelinquentAccountsCommand</argument>
         <argument key="notifications:dispatch-due-reminders">App\Command\DispatchLoanDueRemindersCommand</argument>
         <argument key="notifications:dispatch-overdue-warnings">App\Command\DispatchLoanOverdueWarningsCommand</argument>
         <argument key="notifications:dispatch-reservation-ready">App\Command\DispatchReservationReadyCommand</argument>
+        <argument key="reservations:expire-ready">App\Command\ExpireReadyReservationsCommand</argument>
         <argument key="about">console.command.about</argument>
         <argument key="assets:install">console.command.assets_install</argument>
         <argument key="cache:clear">console.command.cache_clear</argument>
@@ -6125,12 +6196,15 @@
         <argument key="make:webhook">maker.auto_command.make_webhook</argument>
       </argument>
     </service>
-    <service id=".service_locator.DbHU1_f" class="Symfony\Component\DependencyInjection\ServiceLocator">
+    <service id=".service_locator.37S3MzS" class="Symfony\Component\DependencyInjection\ServiceLocator">
       <tag name="container.service_locator"/>
       <argument type="collection">
+        <argument key="App\Command\AssessOverdueFinesCommand" type="service_closure" id=".App\Command\AssessOverdueFinesCommand.lazy"/>
+        <argument key="App\Command\BlockDelinquentAccountsCommand" type="service_closure" id=".App\Command\BlockDelinquentAccountsCommand.lazy"/>
         <argument key="App\Command\DispatchLoanDueRemindersCommand" type="service_closure" id=".App\Command\DispatchLoanDueRemindersCommand.lazy"/>
         <argument key="App\Command\DispatchLoanOverdueWarningsCommand" type="service_closure" id=".App\Command\DispatchLoanOverdueWarningsCommand.lazy"/>
         <argument key="App\Command\DispatchReservationReadyCommand" type="service_closure" id=".App\Command\DispatchReservationReadyCommand.lazy"/>
+        <argument key="App\Command\ExpireReadyReservationsCommand" type="service_closure" id=".App\Command\ExpireReadyReservationsCommand.lazy"/>
         <argument key="console.command.about" type="service_closure" id=".console.command.about.lazy"/>
         <argument key="console.command.assets_install" type="service_closure" id=".console.command.assets_install.lazy"/>
         <argument key="console.command.cache_clear" type="service_closure" id=".console.command.cache_clear.lazy"/>
