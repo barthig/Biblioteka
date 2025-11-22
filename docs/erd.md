@@ -16,9 +16,9 @@ erDiagram
         int id PK
         string title
         string isbn
-        text description
+        string description
         string publisher
-        smallint publication_year
+        int publication_year
         string resource_type
         string signature
         string target_age_group
@@ -45,7 +45,7 @@ erDiagram
         int book_id FK
         string filename
         string mime_type
-        bigint size_bytes
+        int size_bytes
         datetime created_at
     }
     CATEGORY {
@@ -60,16 +60,16 @@ erDiagram
         int id PK
         string email
         string name
-        json roles
+        string roles
         string password
         string phone_number
         string address_line
         string city
         string postal_code
-        boolean blocked
+        bool blocked
         string blocked_reason
-        boolean verified
-        boolean pending_approval
+        bool verified
+        bool pending_approval
         string membership_group
         int loan_limit
         datetime privacy_consent_at
@@ -80,13 +80,14 @@ erDiagram
         int id PK
         int book_id FK
         int book_copy_id FK NULLABLE
-        int user_id FK
+        int user_id
         datetime borrowed_at
         datetime due_at
         datetime returned_at
         int extensions_count
         datetime last_extended_at
     }
+
     RESERVATION {
         int id PK
         int book_id FK
@@ -98,16 +99,19 @@ erDiagram
         datetime fulfilled_at
         datetime cancelled_at
     }
+
     FINE {
         int id PK
         int loan_id FK
-        decimal amount
+        float amount
         string currency
         string reason
         datetime created_at
         datetime paid_at
     }
+
     NOTIFICATION_LOG {
+
         int id PK
         int user_id FK NULLABLE
         int loan_id FK NULLABLE
@@ -118,9 +122,10 @@ erDiagram
         datetime created_at
         datetime sent_at
     }
+
     REGISTRATION_TOKEN {
         int id PK
-        int user_id FK
+        int user_id
         string token
         datetime expires_at
         datetime used_at
@@ -141,6 +146,7 @@ erDiagram
     LOAN ||--o{ NOTIFICATION_LOG : "dot. wypożyczeń"
     RESERVATION ||--o{ NOTIFICATION_LOG : "dot. rezerwacji"
     APP_USER ||--o{ REGISTRATION_TOKEN : "tokeny"
+
 ```
 
 > Diagram można podejrzeć w VS Code (Markdown Preview Mermaid Support) albo w [Mermaid Live Editor](https://mermaid.live/).
