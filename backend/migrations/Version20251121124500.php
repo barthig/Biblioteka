@@ -23,8 +23,6 @@ final class Version20251121124500 extends AbstractMigration
                 'notnull' => true,
             ]);
         }
-
-        $this->addSql('UPDATE app_user SET newsletter_subscribed = TRUE WHERE newsletter_subscribed IS NULL');
     }
 
     public function down(Schema $schema): void

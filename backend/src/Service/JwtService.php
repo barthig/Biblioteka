@@ -17,21 +17,22 @@ class JwtService
 
     public static function createToken(array $claims, int $ttl = 3600): string
     {
-        $secret = getenv('JWT_SECRET') ?: ($_ENV['JWT_SECRET'] ?? null);
-        if (!$secret) {
-            throw new \RuntimeException('JWT_SECRET not configured');
-        }
+        $secrets = self::getSecrets();
+        $currentSecret = $secrets[0]; // use first as current
+        $kid = '1'; // key id
 
-        $header = ['alg' => 'HS256', 'typ' => 'JWT'];
+        $header = ['alg' => 'HS256', 'typ' => 'JWT', 'kid' => $kid];
         $payload = $claims;
         $now = time();
         $payload['iat'] = $now;
         $payload['exp'] = $now + $ttl;
+        $payload['iss'] = 'biblioteka'; // issuer
+        $payload['aud'] = 'biblioteka-api'; // audience
 
         $bHeader = self::base64UrlEncode(json_encode($header));
         $bPayload = self::base64UrlEncode(json_encode($payload));
 
-        $signature = hash_hmac('sha256', $bHeader . '.' . $bPayload, $secret, true);
+        $signature = hash_hmac('sha256', $bHeader . '.' . $bPayload, $currentSecret, true);
         $bSig = self::base64UrlEncode($signature);
 
         return sprintf('%s.%s.%s', $bHeader, $bPayload, $bSig);
@@ -39,12 +40,20 @@ class JwtService
 
     public static function validateToken(string $token): ?array
     {
-        $secret = getenv('JWT_SECRET') ?: ($_ENV['JWT_SECRET'] ?? null);
-        if (!$secret) return null;
+        $secrets = self::getSecrets();
+        if (empty($secrets)) return null;
 
         $parts = explode('.', $token);
         if (count($parts) !== 3) return null;
         [$bHeader, $bPayload, $bSig] = $parts;
+
+        $header = json_decode(self::base64UrlDecode($bHeader), true);
+        if (!$header || !isset($header['kid'])) return null;
+        $kid = $header['kid'];
+
+        // Use secret based on kid (1-based index)
+        $secretIndex = is_numeric($kid) ? (int)$kid - 1 : 0;
+        $secret = isset($secrets[$secretIndex]) ? $secrets[$secretIndex] : $secrets[0];
 
         $expectedSig = hash_hmac('sha256', $bHeader . '.' . $bPayload, $secret, true);
         $expectedB = self::base64UrlEncode($expectedSig);
@@ -54,6 +63,22 @@ class JwtService
         $payload = json_decode($jsonPayload, true);
         if (!$payload) return null;
         if (isset($payload['exp']) && time() > (int)$payload['exp']) return null;
+
+        // Validate iss and aud
+        if (!isset($payload['iss']) || $payload['iss'] !== 'biblioteka') return null;
+        if (!isset($payload['aud']) || $payload['aud'] !== 'biblioteka-api') return null;
+
         return $payload;
+    }
+
+    private static function getSecrets(): array
+    {
+        $secretsStr = getenv('JWT_SECRETS') ?: ($_ENV['JWT_SECRETS'] ?? null);
+        if (!$secretsStr) {
+            // Fallback to single secret
+            $single = getenv('JWT_SECRET') ?: ($_ENV['JWT_SECRET'] ?? null);
+            return $single ? [$single] : [];
+        }
+        return array_map('trim', explode(',', $secretsStr));
     }
 }

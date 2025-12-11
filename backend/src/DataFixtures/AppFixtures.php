@@ -67,6 +67,8 @@ class AppFixtures extends Fixture
                 ->setPostalCode('00-0' . $i)
                 ->setPassword(password_hash('password' . $i, PASSWORD_BCRYPT));
 
+            $user->markVerified();
+
             if ($i === 6) {
                 $user->block('Przykładowa blokada testowa');
             }

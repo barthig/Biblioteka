@@ -12,24 +12,16 @@ api_auth_login:
   controller: App\Controller\AuthController::login
   methods: [POST]
 
+api_auth_profile:
+  path: /api/auth/profile
+  controller: App\Controller\AuthController::profile
+  methods: [GET]
+
 # Dashboard overview
 api_dashboard_overview:
   path: /api/dashboard
   controller: App\Controller\DashboardController::overview
   methods: [GET]
-
-# Product catalogue
-api_products_list:
-  path: /api/products
-  controller: App\Controller\ProductController::list
-  methods: [GET]
-
-api_products_get:
-  path: /api/products/{id}
-  controller: App\Controller\ProductController::getProduct
-  methods: [GET]
-  requirements:
-    id: '[0-9]+'
 
 # User facing queries
 api_users_list:
