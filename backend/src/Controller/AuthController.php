@@ -4,6 +4,7 @@ namespace App\Controller;
 use App\Repository\UserRepository;
 use App\Request\LoginRequest;
 use App\Service\JwtService;
+use App\Service\RefreshTokenService;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -16,6 +17,7 @@ class AuthController extends AbstractController
 {
     public function __construct(
         private RateLimiterFactory $loginAttemptsLimiter,
+        private RefreshTokenService $refreshTokenService,
     ) {
     }
 
@@ -100,7 +102,16 @@ class AuthController extends AbstractController
             }
 
             $token = JwtService::createToken(['sub' => $user->getId(), 'roles' => $user->getRoles()]);
-            return $this->json(['token' => $token], 200);
+            
+            // Utwórz refresh token
+            $refreshToken = $this->refreshTokenService->createRefreshToken($user, $request);
+            
+            return $this->json([
+                'token' => $token,
+                'refreshToken' => $refreshToken->getToken(),
+                'expiresIn' => 86400, // 24h w sekundach
+                'refreshExpiresIn' => 2592000 // 30 dni w sekundach
+            ], 200);
         } catch (\Throwable $e) {
             $logger->error('Login error', ['exception' => $e]);
             return $this->json(['error' => 'Wystąpił błąd logowania'], 500);
@@ -121,4 +132,127 @@ class AuthController extends AbstractController
             ]
         ], 200);
     }
+
+    #[OA\Post(
+        path: '/api/auth/refresh',
+        summary: 'Odświeżenie JWT tokenu',
+        description: 'Używa refresh tokenu do wygenerowania nowego JWT access tokenu',
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['refreshToken'],
+                properties: [
+                    new OA\Property(property: 'refreshToken', type: 'string', example: 'a1b2c3d4e5f6...')
+                ]
+            )
+        ),
+        tags: ['Authentication'],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Nowy access token wygenerowany',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'token', type: 'string'),
+                        new OA\Property(property: 'expiresIn', type: 'integer', example: 86400)
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Nieprawidłowy lub wygasły refresh token')
+        ]
+    )]
+    public function refresh(Request $request): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true) ?: [];
+        $refreshTokenString = $data['refreshToken'] ?? null;
+
+        if (!$refreshTokenString) {
+            return $this->json(['error' => 'Refresh token is required'], 400);
+        }
+
+        $user = $this->refreshTokenService->validateRefreshToken($refreshTokenString);
+
+        if (!$user) {
+            return $this->json(['error' => 'Invalid or expired refresh token'], 401);
+        }
+
+        // Generuj nowy access token
+        $token = JwtService::createToken(['sub' => $user->getId(), 'roles' => $user->getRoles()]);
+
+        return $this->json([
+            'token' => $token,
+            'expiresIn' => 86400
+        ], 200);
+    }
+
+    #[OA\Post(
+        path: '/api/auth/logout',
+        summary: 'Wylogowanie użytkownika',
+        description: 'Unieważnia refresh token (wymaga autentykacji)',
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['refreshToken'],
+                properties: [
+                    new OA\Property(property: 'refreshToken', type: 'string')
+                ]
+            )
+        ),
+        tags: ['Authentication'],
+        responses: [
+            new OA\Response(response: 200, description: 'Wylogowano pomyślnie'),
+            new OA\Response(response: 400, description: 'Brak refresh tokenu')
+        ]
+    )]
+    public function logout(Request $request): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true) ?: [];
+        $refreshTokenString = $data['refreshToken'] ?? null;
+
+        if ($refreshTokenString) {
+            $this->refreshTokenService->revokeRefreshToken($refreshTokenString);
+        }
+
+        return $this->json(['message' => 'Logged out successfully'], 200);
+    }
+
+    #[OA\Post(
+        path: '/api/auth/logout-all',
+        summary: 'Wylogowanie ze wszystkich urządzeń',
+        description: 'Unieważnia wszystkie refresh tokeny użytkownika (wymaga autentykacji)',
+        tags: ['Authentication'],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Wszystkie sesje zakończone',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string'),
+                        new OA\Property(property: 'revokedCount', type: 'integer')
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Nieautoryzowany')
+        ]
+    )]
+    public function logoutAll(Request $request, UserRepository $userRepository): JsonResponse
+    {
+        $payload = $request->attributes->get('jwt_payload');
+        if (!$payload) {
+            return $this->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $user = $userRepository->find($payload['sub']);
+        if (!$user) {
+            return $this->json(['error' => 'User not found'], 404);
+        }
+
+        $count = $this->refreshTokenService->revokeAllUserTokens($user);
+
+        return $this->json([
+            'message' => 'All sessions terminated',
+            'revokedCount' => $count
+        ], 200);
+    }
 }
+

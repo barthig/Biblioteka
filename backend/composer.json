@@ -17,7 +17,13 @@
     "nelmio/api-doc-bundle": "^4.5",
     "symfony/validator": "^6.4",
     "symfony/rate-limiter": "^7.4",
-    "symfony/lock": "^7.4"
+    "symfony/lock": "^7.4",
+    "sentry/sentry-symfony": "^5.8",
+    "symfony/cache": "^7.4",
+    "symfony/redis-messenger": "^5.4",
+    "predis/predis": "^3.3",
+    "overblog/graphql-bundle": "^1.7",
+    "friendsofsymfony/elastica-bundle": "^7.0"
   },
   "autoload": {
     "psr-4": {

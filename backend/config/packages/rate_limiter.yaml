@@ -1,0 +1,25 @@
+framework:
+    rate_limiter:
+        # Anonymous users: 30 requests per minute
+        anonymous_api:
+            policy: 'sliding_window'
+            limit: 30
+            interval: '1 minute'
+
+        # Authenticated users: 100 requests per minute
+        authenticated_api:
+            policy: 'sliding_window'
+            limit: 100
+            interval: '1 minute'
+
+        # Login endpoint: 5 attempts per 15 minutes
+        login_attempts:
+            policy: 'fixed_window'
+            limit: 5
+            interval: '15 minutes'
+
+        # Registration: 3 attempts per hour
+        registration_attempts:
+            policy: 'fixed_window'
+            limit: 3
+            interval: '1 hour'

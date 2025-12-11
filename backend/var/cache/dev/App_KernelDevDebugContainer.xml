@@ -388,6 +388,13 @@
         <argument type="service" id=".service_locator.ZyP9f7K.App\Controller\Admin\SystemConfigController"/>
       </call>
     </service>
+    <service id="App\Controller\AnnouncementController" class="App\Controller\AnnouncementController" public="true" autowire="true" autoconfigure="true">
+      <tag name="controller.service_arguments"/>
+      <tag name="container.service_subscriber"/>
+      <call method="setContainer">
+        <argument type="service" id=".service_locator.ZyP9f7K.App\Controller\AnnouncementController"/>
+      </call>
+    </service>
     <service id="App\Controller\AuditLogController" class="App\Controller\AuditLogController" public="true" autowire="true" autoconfigure="true">
       <tag name="controller.service_arguments"/>
       <tag name="container.service_subscriber"/>
@@ -399,6 +406,7 @@
       <tag name="controller.service_arguments"/>
       <tag name="container.service_subscriber"/>
       <argument type="service" id="limiter.login_attempts"/>
+      <argument type="service" id="App\Service\RefreshTokenService"/>
       <call method="setContainer">
         <argument type="service" id=".service_locator.ZyP9f7K.App\Controller\AuthController"/>
       </call>
@@ -536,6 +544,16 @@
       <tag name="container.hot_path"/>
       <argument type="service" id="App\Repository\UserRepository"/>
     </service>
+    <service id="App\EventSubscriber\RateLimitHeaderSubscriber" class="App\EventSubscriber\RateLimitHeaderSubscriber" autowire="true" autoconfigure="true">
+      <tag name="kernel.event_subscriber"/>
+      <tag name="container.hot_path"/>
+    </service>
+    <service id="App\EventSubscriber\RateLimiterSubscriber" class="App\EventSubscriber\RateLimiterSubscriber" autowire="true" autoconfigure="true">
+      <tag name="kernel.event_subscriber"/>
+      <tag name="container.hot_path"/>
+      <argument type="service" id="limiter.anonymous_api"/>
+      <argument type="service" id="limiter.authenticated_api"/>
+    </service>
     <service id="App\MessageHandler\NotificationMessageHandler" class="App\MessageHandler\NotificationMessageHandler" autowire="true" autoconfigure="true">
       <tag name="messenger.message_handler" bus="" handles="" method="" priority="0" from_transport=""/>
       <argument type="service" id="App\Repository\UserRepository"/>
@@ -572,6 +590,10 @@
       <argument type="service" id="doctrine"/>
     </service>
     <service id="App\Repository\AcquisitionOrderRepository" class="App\Repository\AcquisitionOrderRepository" autowire="true" autoconfigure="true">
+      <tag name="doctrine.repository_service"/>
+      <argument type="service" id="doctrine"/>
+    </service>
+    <service id="App\Repository\AnnouncementRepository" class="App\Repository\AnnouncementRepository" autowire="true" autoconfigure="true">
       <tag name="doctrine.repository_service"/>
       <argument type="service" id="doctrine"/>
     </service>
@@ -620,6 +642,10 @@
       <argument type="service" id="doctrine"/>
     </service>
     <service id="App\Repository\NotificationLogRepository" class="App\Repository\NotificationLogRepository" autowire="true" autoconfigure="true">
+      <tag name="doctrine.repository_service"/>
+      <argument type="service" id="doctrine"/>
+    </service>
+    <service id="App\Repository\RefreshTokenRepository" class="App\Repository\RefreshTokenRepository" autowire="true" autoconfigure="true">
       <tag name="doctrine.repository_service"/>
       <argument type="service" id="doctrine"/>
     </service>
@@ -713,6 +739,10 @@
       <argument type="service" id="logger"/>
       <argument>no-reply@biblioteka.local</argument>
     </service>
+    <service id="App\Service\RefreshTokenService" class="App\Service\RefreshTokenService" autowire="true" autoconfigure="true">
+      <argument type="service" id="doctrine.orm.default_entity_manager"/>
+      <argument type="service" id="App\Repository\RefreshTokenRepository"/>
+    </service>
     <service id="App\Service\RegistrationException" class="App\Service\RegistrationException" autowire="true" autoconfigure="true"/>
     <service id="App\Service\RegistrationService" class="App\Service\RegistrationService" autowire="true" autoconfigure="true">
       <argument type="service" id="doctrine.orm.default_entity_manager"/>
@@ -720,6 +750,10 @@
       <argument type="service" id="App\Repository\RegistrationTokenRepository"/>
     </service>
     <service id="App\Service\SecurityService" class="App\Service\SecurityService" autowire="true" autoconfigure="true"/>
+    <service id="App\Service\SentryBeforeSendCallback" class="App\Service\SentryBeforeSendCallback" autowire="true" autoconfigure="true"/>
+    <service id="App\DataFixtures\AnnouncementFixtures" class="App\DataFixtures\AnnouncementFixtures" autowire="true" autoconfigure="true">
+      <tag name="doctrine.fixture.orm"/>
+    </service>
     <service id="App\DataFixtures\AppFixtures" class="App\DataFixtures\AppFixtures" autowire="true" autoconfigure="true">
       <tag name="doctrine.fixture.orm"/>
     </service>
@@ -750,7 +784,7 @@
     </service>
     <service id="argument_resolver.service" class="Symfony\Component\HttpKernel\Controller\ArgumentResolver\ServiceValueResolver">
       <tag priority="-50" name="Symfony\Component\HttpKernel\Controller\ArgumentResolver\ServiceValueResolver">controller.argument_value_resolver</tag>
-      <argument type="service" id=".service_locator.GINd5kr"/>
+      <argument type="service" id=".service_locator.Q1ma8L6"/>
     </service>
     <service id="argument_resolver.default" class="Symfony\Component\HttpKernel\Controller\ArgumentResolver\DefaultValueResolver">
       <tag priority="-100" name="Symfony\Component\HttpKernel\Controller\ArgumentResolver\DefaultValueResolver">controller.argument_value_resolver</tag>
@@ -1857,6 +1891,22 @@
         <argument>0</argument>
       </call>
       <call method="addListener">
+        <argument>kernel.response</argument>
+        <argument type="collection">
+          <argument type="service_closure" id="App\EventSubscriber\RateLimitHeaderSubscriber"/>
+          <argument>onKernelResponse</argument>
+        </argument>
+        <argument>-10</argument>
+      </call>
+      <call method="addListener">
+        <argument>kernel.request</argument>
+        <argument type="collection">
+          <argument type="service_closure" id="App\EventSubscriber\RateLimiterSubscriber"/>
+          <argument>onKernelRequest</argument>
+        </argument>
+        <argument>10</argument>
+      </call>
+      <call method="addListener">
         <argument>kernel.controller_arguments</argument>
         <argument type="collection">
           <argument type="service_closure" id="argument_resolver.request_payload"/>
@@ -2190,7 +2240,7 @@
     </service>
     <service id="argument_resolver.not_tagged_controller" class="Symfony\Component\HttpKernel\Controller\ArgumentResolver\NotTaggedControllerValueResolver">
       <tag name="controller.argument_value_resolver" priority="-200"/>
-      <argument type="service" id=".service_locator.GINd5kr"/>
+      <argument type="service" id=".service_locator.Q1ma8L6"/>
     </service>
     <service id="routing.resolver" class="Symfony\Component\Config\Loader\LoaderResolver">
       <call method="addLoader">
@@ -2630,7 +2680,7 @@
     </service>
     <service id="limiter.login_attempts" class="Symfony\Component\RateLimiter\RateLimiterFactory">
       <argument type="collection">
-        <argument key="policy">sliding_window</argument>
+        <argument key="policy">fixed_window</argument>
         <argument key="limit">5</argument>
         <argument key="interval">15 minutes</argument>
         <argument key="id">login_attempts</argument>
@@ -2643,7 +2693,7 @@
     </service>
     <service id="limiter.registration_attempts" class="Symfony\Component\RateLimiter\RateLimiterFactory">
       <argument type="collection">
-        <argument key="policy">sliding_window</argument>
+        <argument key="policy">fixed_window</argument>
         <argument key="limit">3</argument>
         <argument key="interval">1 hour</argument>
         <argument key="id">registration_attempts</argument>
@@ -2668,6 +2718,32 @@
       <argument type="service" id="lock.default.factory"/>
     </service>
     <service id="limiter.storage.api_global" class="Symfony\Component\RateLimiter\Storage\CacheStorage">
+      <argument type="service" id="cache.rate_limiter"/>
+    </service>
+    <service id="limiter.anonymous_api" class="Symfony\Component\RateLimiter\RateLimiterFactory">
+      <argument type="collection">
+        <argument key="policy">sliding_window</argument>
+        <argument key="limit">30</argument>
+        <argument key="interval">1 minute</argument>
+        <argument key="id">anonymous_api</argument>
+      </argument>
+      <argument type="service" id="limiter.storage.anonymous_api"/>
+      <argument type="service" id="lock.default.factory"/>
+    </service>
+    <service id="limiter.storage.anonymous_api" class="Symfony\Component\RateLimiter\Storage\CacheStorage">
+      <argument type="service" id="cache.rate_limiter"/>
+    </service>
+    <service id="limiter.authenticated_api" class="Symfony\Component\RateLimiter\RateLimiterFactory">
+      <argument type="collection">
+        <argument key="policy">sliding_window</argument>
+        <argument key="limit">100</argument>
+        <argument key="interval">1 minute</argument>
+        <argument key="id">authenticated_api</argument>
+      </argument>
+      <argument type="service" id="limiter.storage.authenticated_api"/>
+      <argument type="service" id="lock.default.factory"/>
+    </service>
+    <service id="limiter.storage.authenticated_api" class="Symfony\Component\RateLimiter\Storage\CacheStorage">
       <argument type="service" id="cache.rate_limiter"/>
     </service>
     <service id=".cache_connection.MfCypIA" class="Symfony\Component\Cache\Adapter\AbstractAdapter" constructor="createConnection">
@@ -3570,7 +3646,7 @@
     <service id="doctrine.orm.configuration" class="Doctrine\ORM\Configuration" abstract="true"/>
     <service id="doctrine.orm.entity_manager.abstract" class="Doctrine\ORM\EntityManager" lazy="true" abstract="true"/>
     <service id="doctrine.orm.container_repository_factory" class="Doctrine\Bundle\DoctrineBundle\Repository\ContainerRepositoryFactory">
-      <argument type="service" id=".service_locator.QRu3Wmg"/>
+      <argument type="service" id=".service_locator.6A7Pl3d"/>
     </service>
     <service id="doctrine.orm.manager_configurator.abstract" class="Doctrine\Bundle\DoctrineBundle\ManagerConfigurator" abstract="true">
       <argument type="collection"/>
@@ -4066,6 +4142,10 @@
     <service id="doctrine.fixtures.loader" class="Doctrine\Bundle\FixturesBundle\Loader\SymfonyFixturesLoader">
       <call method="addFixtures">
         <argument type="collection">
+          <argument type="collection">
+            <argument key="fixture" type="service" id="App\DataFixtures\AnnouncementFixtures"/>
+            <argument key="groups" type="collection"/>
+          </argument>
           <argument type="collection">
             <argument key="fixture" type="service" id="App\DataFixtures\AppFixtures"/>
             <argument key="groups" type="collection"/>
@@ -4636,6 +4716,9 @@
     <service id=".instanceof.Symfony\Contracts\Service\ServiceSubscriberInterface.0.App\Controller\Admin\SystemConfigController" class="App\Controller\Admin\SystemConfigController" autowire="true" abstract="true"/>
     <service id=".instanceof.Symfony\Bundle\FrameworkBundle\Controller\AbstractController.0.App\Controller\Admin\SystemConfigController" class="App\Controller\Admin\SystemConfigController" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Controller\Admin\SystemConfigController" class="App\Controller\Admin\SystemConfigController" autowire="true" autoconfigure="true" abstract="true"/>
+    <service id=".instanceof.Symfony\Contracts\Service\ServiceSubscriberInterface.0.App\Controller\AnnouncementController" class="App\Controller\AnnouncementController" autowire="true" abstract="true"/>
+    <service id=".instanceof.Symfony\Bundle\FrameworkBundle\Controller\AbstractController.0.App\Controller\AnnouncementController" class="App\Controller\AnnouncementController" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\Controller\AnnouncementController" class="App\Controller\AnnouncementController" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Symfony\Contracts\Service\ServiceSubscriberInterface.0.App\Controller\AuditLogController" class="App\Controller\AuditLogController" autowire="true" abstract="true"/>
     <service id=".instanceof.Symfony\Bundle\FrameworkBundle\Controller\AbstractController.0.App\Controller\AuditLogController" class="App\Controller\AuditLogController" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Controller\AuditLogController" class="App\Controller\AuditLogController" autowire="true" autoconfigure="true" abstract="true"/>
@@ -4698,6 +4781,10 @@
     <service id=".abstract.instanceof.App\Controller\WeedingController" class="App\Controller\WeedingController" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Symfony\Component\EventDispatcher\EventSubscriberInterface.0.App\EventSubscriber\ApiAuthSubscriber" class="App\EventSubscriber\ApiAuthSubscriber" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\EventSubscriber\ApiAuthSubscriber" class="App\EventSubscriber\ApiAuthSubscriber" autowire="true" autoconfigure="true" abstract="true"/>
+    <service id=".instanceof.Symfony\Component\EventDispatcher\EventSubscriberInterface.0.App\EventSubscriber\RateLimitHeaderSubscriber" class="App\EventSubscriber\RateLimitHeaderSubscriber" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\EventSubscriber\RateLimitHeaderSubscriber" class="App\EventSubscriber\RateLimitHeaderSubscriber" autowire="true" autoconfigure="true" abstract="true"/>
+    <service id=".instanceof.Symfony\Component\EventDispatcher\EventSubscriberInterface.0.App\EventSubscriber\RateLimiterSubscriber" class="App\EventSubscriber\RateLimiterSubscriber" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\EventSubscriber\RateLimiterSubscriber" class="App\EventSubscriber\RateLimiterSubscriber" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.App\MessageHandler\NotificationMessageHandler.0.App\MessageHandler\NotificationMessageHandler" class="App\MessageHandler\NotificationMessageHandler" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\MessageHandler\NotificationMessageHandler" class="App\MessageHandler\NotificationMessageHandler" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepositoryInterface.0.App\Repository\AcquisitionBudgetRepository" class="App\Repository\AcquisitionBudgetRepository" autowire="true" abstract="true"/>
@@ -4706,6 +4793,8 @@
     <service id=".abstract.instanceof.App\Repository\AcquisitionExpenseRepository" class="App\Repository\AcquisitionExpenseRepository" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepositoryInterface.0.App\Repository\AcquisitionOrderRepository" class="App\Repository\AcquisitionOrderRepository" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Repository\AcquisitionOrderRepository" class="App\Repository\AcquisitionOrderRepository" autowire="true" autoconfigure="true" abstract="true"/>
+    <service id=".instanceof.Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepositoryInterface.0.App\Repository\AnnouncementRepository" class="App\Repository\AnnouncementRepository" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\Repository\AnnouncementRepository" class="App\Repository\AnnouncementRepository" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepositoryInterface.0.App\Repository\AuditLogRepository" class="App\Repository\AuditLogRepository" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Repository\AuditLogRepository" class="App\Repository\AuditLogRepository" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepositoryInterface.0.App\Repository\AuthorRepository" class="App\Repository\AuthorRepository" autowire="true" abstract="true"/>
@@ -4730,6 +4819,8 @@
     <service id=".abstract.instanceof.App\Repository\LoanRepository" class="App\Repository\LoanRepository" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepositoryInterface.0.App\Repository\NotificationLogRepository" class="App\Repository\NotificationLogRepository" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Repository\NotificationLogRepository" class="App\Repository\NotificationLogRepository" autowire="true" autoconfigure="true" abstract="true"/>
+    <service id=".instanceof.Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepositoryInterface.0.App\Repository\RefreshTokenRepository" class="App\Repository\RefreshTokenRepository" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\Repository\RefreshTokenRepository" class="App\Repository\RefreshTokenRepository" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepositoryInterface.0.App\Repository\RegistrationTokenRepository" class="App\Repository\RegistrationTokenRepository" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Repository\RegistrationTokenRepository" class="App\Repository\RegistrationTokenRepository" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepositoryInterface.0.App\Repository\ReservationRepository" class="App\Repository\ReservationRepository" autowire="true" abstract="true"/>
@@ -4746,6 +4837,8 @@
     <service id=".abstract.instanceof.App\Repository\UserRepository" class="App\Repository\UserRepository" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepositoryInterface.0.App\Repository\WeedingRecordRepository" class="App\Repository\WeedingRecordRepository" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Repository\WeedingRecordRepository" class="App\Repository\WeedingRecordRepository" autowire="true" autoconfigure="true" abstract="true"/>
+    <service id=".instanceof.Doctrine\Bundle\FixturesBundle\ORMFixtureInterface.0.App\DataFixtures\AnnouncementFixtures" class="App\DataFixtures\AnnouncementFixtures" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\DataFixtures\AnnouncementFixtures" class="App\DataFixtures\AnnouncementFixtures" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Doctrine\Bundle\FixturesBundle\ORMFixtureInterface.0.App\DataFixtures\AppFixtures" class="App\DataFixtures\AppFixtures" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\DataFixtures\AppFixtures" class="App\DataFixtures\AppFixtures" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".service_locator.pRu6x_4" class="Symfony\Component\DependencyInjection\ServiceLocator">
@@ -5223,6 +5316,21 @@
         <argument key="kernel" type="service_closure" id="kernel"/>
       </argument>
     </service>
+    <service id=".service_locator.p0kVfHq" class="Symfony\Component\DependencyInjection\ServiceLocator">
+      <tag name="container.service_locator"/>
+      <argument type="collection">
+        <argument key="announcementRepository" type="service_closure" id="App\Repository\AnnouncementRepository"/>
+        <argument key="security" type="service_closure" id="App\Service\SecurityService"/>
+      </argument>
+    </service>
+    <service id=".service_locator.67PO08z" class="Symfony\Component\DependencyInjection\ServiceLocator">
+      <tag name="container.service_locator"/>
+      <argument type="collection">
+        <argument key="doctrine" type="service_closure" id="doctrine"/>
+        <argument key="announcementRepository" type="service_closure" id="App\Repository\AnnouncementRepository"/>
+        <argument key="security" type="service_closure" id="App\Service\SecurityService"/>
+      </argument>
+    </service>
     <service id=".service_locator.EcSWzff" class="Symfony\Component\DependencyInjection\ServiceLocator">
       <tag name="container.service_locator"/>
       <argument type="collection">
@@ -5236,6 +5344,12 @@
         <argument key="repo" type="service_closure" id="App\Repository\UserRepository"/>
         <argument key="validator" type="service_closure" id="validator"/>
         <argument key="logger" type="service_closure" id="logger"/>
+      </argument>
+    </service>
+    <service id=".service_locator.OzEre6h" class="Symfony\Component\DependencyInjection\ServiceLocator">
+      <tag name="container.service_locator"/>
+      <argument type="collection">
+        <argument key="userRepository" type="service_closure" id="App\Repository\UserRepository"/>
       </argument>
     </service>
     <service id=".service_locator.ClYVSdV" class="Symfony\Component\DependencyInjection\ServiceLocator">
@@ -5436,7 +5550,7 @@
         <argument key="security" type="service_closure" id="App\Service\SecurityService"/>
       </argument>
     </service>
-    <service id=".service_locator.GINd5kr" class="Symfony\Component\DependencyInjection\ServiceLocator">
+    <service id=".service_locator.Q1ma8L6" class="Symfony\Component\DependencyInjection\ServiceLocator">
       <tag name="container.service_locator"/>
       <argument type="collection">
         <argument key="kernel::registerContainerConfiguration" type="service_closure" id=".service_locator.zHyJIs5"/>
@@ -5474,9 +5588,17 @@
         <argument key="App\Controller\Admin\SystemConfigController::list" type="service_closure" id=".service_locator.8ZTCuUF"/>
         <argument key="App\Controller\Admin\SystemConfigController::create" type="service_closure" id=".service_locator.8ZTCuUF"/>
         <argument key="App\Controller\Admin\SystemConfigController::update" type="service_closure" id=".service_locator.8ZTCuUF"/>
+        <argument key="App\Controller\AnnouncementController::list" type="service_closure" id=".service_locator.p0kVfHq"/>
+        <argument key="App\Controller\AnnouncementController::show" type="service_closure" id=".service_locator.p0kVfHq"/>
+        <argument key="App\Controller\AnnouncementController::create" type="service_closure" id=".service_locator.AbYyszh"/>
+        <argument key="App\Controller\AnnouncementController::update" type="service_closure" id=".service_locator.67PO08z"/>
+        <argument key="App\Controller\AnnouncementController::publish" type="service_closure" id=".service_locator.67PO08z"/>
+        <argument key="App\Controller\AnnouncementController::archive" type="service_closure" id=".service_locator.67PO08z"/>
+        <argument key="App\Controller\AnnouncementController::delete" type="service_closure" id=".service_locator.67PO08z"/>
         <argument key="App\Controller\AuditLogController::list" type="service_closure" id=".service_locator.EcSWzff"/>
         <argument key="App\Controller\AuditLogController::entityHistory" type="service_closure" id=".service_locator.EcSWzff"/>
         <argument key="App\Controller\AuthController::login" type="service_closure" id=".service_locator.tlKOOBe"/>
+        <argument key="App\Controller\AuthController::logoutAll" type="service_closure" id=".service_locator.OzEre6h"/>
         <argument key="App\Controller\BookAssetController::list" type="service_closure" id=".service_locator.ClYVSdV"/>
         <argument key="App\Controller\BookAssetController::upload" type="service_closure" id=".service_locator.ZepxUq3"/>
         <argument key="App\Controller\BookAssetController::download" type="service_closure" id=".service_locator.ClYVSdV"/>
@@ -5570,9 +5692,17 @@
         <argument key="App\Controller\Admin\SystemConfigController:list" type="service_closure" id=".service_locator.8ZTCuUF"/>
         <argument key="App\Controller\Admin\SystemConfigController:create" type="service_closure" id=".service_locator.8ZTCuUF"/>
         <argument key="App\Controller\Admin\SystemConfigController:update" type="service_closure" id=".service_locator.8ZTCuUF"/>
+        <argument key="App\Controller\AnnouncementController:list" type="service_closure" id=".service_locator.p0kVfHq"/>
+        <argument key="App\Controller\AnnouncementController:show" type="service_closure" id=".service_locator.p0kVfHq"/>
+        <argument key="App\Controller\AnnouncementController:create" type="service_closure" id=".service_locator.AbYyszh"/>
+        <argument key="App\Controller\AnnouncementController:update" type="service_closure" id=".service_locator.67PO08z"/>
+        <argument key="App\Controller\AnnouncementController:publish" type="service_closure" id=".service_locator.67PO08z"/>
+        <argument key="App\Controller\AnnouncementController:archive" type="service_closure" id=".service_locator.67PO08z"/>
+        <argument key="App\Controller\AnnouncementController:delete" type="service_closure" id=".service_locator.67PO08z"/>
         <argument key="App\Controller\AuditLogController:list" type="service_closure" id=".service_locator.EcSWzff"/>
         <argument key="App\Controller\AuditLogController:entityHistory" type="service_closure" id=".service_locator.EcSWzff"/>
         <argument key="App\Controller\AuthController:login" type="service_closure" id=".service_locator.tlKOOBe"/>
+        <argument key="App\Controller\AuthController:logoutAll" type="service_closure" id=".service_locator.OzEre6h"/>
         <argument key="App\Controller\BookAssetController:list" type="service_closure" id=".service_locator.ClYVSdV"/>
         <argument key="App\Controller\BookAssetController:upload" type="service_closure" id=".service_locator.ZepxUq3"/>
         <argument key="App\Controller\BookAssetController:download" type="service_closure" id=".service_locator.ClYVSdV"/>
@@ -5811,12 +5941,13 @@
         <argument key="doctrine.orm.default_listeners.attach_entity_listeners" type="service_closure" id="doctrine.orm.default_listeners.attach_entity_listeners"/>
       </argument>
     </service>
-    <service id=".service_locator.QRu3Wmg" class="Symfony\Component\DependencyInjection\ServiceLocator">
+    <service id=".service_locator.6A7Pl3d" class="Symfony\Component\DependencyInjection\ServiceLocator">
       <tag name="container.service_locator"/>
       <argument type="collection">
         <argument key="App\Repository\AcquisitionBudgetRepository" type="service_closure" id="App\Repository\AcquisitionBudgetRepository"/>
         <argument key="App\Repository\AcquisitionExpenseRepository" type="service_closure" id="App\Repository\AcquisitionExpenseRepository"/>
         <argument key="App\Repository\AcquisitionOrderRepository" type="service_closure" id="App\Repository\AcquisitionOrderRepository"/>
+        <argument key="App\Repository\AnnouncementRepository" type="service_closure" id="App\Repository\AnnouncementRepository"/>
         <argument key="App\Repository\AuditLogRepository" type="service_closure" id="App\Repository\AuditLogRepository"/>
         <argument key="App\Repository\AuthorRepository" type="service_closure" id="App\Repository\AuthorRepository"/>
         <argument key="App\Repository\BackupRecordRepository" type="service_closure" id="App\Repository\BackupRecordRepository"/>
@@ -5829,6 +5960,7 @@
         <argument key="App\Repository\IntegrationConfigRepository" type="service_closure" id="App\Repository\IntegrationConfigRepository"/>
         <argument key="App\Repository\LoanRepository" type="service_closure" id="App\Repository\LoanRepository"/>
         <argument key="App\Repository\NotificationLogRepository" type="service_closure" id="App\Repository\NotificationLogRepository"/>
+        <argument key="App\Repository\RefreshTokenRepository" type="service_closure" id="App\Repository\RefreshTokenRepository"/>
         <argument key="App\Repository\RegistrationTokenRepository" type="service_closure" id="App\Repository\RegistrationTokenRepository"/>
         <argument key="App\Repository\ReservationRepository" type="service_closure" id="App\Repository\ReservationRepository"/>
         <argument key="App\Repository\ReviewRepository" type="service_closure" id="App\Repository\ReviewRepository"/>
@@ -5934,6 +6066,12 @@
     <service id=".service_locator.ZyP9f7K.App\Controller\Admin\SystemConfigController" class="Symfony\Component\DependencyInjection\ServiceLocator">
       <tag name="container.service_locator_context" id="App\Controller\Admin\SystemConfigController"/>
       <argument>App\Controller\Admin\SystemConfigController</argument>
+      <argument type="service" id="service_container"/>
+      <factory service=".service_locator.ZyP9f7K" method="withContext"/>
+    </service>
+    <service id=".service_locator.ZyP9f7K.App\Controller\AnnouncementController" class="Symfony\Component\DependencyInjection\ServiceLocator">
+      <tag name="container.service_locator_context" id="App\Controller\AnnouncementController"/>
+      <argument>App\Controller\AnnouncementController</argument>
       <argument type="service" id="service_container"/>
       <factory service=".service_locator.ZyP9f7K" method="withContext"/>
     </service>
@@ -6161,6 +6299,7 @@
           <argument>App\Controller\Admin\RoleAdminController</argument>
           <argument>App\Controller\Admin\SecurityAdminController</argument>
           <argument>App\Controller\Admin\SystemConfigController</argument>
+          <argument>App\Controller\AnnouncementController</argument>
           <argument>App\Controller\AuditLogController</argument>
           <argument>App\Controller\AuthController</argument>
           <argument>App\Controller\BookAssetController</argument>
@@ -7097,6 +7236,10 @@
     <service id="Symfony\Component\RateLimiter\RateLimiterFactory $registrationAttemptsLimiter" alias="limiter.registration_attempts"/>
     <service id=".Symfony\Component\RateLimiter\RateLimiterFactory $api_global.limiter" alias="limiter.api_global"/>
     <service id="Symfony\Component\RateLimiter\RateLimiterFactory $apiGlobalLimiter" alias="limiter.api_global"/>
+    <service id=".Symfony\Component\RateLimiter\RateLimiterFactory $anonymous_api.limiter" alias="limiter.anonymous_api"/>
+    <service id="Symfony\Component\RateLimiter\RateLimiterFactory $anonymousApiLimiter" alias="limiter.anonymous_api"/>
+    <service id=".Symfony\Component\RateLimiter\RateLimiterFactory $authenticated_api.limiter" alias="limiter.authenticated_api"/>
+    <service id="Symfony\Component\RateLimiter\RateLimiterFactory $authenticatedApiLimiter" alias="limiter.authenticated_api"/>
     <service id="cache.default_redis_provider" alias=".cache_connection.MfCypIA"/>
     <service id="cache.default_memcached_provider" alias=".cache_connection.8kvDmRs"/>
     <service id="cache.default_doctrine_dbal_provider" alias="doctrine.dbal.default_connection"/>
@@ -7138,7 +7281,7 @@
     <service id="nelmio_api_doc.controller.swagger" alias="nelmio_api_doc.controller.swagger_json" public="true"/>
     <service id="nelmio_api_doc.generator" alias="nelmio_api_doc.generator.default" public="true"/>
     <service id="container.env_var_processors_locator" alias=".service_locator.pRu6x_4" public="true"/>
-    <service id="argument_resolver.controller_locator" alias=".service_locator.GINd5kr"/>
+    <service id="argument_resolver.controller_locator" alias=".service_locator.Q1ma8L6"/>
     <service id="doctrine.id_generator_locator" alias=".service_locator.BxSdgVt"/>
     <service id="Psr\Log\LoggerInterface" alias="logger"/>
     <service id=".service_locator.oiB6xeU" alias="messenger.receiver_locator"/>
@@ -7157,8 +7300,11 @@
     <service id=".service_locator.YSjCaiw" alias=".service_locator.S_C3Dzl"/>
     <service id=".service_locator.O33qp4a" alias=".service_locator.8ZTCuUF"/>
     <service id=".service_locator._XkFWFd" alias=".service_locator.6nghiUy"/>
+    <service id=".service_locator.Gl4K9Lp" alias=".service_locator.p0kVfHq"/>
+    <service id=".service_locator.hR1MK2X" alias=".service_locator.67PO08z"/>
     <service id=".service_locator.oY9gUin" alias=".service_locator.EcSWzff"/>
     <service id=".service_locator.x6QRsGg" alias=".service_locator.tlKOOBe"/>
+    <service id=".service_locator.hNMhKaf" alias=".service_locator.OzEre6h"/>
     <service id=".service_locator.fFD1B5Y" alias=".service_locator.ClYVSdV"/>
     <service id=".service_locator.auY8RH1" alias=".service_locator.ZepxUq3"/>
     <service id=".service_locator.FEkqU.N" alias=".service_locator.3XiwbLt"/>
