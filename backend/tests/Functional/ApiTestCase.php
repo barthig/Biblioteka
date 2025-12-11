@@ -87,7 +87,7 @@ abstract class ApiTestCase extends WebTestCase
         return static::createClient([], $server);
     }
 
-    protected function loginAndGetToken(string $email = 'user1@example.com', string $password = 'password1'): string
+    protected function loginAndGetToken(string $email = 'user1@example.com', string $password = 'StrongPass1'): string
     {
         $client = $this->createApiClient();
         $this->jsonRequest($client, 'POST', '/api/auth/login', [
@@ -149,7 +149,7 @@ abstract class ApiTestCase extends WebTestCase
         return json_decode($content, true, 512, JSON_THROW_ON_ERROR);
     }
 
-    protected function createUser(string $email, array $roles = ['ROLE_USER'], string $password = 'password1', ?string $name = null): User
+    protected function createUser(string $email, array $roles = ['ROLE_USER'], string $password = 'StrongPass1', ?string $name = null): User
     {
         $user = new User();
         $user->setEmail($email)

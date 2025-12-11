@@ -14,7 +14,7 @@ class UserManagementControllerTest extends ApiTestCase
             'email' => 'new@example.com',
             'name' => 'New User',
             'roles' => ['ROLE_USER'],
-            'password' => 'secret123',
+            'password' => 'StrongPass1',
         ]);
 
         $this->assertResponseStatusCodeSame(403);
@@ -29,7 +29,7 @@ class UserManagementControllerTest extends ApiTestCase
             'email' => 'new@example.com',
             'name' => 'New User',
             'roles' => ['ROLE_USER'],
-            'password' => 'secret123',
+            'password' => 'StrongPass1',
         ]);
 
         $this->assertResponseStatusCodeSame(201);
@@ -37,13 +37,13 @@ class UserManagementControllerTest extends ApiTestCase
         $repo = $this->entityManager->getRepository(User::class);
         $created = $repo->findOneBy(['email' => 'new@example.com']);
         self::assertNotNull($created);
-        self::assertTrue(password_verify('secret123', $created->getPassword()));
+        self::assertTrue(password_verify('StrongPass1', $created->getPassword()));
     }
 
     public function testUpdateUserRolesRequiresAdmin(): void
     {
         $librarian = $this->createUser('librarian@example.com', ['ROLE_LIBRARIAN']);
-        $user = $this->createUser('user@example.com', ['ROLE_USER'], 'secret', 'Original Name');
+        $user = $this->createUser('user@example.com', ['ROLE_USER'], 'StrongPass1', 'Original Name');
         $client = $this->createAuthenticatedClient($librarian);
 
         $this->jsonRequest($client, 'PUT', '/api/users/' . $user->getId(), [
@@ -60,7 +60,7 @@ class UserManagementControllerTest extends ApiTestCase
     public function testUpdateUserAsAdminCanChangeRoles(): void
     {
         $admin = $this->createUser('admin@example.com', ['ROLE_ADMIN']);
-        $user = $this->createUser('user@example.com', ['ROLE_USER'], 'secret', 'Original Name');
+        $user = $this->createUser('user@example.com', ['ROLE_USER'], 'StrongPass1', 'Original Name');
         $client = $this->createAuthenticatedClient($admin);
 
         $this->jsonRequest($client, 'PUT', '/api/users/' . $user->getId(), [

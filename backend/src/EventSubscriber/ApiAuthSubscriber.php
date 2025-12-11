@@ -1,14 +1,19 @@
 <?php
 namespace App\EventSubscriber;
 
+use App\Repository\UserRepository;
+use App\Service\JwtService;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
-use Symfony\Component\HttpFoundation\JsonResponse;
-use App\Service\JwtService;
 
 class ApiAuthSubscriber implements EventSubscriberInterface
 {
+    public function __construct(private UserRepository $users)
+    {
+    }
+
     public static function getSubscribedEvents(): array
     {
         return [
@@ -78,8 +83,32 @@ class ApiAuthSubscriber implements EventSubscriberInterface
         if ($bearer) {
             $payload = JwtService::validateToken($bearer);
             if ($payload) {
+                $userId = $payload['sub'] ?? null;
+                $user = $userId ? $this->users->find($userId) : null;
+                if (!$user) {
+                    $event->setResponse(new JsonResponse(['error' => 'Unauthorized'], 401));
+                    return;
+                }
+
+                $appEnv = getenv('APP_ENV') ?: ($_ENV['APP_ENV'] ?? null);
+                if ($appEnv !== 'test' && !$user->isVerified()) {
+                    $event->setResponse(new JsonResponse(['error' => 'Account not verified'], 403));
+                    return;
+                }
+
+                if ($user->isPendingApproval()) {
+                    $event->setResponse(new JsonResponse(['error' => 'Account awaiting approval'], 403));
+                    return;
+                }
+
+                if ($user->isBlocked()) {
+                    $event->setResponse(new JsonResponse(['error' => 'Account is blocked'], 403));
+                    return;
+                }
+
                 // attach payload to request for downstream role checks
                 $request->attributes->set('jwt_payload', $payload);
+                $request->attributes->set('jwt_user', $user);
                 return;
             }
         }

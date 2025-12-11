@@ -10,6 +10,7 @@ class LoginRequest
     public ?string $email = null;
 
     #[Assert\NotBlank(message: 'Password is required')]
-    #[Assert\Length(min: 6, minMessage: 'Password must be at least 6 characters')]
+    #[Assert\Length(min: 10, minMessage: 'Hasło musi mieć co najmniej 10 znaków.')]
+    #[Assert\Regex(pattern: '/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/', message: 'Hasło musi zawierać małe i duże litery oraz cyfrę.')]
     public ?string $password = null;
 }

@@ -3,36 +3,31 @@ namespace App\Controller;
 
 use App\Repository\UserRepository;
 use App\Request\LoginRequest;
+use App\Service\JwtService;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class AuthController extends AbstractController
 {
-    public function login(Request $request, UserRepository $repo): JsonResponse
+    public function login(Request $request, UserRepository $repo, ValidatorInterface $validator, LoggerInterface $logger): JsonResponse
     {
         try {
-            var_dump('Login start');
             $data = json_decode($request->getContent(), true) ?: [];
-            var_dump('Data', $data);
             $loginRequest = new LoginRequest();
-            var_dump('LoginRequest created');
             $loginRequest->email = isset($data['email']) ? strtolower(trim((string) $data['email'])) : '';
             $loginRequest->password = $data['password'] ?? null;
 
-            $errors = $this->get('validator')->validate($loginRequest);
+            $errors = $validator->validate($loginRequest);
             if (count($errors) > 0) {
                 $errorMessages = [];
                 foreach ($errors as $error) {
                     $errorMessages[] = $error->getMessage();
                 }
-                var_dump('Validation errors', $errorMessages);
                 return $this->json(['error' => implode(', ', $errorMessages)], 400);
             }
-
-            var_dump('Validation ok');
 
             $email = $loginRequest->email;
             $password = $loginRequest->password;
@@ -42,13 +37,9 @@ class AuthController extends AbstractController
                 return $this->json(['error' => 'Invalid credentials'], 401);
             }
 
-            var_dump('User found', $user->getId(), $user->getPassword());
             if (!password_verify($password, $user->getPassword())) {
-                var_dump('Password fail');
                 return $this->json(['error' => 'Invalid credentials'], 401);
             }
-
-            var_dump('Password ok');
 
             // Allow tests to bypass email verification to simplify functional tests
             $appEnv = getenv('APP_ENV') ?: ($_ENV['APP_ENV'] ?? null);
@@ -65,10 +56,10 @@ class AuthController extends AbstractController
             }
 
             $token = JwtService::createToken(['sub' => $user->getId(), 'roles' => $user->getRoles()]);
-            var_dump('Token created', $token); exit;
             return $this->json(['token' => $token], 200);
-        } catch (\Exception $e) {
-            return $this->json(['error' => $e->getMessage()], 500);
+        } catch (\Throwable $e) {
+            $logger->error('Login error', ['exception' => $e]);
+            return $this->json(['error' => 'Wystąpił błąd logowania'], 500);
         }
     }
 

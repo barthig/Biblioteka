@@ -26,3 +26,8 @@ services:
     arguments:
       $projectDir: '%kernel.project_dir%'
     tags: ['messenger.message_handler']
+
+  App\EventSubscriber\ApiAuthSubscriber:
+    arguments:
+      $users: '@App\Repository\UserRepository'
+    tags: ['kernel.event_subscriber']

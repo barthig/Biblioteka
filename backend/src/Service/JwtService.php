@@ -18,6 +18,11 @@ class JwtService
     public static function createToken(array $claims, int $ttl = 3600): string
     {
         $secrets = self::getSecrets();
+        if (empty($secrets)) {
+            error_log('JWT secret is not configured');
+            throw new \RuntimeException('JWT secret is not configured');
+        }
+
         $currentSecret = $secrets[0]; // use first as current
         $kid = '1'; // key id
 
@@ -77,8 +82,10 @@ class JwtService
         if (!$secretsStr) {
             // Fallback to single secret
             $single = getenv('JWT_SECRET') ?: ($_ENV['JWT_SECRET'] ?? null);
-            return $single ? [$single] : [];
+            $single = $single ? trim($single) : '';
+            return $single !== '' ? [$single] : [];
         }
-        return array_map('trim', explode(',', $secretsStr));
+        $secrets = array_map('trim', explode(',', $secretsStr));
+        return array_values(array_filter($secrets, static fn(string $s) => $s !== ''));
     }
 }
