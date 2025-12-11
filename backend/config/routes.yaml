@@ -576,6 +576,19 @@ api_settings_update:
   controller: App\Controller\SettingsController::updateSettings
   methods: [PATCH]
 
+# Audit Logs
+api_audit_logs_list:
+  path: /api/audit-logs
+  controller: App\Controller\AuditLogController::list
+  methods: [GET]
+
+api_audit_logs_entity_history:
+  path: /api/audit-logs/entity/{entityType}/{entityId}
+  controller: App\Controller\AuditLogController::entityHistory
+  methods: [GET]
+  requirements:
+    entityId: '[0-9]+'
+
 # API documentation
 api_docs_json:
   path: /api/docs.json

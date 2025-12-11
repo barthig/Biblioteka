@@ -1,23 +1,31 @@
 <?php
 namespace App\Controller;
 
+use App\Controller\Traits\ValidationTrait;
 use App\Entity\AcquisitionBudget;
 use App\Entity\AcquisitionExpense;
 use App\Entity\AcquisitionOrder;
 use App\Entity\Supplier;
+use App\Request\CreateAcquisitionOrderRequest;
 use App\Service\SecurityService;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class AcquisitionOrderController extends AbstractController
 {
+    use ValidationTrait;
     public function list(Request $request, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
             return $this->json(['error' => 'Forbidden'], 403);
         }
+
+        $page = max(1, $request->query->getInt('page', 1));
+        $limit = min(100, max(10, $request->query->getInt('limit', 20)));
+        $offset = ($page - 1) * $limit;
 
         /** @var \App\Repository\AcquisitionOrderRepository $repo */
         $repo = $doctrine->getRepository(AcquisitionOrder::class);
@@ -41,34 +49,40 @@ class AcquisitionOrderController extends AbstractController
             $qb->andWhere('o.budget = :budgetId')->setParameter('budgetId', (int) $request->query->get('budgetId'));
         }
 
-        $orders = $qb->getQuery()->getResult();
-        return $this->json($orders, 200, [], ['groups' => ['acquisition:read', 'supplier:read', 'budget:read']]);
+        $countQb = clone $qb;
+        $countQb->select('COUNT(o.id)');
+        $total = (int) $countQb->getQuery()->getSingleScalarResult();
+
+        $orders = $qb->setMaxResults($limit)->setFirstResult($offset)->getQuery()->getResult();
+        
+        return $this->json([
+            'data' => $orders,
+            'meta' => [
+                'page' => $page,
+                'limit' => $limit,
+                'total' => $total,
+                'totalPages' => $total > 0 ? (int)ceil($total / $limit) : 0
+            ]
+        ], 200, [], ['groups' => ['acquisition:read', 'supplier:read', 'budget:read']]);
     }
 
-    public function create(Request $request, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
+    public function create(Request $request, ManagerRegistry $doctrine, SecurityService $security, ValidatorInterface $validator): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
             return $this->json(['error' => 'Forbidden'], 403);
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
-        $supplierId = $data['supplierId'] ?? null;
-        if (!$supplierId || !ctype_digit((string) $supplierId)) {
-            return $this->json(['error' => 'Missing supplierId'], 400);
+        
+        // Walidacja DTO
+        $dto = $this->mapArrayToDto($data, new CreateAcquisitionOrderRequest());
+        $errors = $validator->validate($dto);
+        if (count($errors) > 0) {
+            return $this->validationErrorResponse($errors);
         }
-
-        if (empty($data['title'])) {
-            return $this->json(['error' => 'Title is required'], 400);
-        }
-
-        if (!isset($data['totalAmount']) || !is_numeric($data['totalAmount'])) {
-            return $this->json(['error' => 'Invalid total amount'], 400);
-        }
-
-        $currency = isset($data['currency']) ? strtoupper(trim((string) $data['currency'])) : 'PLN';
-        if (strlen($currency) !== 3) {
-            return $this->json(['error' => 'Currency must be a 3-letter code'], 400);
-        }
+        
+        $supplierId = $dto->supplierId;
+        $currency = $dto->currency;
 
         $supplier = $doctrine->getRepository(Supplier::class)->find((int) $supplierId);
         if (!$supplier) {

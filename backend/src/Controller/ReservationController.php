@@ -1,29 +1,41 @@
 <?php
 namespace App\Controller;
 
+use App\Controller\Traits\ValidationTrait;
 use App\Entity\Book;
 use App\Entity\Reservation;
 use App\Entity\BookCopy;
 use App\Entity\User;
 use App\Message\ReservationQueuedNotification;
 use App\Repository\ReservationRepository;
+use App\Request\CreateReservationRequest;
 use App\Service\SecurityService;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Messenger\MessageBusInterface;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Psr\Log\LoggerInterface;
 
 class ReservationController extends AbstractController
 {
+    use ValidationTrait;
     public function list(Request $request, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
     {
-        /** @var ReservationRepository $repo */
-        $repo = $doctrine->getRepository(Reservation::class);
+        $page = max(1, $request->query->getInt('page', 1));
+        $limit = min(100, max(10, $request->query->getInt('limit', 20)));
+        $offset = ($page - 1) * $limit;
+
+        $em = $doctrine->getManager();
+        $reservationRepository = $em->getRepository(Reservation::class);
+        assert($reservationRepository instanceof ReservationRepository);
 
         if ($security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            $qb = $repo->createQueryBuilder('r')
+            $qb = $reservationRepository->createQueryBuilder('r')
+                ->leftJoin('r.user', 'u')->addSelect('u')
+                ->leftJoin('r.book', 'b')->addSelect('b')
+                ->leftJoin('r.bookCopy', 'bc')->addSelect('bc')
                 ->orderBy('r.reservedAt', 'DESC');
 
             $status = $request->query->get('status');
@@ -40,8 +52,21 @@ class ReservationController extends AbstractController
                 $qb->andWhere('r.user = :userId')->setParameter('userId', (int) $request->query->get('userId'));
             }
 
-            $reservations = $qb->getQuery()->getResult();
-            return $this->json($reservations, 200, [], ['groups' => ['reservation:read']]);
+            $countQb = clone $qb;
+            $countQb->select('COUNT(r.id)');
+            $total = (int) $countQb->getQuery()->getSingleScalarResult();
+
+            $reservations = $qb->setMaxResults($limit)->setFirstResult($offset)->getQuery()->getResult();
+            
+            return $this->json([
+                'data' => $reservations,
+                'meta' => [
+                    'page' => $page,
+                    'limit' => $limit,
+                    'total' => $total,
+                    'totalPages' => $total > 0 ? (int)ceil($total / $limit) : 0
+                ]
+            ], 200, [], ['groups' => ['reservation:read']]);
         }
 
         $payload = $security->getJwtPayload($request);
@@ -55,11 +80,36 @@ class ReservationController extends AbstractController
         }
 
         $includeHistory = $request->query->getBoolean('history', false);
-        $reservations = $repo->findByUser($user, $includeHistory);
-        return $this->json($reservations, 200, [], ['groups' => ['reservation:read']]);
+        $qb = $reservationRepository->createQueryBuilder('r')
+            ->leftJoin('r.user', 'u')->addSelect('u')
+            ->leftJoin('r.book', 'b')->addSelect('b')
+            ->leftJoin('r.bookCopy', 'bc')->addSelect('bc')
+            ->where('r.user = :user')
+            ->setParameter('user', $user)
+            ->orderBy('r.reservedAt', 'DESC');
+
+        if (!$includeHistory) {
+            $qb->andWhere('r.status = :status')->setParameter('status', Reservation::STATUS_ACTIVE);
+        }
+
+        $countQb = clone $qb;
+        $countQb->select('COUNT(r.id)');
+        $total = (int) $countQb->getQuery()->getSingleScalarResult();
+
+        $reservations = $qb->setMaxResults($limit)->setFirstResult($offset)->getQuery()->getResult();
+        
+        return $this->json([
+            'data' => $reservations,
+            'meta' => [
+                'page' => $page,
+                'limit' => $limit,
+                'total' => $total,
+                'totalPages' => $total > 0 ? (int)ceil($total / $limit) : 0
+            ]
+        ], 200, [], ['groups' => ['reservation:read']]);
     }
 
-    public function create(Request $request, ManagerRegistry $doctrine, SecurityService $security, MessageBusInterface $bus, LoggerInterface $logger): JsonResponse
+    public function create(Request $request, ManagerRegistry $doctrine, SecurityService $security, MessageBusInterface $bus, LoggerInterface $logger, ValidatorInterface $validator): JsonResponse
     {
         $payload = $security->getJwtPayload($request);
         if (!$payload || !isset($payload['sub'])) {
@@ -67,12 +117,16 @@ class ReservationController extends AbstractController
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
-        $bookId = $data['bookId'] ?? null;
-        $expiresInDays = isset($data['days']) ? (int) $data['days'] : 2;
-
-        if (!$bookId || !ctype_digit((string) $bookId)) {
-            return $this->json(['error' => 'Invalid bookId'], 400);
+        
+        // Walidacja DTO
+        $dto = $this->mapArrayToDto($data, new CreateReservationRequest());
+        $errors = $validator->validate($dto);
+        if (count($errors) > 0) {
+            return $this->validationErrorResponse($errors);
         }
+        
+        $bookId = $dto->bookId;
+        $expiresInDays = $dto->days ?? 2;
 
         $userRepo = $doctrine->getRepository(User::class);
         $bookRepo = $doctrine->getRepository(Book::class);

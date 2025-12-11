@@ -2,3 +2,12 @@ framework:
   test: true
   session:
     storage_factory_id: session.storage.factory.mock_file
+  
+  # Wyłączenie rate limiting w testach
+  rate_limiter:
+    login_attempts:
+      policy: 'no_limit'
+    registration_attempts:
+      policy: 'no_limit'
+    api_global:
+      policy: 'no_limit'

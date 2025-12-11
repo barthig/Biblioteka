@@ -1,16 +1,21 @@
 <?php
 namespace App\Controller;
 
+use App\Controller\Traits\ValidationTrait;
 use App\Entity\User;
 use App\Repository\UserRepository;
+use App\Request\UpdateAccountRequest;
+use App\Request\ChangePasswordRequest;
 use App\Service\SecurityService;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class AccountController extends AbstractController
 {
+    use ValidationTrait;
     public function me(Request $request, UserRepository $repo, SecurityService $security): JsonResponse
     {
         $user = $this->resolveAuthenticatedUser($request, $repo, $security);
@@ -21,7 +26,7 @@ class AccountController extends AbstractController
         return $this->json($this->formatUser($user));
     }
 
-    public function update(Request $request, ManagerRegistry $doctrine, UserRepository $repo, SecurityService $security): JsonResponse
+    public function update(Request $request, ManagerRegistry $doctrine, UserRepository $repo, SecurityService $security, ValidatorInterface $validator): JsonResponse
     {
         $user = $this->resolveAuthenticatedUser($request, $repo, $security);
         if ($user instanceof JsonResponse) {
@@ -29,12 +34,16 @@ class AccountController extends AbstractController
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
+        
+        // Walidacja DTO
+        $dto = $this->mapArrayToDto($data, new UpdateAccountRequest());
+        $errors = $validator->validate($dto);
+        if (count($errors) > 0) {
+            return $this->validationErrorResponse($errors);
+        }
 
         if (isset($data['email'])) {
             $email = trim((string) $data['email']);
-            if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                return $this->json(['error' => 'Podaj poprawny adres e-mail'], 400);
-            }
             $existing = $repo->findOneBy(['email' => $email]);
             if ($existing && $existing->getId() !== $user->getId()) {
                 return $this->json(['error' => 'Adres e-mail jest już zajęty'], 409);
@@ -78,7 +87,7 @@ class AccountController extends AbstractController
         return $this->json($this->formatUser($user));
     }
 
-    public function changePassword(Request $request, ManagerRegistry $doctrine, UserRepository $repo, SecurityService $security): JsonResponse
+    public function changePassword(Request $request, ManagerRegistry $doctrine, UserRepository $repo, SecurityService $security, ValidatorInterface $validator): JsonResponse
     {
         $user = $this->resolveAuthenticatedUser($request, $repo, $security);
         if ($user instanceof JsonResponse) {
@@ -86,13 +95,17 @@ class AccountController extends AbstractController
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
-        $currentPassword = (string) ($data['currentPassword'] ?? '');
-        $newPassword = (string) ($data['newPassword'] ?? '');
-        $confirmPassword = (string) ($data['confirmPassword'] ?? $newPassword);
-
-        if ($currentPassword === '' || $newPassword === '') {
-            return $this->json(['error' => 'Podaj aktualne i nowe hasło'], 400);
+        
+        // Walidacja DTO
+        $dto = $this->mapArrayToDto($data, new ChangePasswordRequest());
+        $errors = $validator->validate($dto);
+        if (count($errors) > 0) {
+            return $this->validationErrorResponse($errors);
         }
+        
+        $currentPassword = $dto->currentPassword;
+        $newPassword = $dto->newPassword;
+        $confirmPassword = $dto->confirmPassword ?? $newPassword;
 
         if (!password_verify($currentPassword, $user->getPassword())) {
             return $this->json(['error' => 'Aktualne hasło jest niepoprawne'], 400);

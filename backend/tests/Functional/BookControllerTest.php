@@ -24,7 +24,10 @@ class BookControllerTest extends ApiTestCase
 
         $this->assertResponseStatusCodeSame(200);
 
-        $data = $this->getJsonResponse($client);
+        $payload = $this->getJsonResponse($client);
+        $this->assertArrayHasKey('data', $payload);
+        $this->assertArrayHasKey('meta', $payload);
+        $data = $payload['data'];
         $this->assertCount(1, $data);
         $this->assertSame($book->getTitle(), $data[0]['title']);
         $this->assertSame('Robert C. Martin', $data[0]['author']['name']);
@@ -154,7 +157,9 @@ class BookControllerTest extends ApiTestCase
         $this->sendRequest($client, 'GET', '/api/books?ageGroup=' . urlencode(Book::AGE_GROUP_EARLY_SCHOOL));
 
         $this->assertResponseStatusCodeSame(200);
-        $data = $this->getJsonResponse($client);
+        $payload = $this->getJsonResponse($client);
+        $this->assertArrayHasKey('data', $payload);
+        $data = $payload['data'];
         $this->assertCount(1, $data);
         $this->assertSame($targetBook->getTitle(), $data[0]['title']);
         $this->assertSame(Book::AGE_GROUP_EARLY_SCHOOL, $data[0]['targetAgeGroup']);

@@ -1,21 +1,72 @@
 <?php
 namespace App\Controller;
 
+use App\Controller\Traits\ValidationTrait;
 use App\Entity\Book;
 use App\Entity\Favorite;
 use App\Entity\User;
 use App\Repository\AuthorRepository;
 use App\Repository\BookRepository;
 use App\Repository\CategoryRepository;
+use App\Request\CreateBookRequest;
+use App\Request\UpdateBookRequest;
 use App\Service\SecurityService;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 use App\Entity\BookCopy;
+use OpenApi\Attributes as OA;
 
 class BookController extends AbstractController
 {
+    use ValidationTrait;
+    
+    #[OA\Get(
+        path: '/api/books',
+        summary: 'Lista książek z filtrowaniem i paginacją',
+        description: 'Zwraca listę książek dostępnych w systemie z możliwością filtrowania.',
+        tags: ['Books'],
+        parameters: [
+            new OA\Parameter(name: 'page', in: 'query', schema: new OA\Schema(type: 'integer', default: 1)),
+            new OA\Parameter(name: 'limit', in: 'query', schema: new OA\Schema(type: 'integer', default: 20, minimum: 10, maximum: 100)),
+            new OA\Parameter(name: 'q', in: 'query', description: 'Wyszukiwanie pełnotekstowe', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'authorId', in: 'query', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'categoryId', in: 'query', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'publisher', in: 'query', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'resourceType', in: 'query', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'yearFrom', in: 'query', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'yearTo', in: 'query', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'ageGroup', in: 'query', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'available', in: 'query', schema: new OA\Schema(type: 'boolean'))
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Lista książek',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(
+                            property: 'data',
+                            type: 'array',
+                            items: new OA\Items(ref: '#/components/schemas/Book')
+                        ),
+                        new OA\Property(
+                            property: 'meta',
+                            properties: [
+                                new OA\Property(property: 'page', type: 'integer'),
+                                new OA\Property(property: 'limit', type: 'integer'),
+                                new OA\Property(property: 'total', type: 'integer'),
+                                new OA\Property(property: 'totalPages', type: 'integer')
+                            ],
+                            type: 'object'
+                        )
+                    ]
+                )
+            )
+        ]
+    )]
     public function list(Request $request, BookRepository $repo, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
     {
         $filters = [
@@ -28,13 +79,16 @@ class BookController extends AbstractController
             'yearFrom' => $request->query->has('yearFrom') ? $request->query->getInt('yearFrom') : null,
             'yearTo' => $request->query->has('yearTo') ? $request->query->getInt('yearTo') : null,
             'ageGroup' => $request->query->get('ageGroup'),
+            'page' => $request->query->getInt('page', 1),
+            'limit' => $request->query->getInt('limit', 20),
         ];
 
         if ($request->query->has('available')) {
             $filters['available'] = $request->query->get('available');
         }
 
-        $books = $repo->searchPublic($filters);
+        $result = $repo->searchPublic($filters);
+        $books = $result['data'];
 
         $payload = $security->getJwtPayload($request);
         if ($payload && isset($payload['sub'])) {
@@ -54,7 +108,10 @@ class BookController extends AbstractController
             }
         }
 
-        return $this->json($books, 200, [], ['groups' => ['book:read']]);
+        return $this->json([
+            'data' => $books,
+            'meta' => $result['meta']
+        ], 200, [], ['groups' => ['book:read']]);
     }
 
     public function filters(BookRepository $repo): JsonResponse
@@ -86,62 +143,65 @@ class BookController extends AbstractController
         ManagerRegistry $doctrine,
         SecurityService $security,
         AuthorRepository $authorRepository,
-        CategoryRepository $categoryRepository
+        CategoryRepository $categoryRepository,
+        ValidatorInterface $validator
     ): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
             return $this->json(['error' => 'Forbidden'], 403);
         }
+
         $data = json_decode($request->getContent(), true) ?? [];
-
-        if (empty($data['title'])) {
-            return $this->json(['error' => 'Missing title'], 400);
+        $dto = $this->mapArrayToDto($data, new CreateBookRequest());
+        
+        $errors = $validator->validate($dto);
+        if (count($errors) > 0) {
+            return $this->validationErrorResponse($errors);
         }
 
-        $authorId = $data['authorId'] ?? null;
-        if (!$authorId || !ctype_digit((string) $authorId)) {
-            return $this->json(['error' => 'Invalid authorId'], 400);
-        }
-
-        $author = $authorRepository->find((int) $authorId);
+        $author = $authorRepository->find($dto->authorId);
         if (!$author) {
             return $this->json(['error' => 'Author not found'], 404);
         }
 
-        $categoryIds = $data['categoryIds'] ?? [];
-        if (!is_array($categoryIds) || empty($categoryIds)) {
+        $categories = [];
+        if (!empty($dto->categoryIds)) {
+            $uniqueCategoryIds = array_unique(array_map('intval', $dto->categoryIds));
+            $categories = $categoryRepository->findBy(['id' => $uniqueCategoryIds]);
+            if (count($categories) !== count($uniqueCategoryIds)) {
+                return $this->json(['error' => 'One or more categories not found'], 404);
+            }
+        }
+
+        if (empty($categories)) {
             return $this->json(['error' => 'At least one category is required'], 400);
         }
 
-        $uniqueCategoryIds = array_unique(array_map('intval', $categoryIds));
-        $categories = $categoryRepository->findBy(['id' => $uniqueCategoryIds]);
-        if (count($categories) !== count($uniqueCategoryIds)) {
-            return $this->json(['error' => 'One or more categories not found'], 404);
-        }
-
-        $totalCopies = isset($data['totalCopies']) ? (int) $data['totalCopies'] : (int) ($data['copies'] ?? 1);
-        if ($totalCopies < 1) {
-            return $this->json(['error' => 'totalCopies must be at least 1'], 400);
-        }
-
-        $desiredAvailable = isset($data['copies']) ? (int) $data['copies'] : $totalCopies;
+        // Obsługa copies i totalCopies - dla kompatybilności wstecznej
+        $totalCopies = $dto->totalCopies ?? ($data['copies'] ?? 1);
+        $desiredAvailable = isset($data['copies']) ? (int)$data['copies'] : $totalCopies;
         $desiredAvailable = max(0, min($desiredAvailable, $totalCopies));
 
         $book = (new Book())
-            ->setTitle($data['title'])
+            ->setTitle($dto->title)
             ->setAuthor($author)
-            ->setIsbn($data['isbn'] ?? null)
-            ->setDescription($data['description'] ?? null);
+            ->setIsbn($dto->isbn)
+            ->setDescription($dto->description);
 
-        if (array_key_exists('targetAgeGroup', $data)) {
-            $ageGroup = $data['targetAgeGroup'];
-            if ($ageGroup === null || $ageGroup === '') {
-                $book->setTargetAgeGroup(null);
-            } elseif (!is_string($ageGroup) || !Book::isValidAgeGroup($ageGroup)) {
-                return $this->json(['error' => 'Invalid targetAgeGroup'], 400);
-            } else {
-                $book->setTargetAgeGroup($ageGroup);
-            }
+        if ($dto->publisher) {
+            $book->setPublisher($dto->publisher);
+        }
+        if ($dto->publicationYear) {
+            $book->setPublicationYear($dto->publicationYear);
+        }
+        if ($dto->resourceType) {
+            $book->setResourceType($dto->resourceType);
+        }
+        if ($dto->signature) {
+            $book->setSignature($dto->signature);
+        }
+        if ($dto->targetAgeGroup) {
+            $book->setTargetAgeGroup($dto->targetAgeGroup);
         }
 
         foreach ($categories as $category) {
@@ -177,37 +237,50 @@ class BookController extends AbstractController
         ManagerRegistry $doctrine,
         SecurityService $security,
         AuthorRepository $authorRepository,
-        CategoryRepository $categoryRepository
+        CategoryRepository $categoryRepository,
+        ValidatorInterface $validator
     ): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
             return $this->json(['error' => 'Forbidden'], 403);
         }
-        $book = $repo->find($id);
-        if (!$book) return $this->json(['error' => 'Book not found'], 404);
-        $data = json_decode($request->getContent(), true) ?? [];
 
-        if (!empty($data['title'])) {
-            $book->setTitle($data['title']);
+        $book = $repo->find($id);
+        if (!$book) {
+            return $this->json(['error' => 'Book not found'], 404);
         }
 
-        if (isset($data['authorId'])) {
-            $authorId = $data['authorId'];
-            if (!ctype_digit((string) $authorId)) {
-                return $this->json(['error' => 'Invalid authorId'], 400);
-            }
-            $author = $authorRepository->find((int) $authorId);
+        $data = json_decode($request->getContent(), true) ?? [];
+        
+        // Sprawdź czy próbuje się edytować inwentarz
+        if (isset($data['copies']) || isset($data['totalCopies'])) {
+            return $this->json(['error' => 'Inventory is managed automatycznie przez system wypożyczeń i nie może być edytowane ręcznie'], 400);
+        }
+        
+        $dto = $this->mapArrayToDto($data, new UpdateBookRequest());
+        
+        $errors = $validator->validate($dto);
+        if (count($errors) > 0) {
+            return $this->validationErrorResponse($errors);
+        }
+
+        if ($dto->title !== null) {
+            $book->setTitle($dto->title);
+        }
+
+        if ($dto->authorId !== null) {
+            $author = $authorRepository->find($dto->authorId);
             if (!$author) {
                 return $this->json(['error' => 'Author not found'], 404);
             }
             $book->setAuthor($author);
         }
 
-        if (isset($data['categoryIds']) && is_array($data['categoryIds'])) {
-            $uniqueCategoryIds = array_unique(array_map('intval', $data['categoryIds']));
-            if (empty($uniqueCategoryIds)) {
+        if ($dto->categoryIds !== null) {
+            if (empty($dto->categoryIds)) {
                 return $this->json(['error' => 'At least one category is required'], 400);
             }
+            $uniqueCategoryIds = array_unique(array_map('intval', $dto->categoryIds));
             $categories = $categoryRepository->findBy(['id' => $uniqueCategoryIds]);
             if (count($categories) !== count($uniqueCategoryIds)) {
                 return $this->json(['error' => 'One or more categories not found'], 404);
@@ -218,27 +291,32 @@ class BookController extends AbstractController
             }
         }
 
-        if (isset($data['totalCopies']) || isset($data['copies'])) {
-            return $this->json(['error' => 'Inventory is managed automatycznie przez system wypożyczeń i nie może być edytowane ręcznie'], 400);
+        if ($dto->description !== null) {
+            $book->setDescription($dto->description);
         }
 
-        if (array_key_exists('description', $data)) {
-            $book->setDescription($data['description']);
+        if ($dto->isbn !== null) {
+            $book->setIsbn($dto->isbn);
         }
 
-        if (array_key_exists('isbn', $data)) {
-            $book->setIsbn($data['isbn']);
+        if ($dto->publisher !== null) {
+            $book->setPublisher($dto->publisher);
         }
 
-        if (array_key_exists('targetAgeGroup', $data)) {
-            $ageGroup = $data['targetAgeGroup'];
-            if ($ageGroup === null || $ageGroup === '') {
-                $book->setTargetAgeGroup(null);
-            } elseif (!is_string($ageGroup) || !Book::isValidAgeGroup($ageGroup)) {
-                return $this->json(['error' => 'Invalid targetAgeGroup'], 400);
-            } else {
-                $book->setTargetAgeGroup($ageGroup);
-            }
+        if ($dto->publicationYear !== null) {
+            $book->setPublicationYear($dto->publicationYear);
+        }
+
+        if ($dto->resourceType !== null) {
+            $book->setResourceType($dto->resourceType);
+        }
+
+        if ($dto->signature !== null) {
+            $book->setSignature($dto->signature);
+        }
+
+        if ($dto->targetAgeGroup !== null) {
+            $book->setTargetAgeGroup($dto->targetAgeGroup);
         }
 
         $em = $doctrine->getManager();

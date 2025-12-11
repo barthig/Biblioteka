@@ -1,8 +1,11 @@
 <?php
 namespace App\Controller;
 
+use App\Controller\Traits\ValidationTrait;
 use App\Entity\Loan;
+use App\Repository\LoanRepository;
 use App\Message\ReservationReadyMessage;
+use App\Request\CreateLoanRequest;
 use App\Service\BookService;
 use App\Service\SecurityService;
 use Doctrine\Persistence\ManagerRegistry;
@@ -10,6 +13,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Messenger\MessageBusInterface;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Psr\Log\LoggerInterface;
 use App\Entity\Book;
 use App\Entity\User;
@@ -18,14 +22,40 @@ use App\Entity\BookCopy;
 
 class LoanController extends AbstractController
 {
+    use ValidationTrait;
     public function list(Request $request, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
     {
+        $page = max(1, $request->query->getInt('page', 1));
+        $limit = min(100, max(10, $request->query->getInt('limit', 20)));
+        $offset = ($page - 1) * $limit;
+
+        $em = $doctrine->getManager();
+        $loanRepository = $em->getRepository(Loan::class);
+        assert($loanRepository instanceof LoanRepository);
+
         // librarians see all loans; regular users see only their loans
         if ($security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            $repo = $doctrine->getRepository(Loan::class);
-            $loans = $repo->findAll();
+            $qb = $loanRepository->createQueryBuilder('l')
+                ->leftJoin('l.user', 'u')->addSelect('u')
+                ->leftJoin('l.book', 'b')->addSelect('b')
+                ->leftJoin('l.bookCopy', 'bc')->addSelect('bc')
+                ->orderBy('l.borrowedAt', 'DESC');
 
-            return $this->json($loans, 200, [], ['groups' => ['loan:read']]);
+            $countQb = $loanRepository->createQueryBuilder('l')
+                ->select('COUNT(l.id)');
+            $total = (int) $countQb->getQuery()->getSingleScalarResult();
+
+            $loans = $qb->setMaxResults($limit)->setFirstResult($offset)->getQuery()->getResult();
+
+            return $this->json([
+                'data' => $loans,
+                'meta' => [
+                    'page' => $page,
+                    'limit' => $limit,
+                    'total' => $total,
+                    'totalPages' => $total > 0 ? (int)ceil($total / $limit) : 0
+                ]
+            ], 200, [], ['groups' => ['loan:read']]);
         }
 
         $payload = $security->getJwtPayload($request);
@@ -34,10 +64,32 @@ class LoanController extends AbstractController
         }
 
         $userId = (int)$payload['sub'];
-        $repo = $doctrine->getRepository(Loan::class);
-        $loans = $repo->findBy(['user' => $userId]);
+        
+        $qb = $loanRepository->createQueryBuilder('l')
+            ->leftJoin('l.user', 'u')->addSelect('u')
+            ->leftJoin('l.book', 'b')->addSelect('b')
+            ->leftJoin('l.bookCopy', 'bc')->addSelect('bc')
+            ->where('l.user = :userId')
+            ->setParameter('userId', $userId)
+            ->orderBy('l.borrowedAt', 'DESC');
 
-        return $this->json($loans, 200, [], ['groups' => ['loan:read']]);
+        $countQb = $loanRepository->createQueryBuilder('l')
+            ->select('COUNT(l.id)')
+            ->where('l.user = :userId')
+            ->setParameter('userId', $userId);
+        $total = (int) $countQb->getQuery()->getSingleScalarResult();
+
+        $loans = $qb->setMaxResults($limit)->setFirstResult($offset)->getQuery()->getResult();
+
+        return $this->json([
+            'data' => $loans,
+            'meta' => [
+                'page' => $page,
+                'limit' => $limit,
+                'total' => $total,
+                'totalPages' => $total > 0 ? (int)ceil($total / $limit) : 0
+            ]
+        ], 200, [], ['groups' => ['loan:read']]);
     }
 
     public function getLoan(string $id, Request $request, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
@@ -60,7 +112,7 @@ class LoanController extends AbstractController
         return $this->json($loan, 200, [], ['groups' => ['loan:read']]);
     }
 
-    public function create(Request $request, ManagerRegistry $doctrine, BookService $bookService, SecurityService $security): JsonResponse
+    public function create(Request $request, ManagerRegistry $doctrine, BookService $bookService, SecurityService $security, ValidatorInterface $validator): JsonResponse
     {
         $payload = $security->getJwtPayload($request);
         if ($payload === null) {
@@ -68,18 +120,18 @@ class LoanController extends AbstractController
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
-        $userId = $data['userId'] ?? null;
-        $bookId = $data['bookId'] ?? null;
-        $inventoryCode = isset($data['inventoryCode']) && is_string($data['inventoryCode']) ? strtoupper(trim($data['inventoryCode'])) : null;
-        $days = isset($data['days']) ? (int) $data['days'] : 14;
-
-        if (!$userId || !ctype_digit((string) $userId)) {
-            return $this->json(['error' => 'Missing or invalid userId'], 400);
+        
+        // Walidacja DTO
+        $dto = $this->mapArrayToDto($data, new CreateLoanRequest());
+        $errors = $validator->validate($dto);
+        if (count($errors) > 0) {
+            return $this->validationErrorResponse($errors);
         }
 
-        if ((!$inventoryCode || $inventoryCode === '') && (!$bookId || !ctype_digit((string) $bookId))) {
-            return $this->json(['error' => 'Missing bookId or inventoryCode'], 400);
-        }
+        $userId = $dto->userId;
+        $bookId = $dto->bookId;
+        $inventoryCode = $dto->inventoryCode ? strtoupper(trim($dto->inventoryCode)) : null;
+        $days = $dto->days ?? 14;
 
         $userRepo = $doctrine->getRepository(User::class);
         $bookRepo = $doctrine->getRepository(Book::class);
@@ -169,11 +221,20 @@ class LoanController extends AbstractController
             ->setDueAt((new \DateTimeImmutable())->modify("+{$days} days"));
 
         $em = $doctrine->getManager();
-        $em->persist($loan);
-        if ($reservation) {
-            $em->persist($reservation);
+        /** @var EntityManagerInterface $em */
+        $conn = $em->getConnection();
+        $conn->beginTransaction();
+        try {
+            $em->persist($loan);
+            if ($reservation) {
+                $em->persist($reservation);
+            }
+            $em->flush();
+            $conn->commit();
+        } catch (\Exception $e) {
+            $conn->rollBack();
+            return $this->json(['error' => 'Nie udało się utworzyć wypożyczenia'], 500);
         }
-        $em->flush();
 
         return $this->json($loan, 201, [], ['groups' => ['loan:read']]);
     }
@@ -232,16 +293,34 @@ class LoanController extends AbstractController
             $nextReservation->setExpiresAt((new \DateTimeImmutable())->modify('+2 days'));
             $reservationForNotification = $nextReservation;
             $em = $doctrine->getManager();
-            $loan->getBook()->recalculateInventoryCounters();
-            $em->persist($copy);
-            $em->persist($nextReservation);
-            $em->persist($loan->getBook());
-            $em->persist($loan);
-            $em->flush();
+            /** @var EntityManagerInterface $em */
+            $conn = $em->getConnection();
+            $conn->beginTransaction();
+            try {
+                $loan->getBook()->recalculateInventoryCounters();
+                $em->persist($copy);
+                $em->persist($nextReservation);
+                $em->persist($loan->getBook());
+                $em->persist($loan);
+                $em->flush();
+                $conn->commit();
+            } catch (\Exception $e) {
+                $conn->rollBack();
+                return $this->json(['error' => 'Nie udało się zwrócić wypożyczenia'], 500);
+            }
         } else {
             $em = $doctrine->getManager();
-            $em->persist($loan);
-            $em->flush();
+            /** @var EntityManagerInterface $em */
+            $conn = $em->getConnection();
+            $conn->beginTransaction();
+            try {
+                $em->persist($loan);
+                $em->flush();
+                $conn->commit();
+            } catch (\Exception $e) {
+                $conn->rollBack();
+                return $this->json(['error' => 'Nie udało się zwrócić wypożyczenia'], 500);
+            }
         }
 
         if ($reservationForNotification) {

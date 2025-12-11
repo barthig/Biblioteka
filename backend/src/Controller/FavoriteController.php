@@ -1,18 +1,22 @@
 <?php
 namespace App\Controller;
 
+use App\Controller\Traits\ValidationTrait;
 use App\Entity\Book;
 use App\Entity\Favorite;
 use App\Entity\User;
 use App\Repository\FavoriteRepository;
+use App\Request\AddFavoriteRequest;
 use App\Service\SecurityService;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class FavoriteController extends AbstractController
 {
+    use ValidationTrait;
     public function list(Request $request, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
     {
         $payload = $security->getJwtPayload($request);
@@ -32,7 +36,7 @@ class FavoriteController extends AbstractController
         return $this->json($favorites, 200, [], ['groups' => ['favorite:read', 'book:read']]);
     }
 
-    public function add(Request $request, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
+    public function add(Request $request, ManagerRegistry $doctrine, SecurityService $security, ValidatorInterface $validator): JsonResponse
     {
         $payload = $security->getJwtPayload($request);
         if (!$payload || !isset($payload['sub'])) {
@@ -40,10 +44,15 @@ class FavoriteController extends AbstractController
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
-        $bookId = $data['bookId'] ?? null;
-        if (!$bookId || !ctype_digit((string) $bookId)) {
-            return $this->json(['error' => 'Invalid bookId'], 400);
+        
+        // Walidacja DTO
+        $dto = $this->mapArrayToDto($data, new AddFavoriteRequest());
+        $errors = $validator->validate($dto);
+        if (count($errors) > 0) {
+            return $this->validationErrorResponse($errors);
         }
+        
+        $bookId = $dto->bookId;
 
         $userRepo = $doctrine->getRepository(User::class);
         $bookRepo = $doctrine->getRepository(Book::class);

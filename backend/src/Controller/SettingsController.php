@@ -1,13 +1,17 @@
 <?php
 namespace App\Controller;
 
+use App\Controller\Traits\ValidationTrait;
+use App\Request\UpdateSettingsRequest;
 use App\Service\SecurityService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class SettingsController extends AbstractController
 {
+    use ValidationTrait;
     private array $defaults = [
         'loanLimitPerUser' => 5,
         'loanDurationDays' => 14,
@@ -31,7 +35,7 @@ class SettingsController extends AbstractController
         return $this->json($this->defaults, 200);
     }
 
-    public function updateSettings(Request $request, SecurityService $security): JsonResponse
+    public function updateSettings(Request $request, SecurityService $security, ValidatorInterface $validator): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
             return $this->json(['error' => 'Forbidden'], 403);
@@ -40,6 +44,13 @@ class SettingsController extends AbstractController
         $payload = json_decode($request->getContent(), true);
         if (!is_array($payload)) {
             return $this->json(['error' => 'Invalid JSON payload'], 400);
+        }
+        
+        // Walidacja DTO
+        $dto = $this->mapArrayToDto($payload, new UpdateSettingsRequest());
+        $errors = $validator->validate($dto);
+        if (count($errors) > 0) {
+            return $this->validationErrorResponse($errors);
         }
 
         $settings = $this->defaults;

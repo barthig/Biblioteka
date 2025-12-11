@@ -1,25 +1,53 @@
 <?php
 namespace App\Controller;
 
+use App\Controller\Traits\ValidationTrait;
 use App\Entity\Fine;
 use App\Entity\Loan;
 use App\Repository\FineRepository;
+use App\Request\CreateFineRequest;
 use App\Service\SecurityService;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class FineController extends AbstractController
 {
+    use ValidationTrait;
     public function list(Request $request, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
     {
-        /** @var FineRepository $repo */
-        $repo = $doctrine->getRepository(Fine::class);
+        $page = max(1, $request->query->getInt('page', 1));
+        $limit = min(100, max(10, $request->query->getInt('limit', 20)));
+        $offset = ($page - 1) * $limit;
+
+        $em = $doctrine->getManager();
+        $fineRepository = $em->getRepository(Fine::class);
+        assert($fineRepository instanceof FineRepository);
 
         if ($security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            $fines = $repo->findAll();
-            return $this->json($fines, 200, [], [
+            $qb = $fineRepository->createQueryBuilder('f')
+                ->leftJoin('f.loan', 'l')->addSelect('l')
+                ->leftJoin('l.user', 'u')->addSelect('u')
+                ->leftJoin('l.book', 'b')->addSelect('b')
+                ->orderBy('f.createdAt', 'DESC');
+
+            $countQb = $fineRepository->createQueryBuilder('f')
+                ->select('COUNT(f.id)');
+            $total = (int) $countQb->getQuery()->getSingleScalarResult();
+
+            $fines = $qb->setMaxResults($limit)->setFirstResult($offset)->getQuery()->getResult();
+            
+            return $this->json([
+                'data' => $fines,
+                'meta' => [
+                    'page' => $page,
+                    'limit' => $limit,
+                    'total' => $total,
+                    'totalPages' => $total > 0 ? (int)ceil($total / $limit) : 0
+                ]
+            ], 200, [], [
                 'groups' => ['fine:read', 'loan:read'],
                 'json_encode_options' => \JSON_PRESERVE_ZERO_FRACTION,
             ]);
@@ -33,53 +61,67 @@ class FineController extends AbstractController
         $userId = (int) $payload['sub'];
         $loans = $doctrine->getRepository(Loan::class)->findBy(['user' => $userId]);
         if (empty($loans)) {
-            return $this->json([], 200, []);
+            return $this->json([
+                'data' => [],
+                'meta' => [
+                    'page' => 1,
+                    'limit' => $limit,
+                    'total' => 0,
+                    'totalPages' => 0
+                ]
+            ], 200, []);
         }
 
         $loanIds = array_map(static fn ($loan) => $loan->getId(), $loans);
-        $fines = $repo->createQueryBuilder('f')
+        $qb = $fineRepository->createQueryBuilder('f')
+            ->leftJoin('f.loan', 'l')->addSelect('l')
+            ->leftJoin('l.user', 'u')->addSelect('u')
+            ->leftJoin('l.book', 'b')->addSelect('b')
             ->andWhere('f.loan IN (:loans)')
             ->setParameter('loans', $loanIds)
-            ->orderBy('f.createdAt', 'DESC')
-            ->getQuery()
-            ->getResult();
+            ->orderBy('f.createdAt', 'DESC');
 
-        return $this->json($fines, 200, [], [
+        $countQb = $fineRepository->createQueryBuilder('f')
+            ->select('COUNT(f.id)')
+            ->andWhere('f.loan IN (:loans)')
+            ->setParameter('loans', $loanIds);
+        $total = (int) $countQb->getQuery()->getSingleScalarResult();
+
+        $fines = $qb->setMaxResults($limit)->setFirstResult($offset)->getQuery()->getResult();
+
+        return $this->json([
+            'data' => $fines,
+            'meta' => [
+                'page' => $page,
+                'limit' => $limit,
+                'total' => $total,
+                'totalPages' => $total > 0 ? (int)ceil($total / $limit) : 0
+            ]
+        ], 200, [], [
             'groups' => ['fine:read', 'loan:read'],
             'json_encode_options' => \JSON_PRESERVE_ZERO_FRACTION,
         ]);
     }
 
-    public function create(Request $request, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
+    public function create(Request $request, ManagerRegistry $doctrine, SecurityService $security, ValidatorInterface $validator): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
             return $this->json(['error' => 'Forbidden'], 403);
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
-        $loanId = $data['loanId'] ?? null;
-        if (!$loanId || !ctype_digit((string) $loanId)) {
-            return $this->json(['error' => 'Missing or invalid loanId'], 400);
+        
+        // Walidacja DTO
+        $dto = $this->mapArrayToDto($data, new CreateFineRequest());
+        $errors = $validator->validate($dto);
+        if (count($errors) > 0) {
+            return $this->validationErrorResponse($errors);
         }
 
-        $reason = isset($data['reason']) ? trim((string) $data['reason']) : '';
-        if ($reason === '') {
-            return $this->json(['error' => 'Reason is required'], 400);
-        }
-
-        $amountValue = $data['amount'] ?? null;
-        if (!is_numeric($amountValue)) {
-            return $this->json(['error' => 'Invalid amount'], 400);
-        }
-        $amount = (float) $amountValue;
-        if ($amount <= 0) {
-            return $this->json(['error' => 'Amount must be greater than zero'], 400);
-        }
-
-        $currency = isset($data['currency']) ? strtoupper(trim((string) $data['currency'])) : 'PLN';
-        if (strlen($currency) !== 3) {
-            return $this->json(['error' => 'Currency should be a 3-letter code'], 400);
-        }
+        $loanId = $dto->loanId;
+        $reason = $dto->reason;
+        $amount = $dto->amount;
+        $currency = $dto->currency;
 
         $loan = $doctrine->getRepository(Loan::class)->find((int) $loanId);
         if (!$loan) {

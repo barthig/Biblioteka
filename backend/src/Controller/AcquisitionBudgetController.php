@@ -1,16 +1,20 @@
 <?php
 namespace App\Controller;
 
+use App\Controller\Traits\ValidationTrait;
 use App\Entity\AcquisitionBudget;
 use App\Entity\AcquisitionExpense;
+use App\Request\CreateAcquisitionBudgetRequest;
 use App\Service\SecurityService;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class AcquisitionBudgetController extends AbstractController
 {
+    use ValidationTrait;
     public function list(Request $request, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
@@ -27,18 +31,19 @@ class AcquisitionBudgetController extends AbstractController
         return $this->json($budgets, 200, [], ['groups' => ['budget:read']]);
     }
 
-    public function create(Request $request, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
+    public function create(Request $request, ManagerRegistry $doctrine, SecurityService $security, ValidatorInterface $validator): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
             return $this->json(['error' => 'Forbidden'], 403);
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
-        if (empty($data['name']) || empty($data['fiscalYear'])) {
-            return $this->json(['error' => 'Name and fiscalYear are required'], 400);
-        }
-        if (!isset($data['allocatedAmount']) || !is_numeric($data['allocatedAmount'])) {
-            return $this->json(['error' => 'Allocated amount must be numeric'], 400);
+        
+        // Walidacja DTO
+        $dto = $this->mapArrayToDto($data, new CreateAcquisitionBudgetRequest());
+        $errors = $validator->validate($dto);
+        if (count($errors) > 0) {
+            return $this->validationErrorResponse($errors);
         }
 
         $budget = (new AcquisitionBudget())

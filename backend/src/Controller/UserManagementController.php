@@ -1,25 +1,35 @@
 <?php
 namespace App\Controller;
 
+use App\Controller\Traits\ValidationTrait;
 use App\Entity\User;
 use App\Repository\UserRepository;
+use App\Request\CreateUserRequest;
+use App\Request\UpdateUserRequest;
 use App\Service\SecurityService;
 use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class UserManagementController extends AbstractController
 {
-    public function create(Request $request, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
+    use ValidationTrait;
+    public function create(Request $request, ManagerRegistry $doctrine, SecurityService $security, ValidatorInterface $validator): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
             return $this->json(['error' => 'Forbidden'], 403);
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
-        if (empty($data['email']) || empty($data['name']) || empty($data['password'])) {
-            return $this->json(['error' => 'Missing email, name or password'], 400);
+        
+        // Walidacja DTO
+        $dto = $this->mapArrayToDto($data, new CreateUserRequest());
+        $errors = $validator->validate($dto);
+        if (count($errors) > 0) {
+            return $this->validationErrorResponse($errors);
         }
 
         $user = (new User())
@@ -66,13 +76,23 @@ class UserManagementController extends AbstractController
         $user->recordPrivacyConsent();
 
         $em = $doctrine->getManager();
-        $em->persist($user);
-        $em->flush();
+        /** @var EntityManagerInterface $em */
+        $conn = $em->getConnection();
+        
+        $conn->beginTransaction();
+        try {
+            $em->persist($user);
+            $em->flush();
+            $conn->commit();
+        } catch (\Exception $e) {
+            $conn->rollBack();
+            return $this->json(['error' => 'Błąd podczas tworzenia użytkownika'], 500);
+        }
 
         return $this->json($user, 201);
     }
 
-    public function update(string $id, Request $request, UserRepository $repo, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
+    public function update(string $id, Request $request, UserRepository $repo, ManagerRegistry $doctrine, SecurityService $security, ValidatorInterface $validator): JsonResponse
     {
         $isAdmin = $security->hasRole($request, 'ROLE_ADMIN');
         $isLibrarian = $security->hasRole($request, 'ROLE_LIBRARIAN');
@@ -94,6 +114,13 @@ class UserManagementController extends AbstractController
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
+        
+        // Walidacja DTO
+        $dto = $this->mapArrayToDto($data, new UpdateUserRequest());
+        $errors = $validator->validate($dto);
+        if (count($errors) > 0) {
+            return $this->validationErrorResponse($errors);
+        }
 
         if (!empty($data['name'])) {
             $user->setName($data['name']);

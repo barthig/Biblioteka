@@ -1,0 +1,36 @@
+<?php
+namespace App\Request;
+
+use Symfony\Component\Validator\Constraints as Assert;
+
+class UpdateUserRequest
+{
+    #[Assert\Length(min: 2, max: 255)]
+    public ?string $name = null;
+
+    #[Assert\Type('array')]
+    public ?array $roles = null;
+
+    #[Assert\Length(max: 30)]
+    public ?string $phoneNumber = null;
+
+    #[Assert\Length(max: 255)]
+    public ?string $addressLine = null;
+
+    #[Assert\Length(max: 100)]
+    public ?string $city = null;
+
+    #[Assert\Regex(pattern: '/^\d{2}-\d{3}$/', message: 'Kod pocztowy musi być w formacie XX-XXX')]
+    public ?string $postalCode = null;
+
+    #[Assert\Choice(
+        choices: ['standard', 'student', 'pracownik_naukowy', 'dziecko'],
+        message: 'Nieprawidłowa grupa członkowska'
+    )]
+    public ?string $membershipGroup = null;
+
+    #[Assert\Type('bool')]
+    public ?bool $blocked = null;
+
+    public ?string $blockedReason = null;
+}

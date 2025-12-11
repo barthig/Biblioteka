@@ -1,18 +1,22 @@
 <?php
 namespace App\Controller;
 
+use App\Controller\Traits\ValidationTrait;
 use App\Entity\Book;
 use App\Entity\Review;
 use App\Entity\User;
 use App\Repository\ReviewRepository;
+use App\Request\CreateReviewRequest;
 use App\Service\SecurityService;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class ReviewController extends AbstractController
 {
+    use ValidationTrait;
     public function list(int $id, Request $request, ManagerRegistry $doctrine, ReviewRepository $repo, SecurityService $security): JsonResponse
     {
         $book = $doctrine->getRepository(Book::class)->find($id);
@@ -39,7 +43,7 @@ class ReviewController extends AbstractController
         ], 200, [], ['groups' => ['review:read', 'book:read']]);
     }
 
-    public function upsert(int $id, Request $request, ManagerRegistry $doctrine, ReviewRepository $repo, SecurityService $security): JsonResponse
+    public function upsert(int $id, Request $request, ManagerRegistry $doctrine, ReviewRepository $repo, SecurityService $security, ValidatorInterface $validator): JsonResponse
     {
         $payload = $security->getJwtPayload($request);
         if (!$payload || !isset($payload['sub'])) {
@@ -57,12 +61,16 @@ class ReviewController extends AbstractController
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
-        $rating = isset($data['rating']) ? (int) $data['rating'] : null;
-        $comment = isset($data['comment']) ? trim((string) $data['comment']) : null;
-
-        if ($rating === null || $rating < 1 || $rating > 5) {
-            return $this->json(['error' => 'Ocena musi być liczbą z zakresu 1-5'], 400);
+        
+        // Walidacja DTO
+        $dto = $this->mapArrayToDto($data, new CreateReviewRequest());
+        $errors = $validator->validate($dto);
+        if (count($errors) > 0) {
+            return $this->validationErrorResponse($errors);
         }
+        
+        $rating = $dto->rating;
+        $comment = $dto->comment;
 
         $review = $repo->findOneByUserAndBook($user, $book);
         $statusCode = 200;

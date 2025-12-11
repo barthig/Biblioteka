@@ -1,15 +1,19 @@
 <?php
 namespace App\Controller;
 
+use App\Controller\Traits\ValidationTrait;
 use App\Entity\Supplier;
+use App\Request\CreateSupplierRequest;
 use App\Service\SecurityService;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class AcquisitionSupplierController extends AbstractController
 {
+    use ValidationTrait;
     public function list(Request $request, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
@@ -26,15 +30,19 @@ class AcquisitionSupplierController extends AbstractController
         return $this->json($suppliers, 200, [], ['groups' => ['supplier:read']]);
     }
 
-    public function create(Request $request, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
+    public function create(Request $request, ManagerRegistry $doctrine, SecurityService $security, ValidatorInterface $validator): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
             return $this->json(['error' => 'Forbidden'], 403);
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
-        if (empty($data['name'])) {
-            return $this->json(['error' => 'Supplier name is required'], 400);
+        
+        // Walidacja DTO
+        $dto = $this->mapArrayToDto($data, new CreateSupplierRequest());
+        $errors = $validator->validate($dto);
+        if (count($errors) > 0) {
+            return $this->validationErrorResponse($errors);
         }
 
         $supplier = new Supplier();

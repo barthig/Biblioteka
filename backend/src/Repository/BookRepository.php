@@ -26,12 +26,18 @@ class BookRepository extends ServiceEntityRepository
     *     yearFrom?: int|null,
     *     yearTo?: int|null,
     *     available?: bool|null,
-    *     ageGroup?: string|null
+    *     ageGroup?: string|null,
+    *     page?: int,
+    *     limit?: int
      * } $filters
-     * @return Book[]
+     * @return array{data: Book[], meta: array{page: int, limit: int, total: int, totalPages: int}}
      */
     public function searchPublic(array $filters = []): array
     {
+        $page = isset($filters['page']) ? max(1, (int)$filters['page']) : 1;
+        $limit = isset($filters['limit']) ? min(100, max(10, (int)$filters['limit'])) : 20;
+        $offset = ($page - 1) * $limit;
+
         $qb = $this->createQueryBuilder('b')
             ->leftJoin('b.author', 'a')
             ->addSelect('a')
@@ -114,7 +120,24 @@ class BookRepository extends ServiceEntityRepository
             $qb->setParameter($name, $value);
         }
 
-        return $qb->getQuery()->getResult();
+        // Policz total przed paginacją
+        $countQb = clone $qb;
+        $countQb->select('COUNT(DISTINCT b.id)');
+        $total = (int) $countQb->getQuery()->getSingleScalarResult();
+
+        // Zastosuj paginację
+        $qb->setMaxResults($limit)->setFirstResult($offset);
+        $results = $qb->getQuery()->getResult();
+
+        return [
+            'data' => $results,
+            'meta' => [
+                'page' => $page,
+                'limit' => $limit,
+                'total' => $total,
+                'totalPages' => $total > 0 ? (int)ceil($total / $limit) : 0
+            ]
+        ];
     }
 
     /**

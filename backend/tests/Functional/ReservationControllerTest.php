@@ -26,7 +26,9 @@ class ReservationControllerTest extends ApiTestCase
         $listClient = $this->createAuthenticatedClient($waiter);
         $this->sendRequest($listClient, 'GET', '/api/reservations');
         $this->assertResponseStatusCodeSame(200);
-        $reservations = $this->getJsonResponse($listClient);
+        $payload = $this->getJsonResponse($listClient);
+        $this->assertArrayHasKey('data', $payload);
+        $reservations = $payload['data'];
         $this->assertCount(1, $reservations);
     }
 

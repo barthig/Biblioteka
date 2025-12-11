@@ -9,3 +9,19 @@ framework:
     handler_id: null
     cookie_secure: auto
     cookie_samesite: lax
+
+  rate_limiter:
+    login_attempts:
+      policy: 'sliding_window'
+      limit: 5
+      interval: '15 minutes'
+    
+    registration_attempts:
+      policy: 'sliding_window'
+      limit: 3
+      interval: '1 hour'
+    
+    api_global:
+      policy: 'token_bucket'
+      limit: 200
+      rate: { interval: '1 minute', amount: 200 }

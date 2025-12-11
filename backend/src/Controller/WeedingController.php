@@ -1,6 +1,7 @@
 <?php
 namespace App\Controller;
 
+use App\Controller\Traits\ValidationTrait;
 use App\Entity\Book;
 use App\Entity\BookCopy;
 use App\Entity\WeedingRecord;
@@ -9,15 +10,19 @@ use App\Entity\Loan;
 use App\Entity\Reservation;
 use App\Repository\LoanRepository;
 use App\Repository\ReservationRepository;
+use App\Request\CreateWeedingRecordRequest;
 use App\Service\BookService;
 use App\Service\SecurityService;
 use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class WeedingController extends AbstractController
 {
+    use ValidationTrait;
     public function list(Request $request, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
@@ -33,31 +38,32 @@ class WeedingController extends AbstractController
         return $this->json($records, 200, [], ['groups' => ['weeding:read', 'book:read', 'inventory:read']]);
     }
 
-    public function create(Request $request, ManagerRegistry $doctrine, BookService $bookService, SecurityService $security): JsonResponse
+    public function create(Request $request, ManagerRegistry $doctrine, BookService $bookService, SecurityService $security, ValidatorInterface $validator): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
             return $this->json(['error' => 'Forbidden'], 403);
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
-        if (empty($data['bookId']) || !ctype_digit((string) $data['bookId'])) {
-            return $this->json(['error' => 'Invalid bookId'], 400);
+        
+        // Walidacja DTO
+        $dto = $this->mapArrayToDto($data, new CreateWeedingRecordRequest());
+        $errors = $validator->validate($dto);
+        if (count($errors) > 0) {
+            return $this->validationErrorResponse($errors);
         }
-        if (empty($data['reason'])) {
-            return $this->json(['error' => 'Reason is required'], 400);
-        }
+        
+        $bookId = $dto->bookId;
+        $copyId = $dto->copyId;
 
-        $book = $doctrine->getRepository(Book::class)->find((int) $data['bookId']);
+        $book = $doctrine->getRepository(Book::class)->find((int) $bookId);
         if (!$book) {
             return $this->json(['error' => 'Book not found'], 404);
         }
 
         $copy = null;
-        if (!empty($data['copyId'])) {
-            if (!ctype_digit((string) $data['copyId'])) {
-                return $this->json(['error' => 'Invalid copyId'], 400);
-            }
-            $copy = $doctrine->getRepository(BookCopy::class)->find((int) $data['copyId']);
+        if ($copyId !== null) {
+            $copy = $doctrine->getRepository(BookCopy::class)->find((int) $copyId);
             if (!$copy || $copy->getBook()->getId() !== $book->getId()) {
                 return $this->json(['error' => 'Copy does not belong to the book'], 400);
             }
@@ -111,16 +117,25 @@ class WeedingController extends AbstractController
         }
 
         $em = $doctrine->getManager();
+        /** @var EntityManagerInterface $em */
+        $conn = $em->getConnection();
 
-        if ($copy) {
-            $bookService->withdrawCopy($book, $copy, $data['conditionState'] ?? null, false);
-        } else {
-            $book->recalculateInventoryCounters();
-            $em->persist($book);
+        $conn->beginTransaction();
+        try {
+            if ($copy) {
+                $bookService->withdrawCopy($book, $copy, $data['conditionState'] ?? null, false);
+            } else {
+                $book->recalculateInventoryCounters();
+                $em->persist($book);
+            }
+
+            $em->persist($record);
+            $em->flush();
+            $conn->commit();
+        } catch (\Exception $e) {
+            $conn->rollBack();
+            return $this->json(['error' => 'Błąd podczas tworzenia rekordu selekcji'], 500);
         }
-
-        $em->persist($record);
-        $em->flush();
 
         return $this->json($record, 201, [], ['groups' => ['weeding:read', 'book:read', 'inventory:read']]);
     }

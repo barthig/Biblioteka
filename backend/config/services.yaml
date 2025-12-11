@@ -31,3 +31,12 @@ services:
     arguments:
       $users: '@App\Repository\UserRepository'
     tags: ['kernel.event_subscriber']
+  
+  # Named Rate Limiters
+  App\Controller\AuthController:
+    arguments:
+      $loginAttemptsLimiter: '@limiter.login_attempts'
+  
+  App\Controller\RegistrationController:
+    arguments:
+      $registrationAttemptsLimiter: '@limiter.registration_attempts'

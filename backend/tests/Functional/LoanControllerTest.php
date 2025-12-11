@@ -139,7 +139,9 @@ class LoanControllerTest extends ApiTestCase
         $this->sendRequest($client, 'GET', '/api/loans');
 
         $this->assertResponseStatusCodeSame(200);
-        $data = $this->getJsonResponse($client);
+        $payload = $this->getJsonResponse($client);
+        $this->assertArrayHasKey('data', $payload);
+        $data = $payload['data'];
         $this->assertCount(1, $data);
         $this->assertSame($user->getId(), $data[0]['user']['id']);
     }

@@ -15,7 +15,9 @@
     "symfony/mailer": "^7.3",
     "symfony/notifier": "^7.3",
     "nelmio/api-doc-bundle": "^4.5",
-    "symfony/validator": "^6.4"
+    "symfony/validator": "^6.4",
+    "symfony/rate-limiter": "^7.4",
+    "symfony/lock": "^7.4"
   },
   "autoload": {
     "psr-4": {
@@ -37,6 +39,6 @@
   },
   "scripts": {
     "start": "symfony server:start",
-    "test": "phpunit"
+    "test": "php vendor/bin/phpunit"
   }
 }

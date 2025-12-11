@@ -1,18 +1,24 @@
 <?php
 namespace App\Controller;
 
+use App\Controller\Traits\ValidationTrait;
 use App\Entity\Book;
 use App\Entity\BookCopy;
 use App\Repository\BookRepository;
 use App\Repository\BookCopyRepository;
+use App\Request\CreateBookCopyRequest;
+use App\Request\UpdateBookCopyRequest;
 use App\Service\SecurityService;
 use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class BookInventoryController extends AbstractController
 {
+    use ValidationTrait;
     public function list(int $id, Request $request, BookRepository $bookRepository, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
@@ -41,7 +47,8 @@ class BookInventoryController extends AbstractController
         BookRepository $bookRepository,
         BookCopyRepository $copyRepository,
         ManagerRegistry $doctrine,
-        SecurityService $security
+        SecurityService $security,
+        ValidatorInterface $validator
     ): JsonResponse {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
             return $this->json(['error' => 'Forbidden'], 403);
@@ -53,8 +60,16 @@ class BookInventoryController extends AbstractController
         }
 
         $data = json_decode($request->getContent(), true) ?? [];
-        $inventoryCode = isset($data['inventoryCode']) && is_string($data['inventoryCode']) && trim($data['inventoryCode']) !== ''
-            ? strtoupper(trim($data['inventoryCode']))
+        
+        // Walidacja DTO
+        $dto = $this->mapArrayToDto($data, new CreateBookCopyRequest());
+        $errors = $validator->validate($dto);
+        if (count($errors) > 0) {
+            return $this->validationErrorResponse($errors);
+        }
+        
+        $inventoryCode = $dto->inventoryCode && trim($dto->inventoryCode) !== ''
+            ? strtoupper(trim($dto->inventoryCode))
             : $this->generateInventoryCode($copyRepository);
 
         if (!preg_match('/^[A-Z0-9\-_.]+$/', $inventoryCode)) {
@@ -83,10 +98,20 @@ class BookInventoryController extends AbstractController
         }
 
         $em = $doctrine->getManager();
-        $book->addInventoryCopy($copy);
-        $em->persist($copy);
-        $book->recalculateInventoryCounters();
-        $em->flush();
+        /** @var EntityManagerInterface $em */
+        $conn = $em->getConnection();
+        
+        $conn->beginTransaction();
+        try {
+            $book->addInventoryCopy($copy);
+            $em->persist($copy);
+            $book->recalculateInventoryCounters();
+            $em->flush();
+            $conn->commit();
+        } catch (\Exception $e) {
+            $conn->rollBack();
+            return $this->json(['error' => 'Błąd podczas tworzenia egzemplarza'], 500);
+        }
 
         return $this->json($this->serializeCopy($copy), 201);
     }
@@ -98,7 +123,8 @@ class BookInventoryController extends AbstractController
         BookRepository $bookRepository,
         BookCopyRepository $copyRepository,
         ManagerRegistry $doctrine,
-        SecurityService $security
+        SecurityService $security,
+        ValidatorInterface $validator
     ): JsonResponse {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
             return $this->json(['error' => 'Forbidden'], 403);
@@ -115,6 +141,13 @@ class BookInventoryController extends AbstractController
         }
 
         $data = json_decode($request->getContent(), true) ?? [];
+        
+        // Walidacja DTO
+        $dto = $this->mapArrayToDto($data, new UpdateBookCopyRequest());
+        $errors = $validator->validate($dto);
+        if (count($errors) > 0) {
+            return $this->validationErrorResponse($errors);
+        }
 
         if (isset($data['inventoryCode'])) {
             $inventoryCode = strtoupper(trim((string) $data['inventoryCode']));
@@ -152,8 +185,19 @@ class BookInventoryController extends AbstractController
             $copy->setConditionState($data['condition']);
         }
 
-        $book->recalculateInventoryCounters();
-        $doctrine->getManager()->flush();
+        $em = $doctrine->getManager();
+        /** @var EntityManagerInterface $em */
+        $conn = $em->getConnection();
+        
+        $conn->beginTransaction();
+        try {
+            $book->recalculateInventoryCounters();
+            $em->flush();
+            $conn->commit();
+        } catch (\Exception $e) {
+            $conn->rollBack();
+            return $this->json(['error' => 'Błąd podczas aktualizacji egzemplarza'], 500);
+        }
 
         return $this->json($this->serializeCopy($copy));
     }
@@ -182,10 +226,20 @@ class BookInventoryController extends AbstractController
         }
 
         $em = $doctrine->getManager();
-    $book->removeInventoryCopy($copy);
-    $em->remove($copy);
-        $book->recalculateInventoryCounters();
-        $em->flush();
+        /** @var EntityManagerInterface $em */
+        $conn = $em->getConnection();
+        
+        $conn->beginTransaction();
+        try {
+            $book->removeInventoryCopy($copy);
+            $em->remove($copy);
+            $book->recalculateInventoryCounters();
+            $em->flush();
+            $conn->commit();
+        } catch (\Exception $e) {
+            $conn->rollBack();
+            return $this->json(['error' => 'Błąd podczas usuwania egzemplarza'], 500);
+        }
 
         return new JsonResponse(null, 204);
     }

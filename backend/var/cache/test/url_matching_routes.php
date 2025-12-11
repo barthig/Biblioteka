@@ -91,6 +91,7 @@ return [
             [['_route' => 'api_settings_get', '_controller' => 'App\\Controller\\SettingsController::getSettings'], null, ['GET' => 0], null, false, false, null],
             [['_route' => 'api_settings_update', '_controller' => 'App\\Controller\\SettingsController::updateSettings'], null, ['PATCH' => 0], null, false, false, null],
         ],
+        '/api/audit-logs' => [[['_route' => 'api_audit_logs_list', '_controller' => 'App\\Controller\\AuditLogController::list'], null, ['GET' => 0], null, false, false, null]],
         '/api/docs.json' => [[['_route' => 'api_docs_json', '_format' => 'json', '_controller' => 'nelmio_api_doc.controller.swagger'], null, null, null, false, false, null]],
         '/api/docs' => [[['_route' => 'api_docs_ui', '_controller' => 'nelmio_api_doc.controller.swagger_ui'], null, null, null, false, false, null]],
     ],
@@ -107,72 +108,75 @@ return [
                         .'|([0-9]+)/permissions(*:88)'
                     .')'
                     .'|a(?'
-                        .'|uth/verify/([^/]++)(*:119)'
+                        .'|u(?'
+                            .'|th/verify/([^/]++)(*:122)'
+                            .'|dit\\-logs/entity/([^/]++)/([0-9]+)(*:164)'
+                        .')'
                         .'|dmin/(?'
                             .'|books/(?'
                                 .'|([0-9]+)/copies(?'
-                                    .'|(*:162)'
+                                    .'|(*:208)'
                                 .')'
                                 .'|([0-9]+)/copies/([0-9]+)(?'
-                                    .'|(*:198)'
+                                    .'|(*:244)'
                                 .')'
                                 .'|([0-9]+)/assets(?'
-                                    .'|(*:225)'
+                                    .'|(*:271)'
                                 .')'
                                 .'|([0-9]+)/assets/([0-9]+)(?'
-                                    .'|(*:261)'
+                                    .'|(*:307)'
                                 .')'
                             .')'
                             .'|system/(?'
-                                .'|settings/([^/]++)(*:298)'
+                                .'|settings/([^/]++)(*:344)'
                                 .'|roles/([^/]++)(?'
-                                    .'|(*:323)'
-                                    .'|/assign(*:338)'
+                                    .'|(*:369)'
+                                    .'|/assign(*:384)'
                                 .')'
                                 .'|integrations/(?'
-                                    .'|([0-9]+)(*:371)'
-                                    .'|([0-9]+)/test(*:392)'
+                                    .'|([0-9]+)(*:417)'
+                                    .'|([0-9]+)/test(*:438)'
                                 .')'
                             .')'
                             .'|acquisitions/(?'
                                 .'|suppliers/([0-9]+)(?'
-                                    .'|(*:439)'
+                                    .'|(*:485)'
                                 .')'
                                 .'|orders/(?'
-                                    .'|([0-9]+)/status(*:473)'
-                                    .'|([0-9]+)/receive(*:497)'
-                                    .'|([0-9]+)/cancel(*:520)'
+                                    .'|([0-9]+)/status(*:519)'
+                                    .'|([0-9]+)/receive(*:543)'
+                                    .'|([0-9]+)/cancel(*:566)'
                                 .')'
                                 .'|budgets/(?'
-                                    .'|([0-9]+)(*:548)'
-                                    .'|([0-9]+)/expenses(*:573)'
-                                    .'|([0-9]+)/summary(*:597)'
+                                    .'|([0-9]+)(*:594)'
+                                    .'|([0-9]+)/expenses(*:619)'
+                                    .'|([0-9]+)/summary(*:643)'
                                 .')'
                             .')'
                         .')'
                     .')'
                     .'|books/(?'
                         .'|([0-9]+)(?'
-                            .'|(*:629)'
+                            .'|(*:675)'
                         .')'
                         .'|([0-9]+)/reviews(?'
-                            .'|(*:657)'
+                            .'|(*:703)'
                         .')'
                     .')'
                     .'|loans/(?'
-                        .'|([0-9]+)(*:684)'
-                        .'|user/([0-9]+)(*:705)'
-                        .'|([0-9]+)/return(*:728)'
-                        .'|([0-9]+)/extend(*:751)'
-                        .'|([0-9]+)(*:767)'
+                        .'|([0-9]+)(*:730)'
+                        .'|user/([0-9]+)(*:751)'
+                        .'|([0-9]+)/return(*:774)'
+                        .'|([0-9]+)/extend(*:797)'
+                        .'|([0-9]+)(*:813)'
                     .')'
-                    .'|reservations/([0-9]+)(*:797)'
+                    .'|reservations/([0-9]+)(*:843)'
                     .'|f(?'
                         .'|ines/(?'
-                            .'|([0-9]+)(*:825)'
-                            .'|([0-9]+)/pay(*:845)'
+                            .'|([0-9]+)(*:871)'
+                            .'|([0-9]+)/pay(*:891)'
                         .')'
-                        .'|avorites/([0-9]+)(*:871)'
+                        .'|avorites/([0-9]+)(*:917)'
                     .')'
                 .')'
             .')/?$}sDu',
@@ -188,57 +192,58 @@ return [
             [['_route' => 'api_users_unblock', '_controller' => 'App\\Controller\\UserManagementController::unblock'], ['id'], ['DELETE' => 0], null, false, false, null],
         ],
         88 => [[['_route' => 'api_users_permissions_update', '_controller' => 'App\\Controller\\UserManagementController::updatePermissions'], ['id'], ['PUT' => 0], null, false, false, null]],
-        119 => [[['_route' => 'api_auth_verify', '_controller' => 'App\\Controller\\RegistrationController::verify'], ['token'], ['GET' => 0], null, false, true, null]],
-        162 => [
+        122 => [[['_route' => 'api_auth_verify', '_controller' => 'App\\Controller\\RegistrationController::verify'], ['token'], ['GET' => 0], null, false, true, null]],
+        164 => [[['_route' => 'api_audit_logs_entity_history', '_controller' => 'App\\Controller\\AuditLogController::entityHistory'], ['entityType', 'entityId'], ['GET' => 0], null, false, true, null]],
+        208 => [
             [['_route' => 'api_admin_book_copies_list', '_controller' => 'App\\Controller\\BookInventoryController::list'], ['id'], ['GET' => 0], null, false, false, null],
             [['_route' => 'api_admin_book_copies_create', '_controller' => 'App\\Controller\\BookInventoryController::create'], ['id'], ['POST' => 0], null, false, false, null],
         ],
-        198 => [
+        244 => [
             [['_route' => 'api_admin_book_copy_update', '_controller' => 'App\\Controller\\BookInventoryController::update'], ['id', 'copyId'], ['PUT' => 0], null, false, true, null],
             [['_route' => 'api_admin_book_copy_delete', '_controller' => 'App\\Controller\\BookInventoryController::delete'], ['id', 'copyId'], ['DELETE' => 0], null, false, true, null],
         ],
-        225 => [
+        271 => [
             [['_route' => 'api_admin_book_assets_list', '_controller' => 'App\\Controller\\BookAssetController::list'], ['id'], ['GET' => 0], null, false, false, null],
             [['_route' => 'api_admin_book_assets_upload', '_controller' => 'App\\Controller\\BookAssetController::upload'], ['id'], ['POST' => 0], null, false, false, null],
         ],
-        261 => [
+        307 => [
             [['_route' => 'api_admin_book_assets_download', '_controller' => 'App\\Controller\\BookAssetController::download'], ['id', 'assetId'], ['GET' => 0], null, false, true, null],
             [['_route' => 'api_admin_book_assets_delete', '_controller' => 'App\\Controller\\BookAssetController::delete'], ['id', 'assetId'], ['DELETE' => 0], null, false, true, null],
         ],
-        298 => [[['_route' => 'api_admin_system_settings_update', '_controller' => 'App\\Controller\\Admin\\SystemConfigController::update'], ['key'], ['PUT' => 0], null, false, true, null]],
-        323 => [[['_route' => 'api_admin_system_roles_update', '_controller' => 'App\\Controller\\Admin\\RoleAdminController::update'], ['roleKey'], ['PUT' => 0], null, false, true, null]],
-        338 => [[['_route' => 'api_admin_system_roles_assign', '_controller' => 'App\\Controller\\Admin\\RoleAdminController::assign'], ['roleKey'], ['POST' => 0], null, false, false, null]],
-        371 => [[['_route' => 'api_admin_system_integrations_update', '_controller' => 'App\\Controller\\Admin\\IntegrationAdminController::update'], ['id'], ['PUT' => 0], null, false, true, null]],
-        392 => [[['_route' => 'api_admin_system_integrations_test', '_controller' => 'App\\Controller\\Admin\\IntegrationAdminController::testConnection'], ['id'], ['POST' => 0], null, false, false, null]],
-        439 => [
+        344 => [[['_route' => 'api_admin_system_settings_update', '_controller' => 'App\\Controller\\Admin\\SystemConfigController::update'], ['key'], ['PUT' => 0], null, false, true, null]],
+        369 => [[['_route' => 'api_admin_system_roles_update', '_controller' => 'App\\Controller\\Admin\\RoleAdminController::update'], ['roleKey'], ['PUT' => 0], null, false, true, null]],
+        384 => [[['_route' => 'api_admin_system_roles_assign', '_controller' => 'App\\Controller\\Admin\\RoleAdminController::assign'], ['roleKey'], ['POST' => 0], null, false, false, null]],
+        417 => [[['_route' => 'api_admin_system_integrations_update', '_controller' => 'App\\Controller\\Admin\\IntegrationAdminController::update'], ['id'], ['PUT' => 0], null, false, true, null]],
+        438 => [[['_route' => 'api_admin_system_integrations_test', '_controller' => 'App\\Controller\\Admin\\IntegrationAdminController::testConnection'], ['id'], ['POST' => 0], null, false, false, null]],
+        485 => [
             [['_route' => 'api_acquisitions_suppliers_update', '_controller' => 'App\\Controller\\AcquisitionSupplierController::update'], ['id'], ['PUT' => 0], null, false, true, null],
             [['_route' => 'api_acquisitions_suppliers_deactivate', '_controller' => 'App\\Controller\\AcquisitionSupplierController::deactivate'], ['id'], ['DELETE' => 0], null, false, true, null],
         ],
-        473 => [[['_route' => 'api_acquisitions_orders_status', '_controller' => 'App\\Controller\\AcquisitionOrderController::updateStatus'], ['id'], ['PUT' => 0], null, false, false, null]],
-        497 => [[['_route' => 'api_acquisitions_orders_receive', '_controller' => 'App\\Controller\\AcquisitionOrderController::receive'], ['id'], ['POST' => 0], null, false, false, null]],
-        520 => [[['_route' => 'api_acquisitions_orders_cancel', '_controller' => 'App\\Controller\\AcquisitionOrderController::cancel'], ['id'], ['POST' => 0], null, false, false, null]],
-        548 => [[['_route' => 'api_acquisitions_budgets_update', '_controller' => 'App\\Controller\\AcquisitionBudgetController::update'], ['id'], ['PUT' => 0], null, false, true, null]],
-        573 => [[['_route' => 'api_acquisitions_budgets_expense', '_controller' => 'App\\Controller\\AcquisitionBudgetController::addExpense'], ['id'], ['POST' => 0], null, false, false, null]],
-        597 => [[['_route' => 'api_acquisitions_budgets_summary', '_controller' => 'App\\Controller\\AcquisitionBudgetController::summary'], ['id'], ['GET' => 0], null, false, false, null]],
-        629 => [
+        519 => [[['_route' => 'api_acquisitions_orders_status', '_controller' => 'App\\Controller\\AcquisitionOrderController::updateStatus'], ['id'], ['PUT' => 0], null, false, false, null]],
+        543 => [[['_route' => 'api_acquisitions_orders_receive', '_controller' => 'App\\Controller\\AcquisitionOrderController::receive'], ['id'], ['POST' => 0], null, false, false, null]],
+        566 => [[['_route' => 'api_acquisitions_orders_cancel', '_controller' => 'App\\Controller\\AcquisitionOrderController::cancel'], ['id'], ['POST' => 0], null, false, false, null]],
+        594 => [[['_route' => 'api_acquisitions_budgets_update', '_controller' => 'App\\Controller\\AcquisitionBudgetController::update'], ['id'], ['PUT' => 0], null, false, true, null]],
+        619 => [[['_route' => 'api_acquisitions_budgets_expense', '_controller' => 'App\\Controller\\AcquisitionBudgetController::addExpense'], ['id'], ['POST' => 0], null, false, false, null]],
+        643 => [[['_route' => 'api_acquisitions_budgets_summary', '_controller' => 'App\\Controller\\AcquisitionBudgetController::summary'], ['id'], ['GET' => 0], null, false, false, null]],
+        675 => [
             [['_route' => 'api_books_get', '_controller' => 'App\\Controller\\BookController::getBook'], ['id'], ['GET' => 0], null, false, true, null],
             [['_route' => 'api_books_update', '_controller' => 'App\\Controller\\BookController::update'], ['id'], ['PUT' => 0], null, false, true, null],
             [['_route' => 'api_books_delete', '_controller' => 'App\\Controller\\BookController::delete'], ['id'], ['DELETE' => 0], null, false, true, null],
         ],
-        657 => [
+        703 => [
             [['_route' => 'api_reviews_list', '_controller' => 'App\\Controller\\ReviewController::list'], ['id'], ['GET' => 0], null, false, false, null],
             [['_route' => 'api_reviews_upsert', '_controller' => 'App\\Controller\\ReviewController::upsert'], ['id'], ['POST' => 0], null, false, false, null],
             [['_route' => 'api_reviews_delete', '_controller' => 'App\\Controller\\ReviewController::delete'], ['id'], ['DELETE' => 0], null, false, false, null],
         ],
-        684 => [[['_route' => 'api_loans_get', '_controller' => 'App\\Controller\\LoanController::getLoan'], ['id'], ['GET' => 0], null, false, true, null]],
-        705 => [[['_route' => 'api_loans_by_user', '_controller' => 'App\\Controller\\LoanController::listByUser'], ['id'], ['GET' => 0], null, false, true, null]],
-        728 => [[['_route' => 'api_loans_return', '_controller' => 'App\\Controller\\LoanController::returnLoan'], ['id'], ['PUT' => 0], null, false, false, null]],
-        751 => [[['_route' => 'api_loans_extend', '_controller' => 'App\\Controller\\LoanController::extend'], ['id'], ['PUT' => 0], null, false, false, null]],
-        767 => [[['_route' => 'api_loans_delete', '_controller' => 'App\\Controller\\LoanController::delete'], ['id'], ['DELETE' => 0], null, false, true, null]],
-        797 => [[['_route' => 'api_reservations_cancel', '_controller' => 'App\\Controller\\ReservationController::cancel'], ['id'], ['DELETE' => 0], null, false, true, null]],
-        825 => [[['_route' => 'api_fines_cancel', '_controller' => 'App\\Controller\\FineController::cancel'], ['id'], ['DELETE' => 0], null, false, true, null]],
-        845 => [[['_route' => 'api_fines_pay', '_controller' => 'App\\Controller\\FineController::pay'], ['id'], ['POST' => 0], null, false, false, null]],
-        871 => [
+        730 => [[['_route' => 'api_loans_get', '_controller' => 'App\\Controller\\LoanController::getLoan'], ['id'], ['GET' => 0], null, false, true, null]],
+        751 => [[['_route' => 'api_loans_by_user', '_controller' => 'App\\Controller\\LoanController::listByUser'], ['id'], ['GET' => 0], null, false, true, null]],
+        774 => [[['_route' => 'api_loans_return', '_controller' => 'App\\Controller\\LoanController::returnLoan'], ['id'], ['PUT' => 0], null, false, false, null]],
+        797 => [[['_route' => 'api_loans_extend', '_controller' => 'App\\Controller\\LoanController::extend'], ['id'], ['PUT' => 0], null, false, false, null]],
+        813 => [[['_route' => 'api_loans_delete', '_controller' => 'App\\Controller\\LoanController::delete'], ['id'], ['DELETE' => 0], null, false, true, null]],
+        843 => [[['_route' => 'api_reservations_cancel', '_controller' => 'App\\Controller\\ReservationController::cancel'], ['id'], ['DELETE' => 0], null, false, true, null]],
+        871 => [[['_route' => 'api_fines_cancel', '_controller' => 'App\\Controller\\FineController::cancel'], ['id'], ['DELETE' => 0], null, false, true, null]],
+        891 => [[['_route' => 'api_fines_pay', '_controller' => 'App\\Controller\\FineController::pay'], ['id'], ['POST' => 0], null, false, false, null]],
+        917 => [
             [['_route' => 'api_favorites_remove', '_controller' => 'App\\Controller\\FavoriteController::remove'], ['bookId'], ['DELETE' => 0], null, false, true, null],
             [null, null, null, null, false, false, 0],
         ],
