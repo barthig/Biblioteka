@@ -122,7 +122,7 @@ export default function Books() {
     setLastQuery(finalTerm)
     try {
       const data = await apiFetch(endpoint)
-      const list = data || []
+      const list = Array.isArray(data?.data) ? data.data : []
       setBooks(list)
       setCachedResource(cacheKey, list)
     } catch (err) {

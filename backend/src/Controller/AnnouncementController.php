@@ -2,7 +2,9 @@
 namespace App\Controller;
 
 use App\Entity\Announcement;
+use App\Entity\User;
 use App\Repository\AnnouncementRepository;
+use App\Service\SecurityService;
 use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -31,14 +33,24 @@ class AnnouncementController extends AbstractController
     )]
     public function list(
         Request $request,
-        AnnouncementRepository $announcementRepository
+        AnnouncementRepository $announcementRepository,
+        SecurityService $security,
+        ManagerRegistry $doctrine
     ): JsonResponse {
         $page = max(1, $request->query->getInt('page', 1));
         $limit = min(100, max(5, $request->query->getInt('limit', 20)));
         $offset = ($page - 1) * $limit;
 
-        $user = $this->getUser();
-        $isLibrarian = $this->isGranted('ROLE_LIBRARIAN');
+        $payload = $security->getJwtPayload($request);
+        $user = null;
+        $isLibrarian = false;
+        
+        if ($payload && isset($payload['sub'])) {
+            $user = $doctrine->getRepository(User::class)->find((int) $payload['sub']);
+            if ($user) {
+                $isLibrarian = in_array('ROLE_LIBRARIAN', $user->getRoles());
+            }
+        }
 
         // Dla bibliotekarzy - wszystkie ogłoszenia z filtrowaniem
         if ($isLibrarian) {
@@ -102,7 +114,9 @@ class AnnouncementController extends AbstractController
     public function show(
         int $id,
         Request $request,
-        AnnouncementRepository $announcementRepository
+        AnnouncementRepository $announcementRepository,
+        SecurityService $security,
+        ManagerRegistry $doctrine
     ): JsonResponse {
         $announcement = $announcementRepository->find($id);
         
@@ -110,7 +124,16 @@ class AnnouncementController extends AbstractController
             return $this->json(['error' => 'Announcement not found'], 404);
         }
 
-        $isLibrarian = $this->isGranted('ROLE_LIBRARIAN');
+        $payload = $security->getJwtPayload($request);
+        $user = null;
+        $isLibrarian = false;
+        
+        if ($payload && isset($payload['sub'])) {
+            $user = $doctrine->getRepository(User::class)->find((int) $payload['sub']);
+            if ($user) {
+                $isLibrarian = in_array('ROLE_LIBRARIAN', $user->getRoles());
+            }
+        }
         
         // Bibliotekarze widzą wszystko
         if ($isLibrarian) {
@@ -118,9 +141,8 @@ class AnnouncementController extends AbstractController
         }
 
         // Zwykli użytkownicy - tylko aktywne i widoczne dla nich
-        $user = $this->getUser();
         
-        if (!$announcement->isVisibleForUser($user instanceof \App\Entity\User ? $user : null)) {
+        if (!$announcement->isVisibleForUser($user)) {
             return $this->json(['error' => 'Announcement not found'], 404);
         }
 
@@ -153,16 +175,21 @@ class AnnouncementController extends AbstractController
     )]
     public function create(
         Request $request,
-        ManagerRegistry $doctrine
+        ManagerRegistry $doctrine,
+        SecurityService $security
     ): JsonResponse {
-        if (!$this->isGranted('ROLE_LIBRARIAN')) {
-            return $this->json(['error' => 'Access denied'], 403);
+        $payload = $security->getJwtPayload($request);
+        if (!$payload || !isset($payload['sub'])) {
+            return $this->json(['error' => 'Unauthorized'], 401);
         }
 
-        $user = $this->getUser();
-
+        $user = $doctrine->getRepository(User::class)->find((int) $payload['sub']);
         if (!$user) {
             return $this->json(['error' => 'User not found'], 404);
+        }
+
+        if (!in_array('ROLE_LIBRARIAN', $user->getRoles())) {
+            return $this->json(['error' => 'Access denied'], 403);
         }
 
         $data = json_decode($request->getContent(), true);
@@ -221,9 +248,16 @@ class AnnouncementController extends AbstractController
         int $id,
         Request $request,
         ManagerRegistry $doctrine,
-        AnnouncementRepository $announcementRepository
+        AnnouncementRepository $announcementRepository,
+        SecurityService $security
     ): JsonResponse {
-        if (!$this->isGranted('ROLE_LIBRARIAN')) {
+        $payload = $security->getJwtPayload($request);
+        if (!$payload || !isset($payload['sub'])) {
+            return $this->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $user = $doctrine->getRepository(User::class)->find((int) $payload['sub']);
+        if (!$user || !in_array('ROLE_LIBRARIAN', $user->getRoles())) {
             return $this->json(['error' => 'Access denied'], 403);
         }
 
@@ -284,9 +318,16 @@ class AnnouncementController extends AbstractController
         int $id,
         Request $request,
         ManagerRegistry $doctrine,
-        AnnouncementRepository $announcementRepository
+        AnnouncementRepository $announcementRepository,
+        SecurityService $security
     ): JsonResponse {
-        if (!$this->isGranted('ROLE_LIBRARIAN')) {
+        $payload = $security->getJwtPayload($request);
+        if (!$payload || !isset($payload['sub'])) {
+            return $this->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $user = $doctrine->getRepository(User::class)->find((int) $payload['sub']);
+        if (!$user || !in_array('ROLE_LIBRARIAN', $user->getRoles())) {
             return $this->json(['error' => 'Access denied'], 403);
         }
 
@@ -319,9 +360,16 @@ class AnnouncementController extends AbstractController
         int $id,
         Request $request,
         ManagerRegistry $doctrine,
-        AnnouncementRepository $announcementRepository
+        AnnouncementRepository $announcementRepository,
+        SecurityService $security
     ): JsonResponse {
-        if (!$this->isGranted('ROLE_LIBRARIAN')) {
+        $payload = $security->getJwtPayload($request);
+        if (!$payload || !isset($payload['sub'])) {
+            return $this->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $user = $doctrine->getRepository(User::class)->find((int) $payload['sub']);
+        if (!$user || !in_array('ROLE_LIBRARIAN', $user->getRoles())) {
             return $this->json(['error' => 'Access denied'], 403);
         }
 
@@ -354,9 +402,16 @@ class AnnouncementController extends AbstractController
         int $id,
         Request $request,
         ManagerRegistry $doctrine,
-        AnnouncementRepository $announcementRepository
+        AnnouncementRepository $announcementRepository,
+        SecurityService $security
     ): JsonResponse {
-        if (!$this->isGranted('ROLE_LIBRARIAN')) {
+        $payload = $security->getJwtPayload($request);
+        if (!$payload || !isset($payload['sub'])) {
+            return $this->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $user = $doctrine->getRepository(User::class)->find((int) $payload['sub']);
+        if (!$user || !in_array('ROLE_LIBRARIAN', $user->getRoles())) {
             return $this->json(['error' => 'Access denied'], 403);
         }
 

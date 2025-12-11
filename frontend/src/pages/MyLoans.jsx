@@ -47,7 +47,7 @@ export default function MyLoans() {
       try {
         const data = await apiFetch('/api/loans')
         if (!cancelled) {
-          const list = Array.isArray(data) ? data : []
+          const list = Array.isArray(data?.data) ? data.data : []
           setLoans(list)
           setCachedResource(CACHE_KEY, list)
         }
@@ -79,11 +79,12 @@ export default function MyLoans() {
     setActionSuccess(null)
     setExtendLoading(prev => ({ ...prev, [id]: true }))
     try {
-      const updatedLoan = await apiFetch(`/api/loans/${id}/extend`, {
+      const response = await apiFetch(`/api/loans/${id}/extend`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ days }),
       })
+      const updatedLoan = response?.data || response
       setLoans(prev => {
         const next = prev.map(loan => (loan.id === id ? updatedLoan : loan))
         setCachedResource(CACHE_KEY, next)

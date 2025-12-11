@@ -1,0 +1,45 @@
+﻿
+COMMENT ON COLUMN acquisition_budget.created_at IS '(DC2Type:datetime_immutable)';
+COMMENT ON COLUMN acquisition_budget.updated_at IS '(DC2Type:datetime_immutable)';
+COMMENT ON COLUMN acquisition_expense.posted_at IS '(DC2Type:datetime_immutable)';
+COMMENT ON COLUMN acquisition_order.created_at IS '(DC2Type:datetime_immutable)';
+COMMENT ON COLUMN acquisition_order.updated_at IS '(DC2Type:datetime_immutable)';
+COMMENT ON COLUMN acquisition_order.ordered_at IS '(DC2Type:datetime_immutable)';
+COMMENT ON COLUMN acquisition_order.expected_at IS '(DC2Type:datetime_immutable)';
+COMMENT ON COLUMN acquisition_order.received_at IS '(DC2Type:datetime_immutable)';
+COMMENT ON COLUMN acquisition_order.cancelled_at IS '(DC2Type:datetime_immutable)';
+DROP INDEX idx_announcement_expires;
+DROP INDEX idx_announcement_published;
+DROP INDEX idx_announcement_status;
+COMMENT ON COLUMN backup_record.created_at IS '(DC2Type:datetime_immutable)';
+DROP INDEX idx_book_publication_year;
+DROP INDEX idx_book_publisher;
+DROP INDEX uniq_book_signature;
+COMMENT ON COLUMN book_copy.created_at IS '(DC2Type:datetime_immutable)';
+COMMENT ON COLUMN book_copy.updated_at IS '(DC2Type:datetime_immutable)';
+COMMENT ON COLUMN book_digital_asset.created_at IS '(DC2Type:datetime_immutable)';
+COMMENT ON COLUMN fine.created_at IS '(DC2Type:datetime_immutable)';
+COMMENT ON COLUMN fine.paid_at IS '(DC2Type:datetime_immutable)';
+COMMENT ON COLUMN integration_config.last_tested_at IS '(DC2Type:datetime_immutable)';
+COMMENT ON COLUMN integration_config.created_at IS '(DC2Type:datetime_immutable)';
+COMMENT ON COLUMN integration_config.updated_at IS '(DC2Type:datetime_immutable)';
+COMMENT ON COLUMN registration_token.created_at IS '(DC2Type:datetime_immutable)';
+COMMENT ON COLUMN registration_token.expires_at IS '(DC2Type:datetime_immutable)';
+COMMENT ON COLUMN registration_token.used_at IS '(DC2Type:datetime_immutable)';
+COMMENT ON COLUMN reservation.reserved_at IS '(DC2Type:datetime_immutable)';
+COMMENT ON COLUMN reservation.expires_at IS '(DC2Type:datetime_immutable)';
+COMMENT ON COLUMN reservation.fulfilled_at IS '(DC2Type:datetime_immutable)';
+COMMENT ON COLUMN reservation.cancelled_at IS '(DC2Type:datetime_immutable)';
+COMMENT ON COLUMN staff_role.created_at IS '(DC2Type:datetime_immutable)';
+COMMENT ON COLUMN staff_role.updated_at IS '(DC2Type:datetime_immutable)';
+COMMENT ON COLUMN supplier.created_at IS '(DC2Type:datetime_immutable)';
+COMMENT ON COLUMN supplier.updated_at IS '(DC2Type:datetime_immutable)';
+COMMENT ON COLUMN system_setting.created_at IS '(DC2Type:datetime_immutable)';
+COMMENT ON COLUMN system_setting.updated_at IS '(DC2Type:datetime_immutable)';
+COMMENT ON COLUMN app_user.verified_at IS '(DC2Type:datetime_immutable)';
+COMMENT ON COLUMN app_user.created_at IS '(DC2Type:datetime_immutable)';
+COMMENT ON COLUMN app_user.updated_at IS '(DC2Type:datetime_immutable)';
+COMMENT ON COLUMN app_user.privacy_consent_at IS '(DC2Type:datetime_immutable)';
+COMMENT ON COLUMN weeding_record.removed_at IS '(DC2Type:datetime_immutable)';
+
+

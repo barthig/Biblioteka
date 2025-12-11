@@ -160,8 +160,9 @@ export default function BookDetails() {
     setEngagementLoading(true)
 
     try {
-      const reservations = await apiFetch('/api/reservations')
-      if (Array.isArray(reservations)) {
+      const response = await apiFetch('/api/reservations')
+      const reservations = Array.isArray(response?.data) ? response.data : []
+      if (reservations.length > 0 || response?.data) {
         setCachedResource(reservationsCacheKey, reservations)
         if (aliveRef.current) {
           const reservationMatch = reservations.find(item => item?.book?.id === bookId)
@@ -217,11 +218,12 @@ export default function BookDetails() {
     setActionError(null)
     setActionSuccess(null)
     try {
-      const reservation = await apiFetch('/api/reservations', {
+      const response = await apiFetch('/api/reservations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ bookId }),
       })
+      const reservation = response?.data || response
       setActionSuccess('Dodano do kolejki rezerwacji. Powiadomimy Cię, gdy egzemplarz będzie dostępny.')
       setActiveReservation(reservation)
       setEngagementFetched(true)
@@ -248,11 +250,12 @@ export default function BookDetails() {
         setActionSuccess('Usunięto książkę z ulubionych.')
         invalidateResource('favorites:/api/favorites')
       } else {
-        const created = await apiFetch('/api/favorites', {
+        const response = await apiFetch('/api/favorites', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ bookId }),
         })
+        const created = response?.data || response
         setFavorite(Boolean(created))
         setActionSuccess('Dodano książkę do ulubionych.')
         invalidateResource('favorites:/api/favorites')

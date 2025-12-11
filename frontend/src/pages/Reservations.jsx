@@ -35,7 +35,7 @@ export default function Reservations() {
       try {
         const data = await apiFetch('/api/reservations?history=true')
         if (active) {
-          const list = Array.isArray(data) ? data : []
+          const list = Array.isArray(data?.data) ? data.data : []
           setReservations(list)
           setCachedResource(`reservations:${CACHE_KEY}`, list)
         }

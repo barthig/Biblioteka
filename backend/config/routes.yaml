@@ -589,6 +589,66 @@ api_audit_logs_entity_history:
   requirements:
     entityId: '[0-9]+'
 
+# Announcements
+api_announcements_list:
+  path: /api/announcements
+  controller: App\Controller\AnnouncementController::list
+  methods: [GET]
+
+api_announcements_get:
+  path: /api/announcements/{id}
+  controller: App\Controller\AnnouncementController::get
+  methods: [GET]
+  requirements:
+    id: '[0-9]+'
+
+api_announcements_create:
+  path: /api/announcements
+  controller: App\Controller\AnnouncementController::create
+  methods: [POST]
+
+api_announcements_update:
+  path: /api/announcements/{id}
+  controller: App\Controller\AnnouncementController::update
+  methods: [PUT]
+  requirements:
+    id: '[0-9]+'
+
+api_announcements_delete:
+  path: /api/announcements/{id}
+  controller: App\Controller\AnnouncementController::delete
+  methods: [DELETE]
+  requirements:
+    id: '[0-9]+'
+
+api_announcements_publish:
+  path: /api/announcements/{id}/publish
+  controller: App\Controller\AnnouncementController::publish
+  methods: [POST]
+  requirements:
+    id: '[0-9]+'
+
+api_announcements_archive:
+  path: /api/announcements/{id}/archive
+  controller: App\Controller\AnnouncementController::archive
+  methods: [POST]
+  requirements:
+    id: '[0-9]+'
+
+api_announcements_restore:
+  path: /api/announcements/{id}/restore
+  controller: App\Controller\AnnouncementController::restore
+  methods: [POST]
+  requirements:
+    id: '[0-9]+'
+
+api_announcements_acknowledge:
+  path: /api/announcements/{id}/acknowledge
+  controller: App\Controller\AnnouncementController::acknowledge
+  methods: [POST]
+  requirements:
+    id: '[0-9]+'
+
 # API documentation
 api_docs_json:
   path: /api/docs.json

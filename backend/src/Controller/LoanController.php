@@ -101,7 +101,7 @@ class LoanController extends AbstractController
 
         // allow librarian or the borrower to view
         if ($security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json($loan, 200, [], ['groups' => ['loan:read']]);
+            return $this->json(['data' => $loan], 200, [], ['groups' => ['loan:read']]);
         }
 
         $payload = $security->getJwtPayload($request);
@@ -109,7 +109,7 @@ class LoanController extends AbstractController
             return $this->json(['error' => 'Forbidden'], 403);
         }
 
-        return $this->json($loan, 200, [], ['groups' => ['loan:read']]);
+        return $this->json(['data' => $loan], 200, [], ['groups' => ['loan:read']]);
     }
 
     public function create(Request $request, ManagerRegistry $doctrine, BookService $bookService, SecurityService $security, ValidatorInterface $validator): JsonResponse
@@ -236,7 +236,7 @@ class LoanController extends AbstractController
             return $this->json(['error' => 'Nie udało się utworzyć wypożyczenia'], 500);
         }
 
-        return $this->json($loan, 201, [], ['groups' => ['loan:read']]);
+        return $this->json(['data' => $loan], 201, [], ['groups' => ['loan:read']]);
     }
 
     public function listByUser(string $id, Request $request, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
@@ -256,11 +256,11 @@ class LoanController extends AbstractController
 
         $repo = $doctrine->getRepository(Loan::class);
         $loans = $repo->findBy(['user' => $userId]);
-        if (empty($loans)) {
-            return new JsonResponse(null, 204);
-        }
 
-        return $this->json($loans, 200, [], ['groups' => ['loan:read']]);
+        return $this->json([
+            'data' => $loans,
+            'meta' => ['total' => count($loans)]
+        ], 200, [], ['groups' => ['loan:read']]);
     }
 
     public function returnLoan(string $id, Request $request, ManagerRegistry $doctrine, BookService $bookService, SecurityService $security, MessageBusInterface $bus, LoggerInterface $logger): JsonResponse
@@ -339,7 +339,7 @@ class LoanController extends AbstractController
             }
         }
 
-        return $this->json($loan, 200, [], ['groups' => ['loan:read']]);
+        return $this->json(['data' => $loan], 200, [], ['groups' => ['loan:read']]);
     }
 
     public function extend(string $id, Request $request, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
@@ -390,7 +390,7 @@ class LoanController extends AbstractController
         $em->persist($loan);
         $em->flush();
 
-        return $this->json($loan, 200, [], ['groups' => ['loan:read']]);
+        return $this->json(['data' => $loan], 200, [], ['groups' => ['loan:read']]);
     }
 
     public function delete(string $id, Request $request, ManagerRegistry $doctrine, BookService $bookService, SecurityService $security): JsonResponse

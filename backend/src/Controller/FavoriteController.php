@@ -33,7 +33,12 @@ class FavoriteController extends AbstractController
         $repo = $doctrine->getRepository(Favorite::class);
         $favorites = $repo->findByUser($user);
 
-        return $this->json($favorites, 200, [], ['groups' => ['favorite:read', 'book:read']]);
+        return $this->json([
+            'data' => $favorites,
+            'meta' => [
+                'total' => count($favorites)
+            ]
+        ], 200, [], ['groups' => ['favorite:read', 'book:read']]);
     }
 
     public function add(Request $request, ManagerRegistry $doctrine, SecurityService $security, ValidatorInterface $validator): JsonResponse
@@ -77,7 +82,7 @@ class FavoriteController extends AbstractController
         $em->persist($favorite);
         $em->flush();
 
-        return $this->json($favorite, 201, [], ['groups' => ['favorite:read', 'book:read']]);
+        return $this->json(['data' => $favorite], 201, [], ['groups' => ['favorite:read', 'book:read']]);
     }
 
     public function remove(string $bookId, Request $request, ManagerRegistry $doctrine, SecurityService $security): JsonResponse

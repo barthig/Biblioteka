@@ -172,7 +172,7 @@ class ReservationController extends AbstractController
             ]);
         }
 
-        return $this->json($reservation, 201, [], ['groups' => ['reservation:read']]);
+        return $this->json(['data' => $reservation], 201, [], ['groups' => ['reservation:read']]);
     }
 
     public function cancel(string $id, Request $request, ManagerRegistry $doctrine, SecurityService $security): JsonResponse

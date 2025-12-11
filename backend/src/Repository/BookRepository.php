@@ -38,13 +38,12 @@ class BookRepository extends ServiceEntityRepository
         $limit = isset($filters['limit']) ? min(100, max(10, (int)$filters['limit'])) : 20;
         $offset = ($page - 1) * $limit;
 
-        $qb = $this->createQueryBuilder('b')
+        // Najpierw pobierz IDs książek spełniających kryteria
+        $idsQb = $this->createQueryBuilder('b')
+            ->select('b.id')
             ->leftJoin('b.author', 'a')
-            ->addSelect('a')
             ->leftJoin('b.categories', 'c')
-            ->addSelect('c')
-            ->orderBy('b.title', 'ASC')
-            ->distinct();
+            ->groupBy('b.id');
 
         $parameters = [];
 
@@ -52,7 +51,7 @@ class BookRepository extends ServiceEntityRepository
         if ($term !== '') {
             $lower = function_exists('mb_strtolower') ? mb_strtolower($term) : strtolower($term);
             $normalized = '%' . $lower . '%';
-            $qb->andWhere('(' .
+            $idsQb->andWhere('(' .
                 'LOWER(b.title) LIKE :term OR '
                 . 'LOWER(a.name) LIKE :term OR '
                 . 'LOWER(c.name) LIKE :term OR '
@@ -64,70 +63,88 @@ class BookRepository extends ServiceEntityRepository
         }
 
         if (isset($filters['authorId']) && $filters['authorId'] !== '' && $filters['authorId'] !== null) {
-            $qb->andWhere('a.id = :authorId');
+            $idsQb->andWhere('a.id = :authorId');
             $parameters['authorId'] = (int) $filters['authorId'];
         }
 
         if (isset($filters['categoryId']) && $filters['categoryId'] !== '' && $filters['categoryId'] !== null) {
-            $qb->andWhere('c.id = :categoryId');
+            $idsQb->andWhere('c.id = :categoryId');
             $parameters['categoryId'] = (int) $filters['categoryId'];
         }
 
         if (array_key_exists('publisher', $filters)) {
             $publisher = trim((string) $filters['publisher']);
             if ($publisher !== '') {
-                $qb->andWhere('LOWER(b.publisher) LIKE :publisher');
+                $idsQb->andWhere('LOWER(b.publisher) LIKE :publisher');
                 $parameters['publisher'] = '%' . (function_exists('mb_strtolower') ? mb_strtolower($publisher) : strtolower($publisher)) . '%';
             }
         }
 
         if (isset($filters['resourceType']) && $filters['resourceType'] !== '' && $filters['resourceType'] !== null) {
-            $qb->andWhere('b.resourceType = :resourceType');
+            $idsQb->andWhere('b.resourceType = :resourceType');
             $parameters['resourceType'] = (string) $filters['resourceType'];
         }
 
         if (array_key_exists('signature', $filters)) {
             $signature = trim((string) $filters['signature']);
             if ($signature !== '') {
-                $qb->andWhere('LOWER(b.signature) LIKE :signature');
+                $idsQb->andWhere('LOWER(b.signature) LIKE :signature');
                 $parameters['signature'] = '%' . (function_exists('mb_strtolower') ? mb_strtolower($signature) : strtolower($signature)) . '%';
             }
         }
 
         if (isset($filters['yearFrom']) && $filters['yearFrom'] !== null && $filters['yearFrom'] !== '') {
-            $qb->andWhere('b.publicationYear >= :yearFrom');
+            $idsQb->andWhere('b.publicationYear >= :yearFrom');
             $parameters['yearFrom'] = (int) $filters['yearFrom'];
         }
 
         if (isset($filters['yearTo']) && $filters['yearTo'] !== null && $filters['yearTo'] !== '') {
-            $qb->andWhere('b.publicationYear <= :yearTo');
+            $idsQb->andWhere('b.publicationYear <= :yearTo');
             $parameters['yearTo'] = (int) $filters['yearTo'];
         }
 
         if (isset($filters['ageGroup']) && $filters['ageGroup'] !== '' && $filters['ageGroup'] !== null) {
-            $qb->andWhere('b.targetAgeGroup = :ageGroup');
+            $idsQb->andWhere('b.targetAgeGroup = :ageGroup');
             $parameters['ageGroup'] = (string) $filters['ageGroup'];
         }
 
         if (array_key_exists('available', $filters)) {
             $value = $filters['available'];
             if ($value === true || $value === 1 || $value === '1' || $value === 'true') {
-                $qb->andWhere('b.copies > 0');
+                $idsQb->andWhere('b.copies > 0');
             }
         }
 
         foreach ($parameters as $name => $value) {
-            $qb->setParameter($name, $value);
+            $idsQb->setParameter($name, $value);
         }
 
-        // Policz total przed paginacją
-        $countQb = clone $qb;
+        // Policz total
+        $countQb = clone $idsQb;
         $countQb->select('COUNT(DISTINCT b.id)');
+        $countQb->resetDQLPart('groupBy');
         $total = (int) $countQb->getQuery()->getSingleScalarResult();
 
-        // Zastosuj paginację
-        $qb->setMaxResults($limit)->setFirstResult($offset);
-        $results = $qb->getQuery()->getResult();
+        // Sortuj i paginuj IDs
+        $idsQb->orderBy('b.title', 'ASC')
+              ->setMaxResults($limit)
+              ->setFirstResult($offset);
+        
+        $paginatedIds = array_column($idsQb->getQuery()->getScalarResult(), 'id');
+
+        // Teraz pobierz pełne obiekty książek dla tych IDs
+        if (empty($paginatedIds)) {
+            $results = [];
+        } else {
+            $results = $this->createQueryBuilder('b')
+                ->leftJoin('b.author', 'a')->addSelect('a')
+                ->leftJoin('b.categories', 'c')->addSelect('c')
+                ->where('b.id IN (:ids)')
+                ->setParameter('ids', $paginatedIds)
+                ->orderBy('b.title', 'ASC')
+                ->getQuery()
+                ->getResult();
+        }
 
         return [
             'data' => $results,
@@ -179,29 +196,33 @@ class BookRepository extends ServiceEntityRepository
     public function getPublicFacets(): array
     {
         $authorRows = $this->createQueryBuilder('b')
-            ->select('DISTINCT a.id AS id', 'a.name AS name')
+            ->select('a.id AS id', 'a.name AS name')
             ->join('b.author', 'a')
+            ->groupBy('a.id', 'a.name')
             ->orderBy('a.name', 'ASC')
             ->getQuery()
             ->getArrayResult();
 
         $categoryRows = $this->createQueryBuilder('b')
-            ->select('DISTINCT c.id AS id', 'c.name AS name')
+            ->select('c.id AS id', 'c.name AS name')
             ->join('b.categories', 'c')
+            ->groupBy('c.id', 'c.name')
             ->orderBy('c.name', 'ASC')
             ->getQuery()
             ->getArrayResult();
 
         $publisherRows = $this->createQueryBuilder('b')
-            ->select('DISTINCT b.publisher AS publisher')
+            ->select('b.publisher AS publisher')
             ->where('b.publisher IS NOT NULL')
+            ->groupBy('b.publisher')
             ->orderBy('b.publisher', 'ASC')
             ->getQuery()
             ->getArrayResult();
 
         $resourceTypeRows = $this->createQueryBuilder('b')
-            ->select('DISTINCT b.resourceType AS resourceType')
+            ->select('b.resourceType AS resourceType')
             ->where('b.resourceType IS NOT NULL')
+            ->groupBy('b.resourceType')
             ->orderBy('b.resourceType', 'ASC')
             ->getQuery()
             ->getArrayResult();

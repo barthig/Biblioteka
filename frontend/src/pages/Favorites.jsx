@@ -37,7 +37,7 @@ export default function Favorites() {
       try {
         const data = await apiFetch('/api/favorites')
         if (active) {
-          const list = Array.isArray(data) ? data : []
+          const list = Array.isArray(data?.data) ? data.data : []
           setFavorites(list)
           setCachedResource(`favorites:${CACHE_KEY}`, list)
         }

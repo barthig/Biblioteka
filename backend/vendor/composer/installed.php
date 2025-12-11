@@ -3,7 +3,7 @@
         'name' => 'barthig/biblioteka-backend',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => 'd09edd848136839fcebfea22c7b8a8b0f97cac99',
+        'reference' => '9f5b2256e0b8910df1e84d64073e69ce83918e09',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -13,7 +13,7 @@
         'barthig/biblioteka-backend' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => 'd09edd848136839fcebfea22c7b8a8b0f97cac99',
+            'reference' => '9f5b2256e0b8910df1e84d64073e69ce83918e09',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
