@@ -48,6 +48,19 @@ class AppFixtures extends Fixture
         }
 
         $users = [];
+        $admin = (new User())
+            ->setName('Admin')
+            ->setEmail('admin@example.com')
+            ->setRoles(['ROLE_ADMIN'])
+            ->setMembershipGroup(User::GROUP_STANDARD)
+            ->setPhoneNumber('+48 600 000 10')
+            ->setAddressLine('Ul. Biblioteczna 10')
+            ->setCity('Miasto 10')
+            ->setPostalCode('00-10')
+            ->setPassword(password_hash('Admin1234', PASSWORD_BCRYPT));
+        $admin->markVerified();
+        $manager->persist($admin);
+        $users[] = $admin;
         $groupSequence = [
             User::GROUP_STANDARD,
             User::GROUP_STUDENT,

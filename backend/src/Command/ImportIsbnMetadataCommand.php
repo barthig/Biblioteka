@@ -105,7 +105,7 @@ class ImportIsbnMetadataCommand extends Command
         $records = [];
         $headers = null;
         foreach ($lines as $line) {
-            $row = str_getcsv($line, $delimiter);
+             $row = str_getcsv($line, $delimiter, '"', '\\');
             if ($row === null) {
                 continue;
             }

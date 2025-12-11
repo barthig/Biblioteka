@@ -7,8 +7,11 @@ import { useResourceCache } from '../context/ResourceCacheContext'
 const navClass = ({ isActive }) => isActive ? 'sidebar__link is-active' : 'sidebar__link'
 
 export default function Navbar() {
-  const { token, logout } = useAuth()
+  const { token, user, logout } = useAuth()
   const { prefetchResource } = useResourceCache()
+  const roles = user?.roles || []
+  const isAdmin = roles.includes('ROLE_ADMIN')
+  const isLibrarian = roles.includes('ROLE_LIBRARIAN') || isAdmin
 
   const prefetchLoans = useCallback(() => {
     if (!token) return
@@ -34,14 +37,16 @@ export default function Navbar() {
       <div className="sidebar__brand">Biblioteka</div>
       <nav className="sidebar__menu">
         <NavLink to="/" end className={navClass}>Dashboard</NavLink>
-        <NavLink to="/books" className={navClass}>Książki</NavLink>
+        <NavLink to="/books" className={navClass}>Ksiazki</NavLink>
         <NavLink to="/recommended" className={navClass} onMouseEnter={prefetchRecommended} onFocus={prefetchRecommended}>Polecane</NavLink>
-        <NavLink to="/my-loans" className={navClass} onMouseEnter={prefetchLoans} onFocus={prefetchLoans}>Wypożyczenia</NavLink>
+        <NavLink to="/my-loans" className={navClass} onMouseEnter={prefetchLoans} onFocus={prefetchLoans}>Wypozyczenia</NavLink>
         {token && (
           <>
             <NavLink to="/reservations" className={navClass} onMouseEnter={prefetchReservations} onFocus={prefetchReservations}>Rezerwacje</NavLink>
             <NavLink to="/favorites" className={navClass} onMouseEnter={prefetchFavorites} onFocus={prefetchFavorites}>Ulubione</NavLink>
             <NavLink to="/profile" className={navClass}>Profil</NavLink>
+            {isLibrarian && <NavLink to="/librarian" className={navClass}>Panel bibliotekarza</NavLink>}
+            {isAdmin && <NavLink to="/admin" className={navClass}>Panel administratora</NavLink>}
           </>
         )}
       </nav>
@@ -52,7 +57,7 @@ export default function Navbar() {
         ) : (
           <>
             <NavLink to="/login" className="btn btn-primary">Zaloguj</NavLink>
-            <NavLink to="/register" className="btn btn-outline">Zarejestruj się</NavLink>
+            <NavLink to="/register" className="btn btn-outline">Zarejestruj sie</NavLink>
           </>
         )}
       </div>

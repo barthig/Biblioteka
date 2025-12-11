@@ -110,7 +110,7 @@ class BookService
         $em->flush();
     }
 
-    public function markCopyDamaged(BookCopy $copy, string $note = null): void
+  public function markCopyDamaged(BookCopy $copy, ?string $note = null): void
     {
         $copy->setStatus(BookCopy::STATUS_MAINTENANCE);
         if ($note !== null) {

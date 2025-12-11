@@ -3,6 +3,7 @@ import { Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { ResourceCacheProvider } from './context/ResourceCacheContext'
 import Navbar from './components/Navbar'
+import RequireRole from './components/RequireRole'
 import Login from './pages/Login'
 import Books from './pages/Books'
 import Dashboard from './pages/Dashboard'
@@ -13,6 +14,8 @@ import Profile from './pages/Profile'
 import Reservations from './pages/Reservations'
 import Favorites from './pages/Favorites'
 import Recommended from './pages/Recommended'
+import AdminPanel from './pages/AdminPanel'
+import LibrarianPanel from './pages/LibrarianPanel'
 
 export default function App() {
   return (
@@ -32,6 +35,22 @@ export default function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/profile" element={<Profile />} />
+            <Route
+              path="/admin"
+              element={
+                <RequireRole allowed={['ROLE_ADMIN']}>
+                  <AdminPanel />
+                </RequireRole>
+              }
+            />
+            <Route
+              path="/librarian"
+              element={
+                <RequireRole allowed={['ROLE_LIBRARIAN', 'ROLE_ADMIN']}>
+                  <LibrarianPanel />
+                </RequireRole>
+              }
+            />
             </Routes>
             <footer className="footer">
               <p>© 2025 Biblioteka. Wspieramy czytelników w odkrywaniu literatury i edukacji cyfrowej.</p>
