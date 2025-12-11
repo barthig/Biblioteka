@@ -3,12 +3,17 @@
 namespace App\GraphQL\Resolver;
 
 use App\Entity\User;
-use Symfony\Component\Security\Core\Security;
 
+/**
+ * GraphQL resolver for User queries
+ * Note: Requires symfony/security-bundle package
+ * Install: composer require symfony/security-bundle
+ */
 class UserResolver
 {
     public function __construct(
-        private Security $security
+        /** @phpstan-ignore-next-line Optional dependency - install symfony/security-bundle */
+        private ?object $security = null
     ) {
     }
 

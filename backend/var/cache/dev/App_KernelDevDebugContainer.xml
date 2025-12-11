@@ -228,6 +228,17 @@
         <argument>Automatically block accounts that exceed fine or overdue thresholds.</argument>
       </call>
     </service>
+    <service id="App\Command\CleanupRefreshTokensCommand" class="App\Command\CleanupRefreshTokensCommand" autowire="true" autoconfigure="true">
+      <tag name="console.command"/>
+      <tag name="container.no_preload"/>
+      <argument type="service" id="App\Service\RefreshTokenService"/>
+      <call method="setName">
+        <argument>app:cleanup:refresh-tokens</argument>
+      </call>
+      <call method="setDescription">
+        <argument>Remove expired refresh tokens from database</argument>
+      </call>
+    </service>
     <service id="App\Command\CreateBackupCommand" class="App\Command\CreateBackupCommand" autowire="true" autoconfigure="true">
       <tag name="console.command"/>
       <tag name="container.no_preload"/>
@@ -461,6 +472,13 @@
         <argument type="service" id=".service_locator.ZyP9f7K.App\Controller\FineController"/>
       </call>
     </service>
+    <service id="App\Controller\GraphQLController" class="App\Controller\GraphQLController" public="true" autowire="true" autoconfigure="true">
+      <tag name="controller.service_arguments"/>
+      <tag name="container.service_subscriber"/>
+      <call method="setContainer">
+        <argument type="service" id=".service_locator.ZyP9f7K.App\Controller\GraphQLController"/>
+      </call>
+    </service>
     <service id="App\Controller\HealthController" class="App\Controller\HealthController" public="true" autowire="true" autoconfigure="true">
       <tag name="controller.service_arguments"/>
       <tag name="container.service_subscriber"/>
@@ -544,6 +562,10 @@
       <tag name="container.hot_path"/>
       <argument type="service" id="App\Repository\UserRepository"/>
     </service>
+    <service id="App\EventSubscriber\CacheInvalidationSubscriber" class="App\EventSubscriber\CacheInvalidationSubscriber" autowire="true" autoconfigure="true">
+      <argument type="service" id="App\Service\BookCacheService"/>
+      <argument type="service" id="App\Service\StatisticsCacheService"/>
+    </service>
     <service id="App\EventSubscriber\RateLimitHeaderSubscriber" class="App\EventSubscriber\RateLimitHeaderSubscriber" autowire="true" autoconfigure="true">
       <tag name="kernel.event_subscriber"/>
       <tag name="container.hot_path"/>
@@ -554,6 +576,17 @@
       <argument type="service" id="limiter.anonymous_api"/>
       <argument type="service" id="limiter.authenticated_api"/>
     </service>
+    <service id="App\GraphQL\Resolver\AuthResolver" class="App\GraphQL\Resolver\AuthResolver" autowire="true" autoconfigure="true">
+      <tag name="container.error" message="Cannot autowire service &quot;App\GraphQL\Resolver\AuthResolver&quot;: argument &quot;$passwordHasher&quot; of method &quot;__construct()&quot; is type-hinted &quot;object&quot;, you should configure its value explicitly."/>
+    </service>
+    <service id="App\GraphQL\Resolver\BookResolver" class="App\GraphQL\Resolver\BookResolver" autowire="true" autoconfigure="true">
+      <argument type="service" id="App\Repository\BookRepository"/>
+    </service>
+    <service id="App\GraphQL\Resolver\LoanResolver" class="App\GraphQL\Resolver\LoanResolver" autowire="true" autoconfigure="true">
+      <argument type="service" id="App\Repository\LoanRepository"/>
+      <argument type="service" id="App\Repository\BookRepository"/>
+    </service>
+    <service id="App\GraphQL\Resolver\UserResolver" class="App\GraphQL\Resolver\UserResolver" autowire="true" autoconfigure="true"/>
     <service id="App\MessageHandler\NotificationMessageHandler" class="App\MessageHandler\NotificationMessageHandler" autowire="true" autoconfigure="true">
       <tag name="messenger.message_handler" bus="" handles="" method="" priority="0" from_transport=""/>
       <argument type="service" id="App\Repository\UserRepository"/>
@@ -709,9 +742,13 @@
       <argument type="service" id="doctrine.orm.default_entity_manager"/>
       <argument>D:\Biblioteka-1\backend</argument>
     </service>
+    <service id="App\Service\BookCacheService" class="App\Service\BookCacheService" autowire="true" autoconfigure="true">
+      <argument type="service" id="cache.app"/>
+    </service>
     <service id="App\Service\BookService" class="App\Service\BookService" autowire="true" autoconfigure="true">
       <argument type="service" id="doctrine"/>
     </service>
+    <service id="App\Service\ElasticsearchService" class="App\Service\ElasticsearchService" autowire="true" autoconfigure="true"/>
     <service id="App\Service\JwtService" class="App\Service\JwtService" autowire="true" autoconfigure="true"/>
     <service id="App\Service\Maintenance\IsbnImportService" class="App\Service\Maintenance\IsbnImportService" autowire="true" autoconfigure="true">
       <argument type="service" id="doctrine.orm.default_entity_manager"/>
@@ -751,6 +788,9 @@
     </service>
     <service id="App\Service\SecurityService" class="App\Service\SecurityService" autowire="true" autoconfigure="true"/>
     <service id="App\Service\SentryBeforeSendCallback" class="App\Service\SentryBeforeSendCallback" autowire="true" autoconfigure="true"/>
+    <service id="App\Service\StatisticsCacheService" class="App\Service\StatisticsCacheService" autowire="true" autoconfigure="true">
+      <argument type="service" id="cache.app"/>
+    </service>
     <service id="App\DataFixtures\AnnouncementFixtures" class="App\DataFixtures\AnnouncementFixtures" autowire="true" autoconfigure="true">
       <tag name="doctrine.fixture.orm"/>
     </service>
@@ -784,7 +824,7 @@
     </service>
     <service id="argument_resolver.service" class="Symfony\Component\HttpKernel\Controller\ArgumentResolver\ServiceValueResolver">
       <tag priority="-50" name="Symfony\Component\HttpKernel\Controller\ArgumentResolver\ServiceValueResolver">controller.argument_value_resolver</tag>
-      <argument type="service" id=".service_locator.Q1ma8L6"/>
+      <argument type="service" id=".service_locator.hwNNsPW"/>
     </service>
     <service id="argument_resolver.default" class="Symfony\Component\HttpKernel\Controller\ArgumentResolver\DefaultValueResolver">
       <tag priority="-100" name="Symfony\Component\HttpKernel\Controller\ArgumentResolver\DefaultValueResolver">controller.argument_value_resolver</tag>
@@ -2240,7 +2280,7 @@
     </service>
     <service id="argument_resolver.not_tagged_controller" class="Symfony\Component\HttpKernel\Controller\ArgumentResolver\NotTaggedControllerValueResolver">
       <tag name="controller.argument_value_resolver" priority="-200"/>
-      <argument type="service" id=".service_locator.Q1ma8L6"/>
+      <argument type="service" id=".service_locator.hwNNsPW"/>
     </service>
     <service id="routing.resolver" class="Symfony\Component\Config\Loader\LoaderResolver">
       <call method="addLoader">
@@ -2351,6 +2391,9 @@
       <call method="setConfigCacheFactory">
         <argument type="service" id="config_cache_factory"/>
       </call>
+      <call method="addExpressionLanguageProvider">
+        <argument type="service" id="router.expression_language_provider"/>
+      </call>
     </service>
     <service id="router.request_context" class="Symfony\Component\Routing\RequestContext" constructor="fromUri">
       <argument></argument>
@@ -2358,6 +2401,14 @@
       <argument>http</argument>
       <argument>80</argument>
       <argument>443</argument>
+      <call method="setParameter">
+        <argument>_functions</argument>
+        <argument type="service" id="router.expression_language_provider" on-invalid="ignore"/>
+      </call>
+    </service>
+    <service id="router.expression_language_provider" class="Symfony\Component\Routing\Matcher\ExpressionLanguageProvider">
+      <tag name="routing.expression_language_provider"/>
+      <argument type="service" id=".service_locator.u.4FiKa"/>
     </service>
     <service id="router.cache_warmer" class="Symfony\Bundle\FrameworkBundle\CacheWarmer\RouterCacheWarmer">
       <tag name="container.service_subscriber" id="router"/>
@@ -3121,7 +3172,13 @@
     </service>
     <service id="validator.expression" class="Symfony\Component\Validator\Constraints\ExpressionValidator">
       <tag name="validator.constraint_validator" alias="validator.expression"/>
-      <argument>null</argument>
+      <argument type="service" id="validator.expression_language" on-invalid="null"/>
+    </service>
+    <service id="validator.expression_language" class="Symfony\Component\ExpressionLanguage\ExpressionLanguage">
+      <argument type="service" id="cache.validator_expression_language" on-invalid="null"/>
+      <call method="registerProvider">
+        <argument type="service" id="validator.expression_language_provider" on-invalid="ignore"/>
+      </call>
     </service>
     <service id="cache.validator_expression_language" class="Symfony\Component\Cache\Adapter\AdapterInterface" public="true">
       <tag name="cache.pool"/>
@@ -3133,6 +3190,7 @@
       <argument type="service" id="logger" on-invalid="ignore"/>
       <factory class="Symfony\Component\Cache\Adapter\AbstractAdapter" method="createSystemCache"/>
     </service>
+    <service id="validator.expression_language_provider" class="Symfony\Component\Validator\Constraints\ExpressionLanguageProvider"/>
     <service id="validator.email" class="Symfony\Component\Validator\Constraints\EmailValidator">
       <tag name="validator.constraint_validator"/>
       <argument>loose</argument>
@@ -3146,7 +3204,7 @@
     </service>
     <service id="validator.when" class="Symfony\Component\Validator\Constraints\WhenValidator">
       <tag name="validator.constraint_validator"/>
-      <argument>null</argument>
+      <argument type="service" id="validator.expression_language" on-invalid="null"/>
     </service>
     <service id="validator.no_suspicious_characters" class="Symfony\Component\Validator\Constraints\NoSuspiciousCharactersValidator">
       <tag name="validator.constraint_validator" alias="Symfony\Component\Validator\Constraints\NoSuspiciousCharactersValidator"/>
@@ -3229,7 +3287,9 @@
     <service id="messenger.transport.amqp.factory" class="Symfony\Component\Messenger\Bridge\Amqp\Transport\AmqpTransportFactory">
       <tag name="messenger.transport_factory"/>
     </service>
-    <service id="messenger.transport.redis.factory" class="Symfony\Component\Messenger\Bridge\Redis\Transport\RedisTransportFactory"/>
+    <service id="messenger.transport.redis.factory" class="Symfony\Component\Messenger\Bridge\Redis\Transport\RedisTransportFactory">
+      <tag name="messenger.transport_factory"/>
+    </service>
     <service id="messenger.transport.sync.factory" class="Symfony\Component\Messenger\Transport\Sync\SyncTransportFactory">
       <tag name="messenger.transport_factory"/>
       <argument type="service" id="messenger.routable_message_bus"/>
@@ -3703,7 +3763,7 @@
     <service id="doctrine.orm.entity_value_resolver" class="Symfony\Bridge\Doctrine\ArgumentResolver\EntityValueResolver">
       <tag priority="110" name="Symfony\Bridge\Doctrine\ArgumentResolver\EntityValueResolver">controller.argument_value_resolver</tag>
       <argument type="service" id="doctrine"/>
-      <argument>null</argument>
+      <argument type="service" id="doctrine.orm.entity_value_resolver.expression_language" on-invalid="ignore"/>
       <argument type="service">
         <service class="Symfony\Bridge\Doctrine\Attribute\MapEntity">
           <argument>null</argument>
@@ -3719,6 +3779,7 @@
       </argument>
       <argument type="collection"/>
     </service>
+    <service id="doctrine.orm.entity_value_resolver.expression_language" class="Symfony\Component\ExpressionLanguage\ExpressionLanguage"/>
     <service id="doctrine.cache_clear_metadata_command" class="Doctrine\ORM\Tools\Console\Command\ClearCache\MetadataCommand">
       <tag name="console.command" command="doctrine:cache:clear-metadata"/>
       <tag name="container.no_preload"/>
@@ -4676,6 +4737,8 @@
     <service id=".abstract.instanceof.App\Command\AssessOverdueFinesCommand" class="App\Command\AssessOverdueFinesCommand" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Symfony\Component\Console\Command\Command.0.App\Command\BlockDelinquentAccountsCommand" class="App\Command\BlockDelinquentAccountsCommand" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Command\BlockDelinquentAccountsCommand" class="App\Command\BlockDelinquentAccountsCommand" autowire="true" autoconfigure="true" abstract="true"/>
+    <service id=".instanceof.Symfony\Component\Console\Command\Command.0.App\Command\CleanupRefreshTokensCommand" class="App\Command\CleanupRefreshTokensCommand" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\Command\CleanupRefreshTokensCommand" class="App\Command\CleanupRefreshTokensCommand" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Symfony\Component\Console\Command\Command.0.App\Command\CreateBackupCommand" class="App\Command\CreateBackupCommand" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Command\CreateBackupCommand" class="App\Command\CreateBackupCommand" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Symfony\Component\Console\Command\Command.0.App\Command\DispatchLoanDueRemindersCommand" class="App\Command\DispatchLoanDueRemindersCommand" autowire="true" abstract="true"/>
@@ -4746,6 +4809,9 @@
     <service id=".instanceof.Symfony\Contracts\Service\ServiceSubscriberInterface.0.App\Controller\FineController" class="App\Controller\FineController" autowire="true" abstract="true"/>
     <service id=".instanceof.Symfony\Bundle\FrameworkBundle\Controller\AbstractController.0.App\Controller\FineController" class="App\Controller\FineController" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Controller\FineController" class="App\Controller\FineController" autowire="true" autoconfigure="true" abstract="true"/>
+    <service id=".instanceof.Symfony\Contracts\Service\ServiceSubscriberInterface.0.App\Controller\GraphQLController" class="App\Controller\GraphQLController" autowire="true" abstract="true"/>
+    <service id=".instanceof.Symfony\Bundle\FrameworkBundle\Controller\AbstractController.0.App\Controller\GraphQLController" class="App\Controller\GraphQLController" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\Controller\GraphQLController" class="App\Controller\GraphQLController" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Symfony\Contracts\Service\ServiceSubscriberInterface.0.App\Controller\HealthController" class="App\Controller\HealthController" autowire="true" abstract="true"/>
     <service id=".instanceof.Symfony\Bundle\FrameworkBundle\Controller\AbstractController.0.App\Controller\HealthController" class="App\Controller\HealthController" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Controller\HealthController" class="App\Controller\HealthController" autowire="true" autoconfigure="true" abstract="true"/>
@@ -5316,19 +5382,23 @@
         <argument key="kernel" type="service_closure" id="kernel"/>
       </argument>
     </service>
-    <service id=".service_locator.p0kVfHq" class="Symfony\Component\DependencyInjection\ServiceLocator">
+    <service id=".service_locator.FHVF6aA" class="Symfony\Component\DependencyInjection\ServiceLocator">
       <tag name="container.service_locator"/>
       <argument type="collection">
         <argument key="announcementRepository" type="service_closure" id="App\Repository\AnnouncementRepository"/>
-        <argument key="security" type="service_closure" id="App\Service\SecurityService"/>
       </argument>
     </service>
-    <service id=".service_locator.67PO08z" class="Symfony\Component\DependencyInjection\ServiceLocator">
+    <service id=".service_locator.E7ajBy2" class="Symfony\Component\DependencyInjection\ServiceLocator">
+      <tag name="container.service_locator"/>
+      <argument type="collection">
+        <argument key="doctrine" type="service_closure" id="doctrine"/>
+      </argument>
+    </service>
+    <service id=".service_locator.8CQ6.cu" class="Symfony\Component\DependencyInjection\ServiceLocator">
       <tag name="container.service_locator"/>
       <argument type="collection">
         <argument key="doctrine" type="service_closure" id="doctrine"/>
         <argument key="announcementRepository" type="service_closure" id="App\Repository\AnnouncementRepository"/>
-        <argument key="security" type="service_closure" id="App\Service\SecurityService"/>
       </argument>
     </service>
     <service id=".service_locator.EcSWzff" class="Symfony\Component\DependencyInjection\ServiceLocator">
@@ -5447,10 +5517,10 @@
         <argument key="security" type="service_closure" id="App\Service\SecurityService"/>
       </argument>
     </service>
-    <service id=".service_locator.E7ajBy2" class="Symfony\Component\DependencyInjection\ServiceLocator">
+    <service id=".service_locator.Gq.rOo8" class="Symfony\Component\DependencyInjection\ServiceLocator">
       <tag name="container.service_locator"/>
       <argument type="collection">
-        <argument key="doctrine" type="service_closure" id="doctrine"/>
+        <argument key="executor" type="service_closure" id=".errored..service_locator.Gq.rOo8.Overblog\GraphQLBundle\Request\Executor"/>
       </argument>
     </service>
     <service id=".service_locator.9kP6xVn" class="Symfony\Component\DependencyInjection\ServiceLocator">
@@ -5550,7 +5620,7 @@
         <argument key="security" type="service_closure" id="App\Service\SecurityService"/>
       </argument>
     </service>
-    <service id=".service_locator.Q1ma8L6" class="Symfony\Component\DependencyInjection\ServiceLocator">
+    <service id=".service_locator.hwNNsPW" class="Symfony\Component\DependencyInjection\ServiceLocator">
       <tag name="container.service_locator"/>
       <argument type="collection">
         <argument key="kernel::registerContainerConfiguration" type="service_closure" id=".service_locator.zHyJIs5"/>
@@ -5588,13 +5658,13 @@
         <argument key="App\Controller\Admin\SystemConfigController::list" type="service_closure" id=".service_locator.8ZTCuUF"/>
         <argument key="App\Controller\Admin\SystemConfigController::create" type="service_closure" id=".service_locator.8ZTCuUF"/>
         <argument key="App\Controller\Admin\SystemConfigController::update" type="service_closure" id=".service_locator.8ZTCuUF"/>
-        <argument key="App\Controller\AnnouncementController::list" type="service_closure" id=".service_locator.p0kVfHq"/>
-        <argument key="App\Controller\AnnouncementController::show" type="service_closure" id=".service_locator.p0kVfHq"/>
-        <argument key="App\Controller\AnnouncementController::create" type="service_closure" id=".service_locator.AbYyszh"/>
-        <argument key="App\Controller\AnnouncementController::update" type="service_closure" id=".service_locator.67PO08z"/>
-        <argument key="App\Controller\AnnouncementController::publish" type="service_closure" id=".service_locator.67PO08z"/>
-        <argument key="App\Controller\AnnouncementController::archive" type="service_closure" id=".service_locator.67PO08z"/>
-        <argument key="App\Controller\AnnouncementController::delete" type="service_closure" id=".service_locator.67PO08z"/>
+        <argument key="App\Controller\AnnouncementController::list" type="service_closure" id=".service_locator.FHVF6aA"/>
+        <argument key="App\Controller\AnnouncementController::show" type="service_closure" id=".service_locator.FHVF6aA"/>
+        <argument key="App\Controller\AnnouncementController::create" type="service_closure" id=".service_locator.E7ajBy2"/>
+        <argument key="App\Controller\AnnouncementController::update" type="service_closure" id=".service_locator.8CQ6.cu"/>
+        <argument key="App\Controller\AnnouncementController::publish" type="service_closure" id=".service_locator.8CQ6.cu"/>
+        <argument key="App\Controller\AnnouncementController::archive" type="service_closure" id=".service_locator.8CQ6.cu"/>
+        <argument key="App\Controller\AnnouncementController::delete" type="service_closure" id=".service_locator.8CQ6.cu"/>
         <argument key="App\Controller\AuditLogController::list" type="service_closure" id=".service_locator.EcSWzff"/>
         <argument key="App\Controller\AuditLogController::entityHistory" type="service_closure" id=".service_locator.EcSWzff"/>
         <argument key="App\Controller\AuthController::login" type="service_closure" id=".service_locator.tlKOOBe"/>
@@ -5624,6 +5694,7 @@
         <argument key="App\Controller\FineController::create" type="service_closure" id=".service_locator.vhuznaT"/>
         <argument key="App\Controller\FineController::pay" type="service_closure" id=".service_locator.AbYyszh"/>
         <argument key="App\Controller\FineController::cancel" type="service_closure" id=".service_locator.AbYyszh"/>
+        <argument key="App\Controller\GraphQLController::index" type="service_closure" id=".service_locator.Gq.rOo8"/>
         <argument key="App\Controller\LoanController::list" type="service_closure" id=".service_locator.AbYyszh"/>
         <argument key="App\Controller\LoanController::getLoan" type="service_closure" id=".service_locator.AbYyszh"/>
         <argument key="App\Controller\LoanController::create" type="service_closure" id=".service_locator.9kP6xVn"/>
@@ -5692,13 +5763,13 @@
         <argument key="App\Controller\Admin\SystemConfigController:list" type="service_closure" id=".service_locator.8ZTCuUF"/>
         <argument key="App\Controller\Admin\SystemConfigController:create" type="service_closure" id=".service_locator.8ZTCuUF"/>
         <argument key="App\Controller\Admin\SystemConfigController:update" type="service_closure" id=".service_locator.8ZTCuUF"/>
-        <argument key="App\Controller\AnnouncementController:list" type="service_closure" id=".service_locator.p0kVfHq"/>
-        <argument key="App\Controller\AnnouncementController:show" type="service_closure" id=".service_locator.p0kVfHq"/>
-        <argument key="App\Controller\AnnouncementController:create" type="service_closure" id=".service_locator.AbYyszh"/>
-        <argument key="App\Controller\AnnouncementController:update" type="service_closure" id=".service_locator.67PO08z"/>
-        <argument key="App\Controller\AnnouncementController:publish" type="service_closure" id=".service_locator.67PO08z"/>
-        <argument key="App\Controller\AnnouncementController:archive" type="service_closure" id=".service_locator.67PO08z"/>
-        <argument key="App\Controller\AnnouncementController:delete" type="service_closure" id=".service_locator.67PO08z"/>
+        <argument key="App\Controller\AnnouncementController:list" type="service_closure" id=".service_locator.FHVF6aA"/>
+        <argument key="App\Controller\AnnouncementController:show" type="service_closure" id=".service_locator.FHVF6aA"/>
+        <argument key="App\Controller\AnnouncementController:create" type="service_closure" id=".service_locator.E7ajBy2"/>
+        <argument key="App\Controller\AnnouncementController:update" type="service_closure" id=".service_locator.8CQ6.cu"/>
+        <argument key="App\Controller\AnnouncementController:publish" type="service_closure" id=".service_locator.8CQ6.cu"/>
+        <argument key="App\Controller\AnnouncementController:archive" type="service_closure" id=".service_locator.8CQ6.cu"/>
+        <argument key="App\Controller\AnnouncementController:delete" type="service_closure" id=".service_locator.8CQ6.cu"/>
         <argument key="App\Controller\AuditLogController:list" type="service_closure" id=".service_locator.EcSWzff"/>
         <argument key="App\Controller\AuditLogController:entityHistory" type="service_closure" id=".service_locator.EcSWzff"/>
         <argument key="App\Controller\AuthController:login" type="service_closure" id=".service_locator.tlKOOBe"/>
@@ -5728,6 +5799,7 @@
         <argument key="App\Controller\FineController:create" type="service_closure" id=".service_locator.vhuznaT"/>
         <argument key="App\Controller\FineController:pay" type="service_closure" id=".service_locator.AbYyszh"/>
         <argument key="App\Controller\FineController:cancel" type="service_closure" id=".service_locator.AbYyszh"/>
+        <argument key="App\Controller\GraphQLController:index" type="service_closure" id=".service_locator.Gq.rOo8"/>
         <argument key="App\Controller\LoanController:list" type="service_closure" id=".service_locator.AbYyszh"/>
         <argument key="App\Controller\LoanController:getLoan" type="service_closure" id=".service_locator.AbYyszh"/>
         <argument key="App\Controller\LoanController:create" type="service_closure" id=".service_locator.9kP6xVn"/>
@@ -6129,6 +6201,12 @@
       <argument type="service" id="service_container"/>
       <factory service=".service_locator.ZyP9f7K" method="withContext"/>
     </service>
+    <service id=".service_locator.ZyP9f7K.App\Controller\GraphQLController" class="Symfony\Component\DependencyInjection\ServiceLocator">
+      <tag name="container.service_locator_context" id="App\Controller\GraphQLController"/>
+      <argument>App\Controller\GraphQLController</argument>
+      <argument type="service" id="service_container"/>
+      <factory service=".service_locator.ZyP9f7K" method="withContext"/>
+    </service>
     <service id=".service_locator.ZyP9f7K.App\Controller\HealthController" class="Symfony\Component\DependencyInjection\ServiceLocator">
       <tag name="container.service_locator_context" id="App\Controller\HealthController"/>
       <argument>App\Controller\HealthController</argument>
@@ -6260,6 +6338,13 @@
         <argument key="kernel" type="service_closure" id="kernel"/>
       </argument>
     </service>
+    <service id=".service_locator.u.4FiKa" class="Symfony\Component\DependencyInjection\ServiceLocator">
+      <tag name="container.service_locator"/>
+      <argument type="collection">
+        <argument key="env" type="service_closure" id="container.getenv"/>
+        <argument key="service" type="service_closure" id="container.get_routing_condition_service"/>
+      </argument>
+    </service>
     <service id=".service_locator.ECaP3MA" class="Symfony\Component\DependencyInjection\ServiceLocator">
       <tag name="container.service_locator"/>
       <argument type="collection">
@@ -6309,6 +6394,7 @@
           <argument>App\Controller\DashboardController</argument>
           <argument>App\Controller\FavoriteController</argument>
           <argument>App\Controller\FineController</argument>
+          <argument>App\Controller\GraphQLController</argument>
           <argument>App\Controller\HealthController</argument>
           <argument>App\Controller\LoanController</argument>
           <argument>App\Controller\NotificationController</argument>
@@ -6349,6 +6435,9 @@
     <service id=".errored..service_locator.zHyJIs5.Symfony\Component\Config\Loader\LoaderInterface" class="Symfony\Component\Config\Loader\LoaderInterface">
       <tag name="container.error" message="Cannot autowire service &quot;.service_locator.zHyJIs5&quot;: it needs an instance of &quot;Symfony\Component\Config\Loader\LoaderInterface&quot; but this type has been excluded from autowiring."/>
     </service>
+    <service id=".errored..service_locator.Gq.rOo8.Overblog\GraphQLBundle\Request\Executor" class="Overblog\GraphQLBundle\Request\Executor">
+      <tag name="container.error" message="Cannot autowire service &quot;.service_locator.Gq.rOo8&quot;: it references class &quot;Overblog\GraphQLBundle\Request\Executor&quot; but no such service exists."/>
+    </service>
     <service id=".App\Command\AnonymizeInactivePatronsCommand.lazy" class="Symfony\Component\Console\Command\LazyCommand">
       <argument>maintenance:anonymize-patrons</argument>
       <argument type="collection"/>
@@ -6369,6 +6458,13 @@
       <argument>Automatically block accounts that exceed fine or overdue thresholds.</argument>
       <argument>false</argument>
       <argument type="service_closure" id="App\Command\BlockDelinquentAccountsCommand"/>
+    </service>
+    <service id=".App\Command\CleanupRefreshTokensCommand.lazy" class="Symfony\Component\Console\Command\LazyCommand">
+      <argument>app:cleanup:refresh-tokens</argument>
+      <argument type="collection"/>
+      <argument>Remove expired refresh tokens from database</argument>
+      <argument>false</argument>
+      <argument type="service_closure" id="App\Command\CleanupRefreshTokensCommand"/>
     </service>
     <service id=".App\Command\CreateBackupCommand.lazy" class="Symfony\Component\Console\Command\LazyCommand">
       <argument>maintenance:create-backup</argument>
@@ -6937,11 +7033,12 @@
     </service>
     <service id="console.command_loader" class="Symfony\Component\Console\CommandLoader\ContainerCommandLoader" public="true">
       <tag name="container.no_preload"/>
-      <argument type="service" id=".service_locator.xAnDbJr"/>
+      <argument type="service" id=".service_locator.b05Feo8"/>
       <argument type="collection">
         <argument key="maintenance:anonymize-patrons">App\Command\AnonymizeInactivePatronsCommand</argument>
         <argument key="fines:assess-overdue">App\Command\AssessOverdueFinesCommand</argument>
         <argument key="users:block-delinquent">App\Command\BlockDelinquentAccountsCommand</argument>
+        <argument key="app:cleanup:refresh-tokens">App\Command\CleanupRefreshTokensCommand</argument>
         <argument key="maintenance:create-backup">App\Command\CreateBackupCommand</argument>
         <argument key="notifications:dispatch-due-reminders">App\Command\DispatchLoanDueRemindersCommand</argument>
         <argument key="notifications:dispatch-overdue-warnings">App\Command\DispatchLoanOverdueWarningsCommand</argument>
@@ -7046,12 +7143,13 @@
         <argument key="make:webhook">maker.auto_command.make_webhook</argument>
       </argument>
     </service>
-    <service id=".service_locator.xAnDbJr" class="Symfony\Component\DependencyInjection\ServiceLocator">
+    <service id=".service_locator.b05Feo8" class="Symfony\Component\DependencyInjection\ServiceLocator">
       <tag name="container.service_locator"/>
       <argument type="collection">
         <argument key="App\Command\AnonymizeInactivePatronsCommand" type="service_closure" id=".App\Command\AnonymizeInactivePatronsCommand.lazy"/>
         <argument key="App\Command\AssessOverdueFinesCommand" type="service_closure" id=".App\Command\AssessOverdueFinesCommand.lazy"/>
         <argument key="App\Command\BlockDelinquentAccountsCommand" type="service_closure" id=".App\Command\BlockDelinquentAccountsCommand.lazy"/>
+        <argument key="App\Command\CleanupRefreshTokensCommand" type="service_closure" id=".App\Command\CleanupRefreshTokensCommand.lazy"/>
         <argument key="App\Command\CreateBackupCommand" type="service_closure" id=".App\Command\CreateBackupCommand.lazy"/>
         <argument key="App\Command\DispatchLoanDueRemindersCommand" type="service_closure" id=".App\Command\DispatchLoanDueRemindersCommand.lazy"/>
         <argument key="App\Command\DispatchLoanOverdueWarningsCommand" type="service_closure" id=".App\Command\DispatchLoanOverdueWarningsCommand.lazy"/>
@@ -7281,7 +7379,7 @@
     <service id="nelmio_api_doc.controller.swagger" alias="nelmio_api_doc.controller.swagger_json" public="true"/>
     <service id="nelmio_api_doc.generator" alias="nelmio_api_doc.generator.default" public="true"/>
     <service id="container.env_var_processors_locator" alias=".service_locator.pRu6x_4" public="true"/>
-    <service id="argument_resolver.controller_locator" alias=".service_locator.Q1ma8L6"/>
+    <service id="argument_resolver.controller_locator" alias=".service_locator.hwNNsPW"/>
     <service id="doctrine.id_generator_locator" alias=".service_locator.BxSdgVt"/>
     <service id="Psr\Log\LoggerInterface" alias="logger"/>
     <service id=".service_locator.oiB6xeU" alias="messenger.receiver_locator"/>
@@ -7300,8 +7398,9 @@
     <service id=".service_locator.YSjCaiw" alias=".service_locator.S_C3Dzl"/>
     <service id=".service_locator.O33qp4a" alias=".service_locator.8ZTCuUF"/>
     <service id=".service_locator._XkFWFd" alias=".service_locator.6nghiUy"/>
-    <service id=".service_locator.Gl4K9Lp" alias=".service_locator.p0kVfHq"/>
-    <service id=".service_locator.hR1MK2X" alias=".service_locator.67PO08z"/>
+    <service id=".service_locator.mawi.GV" alias=".service_locator.FHVF6aA"/>
+    <service id=".service_locator.8o9hjmt" alias=".service_locator.E7ajBy2"/>
+    <service id=".service_locator.Y52aFYp" alias=".service_locator.8CQ6.cu"/>
     <service id=".service_locator.oY9gUin" alias=".service_locator.EcSWzff"/>
     <service id=".service_locator.x6QRsGg" alias=".service_locator.tlKOOBe"/>
     <service id=".service_locator.hNMhKaf" alias=".service_locator.OzEre6h"/>
@@ -7316,7 +7415,7 @@
     <service id=".service_locator.Ec2b7S0" alias=".service_locator.5V4bIRi"/>
     <service id=".service_locator.QLoEzu4" alias=".service_locator.GUMRX7C"/>
     <service id=".service_locator.qrxZKSf" alias=".service_locator.0tFntzx"/>
-    <service id=".service_locator.8o9hjmt" alias=".service_locator.E7ajBy2"/>
+    <service id=".service_locator.YH11zII" alias=".service_locator.Gq.rOo8"/>
     <service id=".service_locator.8vuCl.6" alias=".service_locator.9kP6xVn"/>
     <service id=".service_locator.7.yhmtD" alias=".service_locator.VF3xVsP"/>
     <service id=".service_locator.QLxwK0X" alias=".service_locator.4aTJiDL"/>

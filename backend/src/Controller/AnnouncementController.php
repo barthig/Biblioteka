@@ -102,8 +102,7 @@ class AnnouncementController extends AbstractController
     public function show(
         int $id,
         Request $request,
-        AnnouncementRepository $announcementRepository,
-        SecurityService $security
+        AnnouncementRepository $announcementRepository
     ): JsonResponse {
         $announcement = $announcementRepository->find($id);
         
@@ -111,7 +110,7 @@ class AnnouncementController extends AbstractController
             return $this->json(['error' => 'Announcement not found'], 404);
         }
 
-        $isLibrarian = $security->hasRole($request, 'ROLE_LIBRARIAN');
+        $isLibrarian = $this->isGranted('ROLE_LIBRARIAN');
         
         // Bibliotekarze widzą wszystko
         if ($isLibrarian) {
@@ -119,14 +118,9 @@ class AnnouncementController extends AbstractController
         }
 
         // Zwykli użytkownicy - tylko aktywne i widoczne dla nich
-        $user = null;
-        $payload = $security->getTokenPayload($request);
-        if ($payload) {
-            $userId = (int)$payload['sub'];
-            $user = $this->getDoctrine()->getRepository(\App\Entity\User::class)->find($userId);
-        }
-
-        if (!$announcement->isVisibleForUser($user)) {
+        $user = $this->getUser();
+        
+        if (!$announcement->isVisibleForUser($user instanceof \App\Entity\User ? $user : null)) {
             return $this->json(['error' => 'Announcement not found'], 404);
         }
 
@@ -180,7 +174,9 @@ class AnnouncementController extends AbstractController
         $announcement = new Announcement();
         $announcement->setTitle($data['title']);
         $announcement->setContent($data['content']);
-        $announcement->setCreatedBy($user);
+        if ($user instanceof \App\Entity\User) {
+            $announcement->setCreatedBy($user);
+        }
 
         if (isset($data['type'])) {
             $announcement->setType($data['type']);

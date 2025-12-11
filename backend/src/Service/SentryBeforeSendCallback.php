@@ -41,16 +41,8 @@ class SentryBeforeSendCallback
         }
         
         // Usuń wrażliwe dane z kontekstu użytkownika
-        $user = $event->getUser();
-        if ($user) {
-            // Zachowaj tylko ID i email (bez innych danych osobowych)
-            $filteredUser = [
-                'id' => $user->getId(),
-                'email' => $user->getEmail() ? self::maskEmail($user->getEmail()) : null,
-            ];
-            
-            $event->setUser($filteredUser);
-        }
+        // For maximum privacy, we don't send user data to Sentry
+        $event->setUser(null);
         
         // Filtruj zmienne środowiskowe
         $extra = $event->getExtra();

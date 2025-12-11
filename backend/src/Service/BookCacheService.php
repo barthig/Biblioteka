@@ -2,7 +2,7 @@
 
 namespace App\Service;
 
-use Psr\Cache\CacheItemPoolInterface;
+use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 
 /**
@@ -17,7 +17,7 @@ class BookCacheService
     private const CACHE_KEY_NEW_BOOKS = 'new_books';
 
     public function __construct(
-        private CacheItemPoolInterface $booksCache
+        private CacheInterface $booksCache
     ) {
     }
 
@@ -98,16 +98,20 @@ class BookCacheService
      */
     public function invalidateBook(int $bookId): void
     {
-        $this->booksCache->deleteItem(sprintf(self::CACHE_KEY_BOOK, $bookId));
-        $this->booksCache->deleteItem(sprintf(self::CACHE_KEY_BOOK_AVAILABILITY, $bookId));
+        $this->booksCache->delete(sprintf(self::CACHE_KEY_BOOK, $bookId));
+        $this->booksCache->delete(sprintf(self::CACHE_KEY_BOOK_AVAILABILITY, $bookId));
     }
 
     /**
      * Invalidate books list cache
+     * Note: This invalidates all cached book lists
      */
     public function invalidateBooksList(): void
     {
-        $this->booksCache->clear();
+        // Note: CacheInterface doesn't have clear(), need to delete specific keys
+        // In production, consider using TagAwareCacheInterface for better invalidation
+        $this->booksCache->delete(self::CACHE_KEY_POPULAR_BOOKS);
+        $this->booksCache->delete(self::CACHE_KEY_NEW_BOOKS);
     }
 
     /**
@@ -115,7 +119,7 @@ class BookCacheService
      */
     public function invalidateBookAvailability(int $bookId): void
     {
-        $this->booksCache->deleteItem(sprintf(self::CACHE_KEY_BOOK_AVAILABILITY, $bookId));
+        $this->booksCache->delete(sprintf(self::CACHE_KEY_BOOK_AVAILABILITY, $bookId));
     }
 
     /**
@@ -123,7 +127,7 @@ class BookCacheService
      */
     public function invalidatePopularBooks(): void
     {
-        $this->booksCache->deleteItem(self::CACHE_KEY_POPULAR_BOOKS);
+        $this->booksCache->delete(self::CACHE_KEY_POPULAR_BOOKS);
     }
 
     /**
@@ -131,6 +135,6 @@ class BookCacheService
      */
     public function invalidateNewBooks(): void
     {
-        $this->booksCache->deleteItem(self::CACHE_KEY_NEW_BOOKS);
+        $this->booksCache->delete(self::CACHE_KEY_NEW_BOOKS);
     }
 }

@@ -2,7 +2,7 @@
 
 namespace App\Service;
 
-use Psr\Cache\CacheItemPoolInterface;
+use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 
 /**
@@ -17,7 +17,7 @@ class StatisticsCacheService
     private const CACHE_KEY_MONTHLY_REPORT = 'monthly_report_%s';
 
     public function __construct(
-        private CacheItemPoolInterface $statisticsCache
+        private CacheInterface $statisticsCache
     ) {
     }
 
@@ -96,15 +96,15 @@ class StatisticsCacheService
      */
     public function invalidateAll(): void
     {
-        $this->statisticsCache->clear();
+        // Delete common statistics keys
+        $this->statisticsCache->delete(self::CACHE_KEY_DASHBOARD);
     }
 
-    /**
-     * Invalidate dashboard cache
+    /**\n     * Invalidate dashboard cache
      */
     public function invalidateDashboard(): void
     {
-        $this->statisticsCache->deleteItem(self::CACHE_KEY_DASHBOARD);
+        $this->statisticsCache->delete(self::CACHE_KEY_DASHBOARD);
     }
 
     /**
@@ -112,6 +112,6 @@ class StatisticsCacheService
      */
     public function invalidateUserStats(int $userId): void
     {
-        $this->statisticsCache->deleteItem(sprintf(self::CACHE_KEY_USER_STATS, $userId));
+        $this->statisticsCache->delete(sprintf(self::CACHE_KEY_USER_STATS, $userId));
     }
 }

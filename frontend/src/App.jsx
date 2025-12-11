@@ -16,6 +16,7 @@ import Favorites from './pages/Favorites'
 import Recommended from './pages/Recommended'
 import AdminPanel from './pages/AdminPanel'
 import LibrarianPanel from './pages/LibrarianPanel'
+import Announcements from './pages/Announcements'
 
 export default function App() {
   return (
@@ -29,6 +30,8 @@ export default function App() {
             <Route path="/books" element={<Books />} />
             <Route path="/books/:id" element={<BookDetails />} />
             <Route path="/recommended" element={<Recommended />} />
+            <Route path="/announcements" element={<Announcements />} />
+            <Route path="/announcements/:id" element={<Announcements />} />
             <Route path="/my-loans" element={<MyLoans />} />
             <Route path="/reservations" element={<Reservations />} />
             <Route path="/favorites" element={<Favorites />} />

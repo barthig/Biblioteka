@@ -1,0 +1,437 @@
+/* ===== ANNOUNCEMENT STYLES ===== */
+.announcements-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+}
+
+.page-header h1 {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.announcements-grid {
+  display: grid;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.announcement-card {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 1.5rem;
+  cursor: pointer;
+  transition: var(--transition);
+  position: relative;
+}
+
+.announcement-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.announcement-type-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.announcement-type-badge-large {
+  font-size: 0.875rem;
+  padding: 0.5rem 1rem;
+}
+
+.announcement-type-badge[data-type="info"] {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.announcement-type-badge[data-type="warning"] {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.announcement-type-badge[data-type="success"] {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.announcement-type-badge[data-type="error"] {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.announcement-pinned {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background-color: var(--warning-color);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.announcement-card-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.announcement-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+}
+
+.announcement-content-preview {
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.announcement-detail {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.announcement-detail-title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: var(--text-primary);
+}
+
+.announcement-detail-content {
+  font-size: 1rem;
+  line-height: 1.8;
+  color: var(--text-secondary);
+  margin-top: 2rem;
+  white-space: pre-wrap;
+}
+
+.filters-bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+}
+
+.filter-select {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  font-size: 0.875rem;
+  background-color: var(--bg-primary);
+}
+
+/* ===== LOAN CARD STYLES ===== */
+.loan-card {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.loan-card-header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.loan-book-info h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.loan-book-author {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.loan-status-badge {
+  padding: 0.375rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.loan-status-active {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.loan-status-overdue {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.loan-status-warning {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.loan-status-returned {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.loan-dates {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.loan-date-item {
+  font-size: 0.875rem;
+}
+
+.loan-date-label {
+  color: var(--text-muted);
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.loan-date-value {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.loan-warning {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background-color: #fee2e2;
+  border-left: 4px solid var(--error-color);
+  border-radius: var(--border-radius);
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+  color: #991b1b;
+}
+
+.loan-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background-color: #dbeafe;
+  border-left: 4px solid var(--info-color);
+  border-radius: var(--border-radius);
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+  color: #1e40af;
+}
+
+.loan-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+/* ===== RESERVATION CARD STYLES ===== */
+.reservation-card {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.reservation-status-pending {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.reservation-status-ready {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.reservation-status-fulfilled {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.reservation-status-cancelled {
+  background-color: #f3f4f6;
+  color: #6b7280;
+}
+
+.reservation-status-expired {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+/* ===== DASHBOARD STYLES ===== */
+.dashboard {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.hero {
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+  color: white;
+  padding: 4rem 2rem;
+  border-radius: var(--border-radius);
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.hero-content h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.hero-content p {
+  font-size: 1.25rem;
+  margin-bottom: 2rem;
+  opacity: 0.9;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.user-stats {
+  margin-bottom: 3rem;
+}
+
+.user-stats h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+}
+
+.announcements-section,
+.books-section {
+  margin-bottom: 3rem;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.section-header h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.quick-actions {
+  margin-top: 3rem;
+}
+
+.quick-actions h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+}
+
+.actions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+
+.action-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 2rem;
+  background-color: var(--bg-primary);
+  border: 2px solid var(--border-color);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: var(--transition);
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.action-card svg {
+  font-size: 2rem;
+  color: var(--primary-color);
+}
+
+.action-card:hover {
+  border-color: var(--primary-color);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+/* ===== RESPONSIVE MOBILE ===== */
+@media (max-width: 640px) {
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .page-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .hero-content h1 {
+    font-size: 1.75rem;
+  }
+
+  .hero-content p {
+    font-size: 1rem;
+  }
+
+  .filters-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .loan-dates {
+    grid-template-columns: 1fr;
+  }
+
+  .loan-actions {
+    flex-direction: column;
+  }
+
+  .actions-grid {
+    grid-template-columns: 1fr;
+  }
+}

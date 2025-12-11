@@ -20,7 +20,7 @@ class AnnouncementFixtures extends Fixture
             $adminUser->setName('Administrator');
             $adminUser->setRoles(['ROLE_LIBRARIAN', 'ROLE_ADMIN']);
             $adminUser->setPassword(password_hash('admin', PASSWORD_BCRYPT));
-            $adminUser->verify(); // Use verify() instead of setVerified()
+            $adminUser->markVerified(); // Use markVerified() method
             $adminUser->recordPrivacyConsent();
             $manager->persist($adminUser);
         }

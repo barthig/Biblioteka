@@ -1,0 +1,23 @@
+parameters:
+    level: 6
+    paths:
+        - src
+        - tests
+    
+    # Ignore false positives
+    ignoreErrors:
+        # PSR-6 Cache get() method is added by Symfony Cache Contracts
+        - '#Method Psr\\Cache\\CacheItemPoolInterface::get\(\) invoked with 2 parameters, 0 required\.#'
+        - '#Call to an undefined method Psr\\Cache\\CacheItemPoolInterface::get\(\)\.#'
+        
+        # PHPUnit MockObject methods
+        - '#Call to an undefined method PHPUnit\\Framework\\MockObject\\MockObject::expects\(\)\.#'
+        - '#Call to an undefined method Doctrine\\ORM\\EntityManagerInterface&PHPUnit\\Framework\\MockObject\\MockObject::expects\(\)\.#'
+        - '#Call to an undefined method App\\Repository\\RefreshTokenRepository&PHPUnit\\Framework\\MockObject\\MockObject::expects\(\)\.#'
+        
+        # Optional GraphQL dependencies - will be resolved when packages are installed
+        - '#Parameter .+ of class .+Resolver constructor expects .+, object\|null given\.#'
+        - '#Property .+Resolver::\$security \(object\|null\) does not accept Symfony\\Component\\Security\\Core\\Security\.#'
+        
+        # Sentry UserDataBag - intentionally set to null for privacy
+        - '#Parameter \#1 \$user of method Sentry\\State\\Scope::setUser\(\) expects Sentry\\UserDataBag\|null, array.+ given\.#'

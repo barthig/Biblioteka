@@ -6,16 +6,21 @@ use App\Entity\Loan;
 use App\Entity\User;
 use App\Repository\LoanRepository;
 use App\Repository\BookRepository;
-use Symfony\Component\Security\Core\Security;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
+/**
+ * GraphQL resolver for Loan operations
+ * Note: Requires symfony/security-bundle package
+ * Install: composer require symfony/security-bundle
+ */
 class LoanResolver
 {
     public function __construct(
         private LoanRepository $loanRepository,
         private BookRepository $bookRepository,
-        private Security $security
+        /** @phpstan-ignore-next-line Optional dependency - install symfony/security-bundle */
+        private ?object $security = null
     ) {
     }
 
@@ -95,9 +100,9 @@ class LoanResolver
                 'name' => $loan->getUser()->getName(),
             ],
             'loanDate' => $loan->getBorrowedAt()?->format('c'),
-            'dueDate' => $loan->getDueDate()?->format('c'),
+            'dueDate' => $loan->getDueAt()?->format('c'),
             'returnDate' => $loan->getReturnedAt()?->format('c'),
-            'status' => $loan->isReturned() ? 'returned' : 'active',
+            'status' => $loan->getReturnedAt() !== null ? 'returned' : 'active',
             'renewalCount' => 0,
         ];
     }

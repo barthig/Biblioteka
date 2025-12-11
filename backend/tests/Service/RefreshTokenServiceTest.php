@@ -10,9 +10,16 @@ use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 
+/**
+ * Test class for RefreshTokenService
+ * 
+ * @phpstan-import-type MockObject from \PHPUnit\Framework\MockObject\MockObject
+ */
 class RefreshTokenServiceTest extends TestCase
 {
+    /** @var EntityManagerInterface&\PHPUnit\Framework\MockObject\MockObject */
     private EntityManagerInterface $em;
+    /** @var RefreshTokenRepository&\PHPUnit\Framework\MockObject\MockObject */
     private RefreshTokenRepository $repository;
     private RefreshTokenService $service;
 
@@ -33,17 +40,20 @@ class RefreshTokenServiceTest extends TestCase
             'HTTP_USER_AGENT' => 'TestBrowser/1.0'
         ]);
 
+        /** @phpstan-ignore-next-line PHPUnit MockObject expects() method */
         $this->repository
             ->expects($this->once())
             ->method('countUserActiveTokens')
             ->with($user)
             ->willReturn(0);
 
+        /** @phpstan-ignore-next-line PHPUnit MockObject expects() method */
         $this->em
             ->expects($this->once())
             ->method('persist')
             ->with($this->isInstanceOf(RefreshToken::class));
 
+        /** @phpstan-ignore-next-line PHPUnit MockObject expects() method */
         $this->em
             ->expects($this->once())
             ->method('flush');

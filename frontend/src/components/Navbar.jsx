@@ -39,6 +39,7 @@ export default function Navbar() {
         <NavLink to="/" end className={navClass}>Dashboard</NavLink>
         <NavLink to="/books" className={navClass}>Ksiazki</NavLink>
         <NavLink to="/recommended" className={navClass} onMouseEnter={prefetchRecommended} onFocus={prefetchRecommended}>Polecane</NavLink>
+        <NavLink to="/announcements" className={navClass}>Ogloszenia</NavLink>
         <NavLink to="/my-loans" className={navClass} onMouseEnter={prefetchLoans} onFocus={prefetchLoans}>Wypozyczenia</NavLink>
         {token && (
           <>

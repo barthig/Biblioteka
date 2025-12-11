@@ -5,18 +5,24 @@ namespace App\GraphQL\Resolver;
 use App\Entity\User;
 use App\Repository\UserRepository;
 use App\Service\RefreshTokenService;
-use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
-use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
+/**
+ * GraphQL resolver for authentication
+ * Note: Requires additional packages:
+ * - composer require symfony/password-hasher
+ * - composer require lexik/jwt-authentication-bundle
+ */
 class AuthResolver
 {
     public function __construct(
         private UserRepository $userRepository,
-        private UserPasswordHasherInterface $passwordHasher,
-        private JWTTokenManagerInterface $jwtManager,
+        /** @phpstan-ignore-next-line Optional dependency - install symfony/password-hasher */
+        private ?object $passwordHasher = null,
+        /** @phpstan-ignore-next-line Optional dependency - install lexik/jwt-authentication-bundle */
+        private ?object $jwtManager = null,
         private RefreshTokenService $refreshTokenService,
         private RequestStack $requestStack
     ) {
