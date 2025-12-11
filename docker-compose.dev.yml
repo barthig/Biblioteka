@@ -12,11 +12,6 @@ services:
       - "5432:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U biblioteka"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   rabbitmq:
     image: rabbitmq:3.13-management
@@ -27,21 +22,15 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   backend:
     build:
       context: .
       dockerfile: docker/backend/Dockerfile
+      target: development
     depends_on:
-      db:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
+      - db
+      - rabbitmq
     volumes:
       - ./backend:/app
     ports:
@@ -51,17 +40,19 @@ services:
       - APP_DEBUG=1
       - DATABASE_URL=postgresql://biblioteka:biblioteka@db:5432/biblioteka_dev?serverVersion=15&charset=utf8
       - MESSENGER_TRANSPORT_DSN=amqp://app:app@rabbitmq:5672/%2f/messages
+      - API_SECRET=change_me_api
+      - JWT_SECRET=change_me_jwt
+    command: php -S 0.0.0.0:8000 -t public
     restart: unless-stopped
 
   php-worker:
     build:
       context: .
       dockerfile: docker/php-worker/Dockerfile
+      target: development
     depends_on:
-      db:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
+      - db
+      - rabbitmq
     volumes:
       - ./backend:/app
     environment:
@@ -69,16 +60,22 @@ services:
       - APP_DEBUG=1
       - DATABASE_URL=postgresql://biblioteka:biblioteka@db:5432/biblioteka_dev?serverVersion=15&charset=utf8
       - MESSENGER_TRANSPORT_DSN=amqp://app:app@rabbitmq:5672/%2f/messages
+      - API_SECRET=change_me_api
+      - JWT_SECRET=change_me_jwt
     restart: unless-stopped
 
   frontend:
-    build:
-      context: .
-      dockerfile: docker/frontend/Dockerfile
-    depends_on:
-      - backend
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
     ports:
-      - "3000:80"
+      - "5176:5173"
+    command: sh -c "npm install && npm run dev -- --host"
+    environment:
+      - VITE_API_URL=http://localhost:8000
+      - VITE_API_SECRET=change_me_api
     restart: unless-stopped
 
 volumes:
