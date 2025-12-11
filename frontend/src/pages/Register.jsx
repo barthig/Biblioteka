@@ -11,7 +11,8 @@ const initialForm = {
   phoneNumber: '',
   addressLine: '',
   city: '',
-  postalCode: ''
+  postalCode: '',
+  privacyConsent: true
 }
 
 export default function Register() {
@@ -19,18 +20,21 @@ export default function Register() {
   const [form, setForm] = useState(initialForm)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [success, setSuccess] = useState(null)
 
   function handleChange(event) {
-    const { name, value } = event.target
-    setForm(prev => ({ ...prev, [name]: value }))
+    const { name, value, type, checked } = event.target
+    const nextValue = type === 'checkbox' ? checked : value
+    setForm(prev => ({ ...prev, [name]: nextValue }))
   }
 
   async function handleSubmit(event) {
     event.preventDefault()
     setError(null)
+    setSuccess(null)
 
     if (form.password !== form.confirmPassword) {
-      setError('Hasła muszą być identyczne')
+      setError('Hasla musza byc identyczne')
       return
     }
 
@@ -43,7 +47,8 @@ export default function Register() {
         phoneNumber: form.phoneNumber.trim() || undefined,
         addressLine: form.addressLine.trim() || undefined,
         city: form.city.trim() || undefined,
-        postalCode: form.postalCode.trim() || undefined
+        postalCode: form.postalCode.trim() || undefined,
+        privacyConsent: form.privacyConsent
       }
 
       const response = await apiFetch('/api/auth/register', {
@@ -52,13 +57,30 @@ export default function Register() {
         body: JSON.stringify(payload)
       })
 
-      if (response?.token) {
-        auth.login(response.token)
+      const verificationToken = response?.verificationToken
+      if (!verificationToken) {
+        throw new Error('Brak tokenu weryfikacyjnego w odpowiedzi serwera')
+      }
+
+      const verifyResult = await apiFetch(`/api/auth/verify/${verificationToken}`)
+      if (verifyResult?.pendingApproval) {
+        setSuccess('Konto zostalo utworzone i zweryfikowane. Oczekuje na akceptacje bibliotekarza.')
+        return
+      }
+
+      const loginResult = await apiFetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: payload.email, password: payload.password })
+      })
+
+      if (loginResult?.token) {
+        auth.login(loginResult.token)
       } else {
-        throw new Error('Brak tokenu w odpowiedzi serwera')
+        setSuccess('Konto zostalo zweryfikowane, ale logowanie nie powiodlo sie. Sprobuj ponownie.')
       }
     } catch (err) {
-      setError(err.message || 'Rejestracja nie powiodła się')
+      setError(err.message || 'Rejestracja nie powiodla sie')
     } finally {
       setLoading(false)
     }
@@ -68,8 +90,8 @@ export default function Register() {
     <div className="page page--centered">
       <header className="page-header">
         <div>
-          <h1>Utwórz konto</h1>
-          <p className="support-copy">Załóż konto czytelnika, aby rezerwować i zarządzać wypożyczeniami online.</p>
+          <h1>Utworz konto</h1>
+          <p className="support-copy">Zaloz konto czytelnika, aby rezerwowac i zarzadzac wypozyczeniami online.</p>
         </div>
       </header>
 
@@ -77,7 +99,7 @@ export default function Register() {
         <form onSubmit={handleSubmit}>
           <div className="form-grid form-grid--two">
             <div>
-              <label htmlFor="register-name">Imię i nazwisko</label>
+              <label htmlFor="register-name">Imie i nazwisko</label>
               <input
                 id="register-name"
                 name="name"
@@ -99,7 +121,7 @@ export default function Register() {
               />
             </div>
             <div>
-              <label htmlFor="register-password">Hasło</label>
+              <label htmlFor="register-password">Haslo</label>
               <input
                 id="register-password"
                 name="password"
@@ -110,9 +132,10 @@ export default function Register() {
                 minLength={8}
                 required
               />
+              <p className="field-hint">Minimum 8 znakow, w tym litery i cyfra.</p>
             </div>
             <div>
-              <label htmlFor="register-confirm">Powtórz hasło</label>
+              <label htmlFor="register-confirm">Powtorz haslo</label>
               <input
                 id="register-confirm"
                 name="confirmPassword"
@@ -163,15 +186,26 @@ export default function Register() {
               />
             </div>
           </div>
+          <label className="checkbox">
+            <input
+              type="checkbox"
+              name="privacyConsent"
+              checked={form.privacyConsent}
+              onChange={handleChange}
+              required
+            />
+            <span>Wyrazam zgode na przetwarzanie danych w celu prowadzenia konta czytelnika.</span>
+          </label>
           <div className="form-actions">
             <button type="submit" className="btn btn-primary" disabled={loading}>
-              {loading ? 'Rejestrowanie...' : 'Zarejestruj się'}
+              {loading ? 'Rejestrowanie...' : 'Zarejestruj sie'}
             </button>
             <span className="support-copy">
-              Masz już konto? <Link to="/login">Zaloguj się</Link>
+              Masz juz konto? <Link to="/login">Zaloguj sie</Link>
             </span>
           </div>
           {error && <div className="error">{error}</div>}
+          {success && <div className="success">{success}</div>}
         </form>
       </div>
     </div>

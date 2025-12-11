@@ -29,6 +29,7 @@ class RegistrationController extends AbstractController
         return $this->json([
             'status' => 'pending_verification',
             'userId' => $token->getUser()->getId(),
+            'verificationToken' => $token->getToken(),
         ], 201);
     }
 

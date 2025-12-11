@@ -44,19 +44,19 @@ class RegistrationService
 
         $name = isset($data['name']) ? trim((string) $data['name']) : '';
         if ($name === '') {
-            throw RegistrationException::validation('Imię i nazwisko są wymagane.');
+            throw RegistrationException::validation('Imie i nazwisko sa wymagane.');
         }
 
         $password = (string) ($data['password'] ?? '');
         $this->assertPasswordStrength($password);
 
         if ($this->users->findOneBy(['email' => $email])) {
-            throw RegistrationException::validation('Konto z takim adresem e-mail już istnieje.', 409);
+            throw RegistrationException::validation('Konto z takim adresem e-mail juz istnieje.', 409);
         }
 
         $consentValue = $data['privacyConsent'] ?? null;
         if (!$this->toBool($consentValue)) {
-            throw RegistrationException::validation('Musisz wyrazić zgodę na przetwarzanie danych osobowych.');
+            throw RegistrationException::validation('Musisz wyrazic zgode na przetwarzanie danych osobowych.');
         }
 
         $user = (new User())
@@ -115,15 +115,15 @@ class RegistrationService
 
         $token = $this->tokens->findActiveByToken($tokenValue);
         if (!$token) {
-            throw RegistrationException::validation('Nieprawidłowy token weryfikacyjny.', 404);
+            throw RegistrationException::validation('Nieprawidlowy token weryfikacyjny.', 404);
         }
 
         if ($token->isExpired()) {
-            throw RegistrationException::validation('Token wygasł. Poproś o nowy link aktywacyjny.', 410);
+            throw RegistrationException::validation('Token wygasl. Popros o nowy link aktywacyjny.', 410);
         }
 
         if ($token->isConsumed()) {
-            throw RegistrationException::validation('Token został już wykorzystany.', 410);
+            throw RegistrationException::validation('Token zostal juz wykorzystany.', 410);
         }
 
         $user = $token->getUser();
@@ -141,12 +141,12 @@ class RegistrationService
 
     private function assertPasswordStrength(string $password): void
     {
-        if (strlen($password) < 10) {
-            throw RegistrationException::validation('Hasło musi mieć co najmniej 10 znaków.');
+        if (strlen($password) < 8) {
+            throw RegistrationException::validation('Haslo musi miec co najmniej 8 znakow.');
         }
 
-        if (!preg_match('/[A-Z]/', $password) || !preg_match('/[a-z]/', $password) || !preg_match('/\d/', $password)) {
-            throw RegistrationException::validation('Hasło musi zawierać małe i duże litery oraz cyfrę.');
+        if (!preg_match('/(?=.*[a-zA-Z])(?=.*\d)/', $password)) {
+            throw RegistrationException::validation('Haslo musi zawierac litery oraz co najmniej jedna cyfre.');
         }
     }
 
