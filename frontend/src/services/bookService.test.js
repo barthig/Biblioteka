@@ -1,8 +1,10 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { bookService } from './bookService'
-import * as api from './api'
+import * as api from '../api'
 
-vi.mock('./api')
+vi.mock('../api', () => ({
+  apiFetch: vi.fn()
+}))
 
 describe('bookService', () => {
   beforeEach(() => {
@@ -21,7 +23,7 @@ describe('bookService', () => {
         limit: 20
       }
 
-      vi.mocked(api.apiFetch).mockResolvedValue(mockBooks)
+      api.apiFetch.mockResolvedValue(mockBooks)
 
       const filters = { page: 1, limit: 20, categoryId: 5 }
       const result = await bookService.getBooks(filters)
@@ -32,18 +34,18 @@ describe('bookService', () => {
 
     it('should handle empty filters', async () => {
       const mockBooks = { items: [], total: 0, page: 1, limit: 20 }
-      vi.mocked(api.apiFetch).mockResolvedValue(mockBooks)
+      api.apiFetch.mockResolvedValue(mockBooks)
 
       await bookService.getBooks()
 
-      expect(api.apiFetch).toHaveBeenCalledWith('/api/books?')
+      expect(api.apiFetch).toHaveBeenCalledWith('/api/books')
     })
   })
 
   describe('getBook', () => {
     it('should fetch single book by id', async () => {
       const mockBook = { id: 1, title: 'Test Book', isbn: '1234567890' }
-      vi.mocked(api.apiFetch).mockResolvedValue(mockBook)
+      api.apiFetch.mockResolvedValue(mockBook)
 
       const result = await bookService.getBook(1)
 
@@ -58,7 +60,7 @@ describe('bookService', () => {
         items: [{ id: 1, title: 'Search Result' }],
         total: 1
       }
-      vi.mocked(api.apiFetch).mockResolvedValue(mockResults)
+      api.apiFetch.mockResolvedValue(mockResults)
 
       const result = await bookService.search('test query')
 
@@ -67,7 +69,7 @@ describe('bookService', () => {
     })
 
     it('should encode special characters in query', async () => {
-      vi.mocked(api.apiFetch).mockResolvedValue({ items: [], total: 0 })
+      api.apiFetch.mockResolvedValue({ items: [], total: 0 })
 
       await bookService.search('test & query')
 
@@ -82,7 +84,7 @@ describe('bookService', () => {
         availableCopies: 3,
         onLoan: 2
       }
-      vi.mocked(api.apiFetch).mockResolvedValue(mockAvailability)
+      api.apiFetch.mockResolvedValue(mockAvailability)
 
       const result = await bookService.getAvailability(1)
 
@@ -97,7 +99,7 @@ describe('bookService', () => {
         categories: [{ id: 1, name: 'Fiction' }],
         authors: [{ id: 1, name: 'Author 1' }]
       }
-      vi.mocked(api.apiFetch).mockResolvedValue(mockFilters)
+      api.apiFetch.mockResolvedValue(mockFilters)
 
       const result = await bookService.getFilters()
 

@@ -1,8 +1,10 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { loanService } from './loanService'
-import * as api from './api'
+import * as api from '../api'
 
-vi.mock('./api')
+vi.mock('../api', () => ({
+  apiFetch: vi.fn()
+}))
 
 describe('loanService', () => {
   beforeEach(() => {
@@ -15,7 +17,7 @@ describe('loanService', () => {
         { id: 1, bookTitle: 'Book 1', dueDate: '2025-12-31' },
         { id: 2, bookTitle: 'Book 2', dueDate: '2025-12-25' }
       ]
-      vi.mocked(api.apiFetch).mockResolvedValue(mockLoans)
+      api.apiFetch.mockResolvedValue(mockLoans)
 
       const result = await loanService.getMyLoans()
 
@@ -31,7 +33,7 @@ describe('loanService', () => {
         total: 1,
         page: 1
       }
-      vi.mocked(api.apiFetch).mockResolvedValue(mockResponse)
+      api.apiFetch.mockResolvedValue(mockResponse)
 
       const filters = { page: 1, status: 'active' }
       const result = await loanService.getAllLoans(filters)
@@ -44,7 +46,7 @@ describe('loanService', () => {
   describe('createLoan', () => {
     it('should create loan with bookId only', async () => {
       const mockLoan = { id: 1, bookId: 123, userId: 456, status: 'active' }
-      vi.mocked(api.apiFetch).mockResolvedValue(mockLoan)
+      api.apiFetch.mockResolvedValue(mockLoan)
 
       const result = await loanService.createLoan(123)
 
@@ -58,7 +60,7 @@ describe('loanService', () => {
 
     it('should create loan with bookId and userId', async () => {
       const mockLoan = { id: 1, bookId: 123, userId: 789, status: 'active' }
-      vi.mocked(api.apiFetch).mockResolvedValue(mockLoan)
+      api.apiFetch.mockResolvedValue(mockLoan)
 
       const result = await loanService.createLoan(123, 789)
 
@@ -74,7 +76,7 @@ describe('loanService', () => {
   describe('returnLoan', () => {
     it('should return a loan', async () => {
       const mockResponse = { id: 1, status: 'returned', returnedAt: '2025-12-12' }
-      vi.mocked(api.apiFetch).mockResolvedValue(mockResponse)
+      api.apiFetch.mockResolvedValue(mockResponse)
 
       const result = await loanService.returnLoan(1)
 
@@ -88,7 +90,7 @@ describe('loanService', () => {
   describe('extendLoan', () => {
     it('should extend a loan', async () => {
       const mockResponse = { id: 1, dueDate: '2026-01-12', renewalCount: 1 }
-      vi.mocked(api.apiFetch).mockResolvedValue(mockResponse)
+      api.apiFetch.mockResolvedValue(mockResponse)
 
       const result = await loanService.extendLoan(1)
 

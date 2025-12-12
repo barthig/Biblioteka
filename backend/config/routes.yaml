@@ -594,11 +594,15 @@ api_announcements_list:
   path: /api/announcements
   controller: App\Controller\AnnouncementController::list
   methods: [GET]
+  defaults:
+    _public: true
 
 api_announcements_get:
   path: /api/announcements/{id}
   controller: App\Controller\AnnouncementController::get
   methods: [GET]
+  defaults:
+    _public: true
   requirements:
     id: '[0-9]+'
 

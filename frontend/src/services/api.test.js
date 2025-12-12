@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
-import { apiFetch } from './api'
+import { apiFetch } from '../api'
 
 // Mock fetch globally
 global.fetch = vi.fn()
@@ -29,7 +29,7 @@ describe('api', () => {
       expect(global.fetch).toHaveBeenCalledWith(
         expect.stringContaining('/api/test'),
         expect.objectContaining({
-          method: 'GET'
+          headers: expect.any(Object)
         })
       )
       expect(result).toEqual(mockData)

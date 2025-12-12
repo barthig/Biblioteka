@@ -4,9 +4,11 @@ namespace App\Controller;
 use App\Application\Command\Account\ChangePasswordCommand;
 use App\Application\Command\Account\UpdateAccountCommand;
 use App\Controller\Traits\ValidationTrait;
+use App\Entity\User;
 use App\Request\ChangePasswordRequest;
 use App\Request\UpdateAccountRequest;
 use App\Service\SecurityService;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -20,7 +22,8 @@ class AccountController extends AbstractController
 
     public function __construct(
         private readonly MessageBusInterface $commandBus,
-        private readonly SecurityService $security
+        private readonly SecurityService $security,
+        private readonly EntityManagerInterface $entityManager
     ) {}
 public function me(Request $request): JsonResponse
     {
@@ -29,8 +32,23 @@ public function me(Request $request): JsonResponse
             return $this->json(['error' => 'Unauthorized'], 401);
         }
 
-        // TODO: Implementacja GetUserQuery dla me endpoint
-        return $this->json(['error' => 'Not implemented'], 501);
+        $user = $this->entityManager->getRepository(User::class)->find($userId);
+        if (!$user) {
+            return $this->json(['error' => 'User not found'], 404);
+        }
+
+        return $this->json([
+            'id' => $user->getId(),
+            'email' => $user->getEmail(),
+            'name' => $user->getName(),
+            'phoneNumber' => $user->getPhoneNumber(),
+            'addressLine' => $user->getAddressLine(),
+            'city' => $user->getCity(),
+            'postalCode' => $user->getPostalCode(),
+            'newsletterSubscribed' => $user->isNewsletterSubscribed(),
+            'membershipGroup' => $user->getMembershipGroup(),
+            'createdAt' => $user->getCreatedAt()?->format('c'),
+        ]);
     }
 
     public function update(Request $request, ValidatorInterface $validator): JsonResponse

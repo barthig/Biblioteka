@@ -14,6 +14,7 @@ use App\Service\SecurityService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Messenger\Exception\HandlerFailedException;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -27,6 +28,29 @@ class LoanController extends AbstractController
         private MessageBusInterface $queryBus,
         private SecurityService $security
     ) {
+    }
+
+    private function handleException(\Throwable $e): JsonResponse
+    {
+        if ($e instanceof HandlerFailedException) {
+            $e = $e->getPrevious() ?? $e;
+        }
+        
+        if ($e instanceof \RuntimeException) {
+            $statusCode = match ($e->getMessage()) {
+                'User not found', 'Book not found', 'Loan not found', 'Egzemplarz nie znaleziony' => 404,
+                'Konto czytelnika jest zablokowane' => 423,
+                'Forbidden' => 403,
+                'Limit wypożyczeń został osiągnięty', 
+                'Egzemplarz jest już wypożyczony',
+                'Book reserved by another reader',
+                'No copies available' => 409,
+                default => 500
+            };
+            return $this->json(['error' => $e->getMessage()], $statusCode);
+        }
+        
+        return $this->json(['error' => 'Internal error'], 500);
     }
 
     public function list(Request $request): JsonResponse
@@ -87,11 +111,8 @@ class LoanController extends AbstractController
             }
 
             return $this->json(['data' => $loan], 200, [], ['groups' => ['loan:read']]);
-        } catch (\RuntimeException $e) {
-            if ($e->getMessage() === 'Forbidden') {
-                return $this->json(['error' => 'Forbidden'], 403);
-            }
-            throw $e;
+        } catch (\Throwable $e) {
+            return $this->handleException($e);
         }
     }
 
@@ -129,17 +150,8 @@ class LoanController extends AbstractController
             $loan = $envelope->last(HandledStamp::class)->getResult();
 
             return $this->json(['data' => $loan], 201, [], ['groups' => ['loan:read']]);
-        } catch (\RuntimeException $e) {
-            $statusCode = match ($e->getMessage()) {
-                'User not found', 'Book not found', 'Egzemplarz nie znaleziony' => 404,
-                'Konto czytelnika jest zablokowane' => 423,
-                'Limit wypożyczeń został osiągnięty', 
-                'Egzemplarz jest już wypożyczony',
-                'Book reserved by another reader',
-                'No copies available' => 409,
-                default => 500
-            };
-            return $this->json(['error' => $e->getMessage()], $statusCode);
+        } catch (\Throwable $e) {
+            return $this->handleException($e);
         }
     }
 
@@ -169,6 +181,10 @@ class LoanController extends AbstractController
 
         $envelope = $this->queryBus->dispatch($query);
         $result = $envelope->last(HandledStamp::class)->getResult();
+
+        if (empty($result['data'])) {
+            return new JsonResponse(null, 204);
+        }
 
         return $this->json($result, 200, [], ['groups' => ['loan:read']]);
     }
@@ -201,11 +217,8 @@ class LoanController extends AbstractController
             if (!$loan) {
                 return $this->json(['error' => 'Loan not found'], 404);
             }
-        } catch (\RuntimeException $e) {
-            if ($e->getMessage() === 'Forbidden') {
-                return $this->json(['error' => 'Forbidden'], 403);
-            }
-            return $this->json(['error' => $e->getMessage()], 500);
+        } catch (\Throwable $e) {
+            return $this->handleException($e);
         }
 
         $command = new ReturnLoanCommand(
@@ -218,13 +231,8 @@ class LoanController extends AbstractController
             $loan = $envelope->last(HandledStamp::class)->getResult();
 
             return $this->json(['data' => $loan], 200, [], ['groups' => ['loan:read']]);
-        } catch (\RuntimeException $e) {
-            $statusCode = match ($e->getMessage()) {
-                'Loan not found' => 404,
-                'Loan already returned' => 400,
-                default => 500
-            };
-            return $this->json(['error' => $e->getMessage()], $statusCode);
+        } catch (\Throwable $e) {
+            return $this->handleException($e);
         }
     }
 
@@ -256,11 +264,8 @@ class LoanController extends AbstractController
             if (!$loan) {
                 return $this->json(['error' => 'Loan not found'], 404);
             }
-        } catch (\RuntimeException $e) {
-            if ($e->getMessage() === 'Forbidden') {
-                return $this->json(['error' => 'Forbidden'], 403);
-            }
-            return $this->json(['error' => $e->getMessage()], 500);
+        } catch (\Throwable $e) {
+            return $this->handleException($e);
         }
 
         $command = new ExtendLoanCommand(
@@ -273,15 +278,8 @@ class LoanController extends AbstractController
             $loan = $envelope->last(HandledStamp::class)->getResult();
 
             return $this->json(['data' => $loan], 200, [], ['groups' => ['loan:read']]);
-        } catch (\RuntimeException $e) {
-            $statusCode = match ($e->getMessage()) {
-                'Loan not found' => 404,
-                'Cannot extend returned loan',
-                'Wypożyczenie zostało już przedłużone' => 400,
-                'Nie można przedłużyć - książka jest zarezerwowana' => 409,
-                default => 500
-            };
-            return $this->json(['error' => $e->getMessage()], $statusCode);
+        } catch (\Throwable $e) {
+            return $this->handleException($e);
         }
     }
 
@@ -300,12 +298,8 @@ class LoanController extends AbstractController
         try {
             $this->commandBus->dispatch($command);
             return new JsonResponse(null, 204);
-        } catch (\RuntimeException $e) {
-            $statusCode = match ($e->getMessage()) {
-                'Loan not found' => 404,
-                default => 500
-            };
-            return $this->json(['error' => $e->getMessage()], $statusCode);
+        } catch (\Throwable $e) {
+            return $this->handleException($e);
         }
     }
 }

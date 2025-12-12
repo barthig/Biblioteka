@@ -7,6 +7,7 @@ use App\Application\Command\Book\UpdateBookCommand;
 use App\Application\Query\Book\GetBookQuery;
 use App\Application\Query\Book\ListBooksQuery;
 use App\Controller\Traits\ValidationTrait;
+use App\Entity\Book;
 use App\Request\CreateBookRequest;
 use App\Request\UpdateBookRequest;
 use App\Service\SecurityService;
@@ -98,8 +99,21 @@ class BookController extends AbstractController
 
     public function filters(): JsonResponse
     {
-        // TODO: Implementacja GetBookFacetsQuery
-        return $this->json(['error' => 'Not implemented'], 501);
+        $ageGroups = [];
+        $ageGroupDefinitions = [
+            Book::AGE_GROUP_TODDLERS => '0-2 lata',
+            Book::AGE_GROUP_PRESCHOOL => '3-6 lat',
+            Book::AGE_GROUP_EARLY_SCHOOL => '7-9 lat',
+            Book::AGE_GROUP_MIDDLE_GRADE => '10-12 lat',
+            Book::AGE_GROUP_YA_EARLY => '13-15 lat',
+            Book::AGE_GROUP_YA_LATE => '16+ lat',
+        ];
+
+        foreach ($ageGroupDefinitions as $value => $label) {
+            $ageGroups[] = ['value' => $value, 'label' => $label];
+        }
+
+        return $this->json(['ageGroups' => $ageGroups]);
     }
 
     public function getBook(int $id, Request $request): JsonResponse
@@ -233,7 +247,40 @@ class BookController extends AbstractController
 
     public function recommended(Request $request): JsonResponse
     {
-        // TODO: Implementacja GetRecommendedBooksQuery
-        return $this->json(['error' => 'Not implemented'], 501);
+        $query = new ListBooksQuery();
+        $envelope = $this->queryBus->dispatch($query);
+        $result = $envelope->last(HandledStamp::class)?->getResult();
+
+        $ageGroupDefinitions = [
+            Book::AGE_GROUP_TODDLERS => '0-2 lata',
+            Book::AGE_GROUP_PRESCHOOL => '3-6 lat',
+            Book::AGE_GROUP_EARLY_SCHOOL => '7-9 lat',
+            Book::AGE_GROUP_MIDDLE_GRADE => '10-12 lat',
+            Book::AGE_GROUP_YA_EARLY => '13-15 lat',
+            Book::AGE_GROUP_YA_LATE => '16+ lat',
+        ];
+
+        $groupedBooks = [];
+        foreach ($result['data'] as $book) {
+            $ageGroup = $book->getTargetAgeGroup();
+            if ($ageGroup && isset($ageGroupDefinitions[$ageGroup])) {
+                if (!isset($groupedBooks[$ageGroup])) {
+                    $groupedBooks[$ageGroup] = [
+                        'key' => $ageGroup,
+                        'label' => $ageGroupDefinitions[$ageGroup],
+                        'books' => []
+                    ];
+                }
+                // Convert Book entity to array (simplified)
+                $groupedBooks[$ageGroup]['books'][] = [
+                    'id' => $book->getId(),
+                    'title' => $book->getTitle(),
+                    'author' => $book->getAuthor() ? ['name' => $book->getAuthor()->getName()] : null,
+                    'targetAgeGroup' => $book->getTargetAgeGroup(),
+                ];
+            }
+        }
+
+        return $this->json(['groups' => array_values($groupedBooks)]);
     }
 }

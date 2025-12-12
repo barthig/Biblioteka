@@ -19,6 +19,8 @@ class ListSuppliersHandler
             $criteria['active'] = $query->active;
         }
 
-        return $this->repository->findBy($criteria, ['name' => 'ASC']);
+        $items = $this->repository->findBy($criteria, ['name' => 'ASC']);
+        
+        return ['items' => $items];
     }
 }

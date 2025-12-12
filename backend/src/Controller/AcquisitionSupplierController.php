@@ -31,13 +31,13 @@ class AcquisitionSupplierController extends AbstractController
             return $this->json(['error' => 'Forbidden'], 403);
         }
 
-        $active = $request->query->get('active');
-        $includeInactive = true;
-        if ($active !== null) {
-            $includeInactive = !filter_var($active, FILTER_VALIDATE_BOOLEAN);
+        $activeParam = $request->query->get('active');
+        $active = null;
+        if ($activeParam !== null) {
+            $active = filter_var($activeParam, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
         }
 
-        $query = new ListSuppliersQuery(1, 1000, $includeInactive);
+        $query = new ListSuppliersQuery($active);
         $envelope = $this->queryBus->dispatch($query);
         $result = $envelope->last(HandledStamp::class)?->getResult();
 
@@ -64,15 +64,15 @@ class AcquisitionSupplierController extends AbstractController
         }
 
         $command = new CreateSupplierCommand(
-            (string) $data['name'],
-            $data['contactEmail'] ?? null,
-            $data['contactPhone'] ?? null,
-            $data['addressLine'] ?? null,
-            $data['city'] ?? null,
-            $data['country'] ?? null,
-            $data['taxIdentifier'] ?? null,
-            $data['notes'] ?? null,
-            $activeFlag
+            name: (string) $data['name'],
+            active: $activeFlag,
+            contactEmail: $data['contactEmail'] ?? null,
+            contactPhone: $data['contactPhone'] ?? null,
+            addressLine: $data['addressLine'] ?? null,
+            city: $data['city'] ?? null,
+            country: $data['country'] ?? null,
+            taxIdentifier: $data['taxIdentifier'] ?? null,
+            notes: $data['notes'] ?? null
         );
         
         $envelope = $this->commandBus->dispatch($command);
@@ -92,6 +92,14 @@ class AcquisitionSupplierController extends AbstractController
 
         $data = json_decode($request->getContent(), true) ?: [];
 
+        $activeValue = null;
+        if (isset($data['active'])) {
+            $activeValue = filter_var($data['active'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+            if ($activeValue === null && $data['active'] !== null) {
+                return $this->json(['error' => 'Invalid active flag'], 400);
+            }
+        }
+
         try {
             $command = new UpdateSupplierCommand(
                 (int) $id,
@@ -103,7 +111,7 @@ class AcquisitionSupplierController extends AbstractController
                 $data['country'] ?? null,
                 $data['taxIdentifier'] ?? null,
                 $data['notes'] ?? null,
-                isset($data['active']) ? filter_var($data['active'], FILTER_VALIDATE_BOOLEAN) : null
+                $activeValue
             );
             
             $envelope = $this->commandBus->dispatch($command);
