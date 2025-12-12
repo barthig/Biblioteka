@@ -25,18 +25,19 @@ class User
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
-    #[Groups(['loan:read', 'reservation:read', 'order:read', 'review:read', 'favorite:read', 'weeding:read'])]
+    #[Groups(['user:read', 'loan:read', 'reservation:read', 'order:read', 'review:read', 'favorite:read', 'weeding:read'])]
     private ?int $id = null;
 
     #[ORM\Column(type: 'string', length: 180, unique: true)]
-    #[Groups(['loan:read', 'reservation:read', 'order:read', 'review:read', 'favorite:read', 'weeding:read'])]
+    #[Groups(['user:read', 'loan:read', 'reservation:read', 'order:read', 'review:read', 'favorite:read', 'weeding:read'])]
     private string $email;
 
     #[ORM\Column(type: 'string', length: 255)]
-    #[Groups(['loan:read', 'reservation:read', 'order:read', 'review:read', 'favorite:read', 'weeding:read'])]
+    #[Groups(['user:read', 'loan:read', 'reservation:read', 'order:read', 'review:read', 'favorite:read', 'weeding:read'])]
     private string $name;
 
     #[ORM\Column(type: 'json')]
+    #[Groups(['user:read'])]
     private array $roles = [];
 
     #[ORM\Column(type: 'string', length: 255)]

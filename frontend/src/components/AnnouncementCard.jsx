@@ -1,6 +1,4 @@
 import React from 'react'
-import { format } from 'date-fns'
-import { pl } from 'date-fns/locale'
 import { FaClock, FaCalendar, FaUser } from 'react-icons/fa'
 
 export default function AnnouncementCard({ announcement, onClick }) {
@@ -19,7 +17,13 @@ export default function AnnouncementCard({ announcement, onClick }) {
   }
 
   const formattedDate = announcement.createdAt 
-    ? format(new Date(announcement.createdAt), 'dd MMMM yyyy, HH:mm', { locale: pl })
+    ? new Date(announcement.createdAt).toLocaleDateString('pl-PL', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
     : ''
 
   return (

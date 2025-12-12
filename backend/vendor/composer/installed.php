@@ -1,9 +1,9 @@
 <?php return array(
     'root' => array(
         'name' => 'barthig/biblioteka-backend',
-        'pretty_version' => 'dev-main',
-        'version' => 'dev-main',
-        'reference' => 'a4703b95b89880e2e78559e422686efd6f89bbf1',
+        'pretty_version' => '1.0.0+no-version-set',
+        'version' => '1.0.0.0',
+        'reference' => null,
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -11,9 +11,9 @@
     ),
     'versions' => array(
         'barthig/biblioteka-backend' => array(
-            'pretty_version' => 'dev-main',
-            'version' => 'dev-main',
-            'reference' => 'a4703b95b89880e2e78559e422686efd6f89bbf1',
+            'pretty_version' => '1.0.0+no-version-set',
+            'version' => '1.0.0.0',
+            'reference' => null,
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),

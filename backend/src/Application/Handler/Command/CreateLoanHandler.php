@@ -74,31 +74,31 @@ class CreateLoanHandler
             $reservation = $this->reservationRepository->findFirstActiveForUserAndBook($user, $book);
         }
 
-        $copy = $this->bookService->borrow($book, $reservation, $preferredCopy);
-        if (!$copy) {
-            $queue = $this->reservationRepository->findActiveByBook($book);
-            if (!empty($queue)) {
-                throw new \RuntimeException('Book reserved by another reader');
-            }
-            throw new \RuntimeException('No copies available');
-        }
-
-        $loan = (new Loan())
-            ->setBook($book)
-            ->setBookCopy($copy)
-            ->setUser($user)
-            ->setDueAt((new \DateTimeImmutable())->modify('+14 days'));
-
         $this->em->beginTransaction();
         try {
-            $this->em->persist($loan);
-            if ($reservation) {
-                $this->em->persist($reservation);
+            $copy = $this->bookService->borrow($book, $reservation, $preferredCopy, false);
+            if (!$copy) {
+                $queue = $this->reservationRepository->findActiveByBook($book);
+                if (!empty($queue)) {
+                    throw new \RuntimeException('Book reserved by another reader');
+                }
+                throw new \RuntimeException('No copies available');
             }
+
+            $loan = (new Loan())
+                ->setBook($book)
+                ->setBookCopy($copy)
+                ->setUser($user)
+                ->setDueAt((new \DateTimeImmutable())->modify('+14 days'));
+
+            $this->em->persist($loan);
             $this->em->flush();
             $this->em->commit();
         } catch (\Exception $e) {
             $this->em->rollback();
+            if ($e instanceof \RuntimeException) {
+                throw $e;
+            }
             throw new \RuntimeException('Nie udało się utworzyć wypożyczenia');
         }
 

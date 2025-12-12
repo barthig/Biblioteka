@@ -54,11 +54,13 @@ class AuthController extends AbstractController
     )]
     public function login(Request $request, UserRepository $repo, ValidatorInterface $validator, LoggerInterface $logger): JsonResponse
     {
-        // Rate limiting - max 5 prób na 15 minut z tego samego IP
+        // Rate limiting tymczasowo wyłączone na prośbę użytkownika
+        /*
         $limiter = $this->loginAttemptsLimiter->create($request->getClientIp());
         if (!$limiter->consume(1)->isAccepted()) {
             return $this->json(['error' => 'Zbyt wiele prób logowania. Spróbuj ponownie za 15 minut.'], 429);
         }
+        */
         
         try {
             $data = json_decode($request->getContent(), true) ?: [];
@@ -118,19 +120,24 @@ class AuthController extends AbstractController
         }
     }
 
-    public function profile(Request $request): JsonResponse
+    public function profile(Request $request, UserRepository $repo): JsonResponse
     {
         $payload = $request->attributes->get('jwt_payload');
         if (!$payload) {
             return $this->json(['error' => 'Unauthorized'], 401);
         }
 
-        return $this->json([
-            'user' => [
-                'id' => $payload['sub'],
-                'roles' => $payload['roles'],
-            ]
-        ], 200);
+        $userId = $payload['sub'] ?? null;
+        if (!$userId) {
+            return $this->json(['error' => 'Invalid token'], 401);
+        }
+
+        $user = $repo->find($userId);
+        if (!$user) {
+            return $this->json(['error' => 'User not found'], 404);
+        }
+
+        return $this->json($user, 200, [], ['groups' => ['user:read']]);
     }
 
     #[OA\Post(

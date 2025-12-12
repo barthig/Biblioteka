@@ -93,7 +93,7 @@ return [
         ],
         '/api/audit-logs' => [[['_route' => 'api_audit_logs_list', '_controller' => 'App\\Controller\\AuditLogController::list'], null, ['GET' => 0], null, false, false, null]],
         '/api/announcements' => [
-            [['_route' => 'api_announcements_list', '_controller' => 'App\\Controller\\AnnouncementController::list'], null, ['GET' => 0], null, false, false, null],
+            [['_route' => 'api_announcements_list', '_public' => true, '_controller' => 'App\\Controller\\AnnouncementController::list'], null, ['GET' => 0], null, false, false, null],
             [['_route' => 'api_announcements_create', '_controller' => 'App\\Controller\\AnnouncementController::create'], null, ['POST' => 0], null, false, false, null],
         ],
         '/api/docs.json' => [[['_route' => 'api_docs_json', '_format' => 'json', '_controller' => 'nelmio_api_doc.controller.swagger'], null, null, null, false, false, null]],
@@ -239,7 +239,7 @@ return [
         619 => [[['_route' => 'api_acquisitions_budgets_expense', '_controller' => 'App\\Controller\\AcquisitionBudgetController::addExpense'], ['id'], ['POST' => 0], null, false, false, null]],
         643 => [[['_route' => 'api_acquisitions_budgets_summary', '_controller' => 'App\\Controller\\AcquisitionBudgetController::summary'], ['id'], ['GET' => 0], null, false, false, null]],
         681 => [
-            [['_route' => 'api_announcements_get', '_controller' => 'App\\Controller\\AnnouncementController::get'], ['id'], ['GET' => 0], null, false, true, null],
+            [['_route' => 'api_announcements_get', '_public' => true, '_controller' => 'App\\Controller\\AnnouncementController::get'], ['id'], ['GET' => 0], null, false, true, null],
             [['_route' => 'api_announcements_update', '_controller' => 'App\\Controller\\AnnouncementController::update'], ['id'], ['PUT' => 0], null, false, true, null],
             [['_route' => 'api_announcements_delete', '_controller' => 'App\\Controller\\AnnouncementController::delete'], ['id'], ['DELETE' => 0], null, false, true, null],
         ],

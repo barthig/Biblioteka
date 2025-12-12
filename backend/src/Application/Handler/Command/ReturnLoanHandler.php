@@ -41,7 +41,6 @@ class ReturnLoanHandler
         }
 
         $loan->setReturnedAt(new \DateTimeImmutable());
-        $this->bookService->restore($loan->getBook(), $loan->getBookCopy());
 
         // Check reservations waiting for this book
         $queue = $this->reservationRepository->findActiveByBook($loan->getBook());
@@ -49,6 +48,8 @@ class ReturnLoanHandler
         $reservationForNotification = null;
 
         if ($copy && !empty($queue)) {
+            $this->bookService->restore($loan->getBook(), $loan->getBookCopy(), false, false);
+            
             $nextReservation = $queue[0];
             $copy->setStatus(BookCopy::STATUS_RESERVED);
             $nextReservation->assignBookCopy($copy);
@@ -82,6 +83,7 @@ class ReturnLoanHandler
                 }
             }
         } else {
+            $this->bookService->restore($loan->getBook(), $loan->getBookCopy());
             $this->em->persist($loan);
             $this->em->flush();
         }

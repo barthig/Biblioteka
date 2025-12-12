@@ -43,6 +43,7 @@ export default function BookItem({ book, onBorrowed }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ bookId: book.id, userId: user.id })
       })
+      setSuccess('Wypożyczenie zostało zarejestrowane. Odbierz książkę w wypożyczalni.')
       onBorrowed && onBorrowed(book)
     } catch (err) {
       setError(err.message || 'Nie udało się zarejestrować wypożyczenia.')

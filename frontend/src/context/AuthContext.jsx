@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { apiFetch } from '../api'
 
 const AuthContext = createContext(null)
 
@@ -33,29 +34,61 @@ function decodeJwt(token) {
 export function AuthProvider({ children }) {
   const [token, setToken] = useState(() => localStorage.getItem('token'))
   const [user, setUser] = useState(null)
+  const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
 
   useEffect(() => {
-    if (token) {
-      localStorage.setItem('token', token)
-      const decoded = decodeJwt(token)
-      setUser(decoded)
-    } else {
-      localStorage.removeItem('token')
-      setUser(null)
+    async function loadUser() {
+      if (token) {
+        localStorage.setItem('token', token)
+        try {
+          // Fetch full user data from server
+          const userData = await apiFetch('/api/auth/profile')
+          setUser(userData)
+        } catch (err) {
+          console.error('Failed to load user profile:', err)
+          // Fallback to JWT decode if profile fetch fails
+          const decoded = decodeJwt(token)
+          if (decoded) {
+            setUser(decoded)
+          } else {
+            // Invalid token, clear it
+            setToken(null)
+            localStorage.removeItem('token')
+          }
+        }
+      } else {
+        localStorage.removeItem('token')
+        setUser(null)
+      }
+      setLoading(false)
     }
+
+    loadUser()
   }, [token])
 
   function login(tokenValue) {
     setToken(tokenValue)
-    const decoded = decodeJwt(tokenValue)
-    setUser(decoded)
+    // User will be loaded by useEffect
     navigate('/')
   }
 
   function logout() {
     setToken(null)
+    setUser(null)
     navigate('/login')
+  }
+
+  if (loading) {
+    return (
+      <div className="app-shell">
+        <div className="page page--centered">
+          <div className="surface-card">
+            <p>Ładowanie...</p>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (

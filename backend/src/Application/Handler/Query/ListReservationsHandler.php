@@ -53,8 +53,37 @@ class ListReservationsHandler
             }
         }
 
-        // Count total
-        $countQb = clone $qb;
+        // Count total (without orderBy for COUNT query)
+        $countQb = $this->reservationRepository->createQueryBuilder('r');
+        
+        // Apply same filters as main query
+        if (!$query->isLibrarian && $query->userId) {
+            $countQb->where('r.user = :userId')
+                ->setParameter('userId', $query->userId);
+            
+            if (!$query->includeHistory) {
+                $countQb->andWhere('r.status = :status')
+                    ->setParameter('status', Reservation::STATUS_ACTIVE);
+            }
+        }
+
+        if ($query->isLibrarian) {
+            if ($query->status !== null && in_array(strtoupper($query->status), [
+                Reservation::STATUS_ACTIVE,
+                Reservation::STATUS_CANCELLED,
+                Reservation::STATUS_FULFILLED,
+                Reservation::STATUS_EXPIRED,
+            ], true)) {
+                $countQb->andWhere('r.status = :status')
+                    ->setParameter('status', strtoupper($query->status));
+            }
+
+            if ($query->filterUserId) {
+                $countQb->andWhere('r.user = :filterUserId')
+                    ->setParameter('filterUserId', $query->filterUserId);
+            }
+        }
+        
         $countQb->select('COUNT(r.id)');
         $total = (int) $countQb->getQuery()->getSingleScalarResult();
 

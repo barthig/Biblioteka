@@ -7,7 +7,7 @@ export default function Dashboard() {
   const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const { token } = useAuth()
+  const { token, user } = useAuth()
   const isAuthenticated = Boolean(token)
   const { prefetchResource } = useResourceCache()
   const prefetchScheduledRef = useRef(false)
@@ -97,66 +97,65 @@ export default function Dashboard() {
 
   if (!isAuthenticated) {
     return (
-      <div className="page">
-        <header className="page-header">
-          <div>
-            <h1>Panel biblioteki</h1>
-            <p className="support-copy">Poznaj naszą placówkę, zanim założysz konto. Poniżej znajdziesz najważniejsze informacje o zasobach, wydarzeniach i zasadach wypożyczeń.</p>
+      <div className="landing-page">
+        {/* Hero Section */}
+        <section className="hero-section">
+          <div className="hero-content">
+            <h1 className="hero-title">Odkryj świat literatury</h1>
+            <p className="hero-subtitle">
+              Twoja centralna platforma do odkrywania, wypożyczania i zarządzania książkami
+            </p>
+            <a href="/books" className="hero-button">
+              Przeglądaj książki →
+            </a>
           </div>
-        </header>
-
-        <section className="surface-card">
-          <h2>O placówce</h2>
-          <p>{publicHighlights.facility.description}</p>
-          <ul>
-            {publicHighlights.facility.services.map(service => (
-              <li key={service}>{service}</li>
-            ))}
-          </ul>
         </section>
 
-        <section className="card-grid card-grid--columns-3">
-          <article className="surface-card stat-card">
-            <h3>Księgozbiór</h3>
-            <span>{publicHighlights.snapshot.collection}</span>
-          </article>
-          <article className="surface-card stat-card">
-            <h3>Czytelnicy</h3>
-            <span>{publicHighlights.snapshot.readers}</span>
-          </article>
-          <article className="surface-card stat-card">
-            <h3>Wydarzenia</h3>
-            <span>{publicHighlights.snapshot.events}</span>
-          </article>
-        </section>
+        {/* Features Section */}
+        <section className="features-section">
+          <h2 className="features-title">Wszystko czego potrzebujesz</h2>
+          <p className="features-subtitle">Kompleksowe rozwiązanie do zarządzania biblioteką</p>
+          
+          <div className="features-grid">
+            <article className="feature-card">
+              <div className="feature-icon feature-icon--calendar">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                </svg>
+              </div>
+              <h3 className="feature-title">Katalog książek</h3>
+              <p className="feature-description">
+                Przeglądaj bogatą kolekcję książek w jednym miejscu. Wyszukuj po tytule, autorze lub kategorii.
+              </p>
+            </article>
 
-        <section className="surface-card">
-          <h2>Polecane tytuły</h2>
-          <p>Oto część najczęściej wypożyczanych pozycji dostępnych na miejscu:</p>
-          <ul>
-            {publicHighlights.featuredTitles.map(title => (
-              <li key={title}>{title}</li>
-            ))}
-          </ul>
-        </section>
+            <article className="feature-card">
+              <div className="feature-icon feature-icon--notifications">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                </svg>
+              </div>
+              <h3 className="feature-title">Powiadomienia</h3>
+              <p className="feature-description">
+                Otrzymuj powiadomienia o dostępności zarezerwowanych książek i zbliżających się terminach zwrotu.
+              </p>
+            </article>
 
-        <section className="surface-card">
-          <h2>Aktualności</h2>
-          <ul>
-            {publicHighlights.announcements.map(note => (
-              <li key={note}>{note}</li>
-            ))}
-          </ul>
-        </section>
-
-        <section className="surface-card">
-          <h2>Zasady wypożyczeń i zwrotów</h2>
-          <ul>
-            {publicHighlights.policies.map(policy => (
-              <li key={policy}>{policy}</li>
-            ))}
-          </ul>
-          <p className="support-copy">Załóż konto lub zaloguj się, aby rezerwować egzemplarze i śledzić własne wypożyczenia.</p>
+            <article className="feature-card">
+              <div className="feature-icon feature-icon--management">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                  <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                </svg>
+              </div>
+              <h3 className="feature-title">Łatwe zarządzanie</h3>
+              <p className="feature-description">
+                Intuicyjny panel pozwala szybko wypożyczać książki, przedłużać terminy i zarządzać rezerwacjami.
+              </p>
+            </article>
+          </div>
         </section>
       </div>
     )

@@ -306,7 +306,11 @@ class Book
         $available = 0;
         $storageAvailable = 0;
         $openAvailable = 0;
-        foreach ($this->inventory as $copy) {
+        
+        // Access the collection to trigger lazy loading if needed
+        $inventory = $this->inventory;
+        
+        foreach ($inventory as $copy) {
             if ($copy->getStatus() === BookCopy::STATUS_WITHDRAWN) {
                 continue;
             }

@@ -16,10 +16,8 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
-use Symfony\Component\Routing\Attribute\Route;
 use OpenApi\Attributes as OA;
 
-#[Route('/api')]
 #[OA\Tag(name: 'Announcements')]
 class AnnouncementController extends AbstractController
 {
@@ -29,7 +27,7 @@ class AnnouncementController extends AbstractController
         private readonly UserRepository $userRepository
     ) {
     }
-    #[Route('/announcements', methods: ['GET'])]
+    
     #[OA\Get(
         path: '/api/announcements',
         summary: 'Pobiera listę ogłoszeń',
@@ -69,7 +67,6 @@ class AnnouncementController extends AbstractController
         return $this->json($result, 200, [], ['groups' => $groups]);
     }
 
-    #[Route('/announcements/{id}', methods: ['GET'])]
     #[OA\Get(
         path: '/api/announcements/{id}',
         summary: 'Pobiera szczegóły ogłoszenia',
@@ -81,7 +78,7 @@ class AnnouncementController extends AbstractController
             new OA\Response(response: 404, description: 'Nie znaleziono ogłoszenia')
         ]
     )]
-    public function show(int $id, Request $request, SecurityService $security): JsonResponse
+    public function get(int $id, Request $request, SecurityService $security): JsonResponse
     {
         $payload = $security->getJwtPayload($request);
         $user = null;
@@ -105,7 +102,6 @@ class AnnouncementController extends AbstractController
         }
     }
 
-    #[Route('/announcements', methods: ['POST'])]
     #[OA\Post(
         path: '/api/announcements',
         summary: 'Tworzy nowe ogłoszenie',
@@ -172,7 +168,6 @@ class AnnouncementController extends AbstractController
         }
     }
 
-    #[Route('/announcements/{id}', methods: ['PUT', 'PATCH'])]
     #[OA\Put(
         path: '/api/announcements/{id}',
         summary: 'Aktualizuje ogłoszenie',
@@ -219,7 +214,6 @@ class AnnouncementController extends AbstractController
         }
     }
 
-    #[Route('/announcements/{id}/publish', methods: ['POST'])]
     #[OA\Post(
         path: '/api/announcements/{id}/publish',
         summary: 'Publikuje ogłoszenie',
@@ -252,7 +246,6 @@ class AnnouncementController extends AbstractController
         }
     }
 
-    #[Route('/announcements/{id}/archive', methods: ['POST'])]
     #[OA\Post(
         path: '/api/announcements/{id}/archive',
         summary: 'Archiwizuje ogłoszenie',
@@ -285,7 +278,6 @@ class AnnouncementController extends AbstractController
         }
     }
 
-    #[Route('/announcements/{id}', methods: ['DELETE'])]
     #[OA\Delete(
         path: '/api/announcements/{id}',
         summary: 'Usuwa ogłoszenie',

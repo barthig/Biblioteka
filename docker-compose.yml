@@ -1,85 +1,125 @@
-version: '3.8'
-
 services:
   db:
-    image: postgres:15
-    restart: always
+    image: postgres:15-alpine
+    restart: unless-stopped
     environment:
       POSTGRES_USER: biblioteka
-      POSTGRES_PASSWORD: biblioteka
+      POSTGRES_PASSWORD: biblioteka_secure_2024
       POSTGRES_DB: biblioteka_dev
     ports:
       - "5432:5432"
     volumes:
-      - db_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/database_full_schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U biblioteka"]
-      interval: 10s
-      timeout: 5s
+      test: ["CMD-SHELL", "pg_isready -U biblioteka -d biblioteka_dev"]
+      interval: 5s
+      timeout: 3s
       retries: 5
+    networks:
+      - biblioteka-network
 
   rabbitmq:
-    image: rabbitmq:3.13-management
+    image: rabbitmq:3.13-management-alpine
     restart: unless-stopped
     environment:
-      RABBITMQ_DEFAULT_USER: app
-      RABBITMQ_DEFAULT_PASS: app
+      RABBITMQ_DEFAULT_USER: biblioteka_app
+      RABBITMQ_DEFAULT_PASS: rabbitmq_secure_2024
+      RABBITMQ_DEFAULT_VHOST: /
     ports:
       - "5672:5672"
       - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
     healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - biblioteka-network
 
   backend:
     build:
       context: .
       dockerfile: docker/backend/Dockerfile
+      target: production
+    restart: unless-stopped
     depends_on:
       db:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
-    volumes:
-      - ./backend:/app
     ports:
       - "8000:8000"
     environment:
-      - APP_ENV=dev
-      - APP_DEBUG=1
-      - DATABASE_URL=postgresql://biblioteka:biblioteka@db:5432/biblioteka_dev?serverVersion=15&charset=utf8
-      - MESSENGER_TRANSPORT_DSN=amqp://app:app@rabbitmq:5672/%2f/messages
-    restart: unless-stopped
+      APP_ENV: prod
+      APP_DEBUG: 0
+      DATABASE_URL: postgresql://biblioteka:biblioteka_secure_2024@db:5432/biblioteka_dev?serverVersion=15&charset=utf8
+      MESSENGER_TRANSPORT_DSN: amqp://biblioteka_app:rabbitmq_secure_2024@rabbitmq:5672/%2f/messages
+      API_SECRET: ${API_SECRET:-change_me_api_secret_production_key}
+      JWT_SECRET: ${JWT_SECRET:-change_me_jwt_secret_production_key}
+      CORS_ALLOW_ORIGIN: http://localhost:3000
+    volumes:
+      - ./backend:/app
+      - backend_var:/app/var
+    networks:
+      - biblioteka-network
+    healthcheck:
+      test: ["CMD", "php", "-v"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   php-worker:
     build:
       context: .
       dockerfile: docker/php-worker/Dockerfile
+      target: production
+    restart: unless-stopped
     depends_on:
       db:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+    environment:
+      APP_ENV: prod
+      APP_DEBUG: 0
+      DATABASE_URL: postgresql://biblioteka:biblioteka_secure_2024@db:5432/biblioteka_dev?serverVersion=15&charset=utf8
+      MESSENGER_TRANSPORT_DSN: amqp://biblioteka_app:rabbitmq_secure_2024@rabbitmq:5672/%2f/messages
+      API_SECRET: ${API_SECRET:-change_me_api_secret_production_key}
+      JWT_SECRET: ${JWT_SECRET:-change_me_jwt_secret_production_key}
     volumes:
       - ./backend:/app
-    environment:
-      - APP_ENV=dev
-      - APP_DEBUG=1
-      - DATABASE_URL=postgresql://biblioteka:biblioteka@db:5432/biblioteka_dev?serverVersion=15&charset=utf8
-      - MESSENGER_TRANSPORT_DSN=amqp://app:app@rabbitmq:5672/%2f/messages
-    restart: unless-stopped
+      - backend_var:/app/var
+    networks:
+      - biblioteka-network
 
   frontend:
     build:
       context: .
       dockerfile: docker/frontend/Dockerfile
+    restart: unless-stopped
     depends_on:
       - backend
     ports:
       - "3000:80"
-    restart: unless-stopped
+    networks:
+      - biblioteka-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  biblioteka-network:
+    driver: bridge
 
 volumes:
-  db_data:
+  postgres_data:
+    driver: local
+  rabbitmq_data:
+    driver: local
+  backend_var:
+    driver: local

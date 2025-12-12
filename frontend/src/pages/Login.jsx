@@ -33,47 +33,51 @@ export default function Login() {
   }
 
   return (
-    <div className="page page--centered">
-      <header className="page-header">
-        <div>
-          <h1>Zaloguj się</h1>
-          <p className="support-copy">Uzyskaj dostęp do panelu czytelnika i poczekalni rezerwacji.</p>
-        </div>
-      </header>
+    <div className="auth-page">
+      <div className="auth-container">
+        <div className="auth-card">
+          <div className="auth-header">
+            <h1>Witaj ponownie</h1>
+            <p>Zaloguj się do swojego konta bibliotecznego</p>
+          </div>
 
-      <div className="surface-card form-card">
-        <form onSubmit={handleSubmit}>
-          <div>
-            <label htmlFor="login-email">Email</label>
-            <input
-              id="login-email"
-              name="email"
-              autoComplete="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              required
-            />
+          <form onSubmit={handleSubmit} className="auth-form">
+            <div className="form-field">
+              <label htmlFor="login-email">Adres email</label>
+              <input
+                id="login-email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                placeholder="twoj@email.com"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                required
+              />
+            </div>
+            <div className="form-field">
+              <label htmlFor="login-password">Hasło</label>
+              <input
+                id="login-password"
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                placeholder="••••••••"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                required
+              />
+            </div>
+            {error && <div className="error-message">{error}</div>}
+            <button className="btn btn-primary btn-block" type="submit" disabled={loading}>
+              {loading ? 'Logowanie...' : 'Zaloguj się'}
+            </button>
+          </form>
+
+          <div className="auth-footer">
+            <p>Nie masz jeszcze konta? <Link to="/register" className="auth-link">Zarejestruj się</Link></p>
           </div>
-          <div>
-            <label htmlFor="login-password">Hasło</label>
-            <input
-              id="login-password"
-              name="password"
-              type="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              required
-            />
-          </div>
-          <button className="btn btn-primary" disabled={loading}>
-            {loading ? 'Logowanie...' : 'Zaloguj'}
-          </button>
-          <span className="support-copy">
-            Nie masz jeszcze konta? <Link to="/register">Zarejestruj się</Link>
-          </span>
-          {error && <div className="error">{error}</div>}
-        </form>
+        </div>
       </div>
     </div>
   )

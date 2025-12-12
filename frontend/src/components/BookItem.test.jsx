@@ -24,7 +24,6 @@ describe('BookItem', () => {
     totalCopies: 5,
     publisher: 'Test Publisher'
   }
-  }
 
   it('should render book title', () => {
     renderWithRouter(<BookItem book={mockBook} />)
@@ -38,8 +37,8 @@ describe('BookItem', () => {
 
   it('should show availability count', () => {
     renderWithRouter(<BookItem book={mockBook} />)
-    // Should display 3 available copies
-    expect(screen.getByText(/3/)).toBeInTheDocument()
+    // Should display "Dostępne 3/5"
+    expect(screen.getByText(/Dostępne 3\/5/)).toBeInTheDocument()
   })
 
   it('should indicate when book is unavailable', () => {

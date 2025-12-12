@@ -7,7 +7,8 @@ RUN apt-get update && apt-get install -y \
     libicu-dev \
     libpq-dev \
     librabbitmq-dev \
-    libssl-dev
+    libssl-dev \
+    && rm -rf /var/lib/apt/lists/*
 
 RUN docker-php-ext-install \
     intl \
@@ -18,6 +19,14 @@ RUN docker-php-ext-install \
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /app
+
+COPY backend/composer.json backend/composer.lock* ./
+
+RUN composer install --no-scripts --no-autoloader --prefer-dist
+
+COPY backend /app
+
+RUN composer dump-autoload --optimize
 
 # Production stage
 FROM php:8.2-cli AS production
@@ -55,9 +64,16 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /app
 
-COPY backend /app
+# Copy composer files first
+COPY backend/composer.json backend/composer.lock* ./
 
 # Install dependencies
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+RUN composer install --no-scripts --no-autoloader --prefer-dist --no-dev
+
+# Copy application files
+COPY backend /app
+
+# Optimize autoloader
+RUN composer dump-autoload --optimize --classmap-authoritative
 
 CMD ["php", "bin/console", "messenger:consume", "async", "-vv"]

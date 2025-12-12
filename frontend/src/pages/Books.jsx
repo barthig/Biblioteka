@@ -165,7 +165,15 @@ export default function Books() {
 
   function onBorrowed(borrowedBook) {
     setBooks(prev => {
-      const next = prev.filter(b => b.id !== borrowedBook.id)
+      const next = prev.map(b => {
+        if (b.id === borrowedBook.id) {
+          return {
+            ...b,
+            copies: Math.max(0, (b.copies ?? 0) - 1)
+          }
+        }
+        return b
+      })
       if (lastCacheKeyRef.current) {
         setCachedResource(lastCacheKeyRef.current, next)
       }

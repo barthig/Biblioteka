@@ -21,7 +21,7 @@ class ReservationControllerTest extends ApiTestCase
 
         $this->assertResponseStatusCodeSame(201);
         $payload = $this->getJsonResponse($client);
-        self::assertSame($book->getId(), $payload['book']['id']);
+        self::assertSame($book->getId(), $payload['data']['book']['id']);
 
         $listClient = $this->createAuthenticatedClient($waiter);
         $this->sendRequest($listClient, 'GET', '/api/reservations');
@@ -48,11 +48,11 @@ class ReservationControllerTest extends ApiTestCase
         $reservationData = $this->getJsonResponse($createClient);
 
         $cancelClient = $this->createAuthenticatedClient($waiter);
-        $this->sendRequest($cancelClient, 'DELETE', '/api/reservations/' . $reservationData['id']);
+        $this->sendRequest($cancelClient, 'DELETE', '/api/reservations/' . $reservationData['data']['id']);
         $this->assertResponseStatusCodeSame(204);
 
         $repo = $this->entityManager->getRepository(Reservation::class);
-        $reservation = $repo->find($reservationData['id']);
+        $reservation = $repo->find($reservationData['data']['id']);
         self::assertNotNull($reservation);
         self::assertSame(Reservation::STATUS_CANCELLED, $reservation->getStatus());
     }

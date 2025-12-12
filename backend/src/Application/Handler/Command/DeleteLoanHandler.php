@@ -24,6 +24,12 @@ class DeleteLoanHandler
             throw new NotFoundHttpException('Loan not found');
         }
 
+        // Restore available copy when deleting loan
+        $book = $loan->getBook();
+        if ($book) {
+            $book->setCopies($book->getCopies() + 1);
+        }
+
         $this->entityManager->remove($loan);
         $this->entityManager->flush();
     }

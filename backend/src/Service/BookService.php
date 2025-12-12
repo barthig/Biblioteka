@@ -16,7 +16,7 @@ class BookService
         $this->doctrine = $doctrine;
     }
 
-    public function borrow(Book $book, ?Reservation $reservation = null, ?BookCopy $preferredCopy = null): ?BookCopy
+    public function borrow(Book $book, ?Reservation $reservation = null, ?BookCopy $preferredCopy = null, bool $flush = true): ?BookCopy
     {
         /** @var BookCopyRepository $repo */
         $repo = $this->doctrine->getRepository(BookCopy::class);
@@ -52,7 +52,10 @@ class BookService
         if ($reservation) {
             $em->persist($reservation);
         }
-        $em->flush();
+        
+        if ($flush) {
+            $em->flush();
+        }
 
         return $copy;
     }
@@ -92,7 +95,7 @@ class BookService
         $em->flush();
     }
 
-    public function restore(Book $book, ?BookCopy $copy = null, bool $recalculate = true): void
+    public function restore(Book $book, ?BookCopy $copy = null, bool $recalculate = true, bool $flush = true): void
     {
         if ($copy) {
             $copy->setStatus(BookCopy::STATUS_AVAILABLE);
@@ -107,7 +110,10 @@ class BookService
             $em->persist($copy);
         }
         $em->persist($book);
-        $em->flush();
+        
+        if ($flush) {
+            $em->flush();
+        }
     }
 
   public function markCopyDamaged(BookCopy $copy, ?string $note = null): void

@@ -1,11 +1,6 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { announcementService } from '../services/announcementService'
-import AnnouncementCard from '../components/AnnouncementCard'
-import LoadingSpinner from '../components/LoadingSpinner'
-import ErrorMessage from '../components/ErrorMessage'
-import EmptyState from '../components/EmptyState'
-import Pagination from '../components/Pagination'
+import { apiFetch } from '../api'
 import { FaBullhorn, FaPlus } from 'react-icons/fa'
 import { useAuth } from '../context/AuthContext'
 
@@ -19,216 +14,145 @@ export default function Announcements() {
   const [error, setError] = useState(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
-  const [filters, setFilters] = useState({
-    type: '',
-    showArchived: false
-  })
+  const loadingRef = useRef(false)
 
   const isAdmin = user?.roles?.includes('ROLE_ADMIN')
   const isLibrarian = user?.roles?.includes('ROLE_LIBRARIAN')
   const canManage = isAdmin || isLibrarian
 
   useEffect(() => {
-    if (id) {
-      loadSingleAnnouncement(id)
-    } else {
-      loadAnnouncements()
+    let mounted = true
+
+    async function fetchData() {
+      if (!mounted || loadingRef.current) return
+      
+      loadingRef.current = true
+      setLoading(true)
+      setError(null)
+
+      try {
+        if (id) {
+          const data = await apiFetch(`/api/announcements/${id}`)
+          if (mounted) {
+            setSelectedAnnouncement(data)
+          }
+        } else {
+          const data = await apiFetch(`/api/announcements?page=${currentPage}&limit=10`)
+          if (mounted) {
+            setAnnouncements(data.data || data.items || data || [])
+            setTotalPages(data.meta?.totalPages || data.totalPages || 1)
+          }
+        }
+      } catch (err) {
+        console.error('Błąd ładowania ogłoszeń:', err)
+        if (mounted) {
+          setError(err.message || 'Nie udało się załadować ogłoszeń')
+          setAnnouncements([])
+        }
+      } finally {
+        if (mounted) {
+          setLoading(false)
+          loadingRef.current = false
+        }
+      }
     }
-  }, [id, currentPage, filters])
 
-  async function loadAnnouncements() {
-    setLoading(true)
-    setError(null)
+    fetchData()
 
-    try {
-      const data = await announcementService.getAnnouncements({
-        page: currentPage,
-        limit: 10,
-        type: filters.type || undefined,
-        includeArchived: filters.showArchived
-      })
-
-      setAnnouncements(data.items || data || [])
-      setTotalPages(data.totalPages || 1)
-    } catch (err) {
-      setError(err.message || 'Nie udało się załadować ogłoszeń')
-    } finally {
-      setLoading(false)
+    return () => {
+      mounted = false
     }
-  }
-
-  async function loadSingleAnnouncement(announcementId) {
-    setLoading(true)
-    setError(null)
-
-    try {
-      const data = await announcementService.getAnnouncement(announcementId)
-      setSelectedAnnouncement(data)
-    } catch (err) {
-      setError(err.message || 'Nie udało się załadować ogłoszenia')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  function handleAnnouncementClick(announcement) {
-    navigate(`/announcements/${announcement.id}`)
-  }
-
-  function handleBack() {
-    navigate('/announcements')
-    setSelectedAnnouncement(null)
-  }
+  }, [id, currentPage])
 
   if (loading) {
-    return <LoadingSpinner message="Ładowanie ogłoszeń..." />
+    return (
+      <div className="page">
+        <div className="surface-card">
+          <p>Ładowanie ogłoszeń...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="page">
+        <div className="surface-card">
+          <p className="error">{error}</p>
+          <button className="btn btn-primary" onClick={() => window.location.reload()}>
+            Spróbuj ponownie
+          </button>
+        </div>
+      </div>
+    )
   }
 
   if (selectedAnnouncement) {
     return (
-      <div className="announcement-detail">
-        <button onClick={handleBack} className="btn btn-secondary mb-3">
+      <div className="page">
+        <button onClick={() => navigate('/announcements')} className="btn btn-outline">
           ← Powrót do listy
         </button>
 
-        {error && <ErrorMessage error={error} onDismiss={() => setError(null)} />}
-
-        <div className="card">
-          <div className="announcement-type-badge announcement-type-badge-large" data-type={selectedAnnouncement.type}>
-            {selectedAnnouncement.type === 'info' && '📢'}
-            {selectedAnnouncement.type === 'warning' && '⚠️'}
-            {selectedAnnouncement.type === 'success' && '✅'}
-            {selectedAnnouncement.type === 'error' && '❌'}
-            {' '}
-            {selectedAnnouncement.type?.toUpperCase() || 'INFO'}
-          </div>
-
-          {selectedAnnouncement.isPinned && (
-            <div className="announcement-pinned">📌 Przypięte</div>
-          )}
-
-          <h1 className="announcement-detail-title">{selectedAnnouncement.title}</h1>
-
-          <div className="announcement-meta">
-            <span>Autor: {selectedAnnouncement.author?.name || 'System'}</span>
-            <span>•</span>
-            <span>{new Date(selectedAnnouncement.publishedAt || selectedAnnouncement.createdAt).toLocaleDateString('pl-PL')}</span>
-          </div>
-
-          <div className="announcement-detail-content">
+        <div className="surface-card" style={{ marginTop: '1rem' }}>
+          <h1>{selectedAnnouncement.title}</h1>
+          <p style={{ color: 'var(--color-muted)', marginTop: '0.5rem' }}>
+            {new Date(selectedAnnouncement.createdAt).toLocaleDateString('pl-PL')}
+          </p>
+          <div style={{ marginTop: '2rem' }}>
             {selectedAnnouncement.content}
           </div>
-
-          {canManage && (
-            <div className="announcement-actions mt-3">
-              <button className="btn btn-primary" onClick={() => navigate(`/admin/announcements/${selectedAnnouncement.id}/edit`)}>
-                Edytuj
-              </button>
-              {selectedAnnouncement.status === 'draft' && (
-                <button className="btn btn-success" onClick={() => handlePublish(selectedAnnouncement.id)}>
-                  Opublikuj
-                </button>
-              )}
-              {selectedAnnouncement.status === 'published' && (
-                <button className="btn btn-warning" onClick={() => handleArchive(selectedAnnouncement.id)}>
-                  Archiwizuj
-                </button>
-              )}
-            </div>
-          )}
         </div>
       </div>
     )
   }
 
   return (
-    <div className="announcements-page">
-      <div className="page-header">
-        <h1><FaBullhorn /> Ogłoszenia</h1>
+    <div className="page">
+      <header className="page-header">
+        <div>
+          <h1>Ogłoszenia</h1>
+          <p>Aktualne informacje i komunikaty</p>
+        </div>
         {canManage && (
           <button className="btn btn-primary" onClick={() => navigate('/admin/announcements/new')}>
             <FaPlus /> Nowe ogłoszenie
           </button>
         )}
-      </div>
-
-      {error && <ErrorMessage error={error} onDismiss={() => setError(null)} />}
-
-      <div className="filters-bar">
-        <select
-          value={filters.type}
-          onChange={(e) => setFilters({ ...filters, type: e.target.value })}
-          className="filter-select"
-        >
-          <option value="">Wszystkie typy</option>
-          <option value="info">Informacja</option>
-          <option value="warning">Ostrzeżenie</option>
-          <option value="success">Sukces</option>
-          <option value="error">Błąd</option>
-        </select>
-
-        {canManage && (
-          <label className="filter-label">
-            <input
-              type="checkbox"
-              checked={filters.showArchived}
-              onChange={(e) => setFilters({ ...filters, showArchived: e.target.checked })}
-            />
-            {' '}Pokaż zarchiwizowane
-          </label>
-        )}
-      </div>
+      </header>
 
       {announcements.length === 0 ? (
-        <EmptyState
-          icon={FaBullhorn}
-          title="Brak ogłoszeń"
-          message="Nie ma obecnie żadnych ogłoszeń do wyświetlenia."
-          action={canManage ? (
-            <button className="btn btn-primary" onClick={() => navigate('/admin/announcements/new')}>
-              <FaPlus /> Dodaj pierwsze ogłoszenie
-            </button>
-          ) : null}
-        />
-      ) : (
-        <>
-          <div className="announcements-grid">
-            {announcements.map(announcement => (
-              <AnnouncementCard
-                key={announcement.id}
-                announcement={announcement}
-                onClick={() => handleAnnouncementClick(announcement)}
-              />
-            ))}
+        <div className="surface-card">
+          <div className="empty-state">
+            <FaBullhorn style={{ fontSize: '3rem', color: 'var(--color-muted)' }} />
+            <h3>Brak ogłoszeń</h3>
+            <p>Nie ma obecnie żadnych ogłoszeń do wyświetlenia.</p>
           </div>
-
-          {totalPages > 1 && (
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={setCurrentPage}
-            />
-          )}
-        </>
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gap: '1rem' }}>
+          {announcements.map(announcement => (
+            <div 
+              key={announcement.id}
+              className="surface-card" 
+              onClick={() => navigate(`/announcements/${announcement.id}`)}
+              style={{ cursor: 'pointer', transition: 'all 0.2s' }}
+            >
+              <h3>{announcement.title}</h3>
+              <p style={{ color: 'var(--color-muted)', fontSize: '0.9rem', marginTop: '0.5rem' }}>
+                {new Date(announcement.createdAt).toLocaleDateString('pl-PL')}
+              </p>
+              {announcement.content && (
+                <p style={{ marginTop: '1rem' }}>
+                  {announcement.content.length > 200 
+                    ? `${announcement.content.substring(0, 200)}...` 
+                    : announcement.content}
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
       )}
     </div>
   )
-
-  async function handlePublish(announcementId) {
-    try {
-      await announcementService.publishAnnouncement(announcementId)
-      loadAnnouncements()
-    } catch (err) {
-      setError(err.message || 'Nie udało się opublikować ogłoszenia')
-    }
-  }
-
-  async function handleArchive(announcementId) {
-    try {
-      await announcementService.archiveAnnouncement(announcementId)
-      loadAnnouncements()
-    } catch (err) {
-      setError(err.message || 'Nie udało się zarchiwizować ogłoszenia')
-    }
-  }
 }

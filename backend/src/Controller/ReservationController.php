@@ -10,6 +10,7 @@ use App\Service\SecurityService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Messenger\Exception\HandlerFailedException;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -88,14 +89,22 @@ class ReservationController extends AbstractController
             $reservation = $envelope->last(HandledStamp::class)->getResult();
 
             return $this->json(['data' => $reservation], 201, [], ['groups' => ['reservation:read']]);
-        } catch (\RuntimeException $e) {
-            $statusCode = match ($e->getMessage()) {
-                'User or book not found' => 404,
-                'Book currently available, wypożycz zamiast rezerwować' => 400,
-                'Masz już aktywną rezerwację na tę książkę' => 409,
-                default => 500
-            };
-            return $this->json(['error' => $e->getMessage()], $statusCode);
+        } catch (\Throwable $e) {
+            if ($e instanceof HandlerFailedException) {
+                $e = $e->getPrevious() ?? $e;
+            }
+            
+            if ($e instanceof \RuntimeException) {
+                $statusCode = match ($e->getMessage()) {
+                    'User or book not found' => 404,
+                    'Book currently available, wypożycz zamiast rezerwować' => 400,
+                    'Masz już aktywną rezerwację na tę książkę' => 409,
+                    default => 500
+                };
+                return $this->json(['error' => $e->getMessage()], $statusCode);
+            }
+            
+            return $this->json(['error' => 'Internal error'], 500);
         }
     }
 
@@ -123,14 +132,22 @@ class ReservationController extends AbstractController
         try {
             $this->commandBus->dispatch($command);
             return new JsonResponse(null, 204);
-        } catch (\RuntimeException $e) {
-            $statusCode = match ($e->getMessage()) {
-                'Reservation not found' => 404,
-                'Reservation already fulfilled' => 400,
-                'Forbidden' => 403,
-                default => 500
-            };
-            return $this->json(['error' => $e->getMessage()], $statusCode);
+        } catch (\Throwable $e) {
+            if ($e instanceof HandlerFailedException) {
+                $e = $e->getPrevious() ?? $e;
+            }
+            
+            if ($e instanceof \RuntimeException) {
+                $statusCode = match ($e->getMessage()) {
+                    'Reservation not found' => 404,
+                    'Reservation already fulfilled' => 400,
+                    'Forbidden' => 403,
+                    default => 500
+                };
+                return $this->json(['error' => $e->getMessage()], $statusCode);
+            }
+            
+            return $this->json(['error' => 'Internal error'], 500);
         }
     }
 }

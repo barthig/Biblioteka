@@ -54,6 +54,8 @@ class ApiAuthSubscriber implements EventSubscriberInterface
             ['pattern' => '#^/api/books$#', 'methods' => ['GET']],
             ['pattern' => '#^/api/books/filters$#', 'methods' => ['GET']],
             ['pattern' => '#^/api/books/\\d+$#', 'methods' => ['GET']],
+            ['pattern' => '#^/api/announcements$#', 'methods' => ['GET']],
+            ['pattern' => '#^/api/announcements/\\d+$#', 'methods' => ['GET']],
             ['pattern' => '#^/api/auth/verify/[A-Za-z0-9]+$#', 'methods' => ['GET']],
         ];
 
@@ -74,12 +76,9 @@ class ApiAuthSubscriber implements EventSubscriberInterface
 
         $envSecret = getenv('API_SECRET') ?: ($_ENV['API_SECRET'] ?? null);
 
-        // direct secret matches env variable
-        if ($secret && $envSecret !== null && $secret === $envSecret) {
-            return;
-        }
+        $secretMatches = $secret && $envSecret !== null && hash_equals($envSecret, $secret);
 
-        // try JWT validation when bearer token provided
+        // always try JWT validation when bearer token provided so downstream controllers get payload
         if ($bearer) {
             $payload = JwtService::validateToken($bearer);
             if ($payload) {
@@ -111,6 +110,11 @@ class ApiAuthSubscriber implements EventSubscriberInterface
                 $request->attributes->set('jwt_user', $user);
                 return;
             }
+        }
+
+        // allow API secret as fallback after attempting JWT validation
+        if ($secretMatches) {
+            return;
         }
 
         // if API secret matched earlier we would have returned; otherwise unauthorized

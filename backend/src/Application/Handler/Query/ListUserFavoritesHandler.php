@@ -22,7 +22,7 @@ class ListUserFavoritesHandler
             ->leftJoin('f.book', 'b')->addSelect('b')
             ->where('f.user = :userId')
             ->setParameter('userId', $query->userId)
-            ->orderBy('f.addedAt', 'DESC')
+            ->orderBy('f.createdAt', 'DESC')
             ->getQuery()
             ->getResult();
 

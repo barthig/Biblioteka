@@ -56,11 +56,11 @@ export default function App() {
             />
             </Routes>
             <footer className="footer">
-              <p>© 2025 Biblioteka. Wspieramy czytelników w odkrywaniu literatury i edukacji cyfrowej.</p>
+              <p>© 2025 Biblioteka. System zarządzania biblioteką i wypożyczeniami.</p>
               <div className="footer__links">
-                <a href="#">Regulamin korzystania</a>
-                <a href="#">Polityka prywatności</a>
-                <a href="#">Kontakt</a>
+                <a href="#regulamin">Regulamin</a>
+                <a href="#prywatnosc">Polityka prywatności</a>
+                <a href="#kontakt">Kontakt</a>
               </div>
             </footer>
           </main>

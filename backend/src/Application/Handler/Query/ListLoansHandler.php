@@ -48,8 +48,32 @@ class ListLoansHandler
             }
         }
 
-        // Count total
-        $countQb = clone $qb;
+        // Count total (without orderBy for COUNT query)
+        $countQb = $this->loanRepository->createQueryBuilder('l');
+        
+        // Apply same filters as main query
+        if (!$query->isLibrarian && $query->userId) {
+            $countQb->where('l.user = :userId')
+                ->setParameter('userId', $query->userId);
+        }
+
+        if ($query->status === 'active') {
+            $countQb->andWhere('l.returnedAt IS NULL');
+        } elseif ($query->status === 'returned') {
+            $countQb->andWhere('l.returnedAt IS NOT NULL');
+        }
+
+        if ($query->overdue !== null) {
+            if ($query->overdue) {
+                $countQb->andWhere('l.dueAt < :now')
+                    ->andWhere('l.returnedAt IS NULL')
+                    ->setParameter('now', new \DateTimeImmutable());
+            } else {
+                $countQb->andWhere('l.dueAt >= :now OR l.returnedAt IS NOT NULL')
+                    ->setParameter('now', new \DateTimeImmutable());
+            }
+        }
+        
         $countQb->select('COUNT(l.id)');
         $total = (int) $countQb->getQuery()->getSingleScalarResult();
 

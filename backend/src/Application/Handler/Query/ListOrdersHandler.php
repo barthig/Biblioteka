@@ -33,7 +33,21 @@ class ListOrdersHandler
             $qb->andWhere('o.budget = :budgetId')->setParameter('budgetId', $query->budgetId);
         }
 
-        $countQb = clone $qb;
+        // Count total (without orderBy for COUNT query)
+        $countQb = $this->repository->createQueryBuilder('o');
+        
+        if ($query->status !== null) {
+            $countQb->andWhere('o.status = :status')->setParameter('status', $query->status);
+        }
+
+        if ($query->supplierId !== null) {
+            $countQb->andWhere('o.supplier = :supplierId')->setParameter('supplierId', $query->supplierId);
+        }
+
+        if ($query->budgetId !== null) {
+            $countQb->andWhere('o.budget = :budgetId')->setParameter('budgetId', $query->budgetId);
+        }
+        
         $countQb->select('COUNT(o.id)');
         $total = (int) $countQb->getQuery()->getSingleScalarResult();
 
