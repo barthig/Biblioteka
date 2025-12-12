@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { apiFetch } from '../api'
 
@@ -9,6 +9,12 @@ export default function Login() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const auth = useAuth()
+  const location = useLocation()
+  const navigate = useNavigate()
+  
+  // Get the page they tried to visit before being redirected to login
+  const from = location.state?.from?.pathname || '/'
+  const message = location.state?.message
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -21,7 +27,10 @@ export default function Login() {
         body: JSON.stringify({ email, password })
       })
       if (data && data.token) {
+        // Set token in auth context
         auth.login(data.token)
+        // Navigate to the page they tried to visit or home
+        navigate(from, { replace: true })
       } else {
         throw new Error('Brak tokenu w odpowiedzi')
       }
@@ -40,6 +49,8 @@ export default function Login() {
             <h1>Witaj ponownie</h1>
             <p>Zaloguj się do swojego konta bibliotecznego</p>
           </div>
+
+          {message && <div className="info-message">{message}</div>}
 
           <form onSubmit={handleSubmit} className="auth-form">
             <div className="form-field">

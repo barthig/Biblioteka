@@ -1248,6 +1248,17 @@ select:focus {
 	font-weight: 500;
 }
 
+/* Info message */
+.info-message {
+	padding: 1rem 1.25rem;
+	margin-bottom: 1.5rem;
+	background: #dbeafe;
+	color: #1e40af;
+	border: 1px solid #93c5fd;
+	border-radius: var(--radius-md);
+	font-weight: 500;
+}
+
 /* Action buttons */
 .action-buttons {
 	display: flex;
