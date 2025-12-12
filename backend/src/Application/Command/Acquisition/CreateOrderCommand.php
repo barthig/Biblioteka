@@ -1,0 +1,19 @@
+<?php
+namespace App\Application\Command\Acquisition;
+
+class CreateOrderCommand
+{
+    public function __construct(
+        public readonly int $supplierId,
+        public readonly ?int $budgetId,
+        public readonly string $title,
+        public readonly string $totalAmount,
+        public readonly string $currency,
+        public readonly ?string $description,
+        public readonly ?string $referenceNumber,
+        public readonly ?array $items,
+        public readonly ?string $expectedAt,
+        public readonly ?string $status
+    ) {
+    }
+}

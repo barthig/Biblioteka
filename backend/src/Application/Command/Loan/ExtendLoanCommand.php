@@ -1,0 +1,11 @@
+<?php
+namespace App\Application\Command\Loan;
+
+class ExtendLoanCommand
+{
+    public function __construct(
+        public readonly int $loanId,
+        public readonly int $userId
+    ) {
+    }
+}

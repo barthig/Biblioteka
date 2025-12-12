@@ -1,122 +1,109 @@
 <?php
 namespace App\Controller;
 
+use App\Application\Command\Review\CreateReviewCommand;
+use App\Application\Command\Review\DeleteReviewCommand;
+use App\Application\Query\Review\ListBookReviewsQuery;
 use App\Controller\Traits\ValidationTrait;
-use App\Entity\Book;
-use App\Entity\Review;
-use App\Entity\User;
-use App\Repository\ReviewRepository;
 use App\Request\CreateReviewRequest;
 use App\Service\SecurityService;
-use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Messenger\MessageBusInterface;
+use Symfony\Component\Messenger\Stamp\HandledStamp;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class ReviewController extends AbstractController
 {
     use ValidationTrait;
-    public function list(int $id, Request $request, ManagerRegistry $doctrine, ReviewRepository $repo, SecurityService $security): JsonResponse
-    {
-        $book = $doctrine->getRepository(Book::class)->find($id);
-        if (!$book) {
-            return $this->json(['error' => 'Book not found'], 404);
-        }
 
-        $summary = $repo->getSummaryForBook($book);
-        $reviews = $repo->findByBook($book);
-
-        $userReview = null;
-        $payload = $security->getJwtPayload($request);
-        if ($payload && isset($payload['sub'])) {
-            $user = $doctrine->getRepository(User::class)->find((int) $payload['sub']);
-            if ($user) {
-                $userReview = $repo->findOneByUserAndBook($user, $book);
-            }
-        }
-
-        return $this->json([
-            'summary' => $summary,
-            'reviews' => $reviews,
-            'userReview' => $userReview,
-        ], 200, [], ['groups' => ['review:read', 'book:read']]);
+    public function __construct(
+        private MessageBusInterface $commandBus,
+        private MessageBusInterface $queryBus,
+        private SecurityService $security
+    ) {
     }
 
-    public function upsert(int $id, Request $request, ManagerRegistry $doctrine, ReviewRepository $repo, SecurityService $security, ValidatorInterface $validator): JsonResponse
+    public function list(int $id, Request $request): JsonResponse
     {
-        $payload = $security->getJwtPayload($request);
+        $query = new ListBookReviewsQuery(bookId: $id);
+
+        try {
+            $envelope = $this->queryBus->dispatch($query);
+            $result = $envelope->last(HandledStamp::class)?->getResult();
+            return $this->json($result, 200, [], ['groups' => ['review:read', 'book:read']]);
+        } catch (\RuntimeException $e) {
+            $statusCode = match ($e->getMessage()) {
+                'Book not found' => 404,
+                default => 500
+            };
+            return $this->json(['error' => $e->getMessage()], $statusCode);
+        }
+    }
+
+    public function upsert(int $id, Request $request, ValidatorInterface $validator): JsonResponse
+    {
+        $payload = $this->security->getJwtPayload($request);
         if (!$payload || !isset($payload['sub'])) {
             return $this->json(['error' => 'Unauthorized'], 401);
         }
 
-        $book = $doctrine->getRepository(Book::class)->find($id);
-        if (!$book) {
-            return $this->json(['error' => 'Book not found'], 404);
-        }
-
-        $user = $doctrine->getRepository(User::class)->find((int) $payload['sub']);
-        if (!$user) {
-            return $this->json(['error' => 'User not found'], 404);
-        }
-
         $data = json_decode($request->getContent(), true) ?: [];
         
-        // Walidacja DTO
         $dto = $this->mapArrayToDto($data, new CreateReviewRequest());
         $errors = $validator->validate($dto);
         if (count($errors) > 0) {
             return $this->validationErrorResponse($errors);
         }
-        
-        $rating = $dto->rating;
-        $comment = $dto->comment;
 
-        $review = $repo->findOneByUserAndBook($user, $book);
-        $statusCode = 200;
+        $command = new CreateReviewCommand(
+            userId: (int) $payload['sub'],
+            bookId: $id,
+            rating: $dto->rating,
+            comment: $dto->comment
+        );
 
-        if (!$review) {
-            $review = (new Review())
-                ->setBook($book)
-                ->setUser($user);
-            $statusCode = 201;
+        try {
+            $envelope = $this->commandBus->dispatch($command);
+            $review = $envelope->last(HandledStamp::class)?->getResult();
+            
+            // Check if it was a new review (would need additional info from handler)
+            // For now, always return 200 as the handler does upsert
+            return $this->json($review, 200, [], ['groups' => ['review:read', 'book:read']]);
+        } catch (\RuntimeException $e) {
+            $statusCode = match ($e->getMessage()) {
+                'User or book not found' => 404,
+                default => 500
+            };
+            return $this->json(['error' => $e->getMessage()], $statusCode);
         }
-
-        $review->setRating($rating)->setComment($comment)->touch();
-
-        $em = $doctrine->getManager();
-        $em->persist($review);
-        $em->flush();
-
-        return $this->json($review, $statusCode, [], ['groups' => ['review:read', 'book:read']]);
     }
 
-    public function delete(int $id, Request $request, ManagerRegistry $doctrine, ReviewRepository $repo, SecurityService $security): JsonResponse
+    public function delete(int $id, Request $request): JsonResponse
     {
-        $payload = $security->getJwtPayload($request);
+        $payload = $this->security->getJwtPayload($request);
         if (!$payload || !isset($payload['sub'])) {
             return $this->json(['error' => 'Unauthorized'], 401);
         }
 
-        $book = $doctrine->getRepository(Book::class)->find($id);
-        if (!$book) {
-            return $this->json(['error' => 'Book not found'], 404);
+        $isLibrarian = $this->security->hasRole($request, 'ROLE_LIBRARIAN');
+
+        $command = new DeleteReviewCommand(
+            reviewId: $id,
+            userId: (int) $payload['sub'],
+            isLibrarian: $isLibrarian
+        );
+
+        try {
+            $this->commandBus->dispatch($command);
+            return new JsonResponse(null, 204);
+        } catch (\RuntimeException $e) {
+            $statusCode = match ($e->getMessage()) {
+                'Review not found' => 404,
+                default => str_contains($e->getMessage(), 'Forbidden') ? 403 : 500
+            };
+            return $this->json(['error' => $e->getMessage()], $statusCode);
         }
-
-        $user = $doctrine->getRepository(User::class)->find((int) $payload['sub']);
-        if (!$user) {
-            return $this->json(['error' => 'User not found'], 404);
-        }
-
-        $review = $repo->findOneByUserAndBook($user, $book);
-        if (!$review) {
-            return $this->json(['error' => 'Nie dodano jeszcze opinii do tej książki'], 404);
-        }
-
-        $em = $doctrine->getManager();
-        $em->remove($review);
-        $em->flush();
-
-        return new JsonResponse(null, 204);
     }
 }

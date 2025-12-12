@@ -1,6 +1,15 @@
 framework:
   messenger:
     default_bus: messenger.bus.default
+    
+    buses:
+      messenger.bus.default:
+        default_middleware: true
+      command.bus:
+        default_middleware: true
+      query.bus:
+        default_middleware: true
+    
     transports:
       async:
         dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
@@ -10,7 +19,45 @@ framework:
           delay: 1000
           multiplier: 2
       sync: 'sync://'
+    
     routing:
+      # Commands - synchronous
+      App\Application\Command\Loan\CreateLoanCommand: sync
+      App\Application\Command\Loan\ReturnLoanCommand: sync
+      App\Application\Command\Loan\ExtendLoanCommand: sync
+      App\Application\Command\Loan\DeleteLoanCommand: sync
+      App\Application\Command\Reservation\CreateReservationCommand: sync
+      App\Application\Command\Reservation\CancelReservationCommand: sync
+      App\Application\Command\Favorite\AddFavoriteCommand: sync
+      App\Application\Command\Favorite\RemoveFavoriteCommand: sync
+      App\Application\Command\Review\CreateReviewCommand: sync
+      App\Application\Command\Review\DeleteReviewCommand: sync
+      App\Application\Command\Fine\CreateFineCommand: sync
+      App\Application\Command\Fine\PayFineCommand: sync
+      App\Application\Command\Fine\CancelFineCommand: sync
+      App\Application\Command\User\CreateUserCommand: sync
+      App\Application\Command\User\UpdateUserCommand: sync
+      App\Application\Command\User\DeleteUserCommand: sync
+      App\Application\Command\User\BlockUserCommand: sync
+      App\Application\Command\User\UnblockUserCommand: sync
+      App\Application\Command\Account\UpdateAccountCommand: sync
+      App\Application\Command\Account\ChangePasswordCommand: sync
+      App\Application\Command\Book\CreateBookCommand: sync
+      App\Application\Command\Book\UpdateBookCommand: sync
+      App\Application\Command\Book\DeleteBookCommand: sync
+      
+      # Queries - synchronous
+      App\Application\Query\Loan\GetLoanQuery: sync
+      App\Application\Query\Loan\ListLoansQuery: sync
+      App\Application\Query\Loan\ListUserLoansQuery: sync
+      App\Application\Query\Reservation\ListReservationsQuery: sync
+      App\Application\Query\Book\ListBooksQuery: sync
+      App\Application\Query\Book\GetBookQuery: sync
+      App\Application\Query\Favorite\ListUserFavoritesQuery: sync
+      App\Application\Query\Review\ListBookReviewsQuery: sync
+      App\Application\Query\Fine\ListFinesQuery: sync
+      
+      # Messages - asynchronous
       App\Message\ReservationQueuedNotification: async
       App\Message\LoanDueReminderMessage: async
       App\Message\LoanOverdueMessage: async

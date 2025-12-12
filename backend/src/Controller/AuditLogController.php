@@ -1,17 +1,23 @@
 <?php
 namespace App\Controller;
 
-use App\Entity\AuditLog;
-use App\Repository\AuditLogRepository;
+use App\Application\Query\AuditLog\ListAuditLogsQuery;
+use App\Application\Query\AuditLog\GetEntityHistoryQuery;
 use App\Service\SecurityService;
-use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Messenger\MessageBusInterface;
+use Symfony\Component\Messenger\Stamp\HandledStamp;
 use OpenApi\Attributes as OA;
 
 class AuditLogController extends AbstractController
 {
+    public function __construct(
+        private readonly MessageBusInterface $queryBus
+    ) {
+    }
+
     #[OA\Get(
         path: '/api/audit-logs',
         summary: 'Lista logów audytu',
@@ -65,7 +71,7 @@ class AuditLogController extends AbstractController
             new OA\Response(response: 403, description: 'Brak uprawnień')
         ]
     )]
-    public function list(Request $request, AuditLogRepository $repo, SecurityService $security): JsonResponse
+    public function list(Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
             return $this->json(['error' => 'Forbidden'], 403);
@@ -85,7 +91,8 @@ class AuditLogController extends AbstractController
             $filters['userId'] = $request->query->getInt('userId');
         }
 
-        $result = $repo->findWithPagination($page, $limit, $filters);
+        $envelope = $this->queryBus->dispatch(new ListAuditLogsQuery($page, $limit, $filters));
+        $result = $envelope->last(HandledStamp::class)?->getResult();
 
         return $this->json($result, 200, [], ['groups' => ['audit:read']]);
     }
@@ -104,13 +111,14 @@ class AuditLogController extends AbstractController
             new OA\Response(response: 403, description: 'Brak uprawnień')
         ]
     )]
-    public function entityHistory(string $entityType, int $entityId, AuditLogRepository $repo, SecurityService $security, Request $request): JsonResponse
+    public function entityHistory(string $entityType, int $entityId, SecurityService $security, Request $request): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
             return $this->json(['error' => 'Forbidden'], 403);
         }
 
-        $logs = $repo->findByEntity($entityType, $entityId);
+        $envelope = $this->queryBus->dispatch(new GetEntityHistoryQuery($entityType, $entityId));
+        $logs = $envelope->last(HandledStamp::class)?->getResult();
 
         return $this->json($logs, 200, [], ['groups' => ['audit:read']]);
     }

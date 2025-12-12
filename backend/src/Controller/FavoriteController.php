@@ -1,122 +1,125 @@
 <?php
 namespace App\Controller;
 
+use App\Application\Command\Favorite\AddFavoriteCommand;
+use App\Application\Command\Favorite\RemoveFavoriteCommand;
+use App\Application\Query\Favorite\ListUserFavoritesQuery;
 use App\Controller\Traits\ValidationTrait;
-use App\Entity\Book;
 use App\Entity\Favorite;
-use App\Entity\User;
-use App\Repository\FavoriteRepository;
 use App\Request\AddFavoriteRequest;
 use App\Service\SecurityService;
-use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Messenger\MessageBusInterface;
+use Symfony\Component\Messenger\Stamp\HandledStamp;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class FavoriteController extends AbstractController
 {
     use ValidationTrait;
-    public function list(Request $request, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
+
+    public function __construct(
+        private MessageBusInterface $commandBus,
+        private MessageBusInterface $queryBus,
+        private SecurityService $security
+    ) {
+    }
+
+    public function list(Request $request): JsonResponse
     {
-        $payload = $security->getJwtPayload($request);
+        $payload = $this->security->getJwtPayload($request);
         if (!$payload || !isset($payload['sub'])) {
             return $this->json(['error' => 'Unauthorized'], 401);
         }
 
-        $user = $doctrine->getRepository(User::class)->find((int) $payload['sub']);
-        if (!$user) {
-            return $this->json(['error' => 'User not found'], 404);
-        }
+        $query = new ListUserFavoritesQuery(userId: (int) $payload['sub']);
+        $envelope = $this->queryBus->dispatch($query);
+        $result = $envelope->last(HandledStamp::class)?->getResult();
 
-        /** @var FavoriteRepository $repo */
-        $repo = $doctrine->getRepository(Favorite::class);
-        $favorites = $repo->findByUser($user);
-
-        return $this->json([
-            'data' => $favorites,
-            'meta' => [
-                'total' => count($favorites)
-            ]
-        ], 200, [], ['groups' => ['favorite:read', 'book:read']]);
+        return $this->json($result, 200, [], ['groups' => ['favorite:read', 'book:read']]);
     }
 
-    public function add(Request $request, ManagerRegistry $doctrine, SecurityService $security, ValidatorInterface $validator): JsonResponse
+    public function add(Request $request, ValidatorInterface $validator): JsonResponse
     {
-        $payload = $security->getJwtPayload($request);
+        $payload = $this->security->getJwtPayload($request);
         if (!$payload || !isset($payload['sub'])) {
             return $this->json(['error' => 'Unauthorized'], 401);
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
         
-        // Walidacja DTO
         $dto = $this->mapArrayToDto($data, new AddFavoriteRequest());
         $errors = $validator->validate($dto);
         if (count($errors) > 0) {
             return $this->validationErrorResponse($errors);
         }
-        
-        $bookId = $dto->bookId;
 
-        $userRepo = $doctrine->getRepository(User::class);
-        $bookRepo = $doctrine->getRepository(Book::class);
-        /** @var FavoriteRepository $favoriteRepo */
-        $favoriteRepo = $doctrine->getRepository(Favorite::class);
+        $command = new AddFavoriteCommand(
+            userId: (int) $payload['sub'],
+            bookId: $dto->bookId
+        );
 
-        $user = $userRepo->find((int) $payload['sub']);
-        $book = $bookRepo->find((int) $bookId);
-        if (!$user || !$book) {
-            return $this->json(['error' => 'User or book not found'], 404);
+        try {
+            $envelope = $this->commandBus->dispatch($command);
+            $favorite = $envelope->last(HandledStamp::class)?->getResult();
+            return $this->json(['data' => $favorite], 201, [], ['groups' => ['favorite:read', 'book:read']]);
+        } catch (\RuntimeException $e) {
+            $statusCode = match ($e->getMessage()) {
+                'User or book not found' => 404,
+                'Książka znajduje się już na Twojej półce' => 409,
+                default => 500
+            };
+            return $this->json(['error' => $e->getMessage()], $statusCode);
         }
-
-        if ($favoriteRepo->findOneByUserAndBook($user, $book)) {
-            return $this->json(['error' => 'Książka znajduje się już na Twojej półce'], 409);
-        }
-
-        $favorite = (new Favorite())
-            ->setUser($user)
-            ->setBook($book);
-
-        $em = $doctrine->getManager();
-        $em->persist($favorite);
-        $em->flush();
-
-        return $this->json(['data' => $favorite], 201, [], ['groups' => ['favorite:read', 'book:read']]);
     }
 
-    public function remove(string $bookId, Request $request, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
+    public function remove(string $bookId, Request $request): JsonResponse
     {
         if (!ctype_digit($bookId) || (int) $bookId <= 0) {
             return $this->json(['error' => 'Invalid book id'], 400);
         }
 
-        $payload = $security->getJwtPayload($request);
+        $payload = $this->security->getJwtPayload($request);
         if (!$payload || !isset($payload['sub'])) {
             return $this->json(['error' => 'Unauthorized'], 401);
         }
 
-        $user = $doctrine->getRepository(User::class)->find((int) $payload['sub']);
-        if (!$user) {
-            return $this->json(['error' => 'User not found'], 404);
+        // Note: RemoveFavoriteCommand uses favoriteId, but the route uses bookId
+        // We need to find the favorite first - this is a limitation that could be improved
+        // by creating a RemoveFavoriteByBookCommand
+        $query = new ListUserFavoritesQuery(userId: (int) $payload['sub']);
+        $envelope = $this->queryBus->dispatch($query);
+        $result = $envelope->last(HandledStamp::class)?->getResult();
+        $favorites = $result['data'] ?? [];
+
+        $favorite = null;
+        foreach ($favorites as $fav) {
+            if ($fav instanceof Favorite && $fav->getBook()?->getId() === (int) $bookId) {
+                $favorite = $fav;
+                break;
+            }
         }
 
-        $book = $doctrine->getRepository(Book::class)->find((int) $bookId);
-        if (!$book) {
-            return $this->json(['error' => 'Book not found'], 404);
-        }
-
-        /** @var FavoriteRepository $favoriteRepo */
-        $favoriteRepo = $doctrine->getRepository(Favorite::class);
-        $favorite = $favoriteRepo->findOneByUserAndBook($user, $book);
         if (!$favorite) {
             return $this->json(['error' => 'Pozycja nie znajduje się na Twojej półce'], 404);
         }
 
-        $em = $doctrine->getManager();
-        $em->remove($favorite);
-        $em->flush();
+        $command = new RemoveFavoriteCommand(
+            favoriteId: $favorite->getId(),
+            userId: (int) $payload['sub']
+        );
 
-        return new JsonResponse(null, 204);
+        try {
+            $this->commandBus->dispatch($command);
+            return new JsonResponse(null, 204);
+        } catch (\RuntimeException $e) {
+            $statusCode = match ($e->getMessage()) {
+                'Favorite not found' => 404,
+                'You can only remove your own favorites' => 403,
+                default => 500
+            };
+            return $this->json(['error' => $e->getMessage()], $statusCode);
+        }
     }
 }

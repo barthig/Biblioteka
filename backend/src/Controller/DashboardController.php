@@ -1,41 +1,24 @@
 <?php
 namespace App\Controller;
 
-use App\Entity\Reservation;
-use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\Persistence\ManagerRegistry;
+use App\Application\Query\Dashboard\GetOverviewQuery;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\Messenger\MessageBusInterface;
+use Symfony\Component\Messenger\Stamp\HandledStamp;
 
 class DashboardController extends AbstractController
 {
-    public function overview(ManagerRegistry $doctrine): JsonResponse
+    public function __construct(
+        private readonly MessageBusInterface $queryBus
+    ) {
+    }
+
+    public function overview(): JsonResponse
     {
-        /** @var EntityManagerInterface $entityManager */
-        $entityManager = $doctrine->getManager();
+        $envelope = $this->queryBus->dispatch(new GetOverviewQuery());
+        $result = $envelope->last(HandledStamp::class)?->getResult();
 
-        $bookCount = (int) $entityManager
-            ->createQuery('SELECT COUNT(b.id) FROM App\\Entity\\Book b')
-            ->getSingleScalarResult();
-
-        $userCount = (int) $entityManager
-            ->createQuery('SELECT COUNT(u.id) FROM App\\Entity\\User u')
-            ->getSingleScalarResult();
-
-        $activeLoans = (int) $entityManager
-            ->createQuery('SELECT COUNT(l.id) FROM App\\Entity\\Loan l WHERE l.returnedAt IS NULL')
-            ->getSingleScalarResult();
-
-        $queueCount = (int) $entityManager
-            ->createQuery('SELECT COUNT(r.id) FROM App\\Entity\\Reservation r WHERE r.status = :status')
-            ->setParameter('status', Reservation::STATUS_ACTIVE)
-            ->getSingleScalarResult();
-
-        return $this->json([
-            'booksCount' => $bookCount,
-            'usersCount' => $userCount,
-            'loansCount' => $activeLoans,
-            'reservationsQueue' => $queueCount,
-        ], 200);
+        return $this->json($result, 200);
     }
 }

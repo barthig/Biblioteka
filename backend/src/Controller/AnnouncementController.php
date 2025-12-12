@@ -1,15 +1,21 @@
 <?php
 namespace App\Controller;
 
-use App\Entity\Announcement;
+use App\Application\Command\Announcement\ArchiveAnnouncementCommand;
+use App\Application\Command\Announcement\CreateAnnouncementCommand;
+use App\Application\Command\Announcement\DeleteAnnouncementCommand;
+use App\Application\Command\Announcement\PublishAnnouncementCommand;
+use App\Application\Command\Announcement\UpdateAnnouncementCommand;
+use App\Application\Query\Announcement\GetAnnouncementQuery;
+use App\Application\Query\Announcement\ListAnnouncementsQuery;
 use App\Entity\User;
-use App\Repository\AnnouncementRepository;
+use App\Repository\UserRepository;
 use App\Service\SecurityService;
-use Doctrine\Persistence\ManagerRegistry;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Messenger\MessageBusInterface;
+use Symfony\Component\Messenger\Stamp\HandledStamp;
 use Symfony\Component\Routing\Attribute\Route;
 use OpenApi\Attributes as OA;
 
@@ -17,6 +23,12 @@ use OpenApi\Attributes as OA;
 #[OA\Tag(name: 'Announcements')]
 class AnnouncementController extends AbstractController
 {
+    public function __construct(
+        private readonly MessageBusInterface $queryBus,
+        private readonly MessageBusInterface $commandBus,
+        private readonly UserRepository $userRepository
+    ) {
+    }
     #[Route('/announcements', methods: ['GET'])]
     #[OA\Get(
         path: '/api/announcements',
@@ -31,72 +43,30 @@ class AnnouncementController extends AbstractController
             new OA\Response(response: 200, description: 'Lista ogłoszeń')
         ]
     )]
-    public function list(
-        Request $request,
-        AnnouncementRepository $announcementRepository,
-        SecurityService $security,
-        ManagerRegistry $doctrine
-    ): JsonResponse {
+    public function list(Request $request, SecurityService $security): JsonResponse
+    {
         $page = max(1, $request->query->getInt('page', 1));
         $limit = min(100, max(5, $request->query->getInt('limit', 20)));
-        $offset = ($page - 1) * $limit;
+        $status = $request->query->get('status');
+        $homepageOnly = $request->query->getBoolean('homepage', false);
 
         $payload = $security->getJwtPayload($request);
         $user = null;
         $isLibrarian = false;
         
         if ($payload && isset($payload['sub'])) {
-            $user = $doctrine->getRepository(User::class)->find((int) $payload['sub']);
+            $user = $this->userRepository->find((int) $payload['sub']);
             if ($user) {
                 $isLibrarian = in_array('ROLE_LIBRARIAN', $user->getRoles());
             }
         }
 
-        // Dla bibliotekarzy - wszystkie ogłoszenia z filtrowaniem
-        if ($isLibrarian) {
-            $status = $request->query->get('status');
-            
-            if ($status) {
-                $announcements = $announcementRepository->findByStatus($status);
-            } else {
-                $announcements = $announcementRepository->findAllWithCreator();
-            }
+        $query = new ListAnnouncementsQuery($user, $isLibrarian, $status, $homepageOnly, $page, $limit);
+        $envelope = $this->queryBus->dispatch($query);
+        $result = $envelope->last(HandledStamp::class)?->getResult();
 
-            $total = count($announcements);
-            $announcements = array_slice($announcements, $offset, $limit);
-
-            return $this->json([
-                'data' => $announcements,
-                'meta' => [
-                    'page' => $page,
-                    'limit' => $limit,
-                    'total' => $total,
-                    'totalPages' => $total > 0 ? (int)ceil($total / $limit) : 0
-                ]
-            ], 200, [], ['groups' => ['announcement:list', 'announcement:read']]);
-        }
-
-        // Dla zwykłych użytkowników - tylko aktywne
-        $homepageOnly = $request->query->getBoolean('homepage', false);
-        
-        if ($homepageOnly) {
-            $announcements = $announcementRepository->findForHomepage($user, $limit);
-            $total = count($announcements);
-        } else {
-            $announcements = $announcementRepository->findActiveForUser($user);
-            $total = count($announcements);
-            $announcements = array_slice($announcements, $offset, $limit);
-        }
-
-        return $this->json([
-            'data' => array_values($announcements),
-            'meta' => [
-                'page' => $page,
-                'limit' => $limit,
-                'total' => $total,
-                'totalPages' => $total > 0 ? (int)ceil($total / $limit) : 0
-            ]
-        ], 200, [], ['groups' => ['announcement:list']]);
+        $groups = $isLibrarian ? ['announcement:list', 'announcement:read'] : ['announcement:list'];
+        return $this->json($result, 200, [], ['groups' => $groups]);
     }
 
     #[Route('/announcements/{id}', methods: ['GET'])]
@@ -111,42 +81,28 @@ class AnnouncementController extends AbstractController
             new OA\Response(response: 404, description: 'Nie znaleziono ogłoszenia')
         ]
     )]
-    public function show(
-        int $id,
-        Request $request,
-        AnnouncementRepository $announcementRepository,
-        SecurityService $security,
-        ManagerRegistry $doctrine
-    ): JsonResponse {
-        $announcement = $announcementRepository->find($id);
-        
-        if (!$announcement) {
-            return $this->json(['error' => 'Announcement not found'], 404);
-        }
-
+    public function show(int $id, Request $request, SecurityService $security): JsonResponse
+    {
         $payload = $security->getJwtPayload($request);
         $user = null;
         $isLibrarian = false;
         
         if ($payload && isset($payload['sub'])) {
-            $user = $doctrine->getRepository(User::class)->find((int) $payload['sub']);
+            $user = $this->userRepository->find((int) $payload['sub']);
             if ($user) {
                 $isLibrarian = in_array('ROLE_LIBRARIAN', $user->getRoles());
             }
         }
-        
-        // Bibliotekarze widzą wszystko
-        if ($isLibrarian) {
+
+        try {
+            $query = new GetAnnouncementQuery($id, $user, $isLibrarian);
+            $envelope = $this->queryBus->dispatch($query);
+            $announcement = $envelope->last(HandledStamp::class)?->getResult();
+            
             return $this->json($announcement, 200, [], ['groups' => ['announcement:read']]);
+        } catch (\RuntimeException $e) {
+            return $this->json(['error' => $e->getMessage()], 404);
         }
-
-        // Zwykli użytkownicy - tylko aktywne i widoczne dla nich
-        
-        if (!$announcement->isVisibleForUser($user)) {
-            return $this->json(['error' => 'Announcement not found'], 404);
-        }
-
-        return $this->json($announcement, 200, [], ['groups' => ['announcement:read']]);
     }
 
     #[Route('/announcements', methods: ['POST'])]
@@ -173,17 +129,14 @@ class AnnouncementController extends AbstractController
             new OA\Response(response: 403, description: 'Brak uprawnień')
         ]
     )]
-    public function create(
-        Request $request,
-        ManagerRegistry $doctrine,
-        SecurityService $security
-    ): JsonResponse {
+    public function create(Request $request, SecurityService $security): JsonResponse
+    {
         $payload = $security->getJwtPayload($request);
         if (!$payload || !isset($payload['sub'])) {
             return $this->json(['error' => 'Unauthorized'], 401);
         }
 
-        $user = $doctrine->getRepository(User::class)->find((int) $payload['sub']);
+        $user = $this->userRepository->find((int) $payload['sub']);
         if (!$user) {
             return $this->json(['error' => 'User not found'], 404);
         }
@@ -198,38 +151,25 @@ class AnnouncementController extends AbstractController
             return $this->json(['error' => 'Title and content are required'], 400);
         }
 
-        $announcement = new Announcement();
-        $announcement->setTitle($data['title']);
-        $announcement->setContent($data['content']);
-        if ($user instanceof \App\Entity\User) {
-            $announcement->setCreatedBy($user);
+        try {
+            $command = new CreateAnnouncementCommand(
+                $user->getId(),
+                $data['title'],
+                $data['content'],
+                $data['type'] ?? null,
+                $data['isPinned'] ?? null,
+                $data['showOnHomepage'] ?? null,
+                $data['targetAudience'] ?? null,
+                $data['expiresAt'] ?? null
+            );
+            
+            $envelope = $this->commandBus->dispatch($command);
+            $announcement = $envelope->last(HandledStamp::class)?->getResult();
+            
+            return $this->json($announcement, 201, [], ['groups' => ['announcement:read']]);
+        } catch (\RuntimeException $e) {
+            return $this->json(['error' => $e->getMessage()], 400);
         }
-
-        if (isset($data['type'])) {
-            $announcement->setType($data['type']);
-        }
-
-        if (isset($data['isPinned'])) {
-            $announcement->setIsPinned((bool)$data['isPinned']);
-        }
-
-        if (isset($data['showOnHomepage'])) {
-            $announcement->setShowOnHomepage((bool)$data['showOnHomepage']);
-        }
-
-        if (isset($data['targetAudience'])) {
-            $announcement->setTargetAudience($data['targetAudience']);
-        }
-
-        if (isset($data['expiresAt'])) {
-            $announcement->setExpiresAt(new \DateTimeImmutable($data['expiresAt']));
-        }
-
-        $em = $doctrine->getManager();
-        $em->persist($announcement);
-        $em->flush();
-
-        return $this->json($announcement, 201, [], ['groups' => ['announcement:read']]);
     }
 
     #[Route('/announcements/{id}', methods: ['PUT', 'PATCH'])]
@@ -244,63 +184,39 @@ class AnnouncementController extends AbstractController
             new OA\Response(response: 404, description: 'Nie znaleziono ogłoszenia')
         ]
     )]
-    public function update(
-        int $id,
-        Request $request,
-        ManagerRegistry $doctrine,
-        AnnouncementRepository $announcementRepository,
-        SecurityService $security
-    ): JsonResponse {
+    public function update(int $id, Request $request, SecurityService $security): JsonResponse
+    {
         $payload = $security->getJwtPayload($request);
         if (!$payload || !isset($payload['sub'])) {
             return $this->json(['error' => 'Unauthorized'], 401);
         }
 
-        $user = $doctrine->getRepository(User::class)->find((int) $payload['sub']);
+        $user = $this->userRepository->find((int) $payload['sub']);
         if (!$user || !in_array('ROLE_LIBRARIAN', $user->getRoles())) {
             return $this->json(['error' => 'Access denied'], 403);
         }
 
-        $announcement = $announcementRepository->find($id);
-        
-        if (!$announcement) {
-            return $this->json(['error' => 'Announcement not found'], 404);
-        }
-
         $data = json_decode($request->getContent(), true);
-
-        if (isset($data['title'])) {
-            $announcement->setTitle($data['title']);
+        
+        try {
+            $command = new UpdateAnnouncementCommand(
+                $id,
+                $data['title'] ?? null,
+                $data['content'] ?? null,
+                $data['type'] ?? null,
+                $data['isPinned'] ?? null,
+                $data['showOnHomepage'] ?? null,
+                $data['targetAudience'] ?? null,
+                array_key_exists('expiresAt', $data) ? $data['expiresAt'] : 'NOT_SET'
+            );
+            
+            $envelope = $this->commandBus->dispatch($command);
+            $announcement = $envelope->last(HandledStamp::class)?->getResult();
+            
+            return $this->json($announcement, 200, [], ['groups' => ['announcement:read']]);
+        } catch (\RuntimeException $e) {
+            return $this->json(['error' => $e->getMessage()], 404);
         }
-
-        if (isset($data['content'])) {
-            $announcement->setContent($data['content']);
-        }
-
-        if (isset($data['type'])) {
-            $announcement->setType($data['type']);
-        }
-
-        if (isset($data['isPinned'])) {
-            $announcement->setIsPinned((bool)$data['isPinned']);
-        }
-
-        if (isset($data['showOnHomepage'])) {
-            $announcement->setShowOnHomepage((bool)$data['showOnHomepage']);
-        }
-
-        if (isset($data['targetAudience'])) {
-            $announcement->setTargetAudience($data['targetAudience']);
-        }
-
-        if (array_key_exists('expiresAt', $data)) {
-            $announcement->setExpiresAt($data['expiresAt'] ? new \DateTimeImmutable($data['expiresAt']) : null);
-        }
-
-        $em = $doctrine->getManager();
-        $em->flush();
-
-        return $this->json($announcement, 200, [], ['groups' => ['announcement:read']]);
     }
 
     #[Route('/announcements/{id}/publish', methods: ['POST'])]
@@ -314,35 +230,26 @@ class AnnouncementController extends AbstractController
             new OA\Response(response: 200, description: 'Ogłoszenie opublikowane')
         ]
     )]
-    public function publish(
-        int $id,
-        Request $request,
-        ManagerRegistry $doctrine,
-        AnnouncementRepository $announcementRepository,
-        SecurityService $security
-    ): JsonResponse {
+    public function publish(int $id, Request $request, SecurityService $security): JsonResponse
+    {
         $payload = $security->getJwtPayload($request);
         if (!$payload || !isset($payload['sub'])) {
             return $this->json(['error' => 'Unauthorized'], 401);
         }
 
-        $user = $doctrine->getRepository(User::class)->find((int) $payload['sub']);
+        $user = $this->userRepository->find((int) $payload['sub']);
         if (!$user || !in_array('ROLE_LIBRARIAN', $user->getRoles())) {
             return $this->json(['error' => 'Access denied'], 403);
         }
 
-        $announcement = $announcementRepository->find($id);
-        
-        if (!$announcement) {
-            return $this->json(['error' => 'Announcement not found'], 404);
+        try {
+            $envelope = $this->commandBus->dispatch(new PublishAnnouncementCommand($id));
+            $announcement = $envelope->last(HandledStamp::class)?->getResult();
+            
+            return $this->json($announcement, 200, [], ['groups' => ['announcement:read']]);
+        } catch (\RuntimeException $e) {
+            return $this->json(['error' => $e->getMessage()], 404);
         }
-
-        $announcement->publish();
-
-        $em = $doctrine->getManager();
-        $em->flush();
-
-        return $this->json($announcement, 200, [], ['groups' => ['announcement:read']]);
     }
 
     #[Route('/announcements/{id}/archive', methods: ['POST'])]
@@ -356,35 +263,26 @@ class AnnouncementController extends AbstractController
             new OA\Response(response: 200, description: 'Ogłoszenie zarchiwizowane')
         ]
     )]
-    public function archive(
-        int $id,
-        Request $request,
-        ManagerRegistry $doctrine,
-        AnnouncementRepository $announcementRepository,
-        SecurityService $security
-    ): JsonResponse {
+    public function archive(int $id, Request $request, SecurityService $security): JsonResponse
+    {
         $payload = $security->getJwtPayload($request);
         if (!$payload || !isset($payload['sub'])) {
             return $this->json(['error' => 'Unauthorized'], 401);
         }
 
-        $user = $doctrine->getRepository(User::class)->find((int) $payload['sub']);
+        $user = $this->userRepository->find((int) $payload['sub']);
         if (!$user || !in_array('ROLE_LIBRARIAN', $user->getRoles())) {
             return $this->json(['error' => 'Access denied'], 403);
         }
 
-        $announcement = $announcementRepository->find($id);
-        
-        if (!$announcement) {
-            return $this->json(['error' => 'Announcement not found'], 404);
+        try {
+            $envelope = $this->commandBus->dispatch(new ArchiveAnnouncementCommand($id));
+            $announcement = $envelope->last(HandledStamp::class)?->getResult();
+            
+            return $this->json($announcement, 200, [], ['groups' => ['announcement:read']]);
+        } catch (\RuntimeException $e) {
+            return $this->json(['error' => $e->getMessage()], 404);
         }
-
-        $announcement->archive();
-
-        $em = $doctrine->getManager();
-        $em->flush();
-
-        return $this->json($announcement, 200, [], ['groups' => ['announcement:read']]);
     }
 
     #[Route('/announcements/{id}', methods: ['DELETE'])]
@@ -398,38 +296,24 @@ class AnnouncementController extends AbstractController
             new OA\Response(response: 204, description: 'Ogłoszenie usunięte')
         ]
     )]
-    public function delete(
-        int $id,
-        Request $request,
-        ManagerRegistry $doctrine,
-        AnnouncementRepository $announcementRepository,
-        SecurityService $security
-    ): JsonResponse {
+    public function delete(int $id, Request $request, SecurityService $security): JsonResponse
+    {
         $payload = $security->getJwtPayload($request);
         if (!$payload || !isset($payload['sub'])) {
             return $this->json(['error' => 'Unauthorized'], 401);
         }
 
-        $user = $doctrine->getRepository(User::class)->find((int) $payload['sub']);
+        $user = $this->userRepository->find((int) $payload['sub']);
         if (!$user || !in_array('ROLE_LIBRARIAN', $user->getRoles())) {
             return $this->json(['error' => 'Access denied'], 403);
         }
 
-        $announcement = $announcementRepository->find($id);
-        
-        if (!$announcement) {
-            return $this->json(['error' => 'Announcement not found'], 404);
+        try {
+            $this->commandBus->dispatch(new DeleteAnnouncementCommand($id));
+            return $this->json(null, 204);
+        } catch (\RuntimeException $e) {
+            return $this->json(['error' => $e->getMessage()], 404);
         }
-
-        $em = $doctrine->getManager();
-        $em->remove($announcement);
-        $em->flush();
-
-        return $this->json(null, 204);
-    }
-
-    private function getDoctrine(): ManagerRegistry
-    {
-        return $this->container->get('doctrine');
     }
 }
+

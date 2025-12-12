@@ -1,164 +1,111 @@
 <?php
 namespace App\Controller;
 
+use App\Application\Command\Account\ChangePasswordCommand;
+use App\Application\Command\Account\UpdateAccountCommand;
 use App\Controller\Traits\ValidationTrait;
-use App\Entity\User;
-use App\Repository\UserRepository;
-use App\Request\UpdateAccountRequest;
 use App\Request\ChangePasswordRequest;
+use App\Request\UpdateAccountRequest;
 use App\Service\SecurityService;
-use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Messenger\MessageBusInterface;
+use Symfony\Component\Messenger\Stamp\HandledStamp;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class AccountController extends AbstractController
 {
     use ValidationTrait;
-    public function me(Request $request, UserRepository $repo, SecurityService $security): JsonResponse
+
+    public function __construct(
+        private readonly MessageBusInterface $commandBus,
+        private readonly SecurityService $security
+    ) {}
+public function me(Request $request): JsonResponse
     {
-        $user = $this->resolveAuthenticatedUser($request, $repo, $security);
-        if ($user instanceof JsonResponse) {
-            return $user;
+        $userId = $this->security->getCurrentUserId($request);
+        if ($userId === null) {
+            return $this->json(['error' => 'Unauthorized'], 401);
         }
 
-        return $this->json($this->formatUser($user));
+        // TODO: Implementacja GetUserQuery dla me endpoint
+        return $this->json(['error' => 'Not implemented'], 501);
     }
 
-    public function update(Request $request, ManagerRegistry $doctrine, UserRepository $repo, SecurityService $security, ValidatorInterface $validator): JsonResponse
+    public function update(Request $request, ValidatorInterface $validator): JsonResponse
     {
-        $user = $this->resolveAuthenticatedUser($request, $repo, $security);
-        if ($user instanceof JsonResponse) {
-            return $user;
+        $userId = $this->security->getCurrentUserId($request);
+        if ($userId === null) {
+            return $this->json(['error' => 'Unauthorized'], 401);
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
         
-        // Walidacja DTO
         $dto = $this->mapArrayToDto($data, new UpdateAccountRequest());
         $errors = $validator->validate($dto);
         if (count($errors) > 0) {
             return $this->validationErrorResponse($errors);
         }
 
-        if (isset($data['email'])) {
-            $email = trim((string) $data['email']);
-            $existing = $repo->findOneBy(['email' => $email]);
-            if ($existing && $existing->getId() !== $user->getId()) {
-                return $this->json(['error' => 'Adres e-mail jest już zajęty'], 409);
-            }
-            $user->setEmail($email);
-        }
+        $command = new UpdateAccountCommand(
+            userId: $userId,
+            email: $data['email'] ?? null,
+            name: $data['name'] ?? null,
+            phoneNumber: array_key_exists('phoneNumber', $data) ? (trim((string) $data['phoneNumber']) ?: null) : null,
+            addressLine: array_key_exists('addressLine', $data) ? (trim((string) $data['addressLine']) ?: null) : null,
+            city: array_key_exists('city', $data) ? (trim((string) $data['city']) ?: null) : null,
+            postalCode: array_key_exists('postalCode', $data) ? (trim((string) $data['postalCode']) ?: null) : null,
+            newsletterSubscribed: array_key_exists('newsletterSubscribed', $data) ? $this->normalizeBoolean($data['newsletterSubscribed']) : null
+        );
 
-        if (isset($data['name'])) {
-            $name = trim((string) $data['name']);
-            if ($name === '') {
-                return $this->json(['error' => 'Imię i nazwisko nie mogą być puste'], 400);
-            }
-            $user->setName($name);
+        try {
+            $envelope = $this->commandBus->dispatch($command);
+            $user = $envelope->last(HandledStamp::class)?->getResult();
+            return $this->json($user, 200);
+        } catch (\RuntimeException $e) {
+            $statusCode = match (true) {
+                str_contains($e->getMessage(), 'User not found') => 404,
+                str_contains($e->getMessage(), 'Email is already taken') => 409,
+                str_contains($e->getMessage(), 'cannot be empty') => 400,
+                default => 500
+            };
+            return $this->json(['error' => $e->getMessage()], $statusCode);
         }
-
-        if (array_key_exists('phoneNumber', $data)) {
-            $phone = trim((string) $data['phoneNumber']);
-            $user->setPhoneNumber($phone !== '' ? $phone : null);
-        }
-        if (array_key_exists('addressLine', $data)) {
-            $address = trim((string) $data['addressLine']);
-            $user->setAddressLine($address !== '' ? $address : null);
-        }
-        if (array_key_exists('city', $data)) {
-            $city = trim((string) $data['city']);
-            $user->setCity($city !== '' ? $city : null);
-        }
-        if (array_key_exists('postalCode', $data)) {
-            $postal = trim((string) $data['postalCode']);
-            $user->setPostalCode($postal !== '' ? $postal : null);
-        }
-
-        if (array_key_exists('newsletterSubscribed', $data)) {
-            $user->setNewsletterSubscribed($this->normalizeBoolean($data['newsletterSubscribed']));
-        }
-
-        $em = $doctrine->getManager();
-        $em->persist($user);
-        $em->flush();
-
-        return $this->json($this->formatUser($user));
     }
 
-    public function changePassword(Request $request, ManagerRegistry $doctrine, UserRepository $repo, SecurityService $security, ValidatorInterface $validator): JsonResponse
+    public function changePassword(Request $request, ValidatorInterface $validator): JsonResponse
     {
-        $user = $this->resolveAuthenticatedUser($request, $repo, $security);
-        if ($user instanceof JsonResponse) {
-            return $user;
+        $userId = $this->security->getCurrentUserId($request);
+        if ($userId === null) {
+            return $this->json(['error' => 'Unauthorized'], 401);
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
         
-        // Walidacja DTO
         $dto = $this->mapArrayToDto($data, new ChangePasswordRequest());
         $errors = $validator->validate($dto);
         if (count($errors) > 0) {
             return $this->validationErrorResponse($errors);
         }
         
-        $currentPassword = $dto->currentPassword;
-        $newPassword = $dto->newPassword;
-        $confirmPassword = $dto->confirmPassword ?? $newPassword;
+        $command = new ChangePasswordCommand(
+            userId: $userId,
+            currentPassword: $dto->currentPassword,
+            newPassword: $dto->newPassword,
+            confirmPassword: $dto->confirmPassword ?? $dto->newPassword
+        );
 
-        if (!password_verify($currentPassword, $user->getPassword())) {
-            return $this->json(['error' => 'Aktualne hasło jest niepoprawne'], 400);
+        try {
+            $this->commandBus->dispatch($command);
+            return $this->json(['message' => 'Hasło zostało zaktualizowane']);
+        } catch (\RuntimeException $e) {
+            $statusCode = match (true) {
+                str_contains($e->getMessage(), 'User not found') => 404,
+                default => 400
+            };
+            return $this->json(['error' => $e->getMessage()], $statusCode);
         }
-
-        if (strlen($newPassword) < 8) {
-            return $this->json(['error' => 'Nowe hasło musi mieć co najmniej 8 znaków'], 400);
-        }
-
-        if ($currentPassword === $newPassword) {
-            return $this->json(['error' => 'Nowe hasło musi się różnić od poprzedniego'], 400);
-        }
-
-        if ($newPassword !== $confirmPassword) {
-            return $this->json(['error' => 'Potwierdzenie hasła nie zgadza się z nowym hasłem'], 400);
-        }
-
-        $user->setPassword(password_hash($newPassword, PASSWORD_BCRYPT));
-        $em = $doctrine->getManager();
-        $em->persist($user);
-        $em->flush();
-
-        return $this->json(['message' => 'Hasło zostało zaktualizowane']);
-    }
-
-    private function resolveAuthenticatedUser(Request $request, UserRepository $repo, SecurityService $security): JsonResponse|User
-    {
-        $payload = $security->getJwtPayload($request);
-        if (!$payload || !isset($payload['sub'])) {
-            return $this->json(['error' => 'Unauthorized'], 401);
-        }
-
-        $user = $repo->find((int) $payload['sub']);
-        if (!$user) {
-            return $this->json(['error' => 'Użytkownik nie istnieje'], 404);
-        }
-
-        return $user;
-    }
-
-    private function formatUser(User $user): array
-    {
-        return [
-            'id' => $user->getId(),
-            'email' => $user->getEmail(),
-            'name' => $user->getName(),
-            'roles' => $user->getRoles(),
-            'phoneNumber' => $user->getPhoneNumber(),
-            'addressLine' => $user->getAddressLine(),
-            'city' => $user->getCity(),
-            'postalCode' => $user->getPostalCode(),
-            'newsletterSubscribed' => $user->isNewsletterSubscribed(),
-        ];
     }
 
     private function normalizeBoolean(mixed $value): bool

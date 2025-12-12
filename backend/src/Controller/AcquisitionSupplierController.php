@@ -1,36 +1,50 @@
 <?php
 namespace App\Controller;
 
+use App\Application\Command\Acquisition\CreateSupplierCommand;
+use App\Application\Command\Acquisition\DeactivateSupplierCommand;
+use App\Application\Command\Acquisition\UpdateSupplierCommand;
+use App\Application\Query\Acquisition\ListSuppliersQuery;
 use App\Controller\Traits\ValidationTrait;
-use App\Entity\Supplier;
 use App\Request\CreateSupplierRequest;
 use App\Service\SecurityService;
-use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Messenger\MessageBusInterface;
+use Symfony\Component\Messenger\Stamp\HandledStamp;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class AcquisitionSupplierController extends AbstractController
 {
     use ValidationTrait;
-    public function list(Request $request, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
+    
+    public function __construct(
+        private readonly MessageBusInterface $queryBus,
+        private readonly MessageBusInterface $commandBus
+    ) {
+    }
+    
+    public function list(Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
             return $this->json(['error' => 'Forbidden'], 403);
         }
 
         $active = $request->query->get('active');
-        $criteria = [];
+        $includeInactive = true;
         if ($active !== null) {
-            $criteria['active'] = filter_var($active, FILTER_VALIDATE_BOOLEAN);
+            $includeInactive = !filter_var($active, FILTER_VALIDATE_BOOLEAN);
         }
 
-        $suppliers = $doctrine->getRepository(Supplier::class)->findBy($criteria, ['name' => 'ASC']);
-        return $this->json($suppliers, 200, [], ['groups' => ['supplier:read']]);
+        $query = new ListSuppliersQuery(1, 1000, $includeInactive);
+        $envelope = $this->queryBus->dispatch($query);
+        $result = $envelope->last(HandledStamp::class)?->getResult();
+
+        return $this->json($result['items'] ?? [], 200, [], ['groups' => ['supplier:read']]);
     }
 
-    public function create(Request $request, ManagerRegistry $doctrine, SecurityService $security, ValidatorInterface $validator): JsonResponse
+    public function create(Request $request, SecurityService $security, ValidatorInterface $validator): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
             return $this->json(['error' => 'Forbidden'], 403);
@@ -38,91 +52,70 @@ class AcquisitionSupplierController extends AbstractController
 
         $data = json_decode($request->getContent(), true) ?: [];
         
-        // Walidacja DTO
         $dto = $this->mapArrayToDto($data, new CreateSupplierRequest());
         $errors = $validator->validate($dto);
         if (count($errors) > 0) {
             return $this->validationErrorResponse($errors);
         }
 
-        $supplier = new Supplier();
-        $supplier->setName((string) $data['name'])
-            ->setContactEmail($data['contactEmail'] ?? null)
-            ->setContactPhone($data['contactPhone'] ?? null)
-            ->setAddressLine($data['addressLine'] ?? null)
-            ->setCity($data['city'] ?? null)
-            ->setCountry($data['country'] ?? null)
-            ->setTaxIdentifier($data['taxIdentifier'] ?? null)
-            ->setNotes($data['notes'] ?? null);
-
         $activeFlag = filter_var($data['active'] ?? true, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
         if ($activeFlag === null) {
             return $this->json(['error' => 'Invalid active flag'], 400);
         }
-        $supplier->setActive($activeFlag);
 
-        $em = $doctrine->getManager();
-        $em->persist($supplier);
-        $em->flush();
+        $command = new CreateSupplierCommand(
+            (string) $data['name'],
+            $data['contactEmail'] ?? null,
+            $data['contactPhone'] ?? null,
+            $data['addressLine'] ?? null,
+            $data['city'] ?? null,
+            $data['country'] ?? null,
+            $data['taxIdentifier'] ?? null,
+            $data['notes'] ?? null,
+            $activeFlag
+        );
+        
+        $envelope = $this->commandBus->dispatch($command);
+        $supplier = $envelope->last(HandledStamp::class)?->getResult();
 
         return $this->json($supplier, 201, [], ['groups' => ['supplier:read']]);
     }
 
-    public function update(string $id, Request $request, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
+    public function update(string $id, Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
             return $this->json(['error' => 'Forbidden'], 403);
         }
         if (!ctype_digit($id) || (int) $id <= 0) {
             return $this->json(['error' => 'Invalid supplier id'], 400);
-        }
-
-        $supplier = $doctrine->getRepository(Supplier::class)->find((int) $id);
-        if (!$supplier) {
-            return $this->json(['error' => 'Supplier not found'], 404);
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
-        if (isset($data['name'])) {
-            $supplier->setName((string) $data['name']);
-        }
-        if (array_key_exists('contactEmail', $data)) {
-            $supplier->setContactEmail($data['contactEmail']);
-        }
-        if (array_key_exists('contactPhone', $data)) {
-            $supplier->setContactPhone($data['contactPhone']);
-        }
-        if (array_key_exists('addressLine', $data)) {
-            $supplier->setAddressLine($data['addressLine']);
-        }
-        if (array_key_exists('city', $data)) {
-            $supplier->setCity($data['city']);
-        }
-        if (array_key_exists('country', $data)) {
-            $supplier->setCountry($data['country']);
-        }
-        if (array_key_exists('taxIdentifier', $data)) {
-            $supplier->setTaxIdentifier($data['taxIdentifier']);
-        }
-        if (array_key_exists('notes', $data)) {
-            $supplier->setNotes($data['notes']);
-        }
-        if (array_key_exists('active', $data)) {
-            $activeFlag = filter_var($data['active'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
-            if ($activeFlag === null) {
-                return $this->json(['error' => 'Invalid active flag'], 400);
-            }
-            $supplier->setActive($activeFlag);
-        }
 
-        $em = $doctrine->getManager();
-        $em->persist($supplier);
-        $em->flush();
+        try {
+            $command = new UpdateSupplierCommand(
+                (int) $id,
+                $data['name'] ?? null,
+                $data['contactEmail'] ?? null,
+                $data['contactPhone'] ?? null,
+                $data['addressLine'] ?? null,
+                $data['city'] ?? null,
+                $data['country'] ?? null,
+                $data['taxIdentifier'] ?? null,
+                $data['notes'] ?? null,
+                isset($data['active']) ? filter_var($data['active'], FILTER_VALIDATE_BOOLEAN) : null
+            );
+            
+            $envelope = $this->commandBus->dispatch($command);
+            $supplier = $envelope->last(HandledStamp::class)?->getResult();
 
-        return $this->json($supplier, 200, [], ['groups' => ['supplier:read']]);
+            return $this->json($supplier, 200, [], ['groups' => ['supplier:read']]);
+        } catch (\RuntimeException $e) {
+            return $this->json(['error' => $e->getMessage()], 404);
+        }
     }
 
-    public function deactivate(string $id, Request $request, ManagerRegistry $doctrine, SecurityService $security): JsonResponse
+    public function deactivate(string $id, Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
             return $this->json(['error' => 'Forbidden'], 403);
@@ -131,16 +124,13 @@ class AcquisitionSupplierController extends AbstractController
             return $this->json(['error' => 'Invalid supplier id'], 400);
         }
 
-        $supplier = $doctrine->getRepository(Supplier::class)->find((int) $id);
-        if (!$supplier) {
-            return $this->json(['error' => 'Supplier not found'], 404);
+        try {
+            $command = new DeactivateSupplierCommand((int) $id);
+            $this->commandBus->dispatch($command);
+
+            return new JsonResponse(null, 204);
+        } catch (\RuntimeException $e) {
+            return $this->json(['error' => $e->getMessage()], 404);
         }
-
-        $supplier->setActive(false);
-        $em = $doctrine->getManager();
-        $em->persist($supplier);
-        $em->flush();
-
-        return new JsonResponse(null, 204);
     }
 }

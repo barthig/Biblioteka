@@ -46,4 +46,16 @@ class SecurityService
     {
         return $this->hasAnyRole($request, [$role]);
     }
+
+    /**
+     * Get current user ID from JWT payload
+     */
+    public function getCurrentUserId(Request $request): ?int
+    {
+        $payload = $this->getJwtPayload($request);
+        if (!$payload || !isset($payload['sub'])) {
+            return null;
+        }
+        return (int) $payload['sub'];
+    }
 }

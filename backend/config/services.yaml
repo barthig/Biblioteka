@@ -40,3 +40,103 @@ services:
   App\Controller\RegistrationController:
     arguments:
       $registrationAttemptsLimiter: '@limiter.registration_attempts'
+  
+  # CQRS Buses
+  App\Controller\LoanController:
+    arguments:
+      $commandBus: '@command.bus'
+      $queryBus: '@query.bus'
+      $security: '@App\Service\SecurityService'
+  
+  App\Controller\ReservationController:
+    arguments:
+      $commandBus: '@command.bus'
+      $queryBus: '@query.bus'
+      $security: '@App\Service\SecurityService'
+
+  App\Controller\FineController:
+    arguments:
+      $commandBus: '@command.bus'
+      $queryBus: '@query.bus'
+      $security: '@App\Service\SecurityService'
+
+  App\Controller\BookController:
+    arguments:
+      $commandBus: '@command.bus'
+      $queryBus: '@query.bus'
+      $security: '@App\Service\SecurityService'
+
+  App\Controller\UserManagementController:
+    arguments:
+      $commandBus: '@command.bus'
+      $security: '@App\Service\SecurityService'
+
+  App\Controller\AccountController:
+    arguments:
+      $commandBus: '@command.bus'
+      $security: '@App\Service\SecurityService'
+
+  App\Controller\FavoriteController:
+    arguments:
+      $commandBus: '@command.bus'
+      $queryBus: '@query.bus'
+      $security: '@App\Service\SecurityService'
+
+  App\Controller\ReviewController:
+    arguments:
+      $commandBus: '@command.bus'
+      $queryBus: '@query.bus'
+      $security: '@App\Service\SecurityService'
+
+  App\Controller\DashboardController:
+    arguments:
+      $queryBus: '@query.bus'
+
+  App\Controller\ReportController:
+    arguments:
+      $queryBus: '@query.bus'
+
+  App\Controller\AuditLogController:
+    arguments:
+      $queryBus: '@query.bus'
+
+  App\Controller\CatalogAdminController:
+    arguments:
+      $queryBus: '@query.bus'
+      $commandBus: '@command.bus'
+
+  App\Controller\BookInventoryController:
+    arguments:
+      $queryBus: '@query.bus'
+      $commandBus: '@command.bus'
+
+  App\Controller\BookAssetController:
+    arguments:
+      $queryBus: '@query.bus'
+      $commandBus: '@command.bus'
+
+  App\Controller\WeedingController:
+    arguments:
+      $queryBus: '@query.bus'
+      $commandBus: '@command.bus'
+
+  App\Controller\AnnouncementController:
+    arguments:
+      $queryBus: '@query.bus'
+      $commandBus: '@command.bus'
+      $userRepository: '@App\Repository\UserRepository'
+
+  App\Controller\AcquisitionBudgetController:
+    arguments:
+      $queryBus: '@query.bus'
+      $commandBus: '@command.bus'
+
+  App\Controller\AcquisitionOrderController:
+    arguments:
+      $queryBus: '@query.bus'
+      $commandBus: '@command.bus'
+
+  App\Controller\AcquisitionSupplierController:
+    arguments:
+      $queryBus: '@query.bus'
+      $commandBus: '@command.bus'

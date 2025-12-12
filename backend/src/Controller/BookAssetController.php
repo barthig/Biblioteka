@@ -1,59 +1,49 @@
 <?php
 namespace App\Controller;
 
+use App\Application\Command\BookAsset\DeleteBookAssetCommand;
+use App\Application\Command\BookAsset\UploadBookAssetCommand;
+use App\Application\Query\BookAsset\GetBookAssetQuery;
+use App\Application\Query\BookAsset\ListBookAssetsQuery;
 use App\Entity\BookDigitalAsset;
-use App\Repository\BookDigitalAssetRepository;
-use App\Repository\BookRepository;
 use App\Service\SecurityService;
-use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\HttpKernel\KernelInterface;
+use Symfony\Component\Messenger\MessageBusInterface;
+use Symfony\Component\Messenger\Stamp\HandledStamp;
 
 class BookAssetController extends AbstractController
 {
-    public function __construct(private KernelInterface $kernel)
+    public function __construct(
+        private readonly KernelInterface $kernel,
+        private readonly MessageBusInterface $queryBus,
+        private readonly MessageBusInterface $commandBus
+    ) {
+    }
+
+    public function list(int $id, Request $request, SecurityService $security): JsonResponse
     {
-    }
-
-    public function list(
-        int $id,
-        Request $request,
-        BookRepository $bookRepository,
-        BookDigitalAssetRepository $assetRepository,
-        SecurityService $security
-    ): JsonResponse {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
             return $this->json(['error' => 'Forbidden'], 403);
         }
 
-        $book = $bookRepository->find($id);
-        if (!$book) {
-            return $this->json(['error' => 'Book not found'], 404);
+        try {
+            $envelope = $this->queryBus->dispatch(new ListBookAssetsQuery($id));
+            $result = $envelope->last(HandledStamp::class)?->getResult();
+            return $this->json($result);
+        } catch (\RuntimeException $e) {
+            return $this->json(['error' => $e->getMessage()], 404);
         }
-
-        $items = array_map(fn (BookDigitalAsset $asset) => $this->serializeAsset($asset), $assetRepository->findForBook($book));
-
-        return $this->json(['items' => $items]);
     }
 
-    public function upload(
-        int $id,
-        Request $request,
-        BookRepository $bookRepository,
-        ManagerRegistry $doctrine,
-        SecurityService $security
-    ): JsonResponse {
+    public function upload(int $id, Request $request, SecurityService $security): JsonResponse
+    {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
             return $this->json(['error' => 'Forbidden'], 403);
-        }
-
-        $book = $bookRepository->find($id);
-        if (!$book) {
-            return $this->json(['error' => 'Book not found'], 404);
         }
 
         $data = json_decode($request->getContent(), true) ?? [];
@@ -66,105 +56,58 @@ class BookAssetController extends AbstractController
             return $this->json(['error' => 'Missing content payload (base64)'], 400);
         }
 
-        $binary = base64_decode($content, true);
-        if ($binary === false) {
-            return $this->json(['error' => 'Invalid base64 payload'], 400);
+        try {
+            $command = new UploadBookAssetCommand($id, $label, $originalFilename, $mimeType, $content);
+            $envelope = $this->commandBus->dispatch($command);
+            $asset = $envelope->last(HandledStamp::class)?->getResult();
+            
+            return $this->json($this->serializeAsset($asset), 201);
+        } catch (\RuntimeException $e) {
+            $statusCode = str_contains($e->getMessage(), 'not found') ? 404 : 500;
+            return $this->json(['error' => $e->getMessage()], $statusCode);
+        }
+    }
+
+    public function download(int $id, int $assetId, Request $request, SecurityService $security): BinaryFileResponse|JsonResponse
+    {
+        if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
+            return $this->json(['error' => 'Forbidden'], 403);
         }
 
         try {
-            $storageName = $this->storeBinary($binary, pathinfo($originalFilename, PATHINFO_EXTENSION));
+            $envelope = $this->queryBus->dispatch(new GetBookAssetQuery($id, $assetId));
+            $asset = $envelope->last(HandledStamp::class)?->getResult();
+            
+            $path = $this->assetDirectory() . DIRECTORY_SEPARATOR . $asset->getStorageName();
+            if (!is_file($path)) {
+                return $this->json(['error' => 'File has been removed from storage'], 410);
+            }
+
+            $response = new BinaryFileResponse($path);
+            $response->headers->set('Content-Type', $asset->getMimeType());
+            $response->setContentDisposition(
+                ResponseHeaderBag::DISPOSITION_ATTACHMENT,
+                $asset->getOriginalFilename()
+            );
+
+            return $response;
         } catch (\RuntimeException $e) {
-            return $this->json(['error' => $e->getMessage()], 500);
+            return $this->json(['error' => $e->getMessage()], 404);
         }
-
-        $asset = (new BookDigitalAsset())
-            ->setBook($book)
-            ->setLabel($label)
-            ->setOriginalFilename($originalFilename)
-            ->setMimeType($mimeType)
-            ->setSize(strlen($binary))
-            ->setStorageName($storageName);
-
-        $book->addDigitalAsset($asset);
-
-        $em = $doctrine->getManager();
-        $em->persist($asset);
-        $em->flush();
-
-        return $this->json($this->serializeAsset($asset), 201);
     }
 
-    public function download(
-        int $id,
-        int $assetId,
-        Request $request,
-        BookRepository $bookRepository,
-        BookDigitalAssetRepository $assetRepository,
-        SecurityService $security
-    ): BinaryFileResponse|JsonResponse {
+    public function delete(int $id, int $assetId, Request $request, SecurityService $security): JsonResponse
+    {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
             return $this->json(['error' => 'Forbidden'], 403);
         }
 
-        $book = $bookRepository->find($id);
-        if (!$book) {
-            return $this->json(['error' => 'Book not found'], 404);
+        try {
+            $this->commandBus->dispatch(new DeleteBookAssetCommand($id, $assetId));
+            return new JsonResponse(null, 204);
+        } catch (\RuntimeException $e) {
+            return $this->json(['error' => $e->getMessage()], 404);
         }
-
-        $asset = $assetRepository->find($assetId);
-        if (!$asset || $asset->getBook()->getId() !== $book->getId()) {
-            return $this->json(['error' => 'Asset not found'], 404);
-        }
-
-        $path = $this->assetDirectory() . DIRECTORY_SEPARATOR . $asset->getStorageName();
-        if (!is_file($path)) {
-            return $this->json(['error' => 'File has been removed from storage'], 410);
-        }
-
-        $response = new BinaryFileResponse($path);
-        $response->headers->set('Content-Type', $asset->getMimeType());
-        $response->setContentDisposition(
-            ResponseHeaderBag::DISPOSITION_ATTACHMENT,
-            $asset->getOriginalFilename()
-        );
-
-        return $response;
-    }
-
-    public function delete(
-        int $id,
-        int $assetId,
-        Request $request,
-        BookRepository $bookRepository,
-        BookDigitalAssetRepository $assetRepository,
-        ManagerRegistry $doctrine,
-        SecurityService $security
-    ): JsonResponse {
-        if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
-        }
-
-        $book = $bookRepository->find($id);
-        if (!$book) {
-            return $this->json(['error' => 'Book not found'], 404);
-        }
-
-        $asset = $assetRepository->find($assetId);
-        if (!$asset || $asset->getBook()->getId() !== $book->getId()) {
-            return $this->json(['error' => 'Asset not found'], 404);
-        }
-
-        $path = $this->assetDirectory() . DIRECTORY_SEPARATOR . $asset->getStorageName();
-        if (is_file($path)) {
-            @unlink($path);
-        }
-
-        $em = $doctrine->getManager();
-        $book->removeDigitalAsset($asset);
-        $em->remove($asset);
-        $em->flush();
-
-        return new JsonResponse(null, 204);
     }
 
     private function serializeAsset(BookDigitalAsset $asset): array
@@ -177,23 +120,6 @@ class BookAssetController extends AbstractController
             'size' => $asset->getSize(),
             'createdAt' => $asset->getCreatedAt()->format(DATE_ATOM),
         ];
-    }
-
-    private function storeBinary(string $binary, string $extension): string
-    {
-        $extension = trim($extension) !== '' ? strtolower($extension) : 'bin';
-        $filename = sprintf('%s.%s', bin2hex(random_bytes(12)), $extension);
-        $dir = $this->assetDirectory();
-        if (!is_dir($dir) && !mkdir($dir, 0775, true) && !is_dir($dir)) {
-            throw new \RuntimeException('Unable to create asset storage directory: ' . $dir);
-        }
-
-        $path = $dir . DIRECTORY_SEPARATOR . $filename;
-        if (file_put_contents($path, $binary) === false) {
-            throw new \RuntimeException('Unable to store uploaded asset');
-        }
-
-        return $filename;
     }
 
     private function assetDirectory(): string
