@@ -88,9 +88,15 @@ class CreateLoanHandlerTest extends TestCase
         $userRepo = $this->createMock(\Doctrine\ORM\EntityRepository::class);
         $userRepo->method('find')->with(999)->willReturn(null);
 
-        $this->em->method('getRepository')
-            ->with(User::class)
-            ->willReturn($userRepo);
+        $bookRepo = $this->createMock(\Doctrine\ORM\EntityRepository::class);
+
+        $this->em->method('getRepository')->willReturnCallback(function ($class) use ($userRepo, $bookRepo) {
+            return match ($class) {
+                User::class => $userRepo,
+                Book::class => $bookRepo,
+                default => $this->createMock(\Doctrine\ORM\EntityRepository::class)
+            };
+        });
 
         $command = new CreateLoanCommand(userId: 999, bookId: 10);
         ($this->handler)($command);
@@ -107,9 +113,15 @@ class CreateLoanHandlerTest extends TestCase
         $userRepo = $this->createMock(\Doctrine\ORM\EntityRepository::class);
         $userRepo->method('find')->with(1)->willReturn($user);
 
-        $this->em->method('getRepository')
-            ->with(User::class)
-            ->willReturn($userRepo);
+        $bookRepo = $this->createMock(\Doctrine\ORM\EntityRepository::class);
+
+        $this->em->method('getRepository')->willReturnCallback(function ($class) use ($userRepo, $bookRepo) {
+            return match ($class) {
+                User::class => $userRepo,
+                Book::class => $bookRepo,
+                default => $this->createMock(\Doctrine\ORM\EntityRepository::class)
+            };
+        });
 
         $command = new CreateLoanCommand(userId: 1, bookId: 10);
         ($this->handler)($command);
@@ -127,9 +139,15 @@ class CreateLoanHandlerTest extends TestCase
         $userRepo = $this->createMock(\Doctrine\ORM\EntityRepository::class);
         $userRepo->method('find')->with(1)->willReturn($user);
 
-        $this->em->method('getRepository')
-            ->with(User::class)
-            ->willReturn($userRepo);
+        $bookRepo = $this->createMock(\Doctrine\ORM\EntityRepository::class);
+
+        $this->em->method('getRepository')->willReturnCallback(function ($class) use ($userRepo, $bookRepo) {
+            return match ($class) {
+                User::class => $userRepo,
+                Book::class => $bookRepo,
+                default => $this->createMock(\Doctrine\ORM\EntityRepository::class)
+            };
+        });
 
         $this->loanRepository->method('countActiveByUser')->with($user)->willReturn(3);
 

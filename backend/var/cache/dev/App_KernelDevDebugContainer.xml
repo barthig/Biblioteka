@@ -241,6 +241,15 @@
     <service id="App\Application\Command\Announcement\UpdateAnnouncementCommand" class="App\Application\Command\Announcement\UpdateAnnouncementCommand" autowire="true" autoconfigure="true">
       <tag name="container.error" message="Cannot autowire service &quot;App\Application\Command\Announcement\UpdateAnnouncementCommand&quot;: argument &quot;$id&quot; of method &quot;__construct()&quot; is type-hinted &quot;int&quot;, you should configure its value explicitly."/>
     </service>
+    <service id="App\Application\Command\Author\CreateAuthorCommand" class="App\Application\Command\Author\CreateAuthorCommand" autowire="true" autoconfigure="true">
+      <tag name="container.error" message="Cannot autowire service &quot;App\Application\Command\Author\CreateAuthorCommand&quot;: argument &quot;$name&quot; of method &quot;__construct()&quot; is type-hinted &quot;string&quot;, you should configure its value explicitly."/>
+    </service>
+    <service id="App\Application\Command\Author\DeleteAuthorCommand" class="App\Application\Command\Author\DeleteAuthorCommand" autowire="true" autoconfigure="true">
+      <tag name="container.error" message="Cannot autowire service &quot;App\Application\Command\Author\DeleteAuthorCommand&quot;: argument &quot;$authorId&quot; of method &quot;__construct()&quot; is type-hinted &quot;int&quot;, you should configure its value explicitly."/>
+    </service>
+    <service id="App\Application\Command\Author\UpdateAuthorCommand" class="App\Application\Command\Author\UpdateAuthorCommand" autowire="true" autoconfigure="true">
+      <tag name="container.error" message="Cannot autowire service &quot;App\Application\Command\Author\UpdateAuthorCommand&quot;: argument &quot;$authorId&quot; of method &quot;__construct()&quot; is type-hinted &quot;int&quot;, you should configure its value explicitly."/>
+    </service>
     <service id="App\Application\Command\BookAsset\DeleteBookAssetCommand" class="App\Application\Command\BookAsset\DeleteBookAssetCommand" autowire="true" autoconfigure="true">
       <tag name="container.error" message="Cannot autowire service &quot;App\Application\Command\BookAsset\DeleteBookAssetCommand&quot;: argument &quot;$bookId&quot; of method &quot;__construct()&quot; is type-hinted &quot;int&quot;, you should configure its value explicitly."/>
     </service>
@@ -267,6 +276,15 @@
     </service>
     <service id="App\Application\Command\Catalog\ImportCatalogCommand" class="App\Application\Command\Catalog\ImportCatalogCommand" autowire="true" autoconfigure="true">
       <tag name="container.error" message="Cannot autowire service &quot;App\Application\Command\Catalog\ImportCatalogCommand&quot;: argument &quot;$items&quot; of method &quot;__construct()&quot; is type-hinted &quot;array&quot;, you should configure its value explicitly."/>
+    </service>
+    <service id="App\Application\Command\Category\CreateCategoryCommand" class="App\Application\Command\Category\CreateCategoryCommand" autowire="true" autoconfigure="true">
+      <tag name="container.error" message="Cannot autowire service &quot;App\Application\Command\Category\CreateCategoryCommand&quot;: argument &quot;$name&quot; of method &quot;__construct()&quot; is type-hinted &quot;string&quot;, you should configure its value explicitly."/>
+    </service>
+    <service id="App\Application\Command\Category\DeleteCategoryCommand" class="App\Application\Command\Category\DeleteCategoryCommand" autowire="true" autoconfigure="true">
+      <tag name="container.error" message="Cannot autowire service &quot;App\Application\Command\Category\DeleteCategoryCommand&quot;: argument &quot;$categoryId&quot; of method &quot;__construct()&quot; is type-hinted &quot;int&quot;, you should configure its value explicitly."/>
+    </service>
+    <service id="App\Application\Command\Category\UpdateCategoryCommand" class="App\Application\Command\Category\UpdateCategoryCommand" autowire="true" autoconfigure="true">
+      <tag name="container.error" message="Cannot autowire service &quot;App\Application\Command\Category\UpdateCategoryCommand&quot;: argument &quot;$categoryId&quot; of method &quot;__construct()&quot; is type-hinted &quot;int&quot;, you should configure its value explicitly."/>
     </service>
     <service id="App\Application\Command\Favorite\AddFavoriteCommand" class="App\Application\Command\Favorite\AddFavoriteCommand" autowire="true" autoconfigure="true">
       <tag name="container.error" message="Cannot autowire service &quot;App\Application\Command\Favorite\AddFavoriteCommand&quot;: argument &quot;$userId&quot; of method &quot;__construct()&quot; is type-hinted &quot;int&quot;, you should configure its value explicitly."/>
@@ -370,6 +388,10 @@
       <argument type="service" id="doctrine.orm.default_entity_manager"/>
       <argument type="service" id="App\Repository\UserRepository"/>
     </service>
+    <service id="App\Application\Handler\Command\CreateAuthorHandler" class="App\Application\Handler\Command\CreateAuthorHandler" autowire="true" autoconfigure="true">
+      <tag name="messenger.message_handler" bus="" handles="" method="" priority="0" from_transport=""/>
+      <argument type="service" id="doctrine.orm.default_entity_manager"/>
+    </service>
     <service id="App\Application\Handler\Command\CreateBookCopyHandler" class="App\Application\Handler\Command\CreateBookCopyHandler" autowire="true" autoconfigure="true">
       <tag name="messenger.message_handler" bus="" handles="" method="" priority="0" from_transport=""/>
       <argument type="service" id="doctrine.orm.default_entity_manager"/>
@@ -383,6 +405,10 @@
       <argument type="service" id="App\Repository\CategoryRepository"/>
     </service>
     <service id="App\Application\Handler\Command\CreateBudgetHandler" class="App\Application\Handler\Command\CreateBudgetHandler" autowire="true" autoconfigure="true">
+      <tag name="messenger.message_handler" bus="" handles="" method="" priority="0" from_transport=""/>
+      <argument type="service" id="doctrine.orm.default_entity_manager"/>
+    </service>
+    <service id="App\Application\Handler\Command\CreateCategoryHandler" class="App\Application\Handler\Command\CreateCategoryHandler" autowire="true" autoconfigure="true">
       <tag name="messenger.message_handler" bus="" handles="" method="" priority="0" from_transport=""/>
       <argument type="service" id="doctrine.orm.default_entity_manager"/>
     </service>
@@ -444,6 +470,11 @@
       <argument type="service" id="doctrine.orm.default_entity_manager"/>
       <argument type="service" id="App\Repository\AnnouncementRepository"/>
     </service>
+    <service id="App\Application\Handler\Command\DeleteAuthorHandler" class="App\Application\Handler\Command\DeleteAuthorHandler" autowire="true" autoconfigure="true">
+      <tag name="messenger.message_handler" bus="" handles="" method="" priority="0" from_transport=""/>
+      <argument type="service" id="doctrine.orm.default_entity_manager"/>
+      <argument type="service" id="App\Repository\AuthorRepository"/>
+    </service>
     <service id="App\Application\Handler\Command\DeleteBookAssetHandler" class="App\Application\Handler\Command\DeleteBookAssetHandler" autowire="true" autoconfigure="true">
       <tag name="messenger.message_handler" bus="" handles="" method="" priority="0" from_transport=""/>
       <argument type="service" id="doctrine.orm.default_entity_manager"/>
@@ -461,6 +492,11 @@
       <tag name="messenger.message_handler" bus="" handles="" method="" priority="0" from_transport=""/>
       <argument type="service" id="doctrine.orm.default_entity_manager"/>
       <argument type="service" id="App\Repository\BookRepository"/>
+    </service>
+    <service id="App\Application\Handler\Command\DeleteCategoryHandler" class="App\Application\Handler\Command\DeleteCategoryHandler" autowire="true" autoconfigure="true">
+      <tag name="messenger.message_handler" bus="" handles="" method="" priority="0" from_transport=""/>
+      <argument type="service" id="doctrine.orm.default_entity_manager"/>
+      <argument type="service" id="App\Repository\CategoryRepository"/>
     </service>
     <service id="App\Application\Handler\Command\DeleteLoanHandler" class="App\Application\Handler\Command\DeleteLoanHandler" autowire="true" autoconfigure="true">
       <tag name="messenger.message_handler" bus="" handles="" method="" priority="0" from_transport=""/>
@@ -534,6 +570,11 @@
       <argument type="service" id="doctrine.orm.default_entity_manager"/>
       <argument type="service" id="App\Repository\AnnouncementRepository"/>
     </service>
+    <service id="App\Application\Handler\Command\UpdateAuthorHandler" class="App\Application\Handler\Command\UpdateAuthorHandler" autowire="true" autoconfigure="true">
+      <tag name="messenger.message_handler" bus="" handles="" method="" priority="0" from_transport=""/>
+      <argument type="service" id="doctrine.orm.default_entity_manager"/>
+      <argument type="service" id="App\Repository\AuthorRepository"/>
+    </service>
     <service id="App\Application\Handler\Command\UpdateBookCopyHandler" class="App\Application\Handler\Command\UpdateBookCopyHandler" autowire="true" autoconfigure="true">
       <tag name="messenger.message_handler" bus="" handles="" method="" priority="0" from_transport=""/>
       <argument type="service" id="doctrine.orm.default_entity_manager"/>
@@ -551,6 +592,11 @@
       <tag name="messenger.message_handler" bus="" handles="" method="" priority="0" from_transport=""/>
       <argument type="service" id="doctrine.orm.default_entity_manager"/>
       <argument type="service" id="App\Repository\AcquisitionBudgetRepository"/>
+    </service>
+    <service id="App\Application\Handler\Command\UpdateCategoryHandler" class="App\Application\Handler\Command\UpdateCategoryHandler" autowire="true" autoconfigure="true">
+      <tag name="messenger.message_handler" bus="" handles="" method="" priority="0" from_transport=""/>
+      <argument type="service" id="doctrine.orm.default_entity_manager"/>
+      <argument type="service" id="App\Repository\CategoryRepository"/>
     </service>
     <service id="App\Application\Handler\Command\UpdateOrderStatusHandler" class="App\Application\Handler\Command\UpdateOrderStatusHandler" autowire="true" autoconfigure="true">
       <tag name="messenger.message_handler" bus="" handles="" method="" priority="0" from_transport=""/>
@@ -581,6 +627,10 @@
       <tag name="messenger.message_handler" bus="" handles="" method="" priority="0" from_transport=""/>
       <argument type="service" id="App\Repository\AnnouncementRepository"/>
     </service>
+    <service id="App\Application\Handler\Query\GetAuthorHandler" class="App\Application\Handler\Query\GetAuthorHandler" autowire="true" autoconfigure="true">
+      <tag name="messenger.message_handler" bus="" handles="" method="" priority="0" from_transport=""/>
+      <argument type="service" id="App\Repository\AuthorRepository"/>
+    </service>
     <service id="App\Application\Handler\Query\GetBookAssetHandler" class="App\Application\Handler\Query\GetBookAssetHandler" autowire="true" autoconfigure="true">
       <tag name="messenger.message_handler" bus="" handles="" method="" priority="0" from_transport=""/>
       <argument type="service" id="App\Repository\BookRepository"/>
@@ -594,6 +644,10 @@
     <service id="App\Application\Handler\Query\GetBudgetSummaryHandler" class="App\Application\Handler\Query\GetBudgetSummaryHandler" autowire="true" autoconfigure="true">
       <tag name="messenger.message_handler" bus="" handles="" method="" priority="0" from_transport=""/>
       <argument type="service" id="App\Repository\AcquisitionBudgetRepository"/>
+    </service>
+    <service id="App\Application\Handler\Query\GetCategoryHandler" class="App\Application\Handler\Query\GetCategoryHandler" autowire="true" autoconfigure="true">
+      <tag name="messenger.message_handler" bus="" handles="" method="" priority="0" from_transport=""/>
+      <argument type="service" id="App\Repository\CategoryRepository"/>
     </service>
     <service id="App\Application\Handler\Query\GetEntityHistoryHandler" class="App\Application\Handler\Query\GetEntityHistoryHandler" autowire="true" autoconfigure="true">
       <tag name="messenger.message_handler" bus="" handles="" method="" priority="0" from_transport=""/>
@@ -635,6 +689,10 @@
       <tag name="messenger.message_handler" bus="" handles="" method="" priority="0" from_transport=""/>
       <argument type="service" id="App\Repository\AuditLogRepository"/>
     </service>
+    <service id="App\Application\Handler\Query\ListAuthorsHandler" class="App\Application\Handler\Query\ListAuthorsHandler" autowire="true" autoconfigure="true">
+      <tag name="messenger.message_handler" bus="" handles="" method="" priority="0" from_transport=""/>
+      <argument type="service" id="App\Repository\AuthorRepository"/>
+    </service>
     <service id="App\Application\Handler\Query\ListBookAssetsHandler" class="App\Application\Handler\Query\ListBookAssetsHandler" autowire="true" autoconfigure="true">
       <tag name="messenger.message_handler" bus="" handles="" method="" priority="0" from_transport=""/>
       <argument type="service" id="App\Repository\BookRepository"/>
@@ -657,6 +715,10 @@
     <service id="App\Application\Handler\Query\ListBudgetsHandler" class="App\Application\Handler\Query\ListBudgetsHandler" autowire="true" autoconfigure="true">
       <tag name="messenger.message_handler" bus="" handles="" method="" priority="0" from_transport=""/>
       <argument type="service" id="App\Repository\AcquisitionBudgetRepository"/>
+    </service>
+    <service id="App\Application\Handler\Query\ListCategoriesHandler" class="App\Application\Handler\Query\ListCategoriesHandler" autowire="true" autoconfigure="true">
+      <tag name="messenger.message_handler" bus="" handles="" method="" priority="0" from_transport=""/>
+      <argument type="service" id="App\Repository\CategoryRepository"/>
     </service>
     <service id="App\Application\Handler\Query\ListFinesHandler" class="App\Application\Handler\Query\ListFinesHandler" autowire="true" autoconfigure="true">
       <tag name="messenger.message_handler" bus="" handles="" method="" priority="0" from_transport=""/>
@@ -709,6 +771,10 @@
       <tag name="container.error" message="Cannot autowire service &quot;App\Application\Query\AuditLog\GetEntityHistoryQuery&quot;: argument &quot;$entityType&quot; of method &quot;__construct()&quot; is type-hinted &quot;string&quot;, you should configure its value explicitly."/>
     </service>
     <service id="App\Application\Query\AuditLog\ListAuditLogsQuery" class="App\Application\Query\AuditLog\ListAuditLogsQuery" autowire="true" autoconfigure="true"/>
+    <service id="App\Application\Query\Author\GetAuthorQuery" class="App\Application\Query\Author\GetAuthorQuery" autowire="true" autoconfigure="true">
+      <tag name="container.error" message="Cannot autowire service &quot;App\Application\Query\Author\GetAuthorQuery&quot;: argument &quot;$authorId&quot; of method &quot;__construct()&quot; is type-hinted &quot;int&quot;, you should configure its value explicitly."/>
+    </service>
+    <service id="App\Application\Query\Author\ListAuthorsQuery" class="App\Application\Query\Author\ListAuthorsQuery" autowire="true" autoconfigure="true"/>
     <service id="App\Application\Query\BookAsset\GetBookAssetQuery" class="App\Application\Query\BookAsset\GetBookAssetQuery" autowire="true" autoconfigure="true">
       <tag name="container.error" message="Cannot autowire service &quot;App\Application\Query\BookAsset\GetBookAssetQuery&quot;: argument &quot;$bookId&quot; of method &quot;__construct()&quot; is type-hinted &quot;int&quot;, you should configure its value explicitly."/>
     </service>
@@ -723,6 +789,10 @@
     </service>
     <service id="App\Application\Query\Book\ListBooksQuery" class="App\Application\Query\Book\ListBooksQuery" autowire="true" autoconfigure="true"/>
     <service id="App\Application\Query\Catalog\ExportCatalogQuery" class="App\Application\Query\Catalog\ExportCatalogQuery" autowire="true" autoconfigure="true"/>
+    <service id="App\Application\Query\Category\GetCategoryQuery" class="App\Application\Query\Category\GetCategoryQuery" autowire="true" autoconfigure="true">
+      <tag name="container.error" message="Cannot autowire service &quot;App\Application\Query\Category\GetCategoryQuery&quot;: argument &quot;$categoryId&quot; of method &quot;__construct()&quot; is type-hinted &quot;int&quot;, you should configure its value explicitly."/>
+    </service>
+    <service id="App\Application\Query\Category\ListCategoriesQuery" class="App\Application\Query\Category\ListCategoriesQuery" autowire="true" autoconfigure="true"/>
     <service id="App\Application\Query\Dashboard\GetOverviewQuery" class="App\Application\Query\Dashboard\GetOverviewQuery" autowire="true" autoconfigure="true"/>
     <service id="App\Application\Query\Favorite\ListUserFavoritesQuery" class="App\Application\Query\Favorite\ListUserFavoritesQuery" autowire="true" autoconfigure="true">
       <tag name="container.error" message="Cannot autowire service &quot;App\Application\Query\Favorite\ListUserFavoritesQuery&quot;: argument &quot;$userId&quot; of method &quot;__construct()&quot; is type-hinted &quot;int&quot;, you should configure its value explicitly."/>
@@ -989,6 +1059,14 @@
         <argument type="service" id=".service_locator.ZyP9f7K.App\Controller\AuthController"/>
       </call>
     </service>
+    <service id="App\Controller\AuthorController" class="App\Controller\AuthorController" public="true" autowire="true" autoconfigure="true">
+      <tag name="controller.service_arguments"/>
+      <tag name="container.service_subscriber"/>
+      <argument type="service" id="messenger.bus.default"/>
+      <call method="setContainer">
+        <argument type="service" id=".service_locator.ZyP9f7K.App\Controller\AuthorController"/>
+      </call>
+    </service>
     <service id="App\Controller\BookAssetController" class="App\Controller\BookAssetController" public="true" autowire="true" autoconfigure="true">
       <tag name="controller.service_arguments"/>
       <tag name="container.service_subscriber"/>
@@ -1025,6 +1103,14 @@
       <argument type="service" id="command.bus"/>
       <call method="setContainer">
         <argument type="service" id=".service_locator.ZyP9f7K.App\Controller\CatalogAdminController"/>
+      </call>
+    </service>
+    <service id="App\Controller\CategoryController" class="App\Controller\CategoryController" public="true" autowire="true" autoconfigure="true">
+      <tag name="controller.service_arguments"/>
+      <tag name="container.service_subscriber"/>
+      <argument type="service" id="messenger.bus.default"/>
+      <call method="setContainer">
+        <argument type="service" id=".service_locator.ZyP9f7K.App\Controller\CategoryController"/>
       </call>
     </service>
     <service id="App\Controller\DashboardController" class="App\Controller\DashboardController" public="true" autowire="true" autoconfigure="true">
@@ -2025,6 +2111,12 @@
               <argument type="collection"/>
             </argument>
           </argument>
+          <argument key="App\Application\Command\Author\CreateAuthorCommand" type="collection">
+            <argument type="collection">
+              <argument>App\Application\Handler\Command\CreateAuthorHandler</argument>
+              <argument type="collection"/>
+            </argument>
+          </argument>
           <argument key="App\Application\Command\BookInventory\CreateBookCopyCommand" type="collection">
             <argument type="collection">
               <argument>App\Application\Handler\Command\CreateBookCopyHandler</argument>
@@ -2040,6 +2132,12 @@
           <argument key="App\Application\Command\Acquisition\CreateBudgetCommand" type="collection">
             <argument type="collection">
               <argument>App\Application\Handler\Command\CreateBudgetHandler</argument>
+              <argument type="collection"/>
+            </argument>
+          </argument>
+          <argument key="App\Application\Command\Category\CreateCategoryCommand" type="collection">
+            <argument type="collection">
+              <argument>App\Application\Handler\Command\CreateCategoryHandler</argument>
               <argument type="collection"/>
             </argument>
           </argument>
@@ -2103,6 +2201,12 @@
               <argument type="collection"/>
             </argument>
           </argument>
+          <argument key="App\Application\Command\Author\DeleteAuthorCommand" type="collection">
+            <argument type="collection">
+              <argument>App\Application\Handler\Command\DeleteAuthorHandler</argument>
+              <argument type="collection"/>
+            </argument>
+          </argument>
           <argument key="App\Application\Command\BookAsset\DeleteBookAssetCommand" type="collection">
             <argument type="collection">
               <argument>App\Application\Handler\Command\DeleteBookAssetHandler</argument>
@@ -2118,6 +2222,12 @@
           <argument key="App\Application\Command\Book\DeleteBookCommand" type="collection">
             <argument type="collection">
               <argument>App\Application\Handler\Command\DeleteBookHandler</argument>
+              <argument type="collection"/>
+            </argument>
+          </argument>
+          <argument key="App\Application\Command\Category\DeleteCategoryCommand" type="collection">
+            <argument type="collection">
+              <argument>App\Application\Handler\Command\DeleteCategoryHandler</argument>
               <argument type="collection"/>
             </argument>
           </argument>
@@ -2199,6 +2309,12 @@
               <argument type="collection"/>
             </argument>
           </argument>
+          <argument key="App\Application\Command\Author\UpdateAuthorCommand" type="collection">
+            <argument type="collection">
+              <argument>App\Application\Handler\Command\UpdateAuthorHandler</argument>
+              <argument type="collection"/>
+            </argument>
+          </argument>
           <argument key="App\Application\Command\BookInventory\UpdateBookCopyCommand" type="collection">
             <argument type="collection">
               <argument>App\Application\Handler\Command\UpdateBookCopyHandler</argument>
@@ -2214,6 +2330,12 @@
           <argument key="App\Application\Command\Acquisition\UpdateBudgetCommand" type="collection">
             <argument type="collection">
               <argument>App\Application\Handler\Command\UpdateBudgetHandler</argument>
+              <argument type="collection"/>
+            </argument>
+          </argument>
+          <argument key="App\Application\Command\Category\UpdateCategoryCommand" type="collection">
+            <argument type="collection">
+              <argument>App\Application\Handler\Command\UpdateCategoryHandler</argument>
               <argument type="collection"/>
             </argument>
           </argument>
@@ -2253,6 +2375,12 @@
               <argument type="collection"/>
             </argument>
           </argument>
+          <argument key="App\Application\Query\Author\GetAuthorQuery" type="collection">
+            <argument type="collection">
+              <argument>App\Application\Handler\Query\GetAuthorHandler</argument>
+              <argument type="collection"/>
+            </argument>
+          </argument>
           <argument key="App\Application\Query\BookAsset\GetBookAssetQuery" type="collection">
             <argument type="collection">
               <argument>App\Application\Handler\Query\GetBookAssetHandler</argument>
@@ -2268,6 +2396,12 @@
           <argument key="App\Application\Query\Acquisition\GetBudgetSummaryQuery" type="collection">
             <argument type="collection">
               <argument>App\Application\Handler\Query\GetBudgetSummaryHandler</argument>
+              <argument type="collection"/>
+            </argument>
+          </argument>
+          <argument key="App\Application\Query\Category\GetCategoryQuery" type="collection">
+            <argument type="collection">
+              <argument>App\Application\Handler\Query\GetCategoryHandler</argument>
               <argument type="collection"/>
             </argument>
           </argument>
@@ -2331,6 +2465,12 @@
               <argument type="collection"/>
             </argument>
           </argument>
+          <argument key="App\Application\Query\Author\ListAuthorsQuery" type="collection">
+            <argument type="collection">
+              <argument>App\Application\Handler\Query\ListAuthorsHandler</argument>
+              <argument type="collection"/>
+            </argument>
+          </argument>
           <argument key="App\Application\Query\BookAsset\ListBookAssetsQuery" type="collection">
             <argument type="collection">
               <argument>App\Application\Handler\Query\ListBookAssetsHandler</argument>
@@ -2358,6 +2498,12 @@
           <argument key="App\Application\Query\Acquisition\ListBudgetsQuery" type="collection">
             <argument type="collection">
               <argument>App\Application\Handler\Query\ListBudgetsHandler</argument>
+              <argument type="collection"/>
+            </argument>
+          </argument>
+          <argument key="App\Application\Query\Category\ListCategoriesQuery" type="collection">
+            <argument type="collection">
+              <argument>App\Application\Handler\Query\ListCategoriesHandler</argument>
               <argument type="collection"/>
             </argument>
           </argument>
@@ -2519,6 +2665,12 @@
               <argument type="collection"/>
             </argument>
           </argument>
+          <argument key="App\Application\Command\Author\CreateAuthorCommand" type="collection">
+            <argument type="collection">
+              <argument>App\Application\Handler\Command\CreateAuthorHandler</argument>
+              <argument type="collection"/>
+            </argument>
+          </argument>
           <argument key="App\Application\Command\BookInventory\CreateBookCopyCommand" type="collection">
             <argument type="collection">
               <argument>App\Application\Handler\Command\CreateBookCopyHandler</argument>
@@ -2534,6 +2686,12 @@
           <argument key="App\Application\Command\Acquisition\CreateBudgetCommand" type="collection">
             <argument type="collection">
               <argument>App\Application\Handler\Command\CreateBudgetHandler</argument>
+              <argument type="collection"/>
+            </argument>
+          </argument>
+          <argument key="App\Application\Command\Category\CreateCategoryCommand" type="collection">
+            <argument type="collection">
+              <argument>App\Application\Handler\Command\CreateCategoryHandler</argument>
               <argument type="collection"/>
             </argument>
           </argument>
@@ -2597,6 +2755,12 @@
               <argument type="collection"/>
             </argument>
           </argument>
+          <argument key="App\Application\Command\Author\DeleteAuthorCommand" type="collection">
+            <argument type="collection">
+              <argument>App\Application\Handler\Command\DeleteAuthorHandler</argument>
+              <argument type="collection"/>
+            </argument>
+          </argument>
           <argument key="App\Application\Command\BookAsset\DeleteBookAssetCommand" type="collection">
             <argument type="collection">
               <argument>App\Application\Handler\Command\DeleteBookAssetHandler</argument>
@@ -2612,6 +2776,12 @@
           <argument key="App\Application\Command\Book\DeleteBookCommand" type="collection">
             <argument type="collection">
               <argument>App\Application\Handler\Command\DeleteBookHandler</argument>
+              <argument type="collection"/>
+            </argument>
+          </argument>
+          <argument key="App\Application\Command\Category\DeleteCategoryCommand" type="collection">
+            <argument type="collection">
+              <argument>App\Application\Handler\Command\DeleteCategoryHandler</argument>
               <argument type="collection"/>
             </argument>
           </argument>
@@ -2693,6 +2863,12 @@
               <argument type="collection"/>
             </argument>
           </argument>
+          <argument key="App\Application\Command\Author\UpdateAuthorCommand" type="collection">
+            <argument type="collection">
+              <argument>App\Application\Handler\Command\UpdateAuthorHandler</argument>
+              <argument type="collection"/>
+            </argument>
+          </argument>
           <argument key="App\Application\Command\BookInventory\UpdateBookCopyCommand" type="collection">
             <argument type="collection">
               <argument>App\Application\Handler\Command\UpdateBookCopyHandler</argument>
@@ -2708,6 +2884,12 @@
           <argument key="App\Application\Command\Acquisition\UpdateBudgetCommand" type="collection">
             <argument type="collection">
               <argument>App\Application\Handler\Command\UpdateBudgetHandler</argument>
+              <argument type="collection"/>
+            </argument>
+          </argument>
+          <argument key="App\Application\Command\Category\UpdateCategoryCommand" type="collection">
+            <argument type="collection">
+              <argument>App\Application\Handler\Command\UpdateCategoryHandler</argument>
               <argument type="collection"/>
             </argument>
           </argument>
@@ -2747,6 +2929,12 @@
               <argument type="collection"/>
             </argument>
           </argument>
+          <argument key="App\Application\Query\Author\GetAuthorQuery" type="collection">
+            <argument type="collection">
+              <argument>App\Application\Handler\Query\GetAuthorHandler</argument>
+              <argument type="collection"/>
+            </argument>
+          </argument>
           <argument key="App\Application\Query\BookAsset\GetBookAssetQuery" type="collection">
             <argument type="collection">
               <argument>App\Application\Handler\Query\GetBookAssetHandler</argument>
@@ -2762,6 +2950,12 @@
           <argument key="App\Application\Query\Acquisition\GetBudgetSummaryQuery" type="collection">
             <argument type="collection">
               <argument>App\Application\Handler\Query\GetBudgetSummaryHandler</argument>
+              <argument type="collection"/>
+            </argument>
+          </argument>
+          <argument key="App\Application\Query\Category\GetCategoryQuery" type="collection">
+            <argument type="collection">
+              <argument>App\Application\Handler\Query\GetCategoryHandler</argument>
               <argument type="collection"/>
             </argument>
           </argument>
@@ -2825,6 +3019,12 @@
               <argument type="collection"/>
             </argument>
           </argument>
+          <argument key="App\Application\Query\Author\ListAuthorsQuery" type="collection">
+            <argument type="collection">
+              <argument>App\Application\Handler\Query\ListAuthorsHandler</argument>
+              <argument type="collection"/>
+            </argument>
+          </argument>
           <argument key="App\Application\Query\BookAsset\ListBookAssetsQuery" type="collection">
             <argument type="collection">
               <argument>App\Application\Handler\Query\ListBookAssetsHandler</argument>
@@ -2852,6 +3052,12 @@
           <argument key="App\Application\Query\Acquisition\ListBudgetsQuery" type="collection">
             <argument type="collection">
               <argument>App\Application\Handler\Query\ListBudgetsHandler</argument>
+              <argument type="collection"/>
+            </argument>
+          </argument>
+          <argument key="App\Application\Query\Category\ListCategoriesQuery" type="collection">
+            <argument type="collection">
+              <argument>App\Application\Handler\Query\ListCategoriesHandler</argument>
               <argument type="collection"/>
             </argument>
           </argument>
@@ -3013,6 +3219,12 @@
               <argument type="collection"/>
             </argument>
           </argument>
+          <argument key="App\Application\Command\Author\CreateAuthorCommand" type="collection">
+            <argument type="collection">
+              <argument>App\Application\Handler\Command\CreateAuthorHandler</argument>
+              <argument type="collection"/>
+            </argument>
+          </argument>
           <argument key="App\Application\Command\BookInventory\CreateBookCopyCommand" type="collection">
             <argument type="collection">
               <argument>App\Application\Handler\Command\CreateBookCopyHandler</argument>
@@ -3028,6 +3240,12 @@
           <argument key="App\Application\Command\Acquisition\CreateBudgetCommand" type="collection">
             <argument type="collection">
               <argument>App\Application\Handler\Command\CreateBudgetHandler</argument>
+              <argument type="collection"/>
+            </argument>
+          </argument>
+          <argument key="App\Application\Command\Category\CreateCategoryCommand" type="collection">
+            <argument type="collection">
+              <argument>App\Application\Handler\Command\CreateCategoryHandler</argument>
               <argument type="collection"/>
             </argument>
           </argument>
@@ -3091,6 +3309,12 @@
               <argument type="collection"/>
             </argument>
           </argument>
+          <argument key="App\Application\Command\Author\DeleteAuthorCommand" type="collection">
+            <argument type="collection">
+              <argument>App\Application\Handler\Command\DeleteAuthorHandler</argument>
+              <argument type="collection"/>
+            </argument>
+          </argument>
           <argument key="App\Application\Command\BookAsset\DeleteBookAssetCommand" type="collection">
             <argument type="collection">
               <argument>App\Application\Handler\Command\DeleteBookAssetHandler</argument>
@@ -3106,6 +3330,12 @@
           <argument key="App\Application\Command\Book\DeleteBookCommand" type="collection">
             <argument type="collection">
               <argument>App\Application\Handler\Command\DeleteBookHandler</argument>
+              <argument type="collection"/>
+            </argument>
+          </argument>
+          <argument key="App\Application\Command\Category\DeleteCategoryCommand" type="collection">
+            <argument type="collection">
+              <argument>App\Application\Handler\Command\DeleteCategoryHandler</argument>
               <argument type="collection"/>
             </argument>
           </argument>
@@ -3187,6 +3417,12 @@
               <argument type="collection"/>
             </argument>
           </argument>
+          <argument key="App\Application\Command\Author\UpdateAuthorCommand" type="collection">
+            <argument type="collection">
+              <argument>App\Application\Handler\Command\UpdateAuthorHandler</argument>
+              <argument type="collection"/>
+            </argument>
+          </argument>
           <argument key="App\Application\Command\BookInventory\UpdateBookCopyCommand" type="collection">
             <argument type="collection">
               <argument>App\Application\Handler\Command\UpdateBookCopyHandler</argument>
@@ -3202,6 +3438,12 @@
           <argument key="App\Application\Command\Acquisition\UpdateBudgetCommand" type="collection">
             <argument type="collection">
               <argument>App\Application\Handler\Command\UpdateBudgetHandler</argument>
+              <argument type="collection"/>
+            </argument>
+          </argument>
+          <argument key="App\Application\Command\Category\UpdateCategoryCommand" type="collection">
+            <argument type="collection">
+              <argument>App\Application\Handler\Command\UpdateCategoryHandler</argument>
               <argument type="collection"/>
             </argument>
           </argument>
@@ -3241,6 +3483,12 @@
               <argument type="collection"/>
             </argument>
           </argument>
+          <argument key="App\Application\Query\Author\GetAuthorQuery" type="collection">
+            <argument type="collection">
+              <argument>App\Application\Handler\Query\GetAuthorHandler</argument>
+              <argument type="collection"/>
+            </argument>
+          </argument>
           <argument key="App\Application\Query\BookAsset\GetBookAssetQuery" type="collection">
             <argument type="collection">
               <argument>App\Application\Handler\Query\GetBookAssetHandler</argument>
@@ -3256,6 +3504,12 @@
           <argument key="App\Application\Query\Acquisition\GetBudgetSummaryQuery" type="collection">
             <argument type="collection">
               <argument>App\Application\Handler\Query\GetBudgetSummaryHandler</argument>
+              <argument type="collection"/>
+            </argument>
+          </argument>
+          <argument key="App\Application\Query\Category\GetCategoryQuery" type="collection">
+            <argument type="collection">
+              <argument>App\Application\Handler\Query\GetCategoryHandler</argument>
               <argument type="collection"/>
             </argument>
           </argument>
@@ -3319,6 +3573,12 @@
               <argument type="collection"/>
             </argument>
           </argument>
+          <argument key="App\Application\Query\Author\ListAuthorsQuery" type="collection">
+            <argument type="collection">
+              <argument>App\Application\Handler\Query\ListAuthorsHandler</argument>
+              <argument type="collection"/>
+            </argument>
+          </argument>
           <argument key="App\Application\Query\BookAsset\ListBookAssetsQuery" type="collection">
             <argument type="collection">
               <argument>App\Application\Handler\Query\ListBookAssetsHandler</argument>
@@ -3346,6 +3606,12 @@
           <argument key="App\Application\Query\Acquisition\ListBudgetsQuery" type="collection">
             <argument type="collection">
               <argument>App\Application\Handler\Query\ListBudgetsHandler</argument>
+              <argument type="collection"/>
+            </argument>
+          </argument>
+          <argument key="App\Application\Query\Category\ListCategoriesQuery" type="collection">
+            <argument type="collection">
+              <argument>App\Application\Handler\Query\ListCategoriesHandler</argument>
               <argument type="collection"/>
             </argument>
           </argument>
@@ -5334,6 +5600,24 @@
         <argument key="App\Application\Command\Book\DeleteBookCommand" type="collection">
           <argument>sync</argument>
         </argument>
+        <argument key="App\Application\Command\Author\CreateAuthorCommand" type="collection">
+          <argument>sync</argument>
+        </argument>
+        <argument key="App\Application\Command\Author\UpdateAuthorCommand" type="collection">
+          <argument>sync</argument>
+        </argument>
+        <argument key="App\Application\Command\Author\DeleteAuthorCommand" type="collection">
+          <argument>sync</argument>
+        </argument>
+        <argument key="App\Application\Command\Category\CreateCategoryCommand" type="collection">
+          <argument>sync</argument>
+        </argument>
+        <argument key="App\Application\Command\Category\UpdateCategoryCommand" type="collection">
+          <argument>sync</argument>
+        </argument>
+        <argument key="App\Application\Command\Category\DeleteCategoryCommand" type="collection">
+          <argument>sync</argument>
+        </argument>
         <argument key="App\Application\Query\Loan\GetLoanQuery" type="collection">
           <argument>sync</argument>
         </argument>
@@ -5359,6 +5643,18 @@
           <argument>sync</argument>
         </argument>
         <argument key="App\Application\Query\Fine\ListFinesQuery" type="collection">
+          <argument>sync</argument>
+        </argument>
+        <argument key="App\Application\Query\Author\GetAuthorQuery" type="collection">
+          <argument>sync</argument>
+        </argument>
+        <argument key="App\Application\Query\Author\ListAuthorsQuery" type="collection">
+          <argument>sync</argument>
+        </argument>
+        <argument key="App\Application\Query\Category\GetCategoryQuery" type="collection">
+          <argument>sync</argument>
+        </argument>
+        <argument key="App\Application\Query\Category\ListCategoriesQuery" type="collection">
           <argument>sync</argument>
         </argument>
         <argument key="App\Message\ReservationQueuedNotification" type="collection">
@@ -6915,12 +7211,16 @@
     <service id=".abstract.instanceof.App\Application\Handler\Command\ChangePasswordHandler" class="App\Application\Handler\Command\ChangePasswordHandler" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.App\Application\Handler\Command\CreateAnnouncementHandler.0.App\Application\Handler\Command\CreateAnnouncementHandler" class="App\Application\Handler\Command\CreateAnnouncementHandler" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Application\Handler\Command\CreateAnnouncementHandler" class="App\Application\Handler\Command\CreateAnnouncementHandler" autowire="true" autoconfigure="true" abstract="true"/>
+    <service id=".instanceof.App\Application\Handler\Command\CreateAuthorHandler.0.App\Application\Handler\Command\CreateAuthorHandler" class="App\Application\Handler\Command\CreateAuthorHandler" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\Application\Handler\Command\CreateAuthorHandler" class="App\Application\Handler\Command\CreateAuthorHandler" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.App\Application\Handler\Command\CreateBookCopyHandler.0.App\Application\Handler\Command\CreateBookCopyHandler" class="App\Application\Handler\Command\CreateBookCopyHandler" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Application\Handler\Command\CreateBookCopyHandler" class="App\Application\Handler\Command\CreateBookCopyHandler" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.App\Application\Handler\Command\CreateBookHandler.0.App\Application\Handler\Command\CreateBookHandler" class="App\Application\Handler\Command\CreateBookHandler" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Application\Handler\Command\CreateBookHandler" class="App\Application\Handler\Command\CreateBookHandler" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.App\Application\Handler\Command\CreateBudgetHandler.0.App\Application\Handler\Command\CreateBudgetHandler" class="App\Application\Handler\Command\CreateBudgetHandler" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Application\Handler\Command\CreateBudgetHandler" class="App\Application\Handler\Command\CreateBudgetHandler" autowire="true" autoconfigure="true" abstract="true"/>
+    <service id=".instanceof.App\Application\Handler\Command\CreateCategoryHandler.0.App\Application\Handler\Command\CreateCategoryHandler" class="App\Application\Handler\Command\CreateCategoryHandler" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\Application\Handler\Command\CreateCategoryHandler" class="App\Application\Handler\Command\CreateCategoryHandler" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.App\Application\Handler\Command\CreateFineHandler.0.App\Application\Handler\Command\CreateFineHandler" class="App\Application\Handler\Command\CreateFineHandler" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Application\Handler\Command\CreateFineHandler" class="App\Application\Handler\Command\CreateFineHandler" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.App\Application\Handler\Command\CreateLoanHandler.0.App\Application\Handler\Command\CreateLoanHandler" class="App\Application\Handler\Command\CreateLoanHandler" autowire="true" abstract="true"/>
@@ -6941,12 +7241,16 @@
     <service id=".abstract.instanceof.App\Application\Handler\Command\DeactivateSupplierHandler" class="App\Application\Handler\Command\DeactivateSupplierHandler" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.App\Application\Handler\Command\DeleteAnnouncementHandler.0.App\Application\Handler\Command\DeleteAnnouncementHandler" class="App\Application\Handler\Command\DeleteAnnouncementHandler" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Application\Handler\Command\DeleteAnnouncementHandler" class="App\Application\Handler\Command\DeleteAnnouncementHandler" autowire="true" autoconfigure="true" abstract="true"/>
+    <service id=".instanceof.App\Application\Handler\Command\DeleteAuthorHandler.0.App\Application\Handler\Command\DeleteAuthorHandler" class="App\Application\Handler\Command\DeleteAuthorHandler" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\Application\Handler\Command\DeleteAuthorHandler" class="App\Application\Handler\Command\DeleteAuthorHandler" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.App\Application\Handler\Command\DeleteBookAssetHandler.0.App\Application\Handler\Command\DeleteBookAssetHandler" class="App\Application\Handler\Command\DeleteBookAssetHandler" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Application\Handler\Command\DeleteBookAssetHandler" class="App\Application\Handler\Command\DeleteBookAssetHandler" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.App\Application\Handler\Command\DeleteBookCopyHandler.0.App\Application\Handler\Command\DeleteBookCopyHandler" class="App\Application\Handler\Command\DeleteBookCopyHandler" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Application\Handler\Command\DeleteBookCopyHandler" class="App\Application\Handler\Command\DeleteBookCopyHandler" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.App\Application\Handler\Command\DeleteBookHandler.0.App\Application\Handler\Command\DeleteBookHandler" class="App\Application\Handler\Command\DeleteBookHandler" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Application\Handler\Command\DeleteBookHandler" class="App\Application\Handler\Command\DeleteBookHandler" autowire="true" autoconfigure="true" abstract="true"/>
+    <service id=".instanceof.App\Application\Handler\Command\DeleteCategoryHandler.0.App\Application\Handler\Command\DeleteCategoryHandler" class="App\Application\Handler\Command\DeleteCategoryHandler" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\Application\Handler\Command\DeleteCategoryHandler" class="App\Application\Handler\Command\DeleteCategoryHandler" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.App\Application\Handler\Command\DeleteLoanHandler.0.App\Application\Handler\Command\DeleteLoanHandler" class="App\Application\Handler\Command\DeleteLoanHandler" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Application\Handler\Command\DeleteLoanHandler" class="App\Application\Handler\Command\DeleteLoanHandler" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.App\Application\Handler\Command\DeleteReviewHandler.0.App\Application\Handler\Command\DeleteReviewHandler" class="App\Application\Handler\Command\DeleteReviewHandler" autowire="true" abstract="true"/>
@@ -6973,12 +7277,16 @@
     <service id=".abstract.instanceof.App\Application\Handler\Command\UpdateAccountHandler" class="App\Application\Handler\Command\UpdateAccountHandler" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.App\Application\Handler\Command\UpdateAnnouncementHandler.0.App\Application\Handler\Command\UpdateAnnouncementHandler" class="App\Application\Handler\Command\UpdateAnnouncementHandler" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Application\Handler\Command\UpdateAnnouncementHandler" class="App\Application\Handler\Command\UpdateAnnouncementHandler" autowire="true" autoconfigure="true" abstract="true"/>
+    <service id=".instanceof.App\Application\Handler\Command\UpdateAuthorHandler.0.App\Application\Handler\Command\UpdateAuthorHandler" class="App\Application\Handler\Command\UpdateAuthorHandler" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\Application\Handler\Command\UpdateAuthorHandler" class="App\Application\Handler\Command\UpdateAuthorHandler" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.App\Application\Handler\Command\UpdateBookCopyHandler.0.App\Application\Handler\Command\UpdateBookCopyHandler" class="App\Application\Handler\Command\UpdateBookCopyHandler" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Application\Handler\Command\UpdateBookCopyHandler" class="App\Application\Handler\Command\UpdateBookCopyHandler" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.App\Application\Handler\Command\UpdateBookHandler.0.App\Application\Handler\Command\UpdateBookHandler" class="App\Application\Handler\Command\UpdateBookHandler" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Application\Handler\Command\UpdateBookHandler" class="App\Application\Handler\Command\UpdateBookHandler" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.App\Application\Handler\Command\UpdateBudgetHandler.0.App\Application\Handler\Command\UpdateBudgetHandler" class="App\Application\Handler\Command\UpdateBudgetHandler" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Application\Handler\Command\UpdateBudgetHandler" class="App\Application\Handler\Command\UpdateBudgetHandler" autowire="true" autoconfigure="true" abstract="true"/>
+    <service id=".instanceof.App\Application\Handler\Command\UpdateCategoryHandler.0.App\Application\Handler\Command\UpdateCategoryHandler" class="App\Application\Handler\Command\UpdateCategoryHandler" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\Application\Handler\Command\UpdateCategoryHandler" class="App\Application\Handler\Command\UpdateCategoryHandler" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.App\Application\Handler\Command\UpdateOrderStatusHandler.0.App\Application\Handler\Command\UpdateOrderStatusHandler" class="App\Application\Handler\Command\UpdateOrderStatusHandler" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Application\Handler\Command\UpdateOrderStatusHandler" class="App\Application\Handler\Command\UpdateOrderStatusHandler" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.App\Application\Handler\Command\UpdateSupplierHandler.0.App\Application\Handler\Command\UpdateSupplierHandler" class="App\Application\Handler\Command\UpdateSupplierHandler" autowire="true" abstract="true"/>
@@ -6991,12 +7299,16 @@
     <service id=".abstract.instanceof.App\Application\Handler\Query\ExportCatalogHandler" class="App\Application\Handler\Query\ExportCatalogHandler" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.App\Application\Handler\Query\GetAnnouncementHandler.0.App\Application\Handler\Query\GetAnnouncementHandler" class="App\Application\Handler\Query\GetAnnouncementHandler" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Application\Handler\Query\GetAnnouncementHandler" class="App\Application\Handler\Query\GetAnnouncementHandler" autowire="true" autoconfigure="true" abstract="true"/>
+    <service id=".instanceof.App\Application\Handler\Query\GetAuthorHandler.0.App\Application\Handler\Query\GetAuthorHandler" class="App\Application\Handler\Query\GetAuthorHandler" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\Application\Handler\Query\GetAuthorHandler" class="App\Application\Handler\Query\GetAuthorHandler" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.App\Application\Handler\Query\GetBookAssetHandler.0.App\Application\Handler\Query\GetBookAssetHandler" class="App\Application\Handler\Query\GetBookAssetHandler" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Application\Handler\Query\GetBookAssetHandler" class="App\Application\Handler\Query\GetBookAssetHandler" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.App\Application\Handler\Query\GetBookHandler.0.App\Application\Handler\Query\GetBookHandler" class="App\Application\Handler\Query\GetBookHandler" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Application\Handler\Query\GetBookHandler" class="App\Application\Handler\Query\GetBookHandler" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.App\Application\Handler\Query\GetBudgetSummaryHandler.0.App\Application\Handler\Query\GetBudgetSummaryHandler" class="App\Application\Handler\Query\GetBudgetSummaryHandler" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Application\Handler\Query\GetBudgetSummaryHandler" class="App\Application\Handler\Query\GetBudgetSummaryHandler" autowire="true" autoconfigure="true" abstract="true"/>
+    <service id=".instanceof.App\Application\Handler\Query\GetCategoryHandler.0.App\Application\Handler\Query\GetCategoryHandler" class="App\Application\Handler\Query\GetCategoryHandler" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\Application\Handler\Query\GetCategoryHandler" class="App\Application\Handler\Query\GetCategoryHandler" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.App\Application\Handler\Query\GetEntityHistoryHandler.0.App\Application\Handler\Query\GetEntityHistoryHandler" class="App\Application\Handler\Query\GetEntityHistoryHandler" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Application\Handler\Query\GetEntityHistoryHandler" class="App\Application\Handler\Query\GetEntityHistoryHandler" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.App\Application\Handler\Query\GetFinancialSummaryHandler.0.App\Application\Handler\Query\GetFinancialSummaryHandler" class="App\Application\Handler\Query\GetFinancialSummaryHandler" autowire="true" abstract="true"/>
@@ -7017,6 +7329,8 @@
     <service id=".abstract.instanceof.App\Application\Handler\Query\ListAnnouncementsHandler" class="App\Application\Handler\Query\ListAnnouncementsHandler" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.App\Application\Handler\Query\ListAuditLogsHandler.0.App\Application\Handler\Query\ListAuditLogsHandler" class="App\Application\Handler\Query\ListAuditLogsHandler" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Application\Handler\Query\ListAuditLogsHandler" class="App\Application\Handler\Query\ListAuditLogsHandler" autowire="true" autoconfigure="true" abstract="true"/>
+    <service id=".instanceof.App\Application\Handler\Query\ListAuthorsHandler.0.App\Application\Handler\Query\ListAuthorsHandler" class="App\Application\Handler\Query\ListAuthorsHandler" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\Application\Handler\Query\ListAuthorsHandler" class="App\Application\Handler\Query\ListAuthorsHandler" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.App\Application\Handler\Query\ListBookAssetsHandler.0.App\Application\Handler\Query\ListBookAssetsHandler" class="App\Application\Handler\Query\ListBookAssetsHandler" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Application\Handler\Query\ListBookAssetsHandler" class="App\Application\Handler\Query\ListBookAssetsHandler" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.App\Application\Handler\Query\ListBookCopiesHandler.0.App\Application\Handler\Query\ListBookCopiesHandler" class="App\Application\Handler\Query\ListBookCopiesHandler" autowire="true" abstract="true"/>
@@ -7027,6 +7341,8 @@
     <service id=".abstract.instanceof.App\Application\Handler\Query\ListBooksHandler" class="App\Application\Handler\Query\ListBooksHandler" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.App\Application\Handler\Query\ListBudgetsHandler.0.App\Application\Handler\Query\ListBudgetsHandler" class="App\Application\Handler\Query\ListBudgetsHandler" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Application\Handler\Query\ListBudgetsHandler" class="App\Application\Handler\Query\ListBudgetsHandler" autowire="true" autoconfigure="true" abstract="true"/>
+    <service id=".instanceof.App\Application\Handler\Query\ListCategoriesHandler.0.App\Application\Handler\Query\ListCategoriesHandler" class="App\Application\Handler\Query\ListCategoriesHandler" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\Application\Handler\Query\ListCategoriesHandler" class="App\Application\Handler\Query\ListCategoriesHandler" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.App\Application\Handler\Query\ListFinesHandler.0.App\Application\Handler\Query\ListFinesHandler" class="App\Application\Handler\Query\ListFinesHandler" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Application\Handler\Query\ListFinesHandler" class="App\Application\Handler\Query\ListFinesHandler" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.App\Application\Handler\Query\ListLoansHandler.0.App\Application\Handler\Query\ListLoansHandler" class="App\Application\Handler\Query\ListLoansHandler" autowire="true" abstract="true"/>
@@ -7100,6 +7416,9 @@
     <service id=".instanceof.Symfony\Contracts\Service\ServiceSubscriberInterface.0.App\Controller\AuthController" class="App\Controller\AuthController" autowire="true" abstract="true"/>
     <service id=".instanceof.Symfony\Bundle\FrameworkBundle\Controller\AbstractController.0.App\Controller\AuthController" class="App\Controller\AuthController" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Controller\AuthController" class="App\Controller\AuthController" autowire="true" autoconfigure="true" abstract="true"/>
+    <service id=".instanceof.Symfony\Contracts\Service\ServiceSubscriberInterface.0.App\Controller\AuthorController" class="App\Controller\AuthorController" autowire="true" abstract="true"/>
+    <service id=".instanceof.Symfony\Bundle\FrameworkBundle\Controller\AbstractController.0.App\Controller\AuthorController" class="App\Controller\AuthorController" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\Controller\AuthorController" class="App\Controller\AuthorController" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Symfony\Contracts\Service\ServiceSubscriberInterface.0.App\Controller\BookAssetController" class="App\Controller\BookAssetController" autowire="true" abstract="true"/>
     <service id=".instanceof.Symfony\Bundle\FrameworkBundle\Controller\AbstractController.0.App\Controller\BookAssetController" class="App\Controller\BookAssetController" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Controller\BookAssetController" class="App\Controller\BookAssetController" autowire="true" autoconfigure="true" abstract="true"/>
@@ -7112,6 +7431,9 @@
     <service id=".instanceof.Symfony\Contracts\Service\ServiceSubscriberInterface.0.App\Controller\CatalogAdminController" class="App\Controller\CatalogAdminController" autowire="true" abstract="true"/>
     <service id=".instanceof.Symfony\Bundle\FrameworkBundle\Controller\AbstractController.0.App\Controller\CatalogAdminController" class="App\Controller\CatalogAdminController" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Controller\CatalogAdminController" class="App\Controller\CatalogAdminController" autowire="true" autoconfigure="true" abstract="true"/>
+    <service id=".instanceof.Symfony\Contracts\Service\ServiceSubscriberInterface.0.App\Controller\CategoryController" class="App\Controller\CategoryController" autowire="true" abstract="true"/>
+    <service id=".instanceof.Symfony\Bundle\FrameworkBundle\Controller\AbstractController.0.App\Controller\CategoryController" class="App\Controller\CategoryController" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\Controller\CategoryController" class="App\Controller\CategoryController" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Symfony\Contracts\Service\ServiceSubscriberInterface.0.App\Controller\DashboardController" class="App\Controller\DashboardController" autowire="true" abstract="true"/>
     <service id=".instanceof.Symfony\Bundle\FrameworkBundle\Controller\AbstractController.0.App\Controller\DashboardController" class="App\Controller\DashboardController" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Controller\DashboardController" class="App\Controller\DashboardController" autowire="true" autoconfigure="true" abstract="true"/>
@@ -8063,6 +8385,10 @@
       <argument type="service" id="App\Application\Handler\Command\CreateAnnouncementHandler"/>
       <argument type="collection"/>
     </service>
+    <service id=".messenger.handler_descriptor.uQjDjDq" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
+      <argument type="service" id="App\Application\Handler\Command\CreateAuthorHandler"/>
+      <argument type="collection"/>
+    </service>
     <service id=".messenger.handler_descriptor.SFZas06" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
       <argument type="service" id="App\Application\Handler\Command\CreateBookCopyHandler"/>
       <argument type="collection"/>
@@ -8073,6 +8399,10 @@
     </service>
     <service id=".messenger.handler_descriptor.XT.xLQj" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
       <argument type="service" id="App\Application\Handler\Command\CreateBudgetHandler"/>
+      <argument type="collection"/>
+    </service>
+    <service id=".messenger.handler_descriptor.ls1mNe1" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
+      <argument type="service" id="App\Application\Handler\Command\CreateCategoryHandler"/>
       <argument type="collection"/>
     </service>
     <service id=".messenger.handler_descriptor.wmeBmbn" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
@@ -8115,6 +8445,10 @@
       <argument type="service" id="App\Application\Handler\Command\DeleteAnnouncementHandler"/>
       <argument type="collection"/>
     </service>
+    <service id=".messenger.handler_descriptor.wsip0re" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
+      <argument type="service" id="App\Application\Handler\Command\DeleteAuthorHandler"/>
+      <argument type="collection"/>
+    </service>
     <service id=".messenger.handler_descriptor.T5pzHh7" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
       <argument type="service" id="App\Application\Handler\Command\DeleteBookAssetHandler"/>
       <argument type="collection"/>
@@ -8125,6 +8459,10 @@
     </service>
     <service id=".messenger.handler_descriptor.C497iFs" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
       <argument type="service" id="App\Application\Handler\Command\DeleteBookHandler"/>
+      <argument type="collection"/>
+    </service>
+    <service id=".messenger.handler_descriptor.HWz_eVV" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
+      <argument type="service" id="App\Application\Handler\Command\DeleteCategoryHandler"/>
       <argument type="collection"/>
     </service>
     <service id=".messenger.handler_descriptor.xPJj0HX" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
@@ -8179,6 +8517,10 @@
       <argument type="service" id="App\Application\Handler\Command\UpdateAnnouncementHandler"/>
       <argument type="collection"/>
     </service>
+    <service id=".messenger.handler_descriptor.5qSxPCG" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
+      <argument type="service" id="App\Application\Handler\Command\UpdateAuthorHandler"/>
+      <argument type="collection"/>
+    </service>
     <service id=".messenger.handler_descriptor.eeXfD3j" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
       <argument type="service" id="App\Application\Handler\Command\UpdateBookCopyHandler"/>
       <argument type="collection"/>
@@ -8189,6 +8531,10 @@
     </service>
     <service id=".messenger.handler_descriptor.QV8c.32" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
       <argument type="service" id="App\Application\Handler\Command\UpdateBudgetHandler"/>
+      <argument type="collection"/>
+    </service>
+    <service id=".messenger.handler_descriptor.E2ZANj4" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
+      <argument type="service" id="App\Application\Handler\Command\UpdateCategoryHandler"/>
       <argument type="collection"/>
     </service>
     <service id=".messenger.handler_descriptor.NMI0rIO" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
@@ -8215,6 +8561,10 @@
       <argument type="service" id="App\Application\Handler\Query\GetAnnouncementHandler"/>
       <argument type="collection"/>
     </service>
+    <service id=".messenger.handler_descriptor.NufNga." class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
+      <argument type="service" id="App\Application\Handler\Query\GetAuthorHandler"/>
+      <argument type="collection"/>
+    </service>
     <service id=".messenger.handler_descriptor.8b2xNp8" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
       <argument type="service" id="App\Application\Handler\Query\GetBookAssetHandler"/>
       <argument type="collection"/>
@@ -8225,6 +8575,10 @@
     </service>
     <service id=".messenger.handler_descriptor.QU_jIcT" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
       <argument type="service" id="App\Application\Handler\Query\GetBudgetSummaryHandler"/>
+      <argument type="collection"/>
+    </service>
+    <service id=".messenger.handler_descriptor.peABbR7" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
+      <argument type="service" id="App\Application\Handler\Query\GetCategoryHandler"/>
       <argument type="collection"/>
     </service>
     <service id=".messenger.handler_descriptor.mfRwlcn" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
@@ -8267,6 +8621,10 @@
       <argument type="service" id="App\Application\Handler\Query\ListAuditLogsHandler"/>
       <argument type="collection"/>
     </service>
+    <service id=".messenger.handler_descriptor.dLyoYOV" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
+      <argument type="service" id="App\Application\Handler\Query\ListAuthorsHandler"/>
+      <argument type="collection"/>
+    </service>
     <service id=".messenger.handler_descriptor.gkpTWeD" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
       <argument type="service" id="App\Application\Handler\Query\ListBookAssetsHandler"/>
       <argument type="collection"/>
@@ -8285,6 +8643,10 @@
     </service>
     <service id=".messenger.handler_descriptor.eVEtMIj" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
       <argument type="service" id="App\Application\Handler\Query\ListBudgetsHandler"/>
+      <argument type="collection"/>
+    </service>
+    <service id=".messenger.handler_descriptor.aCd2kBq" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
+      <argument type="service" id="App\Application\Handler\Query\ListCategoriesHandler"/>
       <argument type="collection"/>
     </service>
     <service id=".messenger.handler_descriptor.yFNI7aI" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
@@ -8391,6 +8753,10 @@
       <argument type="service" id="App\Application\Handler\Command\CreateAnnouncementHandler"/>
       <argument type="collection"/>
     </service>
+    <service id=".messenger.handler_descriptor.r_dl04A" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
+      <argument type="service" id="App\Application\Handler\Command\CreateAuthorHandler"/>
+      <argument type="collection"/>
+    </service>
     <service id=".messenger.handler_descriptor.ytxQu6Q" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
       <argument type="service" id="App\Application\Handler\Command\CreateBookCopyHandler"/>
       <argument type="collection"/>
@@ -8401,6 +8767,10 @@
     </service>
     <service id=".messenger.handler_descriptor.TBWu2ig" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
       <argument type="service" id="App\Application\Handler\Command\CreateBudgetHandler"/>
+      <argument type="collection"/>
+    </service>
+    <service id=".messenger.handler_descriptor.Qff4xRZ" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
+      <argument type="service" id="App\Application\Handler\Command\CreateCategoryHandler"/>
       <argument type="collection"/>
     </service>
     <service id=".messenger.handler_descriptor.jVyI1Fo" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
@@ -8443,6 +8813,10 @@
       <argument type="service" id="App\Application\Handler\Command\DeleteAnnouncementHandler"/>
       <argument type="collection"/>
     </service>
+    <service id=".messenger.handler_descriptor.PG2PtmK" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
+      <argument type="service" id="App\Application\Handler\Command\DeleteAuthorHandler"/>
+      <argument type="collection"/>
+    </service>
     <service id=".messenger.handler_descriptor.N.hBBxs" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
       <argument type="service" id="App\Application\Handler\Command\DeleteBookAssetHandler"/>
       <argument type="collection"/>
@@ -8453,6 +8827,10 @@
     </service>
     <service id=".messenger.handler_descriptor.veQrPVN" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
       <argument type="service" id="App\Application\Handler\Command\DeleteBookHandler"/>
+      <argument type="collection"/>
+    </service>
+    <service id=".messenger.handler_descriptor.iFSB8sQ" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
+      <argument type="service" id="App\Application\Handler\Command\DeleteCategoryHandler"/>
       <argument type="collection"/>
     </service>
     <service id=".messenger.handler_descriptor..Lx.Cx." class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
@@ -8507,6 +8885,10 @@
       <argument type="service" id="App\Application\Handler\Command\UpdateAnnouncementHandler"/>
       <argument type="collection"/>
     </service>
+    <service id=".messenger.handler_descriptor.ZfZTtb4" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
+      <argument type="service" id="App\Application\Handler\Command\UpdateAuthorHandler"/>
+      <argument type="collection"/>
+    </service>
     <service id=".messenger.handler_descriptor.EZmAuX1" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
       <argument type="service" id="App\Application\Handler\Command\UpdateBookCopyHandler"/>
       <argument type="collection"/>
@@ -8517,6 +8899,10 @@
     </service>
     <service id=".messenger.handler_descriptor.gYyCA.V" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
       <argument type="service" id="App\Application\Handler\Command\UpdateBudgetHandler"/>
+      <argument type="collection"/>
+    </service>
+    <service id=".messenger.handler_descriptor.1pQj2Q5" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
+      <argument type="service" id="App\Application\Handler\Command\UpdateCategoryHandler"/>
       <argument type="collection"/>
     </service>
     <service id=".messenger.handler_descriptor.eqfaYVW" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
@@ -8543,6 +8929,10 @@
       <argument type="service" id="App\Application\Handler\Query\GetAnnouncementHandler"/>
       <argument type="collection"/>
     </service>
+    <service id=".messenger.handler_descriptor.knUjh8U" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
+      <argument type="service" id="App\Application\Handler\Query\GetAuthorHandler"/>
+      <argument type="collection"/>
+    </service>
     <service id=".messenger.handler_descriptor.ObxTmwJ" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
       <argument type="service" id="App\Application\Handler\Query\GetBookAssetHandler"/>
       <argument type="collection"/>
@@ -8553,6 +8943,10 @@
     </service>
     <service id=".messenger.handler_descriptor.3aFdRQm" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
       <argument type="service" id="App\Application\Handler\Query\GetBudgetSummaryHandler"/>
+      <argument type="collection"/>
+    </service>
+    <service id=".messenger.handler_descriptor..L9gdTN" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
+      <argument type="service" id="App\Application\Handler\Query\GetCategoryHandler"/>
       <argument type="collection"/>
     </service>
     <service id=".messenger.handler_descriptor.YI2q3iF" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
@@ -8595,6 +8989,10 @@
       <argument type="service" id="App\Application\Handler\Query\ListAuditLogsHandler"/>
       <argument type="collection"/>
     </service>
+    <service id=".messenger.handler_descriptor.jl4_miw" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
+      <argument type="service" id="App\Application\Handler\Query\ListAuthorsHandler"/>
+      <argument type="collection"/>
+    </service>
     <service id=".messenger.handler_descriptor.GeVAqN2" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
       <argument type="service" id="App\Application\Handler\Query\ListBookAssetsHandler"/>
       <argument type="collection"/>
@@ -8613,6 +9011,10 @@
     </service>
     <service id=".messenger.handler_descriptor.1MV0ISs" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
       <argument type="service" id="App\Application\Handler\Query\ListBudgetsHandler"/>
+      <argument type="collection"/>
+    </service>
+    <service id=".messenger.handler_descriptor.HpP__VN" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
+      <argument type="service" id="App\Application\Handler\Query\ListCategoriesHandler"/>
       <argument type="collection"/>
     </service>
     <service id=".messenger.handler_descriptor.BWP1uBe" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
@@ -8719,6 +9121,10 @@
       <argument type="service" id="App\Application\Handler\Command\CreateAnnouncementHandler"/>
       <argument type="collection"/>
     </service>
+    <service id=".messenger.handler_descriptor.GORTffd" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
+      <argument type="service" id="App\Application\Handler\Command\CreateAuthorHandler"/>
+      <argument type="collection"/>
+    </service>
     <service id=".messenger.handler_descriptor.A8VGFO6" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
       <argument type="service" id="App\Application\Handler\Command\CreateBookCopyHandler"/>
       <argument type="collection"/>
@@ -8729,6 +9135,10 @@
     </service>
     <service id=".messenger.handler_descriptor.aUqloZF" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
       <argument type="service" id="App\Application\Handler\Command\CreateBudgetHandler"/>
+      <argument type="collection"/>
+    </service>
+    <service id=".messenger.handler_descriptor.BhC9q2v" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
+      <argument type="service" id="App\Application\Handler\Command\CreateCategoryHandler"/>
       <argument type="collection"/>
     </service>
     <service id=".messenger.handler_descriptor.gXE248t" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
@@ -8771,6 +9181,10 @@
       <argument type="service" id="App\Application\Handler\Command\DeleteAnnouncementHandler"/>
       <argument type="collection"/>
     </service>
+    <service id=".messenger.handler_descriptor.ktTTI_0" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
+      <argument type="service" id="App\Application\Handler\Command\DeleteAuthorHandler"/>
+      <argument type="collection"/>
+    </service>
     <service id=".messenger.handler_descriptor.n.TZObW" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
       <argument type="service" id="App\Application\Handler\Command\DeleteBookAssetHandler"/>
       <argument type="collection"/>
@@ -8781,6 +9195,10 @@
     </service>
     <service id=".messenger.handler_descriptor.RXIqBle" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
       <argument type="service" id="App\Application\Handler\Command\DeleteBookHandler"/>
+      <argument type="collection"/>
+    </service>
+    <service id=".messenger.handler_descriptor.iLIkoca" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
+      <argument type="service" id="App\Application\Handler\Command\DeleteCategoryHandler"/>
       <argument type="collection"/>
     </service>
     <service id=".messenger.handler_descriptor.pV5XYZp" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
@@ -8835,6 +9253,10 @@
       <argument type="service" id="App\Application\Handler\Command\UpdateAnnouncementHandler"/>
       <argument type="collection"/>
     </service>
+    <service id=".messenger.handler_descriptor.DiiFaVr" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
+      <argument type="service" id="App\Application\Handler\Command\UpdateAuthorHandler"/>
+      <argument type="collection"/>
+    </service>
     <service id=".messenger.handler_descriptor.o4jy5ji" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
       <argument type="service" id="App\Application\Handler\Command\UpdateBookCopyHandler"/>
       <argument type="collection"/>
@@ -8845,6 +9267,10 @@
     </service>
     <service id=".messenger.handler_descriptor.B2gadlm" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
       <argument type="service" id="App\Application\Handler\Command\UpdateBudgetHandler"/>
+      <argument type="collection"/>
+    </service>
+    <service id=".messenger.handler_descriptor.QEMSpBw" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
+      <argument type="service" id="App\Application\Handler\Command\UpdateCategoryHandler"/>
       <argument type="collection"/>
     </service>
     <service id=".messenger.handler_descriptor.y0GCgUJ" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
@@ -8871,6 +9297,10 @@
       <argument type="service" id="App\Application\Handler\Query\GetAnnouncementHandler"/>
       <argument type="collection"/>
     </service>
+    <service id=".messenger.handler_descriptor.OjEiGwF" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
+      <argument type="service" id="App\Application\Handler\Query\GetAuthorHandler"/>
+      <argument type="collection"/>
+    </service>
     <service id=".messenger.handler_descriptor.R1U1KdS" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
       <argument type="service" id="App\Application\Handler\Query\GetBookAssetHandler"/>
       <argument type="collection"/>
@@ -8881,6 +9311,10 @@
     </service>
     <service id=".messenger.handler_descriptor.3LlY36e" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
       <argument type="service" id="App\Application\Handler\Query\GetBudgetSummaryHandler"/>
+      <argument type="collection"/>
+    </service>
+    <service id=".messenger.handler_descriptor.HFpQWIO" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
+      <argument type="service" id="App\Application\Handler\Query\GetCategoryHandler"/>
       <argument type="collection"/>
     </service>
     <service id=".messenger.handler_descriptor.PJC99QM" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
@@ -8923,6 +9357,10 @@
       <argument type="service" id="App\Application\Handler\Query\ListAuditLogsHandler"/>
       <argument type="collection"/>
     </service>
+    <service id=".messenger.handler_descriptor.y2RB__5" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
+      <argument type="service" id="App\Application\Handler\Query\ListAuthorsHandler"/>
+      <argument type="collection"/>
+    </service>
     <service id=".messenger.handler_descriptor.X4HRvgK" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
       <argument type="service" id="App\Application\Handler\Query\ListBookAssetsHandler"/>
       <argument type="collection"/>
@@ -8941,6 +9379,10 @@
     </service>
     <service id=".messenger.handler_descriptor.lUJJnvs" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
       <argument type="service" id="App\Application\Handler\Query\ListBudgetsHandler"/>
+      <argument type="collection"/>
+    </service>
+    <service id=".messenger.handler_descriptor._eaIQ3_" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
+      <argument type="service" id="App\Application\Handler\Query\ListCategoriesHandler"/>
       <argument type="collection"/>
     </service>
     <service id=".messenger.handler_descriptor.6sZPRwD" class="Symfony\Component\Messenger\Handler\HandlerDescriptor">
@@ -9040,6 +9482,9 @@
         <argument key="App\Application\Command\Announcement\CreateAnnouncementCommand" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor.3.w2ZEw"/>
         </argument>
+        <argument key="App\Application\Command\Author\CreateAuthorCommand" type="iterator">
+          <argument type="service" id=".messenger.handler_descriptor.uQjDjDq"/>
+        </argument>
         <argument key="App\Application\Command\BookInventory\CreateBookCopyCommand" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor.SFZas06"/>
         </argument>
@@ -9048,6 +9493,9 @@
         </argument>
         <argument key="App\Application\Command\Acquisition\CreateBudgetCommand" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor.XT.xLQj"/>
+        </argument>
+        <argument key="App\Application\Command\Category\CreateCategoryCommand" type="iterator">
+          <argument type="service" id=".messenger.handler_descriptor.ls1mNe1"/>
         </argument>
         <argument key="App\Application\Command\Fine\CreateFineCommand" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor.wmeBmbn"/>
@@ -9079,6 +9527,9 @@
         <argument key="App\Application\Command\Announcement\DeleteAnnouncementCommand" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor.ZqHyPBm"/>
         </argument>
+        <argument key="App\Application\Command\Author\DeleteAuthorCommand" type="iterator">
+          <argument type="service" id=".messenger.handler_descriptor.wsip0re"/>
+        </argument>
         <argument key="App\Application\Command\BookAsset\DeleteBookAssetCommand" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor.T5pzHh7"/>
         </argument>
@@ -9087,6 +9538,9 @@
         </argument>
         <argument key="App\Application\Command\Book\DeleteBookCommand" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor.C497iFs"/>
+        </argument>
+        <argument key="App\Application\Command\Category\DeleteCategoryCommand" type="iterator">
+          <argument type="service" id=".messenger.handler_descriptor.HWz_eVV"/>
         </argument>
         <argument key="App\Application\Command\Loan\DeleteLoanCommand" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor.xPJj0HX"/>
@@ -9127,6 +9581,9 @@
         <argument key="App\Application\Command\Announcement\UpdateAnnouncementCommand" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor.1lipixo"/>
         </argument>
+        <argument key="App\Application\Command\Author\UpdateAuthorCommand" type="iterator">
+          <argument type="service" id=".messenger.handler_descriptor.5qSxPCG"/>
+        </argument>
         <argument key="App\Application\Command\BookInventory\UpdateBookCopyCommand" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor.eeXfD3j"/>
         </argument>
@@ -9135,6 +9592,9 @@
         </argument>
         <argument key="App\Application\Command\Acquisition\UpdateBudgetCommand" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor.QV8c.32"/>
+        </argument>
+        <argument key="App\Application\Command\Category\UpdateCategoryCommand" type="iterator">
+          <argument type="service" id=".messenger.handler_descriptor.E2ZANj4"/>
         </argument>
         <argument key="App\Application\Command\Acquisition\UpdateOrderStatusCommand" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor.NMI0rIO"/>
@@ -9154,6 +9614,9 @@
         <argument key="App\Application\Query\Announcement\GetAnnouncementQuery" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor.8y6b3l2"/>
         </argument>
+        <argument key="App\Application\Query\Author\GetAuthorQuery" type="iterator">
+          <argument type="service" id=".messenger.handler_descriptor.NufNga."/>
+        </argument>
         <argument key="App\Application\Query\BookAsset\GetBookAssetQuery" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor.8b2xNp8"/>
         </argument>
@@ -9162,6 +9625,9 @@
         </argument>
         <argument key="App\Application\Query\Acquisition\GetBudgetSummaryQuery" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor.QU_jIcT"/>
+        </argument>
+        <argument key="App\Application\Query\Category\GetCategoryQuery" type="iterator">
+          <argument type="service" id=".messenger.handler_descriptor.peABbR7"/>
         </argument>
         <argument key="App\Application\Query\AuditLog\GetEntityHistoryQuery" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor.mfRwlcn"/>
@@ -9193,6 +9659,9 @@
         <argument key="App\Application\Query\AuditLog\ListAuditLogsQuery" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor.lr.JCxT"/>
         </argument>
+        <argument key="App\Application\Query\Author\ListAuthorsQuery" type="iterator">
+          <argument type="service" id=".messenger.handler_descriptor.dLyoYOV"/>
+        </argument>
         <argument key="App\Application\Query\BookAsset\ListBookAssetsQuery" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor.gkpTWeD"/>
         </argument>
@@ -9207,6 +9676,9 @@
         </argument>
         <argument key="App\Application\Query\Acquisition\ListBudgetsQuery" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor.eVEtMIj"/>
+        </argument>
+        <argument key="App\Application\Query\Category\ListCategoriesQuery" type="iterator">
+          <argument type="service" id=".messenger.handler_descriptor.aCd2kBq"/>
         </argument>
         <argument key="App\Application\Query\Fine\ListFinesQuery" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor.yFNI7aI"/>
@@ -9290,6 +9762,9 @@
         <argument key="App\Application\Command\Announcement\CreateAnnouncementCommand" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor._O.tocC"/>
         </argument>
+        <argument key="App\Application\Command\Author\CreateAuthorCommand" type="iterator">
+          <argument type="service" id=".messenger.handler_descriptor.r_dl04A"/>
+        </argument>
         <argument key="App\Application\Command\BookInventory\CreateBookCopyCommand" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor.ytxQu6Q"/>
         </argument>
@@ -9298,6 +9773,9 @@
         </argument>
         <argument key="App\Application\Command\Acquisition\CreateBudgetCommand" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor.TBWu2ig"/>
+        </argument>
+        <argument key="App\Application\Command\Category\CreateCategoryCommand" type="iterator">
+          <argument type="service" id=".messenger.handler_descriptor.Qff4xRZ"/>
         </argument>
         <argument key="App\Application\Command\Fine\CreateFineCommand" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor.jVyI1Fo"/>
@@ -9329,6 +9807,9 @@
         <argument key="App\Application\Command\Announcement\DeleteAnnouncementCommand" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor.202w.mx"/>
         </argument>
+        <argument key="App\Application\Command\Author\DeleteAuthorCommand" type="iterator">
+          <argument type="service" id=".messenger.handler_descriptor.PG2PtmK"/>
+        </argument>
         <argument key="App\Application\Command\BookAsset\DeleteBookAssetCommand" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor.N.hBBxs"/>
         </argument>
@@ -9337,6 +9818,9 @@
         </argument>
         <argument key="App\Application\Command\Book\DeleteBookCommand" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor.veQrPVN"/>
+        </argument>
+        <argument key="App\Application\Command\Category\DeleteCategoryCommand" type="iterator">
+          <argument type="service" id=".messenger.handler_descriptor.iFSB8sQ"/>
         </argument>
         <argument key="App\Application\Command\Loan\DeleteLoanCommand" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor..Lx.Cx."/>
@@ -9377,6 +9861,9 @@
         <argument key="App\Application\Command\Announcement\UpdateAnnouncementCommand" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor.j73PLd_"/>
         </argument>
+        <argument key="App\Application\Command\Author\UpdateAuthorCommand" type="iterator">
+          <argument type="service" id=".messenger.handler_descriptor.ZfZTtb4"/>
+        </argument>
         <argument key="App\Application\Command\BookInventory\UpdateBookCopyCommand" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor.EZmAuX1"/>
         </argument>
@@ -9385,6 +9872,9 @@
         </argument>
         <argument key="App\Application\Command\Acquisition\UpdateBudgetCommand" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor.gYyCA.V"/>
+        </argument>
+        <argument key="App\Application\Command\Category\UpdateCategoryCommand" type="iterator">
+          <argument type="service" id=".messenger.handler_descriptor.1pQj2Q5"/>
         </argument>
         <argument key="App\Application\Command\Acquisition\UpdateOrderStatusCommand" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor.eqfaYVW"/>
@@ -9404,6 +9894,9 @@
         <argument key="App\Application\Query\Announcement\GetAnnouncementQuery" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor._zdL60Z"/>
         </argument>
+        <argument key="App\Application\Query\Author\GetAuthorQuery" type="iterator">
+          <argument type="service" id=".messenger.handler_descriptor.knUjh8U"/>
+        </argument>
         <argument key="App\Application\Query\BookAsset\GetBookAssetQuery" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor.ObxTmwJ"/>
         </argument>
@@ -9412,6 +9905,9 @@
         </argument>
         <argument key="App\Application\Query\Acquisition\GetBudgetSummaryQuery" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor.3aFdRQm"/>
+        </argument>
+        <argument key="App\Application\Query\Category\GetCategoryQuery" type="iterator">
+          <argument type="service" id=".messenger.handler_descriptor..L9gdTN"/>
         </argument>
         <argument key="App\Application\Query\AuditLog\GetEntityHistoryQuery" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor.YI2q3iF"/>
@@ -9443,6 +9939,9 @@
         <argument key="App\Application\Query\AuditLog\ListAuditLogsQuery" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor.RSXNI05"/>
         </argument>
+        <argument key="App\Application\Query\Author\ListAuthorsQuery" type="iterator">
+          <argument type="service" id=".messenger.handler_descriptor.jl4_miw"/>
+        </argument>
         <argument key="App\Application\Query\BookAsset\ListBookAssetsQuery" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor.GeVAqN2"/>
         </argument>
@@ -9457,6 +9956,9 @@
         </argument>
         <argument key="App\Application\Query\Acquisition\ListBudgetsQuery" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor.1MV0ISs"/>
+        </argument>
+        <argument key="App\Application\Query\Category\ListCategoriesQuery" type="iterator">
+          <argument type="service" id=".messenger.handler_descriptor.HpP__VN"/>
         </argument>
         <argument key="App\Application\Query\Fine\ListFinesQuery" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor.BWP1uBe"/>
@@ -9540,6 +10042,9 @@
         <argument key="App\Application\Command\Announcement\CreateAnnouncementCommand" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor.qnTS0um"/>
         </argument>
+        <argument key="App\Application\Command\Author\CreateAuthorCommand" type="iterator">
+          <argument type="service" id=".messenger.handler_descriptor.GORTffd"/>
+        </argument>
         <argument key="App\Application\Command\BookInventory\CreateBookCopyCommand" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor.A8VGFO6"/>
         </argument>
@@ -9548,6 +10053,9 @@
         </argument>
         <argument key="App\Application\Command\Acquisition\CreateBudgetCommand" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor.aUqloZF"/>
+        </argument>
+        <argument key="App\Application\Command\Category\CreateCategoryCommand" type="iterator">
+          <argument type="service" id=".messenger.handler_descriptor.BhC9q2v"/>
         </argument>
         <argument key="App\Application\Command\Fine\CreateFineCommand" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor.gXE248t"/>
@@ -9579,6 +10087,9 @@
         <argument key="App\Application\Command\Announcement\DeleteAnnouncementCommand" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor.AAPOv_v"/>
         </argument>
+        <argument key="App\Application\Command\Author\DeleteAuthorCommand" type="iterator">
+          <argument type="service" id=".messenger.handler_descriptor.ktTTI_0"/>
+        </argument>
         <argument key="App\Application\Command\BookAsset\DeleteBookAssetCommand" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor.n.TZObW"/>
         </argument>
@@ -9587,6 +10098,9 @@
         </argument>
         <argument key="App\Application\Command\Book\DeleteBookCommand" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor.RXIqBle"/>
+        </argument>
+        <argument key="App\Application\Command\Category\DeleteCategoryCommand" type="iterator">
+          <argument type="service" id=".messenger.handler_descriptor.iLIkoca"/>
         </argument>
         <argument key="App\Application\Command\Loan\DeleteLoanCommand" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor.pV5XYZp"/>
@@ -9627,6 +10141,9 @@
         <argument key="App\Application\Command\Announcement\UpdateAnnouncementCommand" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor.TkdkvBl"/>
         </argument>
+        <argument key="App\Application\Command\Author\UpdateAuthorCommand" type="iterator">
+          <argument type="service" id=".messenger.handler_descriptor.DiiFaVr"/>
+        </argument>
         <argument key="App\Application\Command\BookInventory\UpdateBookCopyCommand" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor.o4jy5ji"/>
         </argument>
@@ -9635,6 +10152,9 @@
         </argument>
         <argument key="App\Application\Command\Acquisition\UpdateBudgetCommand" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor.B2gadlm"/>
+        </argument>
+        <argument key="App\Application\Command\Category\UpdateCategoryCommand" type="iterator">
+          <argument type="service" id=".messenger.handler_descriptor.QEMSpBw"/>
         </argument>
         <argument key="App\Application\Command\Acquisition\UpdateOrderStatusCommand" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor.y0GCgUJ"/>
@@ -9654,6 +10174,9 @@
         <argument key="App\Application\Query\Announcement\GetAnnouncementQuery" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor.Vowya5x"/>
         </argument>
+        <argument key="App\Application\Query\Author\GetAuthorQuery" type="iterator">
+          <argument type="service" id=".messenger.handler_descriptor.OjEiGwF"/>
+        </argument>
         <argument key="App\Application\Query\BookAsset\GetBookAssetQuery" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor.R1U1KdS"/>
         </argument>
@@ -9662,6 +10185,9 @@
         </argument>
         <argument key="App\Application\Query\Acquisition\GetBudgetSummaryQuery" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor.3LlY36e"/>
+        </argument>
+        <argument key="App\Application\Query\Category\GetCategoryQuery" type="iterator">
+          <argument type="service" id=".messenger.handler_descriptor.HFpQWIO"/>
         </argument>
         <argument key="App\Application\Query\AuditLog\GetEntityHistoryQuery" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor.PJC99QM"/>
@@ -9693,6 +10219,9 @@
         <argument key="App\Application\Query\AuditLog\ListAuditLogsQuery" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor.YXRjcZ8"/>
         </argument>
+        <argument key="App\Application\Query\Author\ListAuthorsQuery" type="iterator">
+          <argument type="service" id=".messenger.handler_descriptor.y2RB__5"/>
+        </argument>
         <argument key="App\Application\Query\BookAsset\ListBookAssetsQuery" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor.X4HRvgK"/>
         </argument>
@@ -9707,6 +10236,9 @@
         </argument>
         <argument key="App\Application\Query\Acquisition\ListBudgetsQuery" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor.lUJJnvs"/>
+        </argument>
+        <argument key="App\Application\Query\Category\ListCategoriesQuery" type="iterator">
+          <argument type="service" id=".messenger.handler_descriptor._eaIQ3_"/>
         </argument>
         <argument key="App\Application\Query\Fine\ListFinesQuery" type="iterator">
           <argument type="service" id=".messenger.handler_descriptor.6sZPRwD"/>
@@ -9917,6 +10449,12 @@
       <argument type="service" id="service_container"/>
       <factory service=".service_locator.ZyP9f7K" method="withContext"/>
     </service>
+    <service id=".service_locator.ZyP9f7K.App\Controller\AuthorController" class="Symfony\Component\DependencyInjection\ServiceLocator">
+      <tag name="container.service_locator_context" id="App\Controller\AuthorController"/>
+      <argument>App\Controller\AuthorController</argument>
+      <argument type="service" id="service_container"/>
+      <factory service=".service_locator.ZyP9f7K" method="withContext"/>
+    </service>
     <service id=".service_locator.ZyP9f7K.App\Controller\BookAssetController" class="Symfony\Component\DependencyInjection\ServiceLocator">
       <tag name="container.service_locator_context" id="App\Controller\BookAssetController"/>
       <argument>App\Controller\BookAssetController</argument>
@@ -9938,6 +10476,12 @@
     <service id=".service_locator.ZyP9f7K.App\Controller\CatalogAdminController" class="Symfony\Component\DependencyInjection\ServiceLocator">
       <tag name="container.service_locator_context" id="App\Controller\CatalogAdminController"/>
       <argument>App\Controller\CatalogAdminController</argument>
+      <argument type="service" id="service_container"/>
+      <factory service=".service_locator.ZyP9f7K" method="withContext"/>
+    </service>
+    <service id=".service_locator.ZyP9f7K.App\Controller\CategoryController" class="Symfony\Component\DependencyInjection\ServiceLocator">
+      <tag name="container.service_locator_context" id="App\Controller\CategoryController"/>
+      <argument>App\Controller\CategoryController</argument>
       <argument type="service" id="service_container"/>
       <factory service=".service_locator.ZyP9f7K" method="withContext"/>
     </service>
@@ -10145,10 +10689,12 @@
           <argument>App\Controller\AnnouncementController</argument>
           <argument>App\Controller\AuditLogController</argument>
           <argument>App\Controller\AuthController</argument>
+          <argument>App\Controller\AuthorController</argument>
           <argument>App\Controller\BookAssetController</argument>
           <argument>App\Controller\BookController</argument>
           <argument>App\Controller\BookInventoryController</argument>
           <argument>App\Controller\CatalogAdminController</argument>
+          <argument>App\Controller\CategoryController</argument>
           <argument>App\Controller\DashboardController</argument>
           <argument>App\Controller\FavoriteController</argument>
           <argument>App\Controller\FineController</argument>

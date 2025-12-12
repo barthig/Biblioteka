@@ -31,7 +31,7 @@ class ExtendLoanHandler
             throw new \RuntimeException('Cannot extend returned loan');
         }
 
-        if ($loan->isExtended()) {
+        if ($loan->getExtensionsCount() > 0) {
             throw new \RuntimeException('Wypożyczenie zostało już przedłużone');
         }
 
@@ -44,7 +44,8 @@ class ExtendLoanHandler
         $currentDue = $loan->getDueAt();
         $newDue = $currentDue->modify('+14 days');
         $loan->setDueAt($newDue);
-        $loan->setExtended(true);
+        $loan->incrementExtensions();
+        $loan->setLastExtendedAt(new \DateTimeImmutable());
 
         $this->em->persist($loan);
         $this->em->flush();

@@ -45,6 +45,12 @@ framework:
       App\Application\Command\Book\CreateBookCommand: sync
       App\Application\Command\Book\UpdateBookCommand: sync
       App\Application\Command\Book\DeleteBookCommand: sync
+      App\Application\Command\Author\CreateAuthorCommand: sync
+      App\Application\Command\Author\UpdateAuthorCommand: sync
+      App\Application\Command\Author\DeleteAuthorCommand: sync
+      App\Application\Command\Category\CreateCategoryCommand: sync
+      App\Application\Command\Category\UpdateCategoryCommand: sync
+      App\Application\Command\Category\DeleteCategoryCommand: sync
       
       # Queries - synchronous
       App\Application\Query\Loan\GetLoanQuery: sync
@@ -56,6 +62,10 @@ framework:
       App\Application\Query\Favorite\ListUserFavoritesQuery: sync
       App\Application\Query\Review\ListBookReviewsQuery: sync
       App\Application\Query\Fine\ListFinesQuery: sync
+      App\Application\Query\Author\GetAuthorQuery: sync
+      App\Application\Query\Author\ListAuthorsQuery: sync
+      App\Application\Query\Category\GetCategoryQuery: sync
+      App\Application\Query\Category\ListCategoriesQuery: sync
       
       # Messages - asynchronous
       App\Message\ReservationQueuedNotification: async

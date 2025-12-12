@@ -61,7 +61,7 @@ class ReturnLoanHandlerTest extends TestCase
         $this->em->expects($this->once())->method('persist')->with($loan);
         $this->em->expects($this->once())->method('flush');
 
-        $command = new ReturnLoanCommand(loanId: 1);
+        $command = new ReturnLoanCommand(loanId: 1, userId: 1);
         $result = ($this->handler)($command);
 
         $this->assertSame($loan, $result);
@@ -74,7 +74,7 @@ class ReturnLoanHandlerTest extends TestCase
 
         $this->loanRepository->method('find')->with(999)->willReturn(null);
 
-        $command = new ReturnLoanCommand(loanId: 999);
+        $command = new ReturnLoanCommand(loanId: 999, userId: 1);
         ($this->handler)($command);
     }
 
@@ -88,7 +88,7 @@ class ReturnLoanHandlerTest extends TestCase
 
         $this->loanRepository->method('find')->with(1)->willReturn($loan);
 
-        $command = new ReturnLoanCommand(loanId: 1);
+        $command = new ReturnLoanCommand(loanId: 1, userId: 1);
         ($this->handler)($command);
     }
 }
