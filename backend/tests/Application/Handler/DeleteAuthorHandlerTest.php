@@ -18,7 +18,7 @@ class DeleteAuthorHandlerTest extends TestCase
     {
         $this->authorRepository = $this->createMock(AuthorRepository::class);
         $this->entityManager = $this->createMock(EntityManagerInterface::class);
-        $this->handler = new DeleteAuthorHandler($this->authorRepository, $this->entityManager);
+        $this->handler = new DeleteAuthorHandler($this->entityManager, $this->authorRepository);
     }
 
     public function testDeleteAuthorSuccess(): void

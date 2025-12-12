@@ -18,7 +18,7 @@ class UpdateAuthorHandlerTest extends TestCase
     {
         $this->authorRepository = $this->createMock(AuthorRepository::class);
         $this->entityManager = $this->createMock(EntityManagerInterface::class);
-        $this->handler = new UpdateAuthorHandler($this->authorRepository, $this->entityManager);
+        $this->handler = new UpdateAuthorHandler($this->entityManager, $this->authorRepository);
     }
 
     public function testUpdateAuthorSuccess(): void

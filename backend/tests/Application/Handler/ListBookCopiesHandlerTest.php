@@ -14,15 +14,22 @@ class ListBookCopiesHandlerTest extends TestCase
     protected function setUp(): void
     {
         $this->bookCopyRepository = $this->createMock(BookCopyRepository::class);
-        $this->handler = new ListBookCopiesHandler($this->bookCopyRepository);
+        $this->handler = new ListBookCopiesHandler($this->createMock(\App\Repository\BookRepository::class));
     }
 
     public function testListBookCopiesSuccess(): void
     {
-        $this->bookCopyRepository->method('findBy')->willReturn([]);
+        $book = $this->createMock(\App\Entity\Book::class);
+        
+        // BookRepository mock that returns the book
+        $bookRepo = $this->createMock(\App\Repository\BookRepository::class);
+        $bookRepo->method('find')->with(1)->willReturn($book);
+        
+        // Use the actual BookRepository passed to handler
+        $handler = new ListBookCopiesHandler($bookRepo);
 
-        $query = new ListBookCopiesQuery(bookId: 1);
-        $result = ($this->handler)($query);
+        $query = new \App\Application\Query\BookInventory\ListBookCopiesQuery(bookId: 1);
+        $result = $handler($query);
 
         $this->assertIsArray($result);
     }

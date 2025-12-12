@@ -21,7 +21,7 @@ class ListWeedingRecordsHandlerTest extends TestCase
     {
         $this->weedingRecordRepository->method('findBy')->willReturn([]);
 
-        $query = new ListWeedingRecordsQuery(page: 1, limit: 50);
+        $query = new \App\Application\Query\Weeding\ListWeedingRecordsQuery();
         $result = ($this->handler)($query);
 
         $this->assertIsArray($result);

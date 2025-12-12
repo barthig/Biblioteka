@@ -2,18 +2,18 @@
 namespace App\Tests\Application\Handler;
 
 use App\Application\Handler\Query\ListBudgetsHandler;
-use App\Application\Query\Budget\ListBudgetsQuery;
-use App\Repository\BudgetRepository;
+use App\Application\Query\Acquisition\ListBudgetsQuery;
+use App\Repository\AcquisitionBudgetRepository;
 use PHPUnit\Framework\TestCase;
 
 class ListBudgetsHandlerTest extends TestCase
 {
-    private BudgetRepository $budgetRepository;
+    private AcquisitionBudgetRepository $budgetRepository;
     private ListBudgetsHandler $handler;
 
     protected function setUp(): void
     {
-        $this->budgetRepository = $this->createMock(BudgetRepository::class);
+        $this->budgetRepository = $this->createMock(AcquisitionBudgetRepository::class);
         $this->handler = new ListBudgetsHandler($this->budgetRepository);
     }
 
@@ -21,7 +21,7 @@ class ListBudgetsHandlerTest extends TestCase
     {
         $this->budgetRepository->method('findBy')->willReturn([]);
 
-        $query = new ListBudgetsQuery(page: 1, limit: 50);
+        $query = new ListBudgetsQuery();
         $result = ($this->handler)($query);
 
         $this->assertIsArray($result);

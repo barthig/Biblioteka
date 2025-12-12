@@ -28,19 +28,29 @@ class AddFavoriteHandlerTest extends TestCase
         $this->favoriteRepository = $this->createMock(FavoriteRepository::class);
         $this->handler = new AddFavoriteHandler(
             $this->entityManager,
-            $this->bookRepository,
-            $this->userRepository,
             $this->favoriteRepository
         );
     }
 
     public function testAddFavoriteSuccess(): void
     {
-        $book = $this->createMock(Book::class);
-        $user = $this->createMock(User::class);
+        // Mock Entity Manager's getRepository to return our mocked repositories
+        $userRepo = $this->createMock(\App\Repository\UserRepository::class);
+        $bookRepo = $this->createMock(\App\Repository\BookRepository::class);
         
-        $this->bookRepository->method('find')->with(1)->willReturn($book);
-        $this->userRepository->method('find')->with(1)->willReturn($user);
+        $user = $this->createMock(User::class);
+        $book = $this->createMock(Book::class);
+        
+        $userRepo->method('find')->with(1)->willReturn($user);
+        $bookRepo->method('find')->with(1)->willReturn($book);
+        
+        $this->entityManager->method('getRepository')
+            ->willReturnCallback(function($class) use ($userRepo, $bookRepo) {
+                if ($class === User::class) return $userRepo;
+                if ($class === Book::class) return $bookRepo;
+                return null;
+            });
+        
         $this->favoriteRepository->method('findOneBy')->willReturn(null);
         $this->entityManager->expects($this->once())->method('persist');
         $this->entityManager->expects($this->once())->method('flush');

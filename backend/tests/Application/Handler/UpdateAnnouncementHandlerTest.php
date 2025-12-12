@@ -18,18 +18,27 @@ class UpdateAnnouncementHandlerTest extends TestCase
     {
         $this->announcementRepository = $this->createMock(AnnouncementRepository::class);
         $this->entityManager = $this->createMock(EntityManagerInterface::class);
-        $this->handler = new UpdateAnnouncementHandler($this->announcementRepository, $this->entityManager);
+        $this->handler = new UpdateAnnouncementHandler($this->entityManager, $this->announcementRepository);
     }
 
     public function testUpdateAnnouncementSuccess(): void
     {
         $announcement = $this->createMock(Announcement::class);
-        $announcement->expects($this->once())->method('setTitle')->with('Updated Title');
+        $announcement->expects($this->once())->method('setTitle')->with('New Title');
         
         $this->announcementRepository->method('find')->with(1)->willReturn($announcement);
         $this->entityManager->expects($this->once())->method('flush');
 
-        $command = new UpdateAnnouncementCommand(announcementId: 1, title: 'Updated Title');
+        $command = new UpdateAnnouncementCommand(
+            id: 1,
+            title: 'New Title',
+            content: null,
+            type: null,
+            isPinned: null,
+            showOnHomepage: null,
+            targetAudience: null,
+            expiresAt: null
+        );
         $result = ($this->handler)($command);
 
         $this->assertSame($announcement, $result);

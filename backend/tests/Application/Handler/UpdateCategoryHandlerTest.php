@@ -18,7 +18,7 @@ class UpdateCategoryHandlerTest extends TestCase
     {
         $this->categoryRepository = $this->createMock(CategoryRepository::class);
         $this->entityManager = $this->createMock(EntityManagerInterface::class);
-        $this->handler = new UpdateCategoryHandler($this->categoryRepository, $this->entityManager);
+        $this->handler = new UpdateCategoryHandler($this->entityManager, $this->categoryRepository);
     }
 
     public function testUpdateCategorySuccess(): void

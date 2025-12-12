@@ -7,33 +7,37 @@ use App\Entity\User;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class ChangePasswordHandlerTest extends TestCase
 {
     private EntityManagerInterface $entityManager;
     private UserRepository $userRepository;
-    private UserPasswordHasherInterface $passwordHasher;
     private ChangePasswordHandler $handler;
 
     protected function setUp(): void
     {
         $this->entityManager = $this->createMock(EntityManagerInterface::class);
         $this->userRepository = $this->createMock(UserRepository::class);
-        $this->passwordHasher = $this->createMock(UserPasswordHasherInterface::class);
-        $this->handler = new ChangePasswordHandler($this->entityManager, $this->userRepository, $this->passwordHasher);
+        // UserPasswordHasherInterface doesn't exist in the codebase
+        $this->handler = new ChangePasswordHandler($this->entityManager, $this->userRepository);
     }
 
     public function testChangePasswordSuccess(): void
     {
         $user = $this->createMock(User::class);
+        $user->method('getPassword')->willReturn(password_hash('oldpassword', PASSWORD_BCRYPT));
+        $user->expects($this->once())->method('setPassword');
         
         $this->userRepository->method('find')->with(1)->willReturn($user);
-        $this->passwordHasher->method('hashPassword')->willReturn('hashed_password');
-        $user->expects($this->once())->method('setPassword')->with('hashed_password');
+        $this->entityManager->expects($this->once())->method('persist');
         $this->entityManager->expects($this->once())->method('flush');
 
-        $command = new ChangePasswordCommand(userId: 1, newPassword: 'new_password');
+        $command = new ChangePasswordCommand(
+            userId: 1,
+            currentPassword: 'oldpassword',
+            newPassword: 'newpassword',
+            confirmPassword: 'newpassword'
+        );
         ($this->handler)($command);
 
         $this->assertTrue(true);

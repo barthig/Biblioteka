@@ -21,9 +21,12 @@ class GetAnnouncementHandlerTest extends TestCase
     public function testGetAnnouncementSuccess(): void
     {
         $announcement = $this->createMock(Announcement::class);
+        $announcement->method('isActive')->willReturn(true);
+        $announcement->method('isVisibleForUser')->willReturn(true);
+        
         $this->announcementRepository->method('find')->with(1)->willReturn($announcement);
 
-        $query = new GetAnnouncementQuery(announcementId: 1);
+        $query = new GetAnnouncementQuery(id: 1, user: null, isLibrarian: false);
         $result = ($this->handler)($query);
 
         $this->assertSame($announcement, $result);

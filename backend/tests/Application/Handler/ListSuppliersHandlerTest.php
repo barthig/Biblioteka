@@ -21,7 +21,7 @@ class ListSuppliersHandlerTest extends TestCase
     {
         $this->supplierRepository->method('findBy')->willReturn([]);
 
-        $query = new ListSuppliersQuery(page: 1, limit: 50);
+        $query = new \App\Application\Query\Acquisition\ListSuppliersQuery();
         $result = ($this->handler)($query);
 
         $this->assertIsArray($result);

@@ -18,7 +18,7 @@ class DeleteReviewHandlerTest extends TestCase
     {
         $this->reviewRepository = $this->createMock(ReviewRepository::class);
         $this->entityManager = $this->createMock(EntityManagerInterface::class);
-        $this->handler = new DeleteReviewHandler($this->reviewRepository, $this->entityManager);
+        $this->handler = new DeleteReviewHandler($this->entityManager, $this->reviewRepository);
     }
 
     public function testDeleteReviewSuccess(): void
@@ -28,7 +28,7 @@ class DeleteReviewHandlerTest extends TestCase
         $this->entityManager->expects($this->once())->method('remove')->with($review);
         $this->entityManager->expects($this->once())->method('flush');
 
-        $command = new DeleteReviewCommand(reviewId: 1);
+        $command = new DeleteReviewCommand(reviewId: 1, userId: 1, isLibrarian: true);
         ($this->handler)($command);
 
         $this->assertTrue(true);

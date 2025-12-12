@@ -18,7 +18,7 @@ class DeleteCategoryHandlerTest extends TestCase
     {
         $this->categoryRepository = $this->createMock(CategoryRepository::class);
         $this->entityManager = $this->createMock(EntityManagerInterface::class);
-        $this->handler = new DeleteCategoryHandler($this->categoryRepository, $this->entityManager);
+        $this->handler = new DeleteCategoryHandler($this->entityManager, $this->categoryRepository);
     }
 
     public function testDeleteCategorySuccess(): void

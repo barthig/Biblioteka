@@ -23,16 +23,28 @@ class CreateReviewHandlerTest extends TestCase
         $this->entityManager = $this->createMock(EntityManagerInterface::class);
         $this->bookRepository = $this->createMock(BookRepository::class);
         $this->userRepository = $this->createMock(UserRepository::class);
-        $this->handler = new CreateReviewHandler($this->entityManager, $this->bookRepository, $this->userRepository);
+        $this->handler = new CreateReviewHandler($this->entityManager, $this->createMock(\App\Repository\ReviewRepository::class));
     }
 
     public function testCreateReviewSuccess(): void
     {
-        $book = $this->createMock(Book::class);
-        $user = $this->createMock(User::class);
+        // Mock Entity Manager's getRepository to return our mocked repositories
+        $userRepo = $this->createMock(\App\Repository\UserRepository::class);
+        $bookRepo = $this->createMock(\App\Repository\BookRepository::class);
         
-        $this->bookRepository->method('find')->with(1)->willReturn($book);
-        $this->userRepository->method('find')->with(1)->willReturn($user);
+        $user = $this->createMock(User::class);
+        $book = $this->createMock(Book::class);
+        
+        $userRepo->method('find')->with(1)->willReturn($user);
+        $bookRepo->method('find')->with(1)->willReturn($book);
+        
+        $this->entityManager->method('getRepository')
+            ->willReturnCallback(function($class) use ($userRepo, $bookRepo) {
+                if ($class === User::class) return $userRepo;
+                if ($class === Book::class) return $bookRepo;
+                return null;
+            });
+        
         $this->entityManager->expects($this->once())->method('persist');
         $this->entityManager->expects($this->once())->method('flush');
 

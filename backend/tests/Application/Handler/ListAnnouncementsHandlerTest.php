@@ -21,7 +21,7 @@ class ListAnnouncementsHandlerTest extends TestCase
     {
         $this->announcementRepository->method('findBy')->willReturn([]);
 
-        $query = new ListAnnouncementsQuery(page: 1, limit: 50);
+        $query = new ListAnnouncementsQuery(user: null, isLibrarian: false, status: null, homepageOnly: false, page: 1, limit: 50);
         $result = ($this->handler)($query);
 
         $this->assertIsArray($result);
