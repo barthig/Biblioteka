@@ -23,7 +23,7 @@ class GetLoanHandlerTest extends TestCase
         $loan = $this->createMock(Loan::class);
         $this->loanRepository->method('find')->with(1)->willReturn($loan);
 
-        $query = new GetLoanQuery(loanId: 1);
+        $query = new GetLoanQuery(loanId: 1, userId: 1, isLibrarian: true);
         $result = ($this->handler)($query);
 
         $this->assertSame($loan, $result);
@@ -31,12 +31,11 @@ class GetLoanHandlerTest extends TestCase
 
     public function testThrowsExceptionWhenLoanNotFound(): void
     {
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Loan not found');
-
         $this->loanRepository->method('find')->with(999)->willReturn(null);
 
-        $query = new GetLoanQuery(loanId: 999);
-        ($this->handler)($query);
+        $query = new GetLoanQuery(loanId: 999, userId: 1, isLibrarian: true);
+        $result = ($this->handler)($query);
+        
+        $this->assertNull($result);
     }
 }

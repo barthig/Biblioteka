@@ -30,7 +30,7 @@ class ListAuthorsHandlerTest extends TestCase
     public function testListAuthorsWithSearch(): void
     {
         $qb = $this->createMock(\Doctrine\ORM\QueryBuilder::class);
-        $query = $this->createMock(\Doctrine\ORM\AbstractQuery::class);
+        $query = $this->createMock(\Doctrine\ORM\Query::class);
         
         $qb->method('where')->willReturnSelf();
         $qb->method('setParameter')->willReturnSelf();

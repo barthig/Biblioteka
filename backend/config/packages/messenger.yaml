@@ -66,6 +66,21 @@ framework:
       App\Application\Query\Author\ListAuthorsQuery: sync
       App\Application\Query\Category\GetCategoryQuery: sync
       App\Application\Query\Category\ListCategoriesQuery: sync
+      App\Application\Command\SystemSetting\CreateSystemSettingCommand: sync
+      App\Application\Command\SystemSetting\UpdateSystemSettingCommand: sync
+      App\Application\Command\SystemSetting\DeleteSystemSettingCommand: sync
+      App\Application\Query\SystemSetting\GetSystemSettingQuery: sync
+      App\Application\Query\SystemSetting\ListSystemSettingsQuery: sync
+      App\Application\Command\IntegrationConfig\CreateIntegrationConfigCommand: sync
+      App\Application\Command\IntegrationConfig\UpdateIntegrationConfigCommand: sync
+      App\Application\Command\IntegrationConfig\DeleteIntegrationConfigCommand: sync
+      App\Application\Query\IntegrationConfig\GetIntegrationConfigQuery: sync
+      App\Application\Query\IntegrationConfig\ListIntegrationConfigsQuery: sync
+      App\Application\Command\StaffRole\CreateStaffRoleCommand: sync
+      App\Application\Command\StaffRole\UpdateStaffRoleCommand: sync
+      App\Application\Command\StaffRole\DeleteStaffRoleCommand: sync
+      App\Application\Query\StaffRole\GetStaffRoleQuery: sync
+      App\Application\Query\StaffRole\ListStaffRolesQuery: sync
       
       # Messages - asynchronous
       App\Message\ReservationQueuedNotification: async
