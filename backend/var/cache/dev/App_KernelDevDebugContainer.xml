@@ -1246,13 +1246,6 @@
         <argument type="service" id=".service_locator.ZyP9f7K.App\Controller\FineController"/>
       </call>
     </service>
-    <service id="App\Controller\GraphQLController" class="App\Controller\GraphQLController" public="true" autowire="true" autoconfigure="true">
-      <tag name="controller.service_arguments"/>
-      <tag name="container.service_subscriber"/>
-      <call method="setContainer">
-        <argument type="service" id=".service_locator.ZyP9f7K.App\Controller\GraphQLController"/>
-      </call>
-    </service>
     <service id="App\Controller\HealthController" class="App\Controller\HealthController" public="true" autowire="true" autoconfigure="true">
       <tag name="controller.service_arguments"/>
       <tag name="container.service_subscriber"/>
@@ -1393,17 +1386,6 @@
       <argument type="service" id="limiter.anonymous_api"/>
       <argument type="service" id="limiter.authenticated_api"/>
     </service>
-    <service id="App\GraphQL\Resolver\AuthResolver" class="App\GraphQL\Resolver\AuthResolver" autowire="true" autoconfigure="true">
-      <tag name="container.error" message="Cannot autowire service &quot;App\GraphQL\Resolver\AuthResolver&quot;: argument &quot;$passwordHasher&quot; of method &quot;__construct()&quot; is type-hinted &quot;object&quot;, you should configure its value explicitly."/>
-    </service>
-    <service id="App\GraphQL\Resolver\BookResolver" class="App\GraphQL\Resolver\BookResolver" autowire="true" autoconfigure="true">
-      <argument type="service" id="App\Repository\BookRepository"/>
-    </service>
-    <service id="App\GraphQL\Resolver\LoanResolver" class="App\GraphQL\Resolver\LoanResolver" autowire="true" autoconfigure="true">
-      <argument type="service" id="App\Repository\LoanRepository"/>
-      <argument type="service" id="App\Repository\BookRepository"/>
-    </service>
-    <service id="App\GraphQL\Resolver\UserResolver" class="App\GraphQL\Resolver\UserResolver" autowire="true" autoconfigure="true"/>
     <service id="App\MessageHandler\NotificationMessageHandler" class="App\MessageHandler\NotificationMessageHandler" autowire="true" autoconfigure="true">
       <tag name="messenger.message_handler" bus="" handles="" method="" priority="0" from_transport=""/>
       <argument type="service" id="App\Repository\UserRepository"/>
@@ -1641,7 +1623,7 @@
     </service>
     <service id="argument_resolver.service" class="Symfony\Component\HttpKernel\Controller\ArgumentResolver\ServiceValueResolver">
       <tag priority="-50" name="Symfony\Component\HttpKernel\Controller\ArgumentResolver\ServiceValueResolver">controller.argument_value_resolver</tag>
-      <argument type="service" id=".service_locator.EX5DJhI"/>
+      <argument type="service" id=".service_locator.bcOmtOa"/>
     </service>
     <service id="argument_resolver.default" class="Symfony\Component\HttpKernel\Controller\ArgumentResolver\DefaultValueResolver">
       <tag priority="-100" name="Symfony\Component\HttpKernel\Controller\ArgumentResolver\DefaultValueResolver">controller.argument_value_resolver</tag>
@@ -4991,7 +4973,7 @@
     </service>
     <service id="argument_resolver.not_tagged_controller" class="Symfony\Component\HttpKernel\Controller\ArgumentResolver\NotTaggedControllerValueResolver">
       <tag name="controller.argument_value_resolver" priority="-200"/>
-      <argument type="service" id=".service_locator.EX5DJhI"/>
+      <argument type="service" id=".service_locator.bcOmtOa"/>
     </service>
     <service id="routing.resolver" class="Symfony\Component\Config\Loader\LoaderResolver">
       <call method="addLoader">
@@ -5590,6 +5572,22 @@
       <argument>%session.storage.options%</argument>
     </service>
     <service id="session.marshaller" class="Symfony\Component\HttpFoundation\Session\Storage\Handler\IdentityMarshaller"/>
+    <service id="security.csrf.token_generator" class="Symfony\Component\Security\Csrf\TokenGenerator\UriSafeTokenGenerator"/>
+    <service id="security.csrf.token_storage" class="Symfony\Component\Security\Csrf\TokenStorage\SessionTokenStorage">
+      <argument type="service" id="request_stack"/>
+    </service>
+    <service id="security.csrf.token_manager" class="Symfony\Component\Security\Csrf\CsrfTokenManager">
+      <argument type="service" id="security.csrf.token_generator"/>
+      <argument type="service" id="security.csrf.token_storage"/>
+      <argument type="service" id="request_stack" on-invalid="ignore"/>
+    </service>
+    <service id="twig.runtime.security_csrf" class="Symfony\Bridge\Twig\Extension\CsrfRuntime">
+      <tag name="twig.runtime"/>
+      <argument type="service" id="security.csrf.token_manager"/>
+    </service>
+    <service id="twig.extension.security_csrf" class="Symfony\Bridge\Twig\Extension\CsrfExtension">
+      <tag name="twig.extension"/>
+    </service>
     <service id="validator" class="Symfony\Component\Validator\Validator\ValidatorInterface">
       <factory service="validator.builder" method="getValidator"/>
     </service>
@@ -7917,9 +7915,6 @@
     <service id=".instanceof.Symfony\Contracts\Service\ServiceSubscriberInterface.0.App\Controller\FineController" class="App\Controller\FineController" autowire="true" abstract="true"/>
     <service id=".instanceof.Symfony\Bundle\FrameworkBundle\Controller\AbstractController.0.App\Controller\FineController" class="App\Controller\FineController" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Controller\FineController" class="App\Controller\FineController" autowire="true" autoconfigure="true" abstract="true"/>
-    <service id=".instanceof.Symfony\Contracts\Service\ServiceSubscriberInterface.0.App\Controller\GraphQLController" class="App\Controller\GraphQLController" autowire="true" abstract="true"/>
-    <service id=".instanceof.Symfony\Bundle\FrameworkBundle\Controller\AbstractController.0.App\Controller\GraphQLController" class="App\Controller\GraphQLController" autowire="true" abstract="true"/>
-    <service id=".abstract.instanceof.App\Controller\GraphQLController" class="App\Controller\GraphQLController" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Symfony\Contracts\Service\ServiceSubscriberInterface.0.App\Controller\HealthController" class="App\Controller\HealthController" autowire="true" abstract="true"/>
     <service id=".instanceof.Symfony\Bundle\FrameworkBundle\Controller\AbstractController.0.App\Controller\HealthController" class="App\Controller\HealthController" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Controller\HealthController" class="App\Controller\HealthController" autowire="true" autoconfigure="true" abstract="true"/>
@@ -8497,12 +8492,6 @@
         <argument key="userRepository" type="service_closure" id="App\Repository\UserRepository"/>
       </argument>
     </service>
-    <service id=".service_locator.Gq.rOo8" class="Symfony\Component\DependencyInjection\ServiceLocator">
-      <tag name="container.service_locator"/>
-      <argument type="collection">
-        <argument key="executor" type="service_closure" id=".errored..service_locator.Gq.rOo8.Overblog\GraphQLBundle\Request\Executor"/>
-      </argument>
-    </service>
     <service id=".service_locator.X3lyi.v" class="Symfony\Component\DependencyInjection\ServiceLocator">
       <tag name="container.service_locator"/>
       <argument type="collection">
@@ -8522,7 +8511,7 @@
         <argument key="repo" type="service_closure" id="App\Repository\UserRepository"/>
       </argument>
     </service>
-    <service id=".service_locator.EX5DJhI" class="Symfony\Component\DependencyInjection\ServiceLocator">
+    <service id=".service_locator.bcOmtOa" class="Symfony\Component\DependencyInjection\ServiceLocator">
       <tag name="container.service_locator"/>
       <argument type="collection">
         <argument key="kernel::registerContainerConfiguration" type="service_closure" id=".service_locator.zHyJIs5"/>
@@ -8584,7 +8573,6 @@
         <argument key="App\Controller\CatalogAdminController::import" type="service_closure" id=".service_locator.S_C3Dzl"/>
         <argument key="App\Controller\FavoriteController::add" type="service_closure" id=".service_locator.axWvN5H"/>
         <argument key="App\Controller\FineController::create" type="service_closure" id=".service_locator.axWvN5H"/>
-        <argument key="App\Controller\GraphQLController::index" type="service_closure" id=".service_locator.Gq.rOo8"/>
         <argument key="App\Controller\LoanController::create" type="service_closure" id=".service_locator.axWvN5H"/>
         <argument key="App\Controller\NotificationController::list" type="service_closure" id=".service_locator.S_C3Dzl"/>
         <argument key="App\Controller\NotificationController::triggerTest" type="service_closure" id=".service_locator.S_C3Dzl"/>
@@ -8663,7 +8651,6 @@
         <argument key="App\Controller\CatalogAdminController:import" type="service_closure" id=".service_locator.S_C3Dzl"/>
         <argument key="App\Controller\FavoriteController:add" type="service_closure" id=".service_locator.axWvN5H"/>
         <argument key="App\Controller\FineController:create" type="service_closure" id=".service_locator.axWvN5H"/>
-        <argument key="App\Controller\GraphQLController:index" type="service_closure" id=".service_locator.Gq.rOo8"/>
         <argument key="App\Controller\LoanController:create" type="service_closure" id=".service_locator.axWvN5H"/>
         <argument key="App\Controller\NotificationController:list" type="service_closure" id=".service_locator.S_C3Dzl"/>
         <argument key="App\Controller\NotificationController:triggerTest" type="service_closure" id=".service_locator.S_C3Dzl"/>
@@ -11178,6 +11165,7 @@
         <argument key="request_stack" type="service_closure" id="request_stack" on-invalid="ignore"/>
         <argument key="http_kernel" type="service_closure" id="http_kernel" on-invalid="ignore"/>
         <argument key="serializer" type="service_closure" id="serializer" on-invalid="ignore"/>
+        <argument key="security.csrf.token_manager" type="service_closure" id="security.csrf.token_manager" on-invalid="ignore"/>
         <argument key="parameter_bag" type="service_closure" id="parameter_bag" on-invalid="ignore"/>
       </argument>
     </service>
@@ -11298,12 +11286,6 @@
     <service id=".service_locator.ZyP9f7K.App\Controller\FineController" class="Symfony\Component\DependencyInjection\ServiceLocator">
       <tag name="container.service_locator_context" id="App\Controller\FineController"/>
       <argument>App\Controller\FineController</argument>
-      <argument type="service" id="service_container"/>
-      <factory service=".service_locator.ZyP9f7K" method="withContext"/>
-    </service>
-    <service id=".service_locator.ZyP9f7K.App\Controller\GraphQLController" class="Symfony\Component\DependencyInjection\ServiceLocator">
-      <tag name="container.service_locator_context" id="App\Controller\GraphQLController"/>
-      <argument>App\Controller\GraphQLController</argument>
       <argument type="service" id="service_container"/>
       <factory service=".service_locator.ZyP9f7K" method="withContext"/>
     </service>
@@ -11514,7 +11496,6 @@
           <argument>App\Controller\DashboardController</argument>
           <argument>App\Controller\FavoriteController</argument>
           <argument>App\Controller\FineController</argument>
-          <argument>App\Controller\GraphQLController</argument>
           <argument>App\Controller\HealthController</argument>
           <argument>App\Controller\IntegrationConfigController</argument>
           <argument>App\Controller\LoanController</argument>
@@ -11557,9 +11538,6 @@
     </service>
     <service id=".errored..service_locator.zHyJIs5.Symfony\Component\Config\Loader\LoaderInterface" class="Symfony\Component\Config\Loader\LoaderInterface">
       <tag name="container.error" message="Cannot autowire service &quot;.service_locator.zHyJIs5&quot;: it needs an instance of &quot;Symfony\Component\Config\Loader\LoaderInterface&quot; but this type has been excluded from autowiring."/>
-    </service>
-    <service id=".errored..service_locator.Gq.rOo8.Overblog\GraphQLBundle\Request\Executor" class="Overblog\GraphQLBundle\Request\Executor">
-      <tag name="container.error" message="Cannot autowire service &quot;.service_locator.Gq.rOo8&quot;: it references class &quot;Overblog\GraphQLBundle\Request\Executor&quot; but no such service exists."/>
     </service>
     <service id=".App\Command\AnonymizeInactivePatronsCommand.lazy" class="Symfony\Component\Console\Command\LazyCommand">
       <argument>maintenance:anonymize-patrons</argument>
@@ -12467,6 +12445,9 @@
     <service id="SessionHandlerInterface" alias="session.handler.native"/>
     <service id="session.storage.factory" alias="session.storage.factory.native"/>
     <service id="session.handler" alias="session.handler.native"/>
+    <service id="Symfony\Component\Security\Csrf\TokenGenerator\TokenGeneratorInterface" alias="security.csrf.token_generator"/>
+    <service id="Symfony\Component\Security\Csrf\TokenStorage\TokenStorageInterface" alias="security.csrf.token_storage"/>
+    <service id="Symfony\Component\Security\Csrf\CsrfTokenManagerInterface" alias="security.csrf.token_manager"/>
     <service id="Symfony\Component\Validator\Validator\ValidatorInterface" alias="validator"/>
     <service id="validator.mapping.class_metadata_factory" alias="validator"/>
     <service id="Symfony\Component\Messenger\Transport\Serialization\SerializerInterface" alias="messenger.transport.native_php_serializer"/>
@@ -12506,7 +12487,7 @@
     <service id="nelmio_api_doc.controller.swagger" alias="nelmio_api_doc.controller.swagger_json" public="true"/>
     <service id="nelmio_api_doc.generator" alias="nelmio_api_doc.generator.default" public="true"/>
     <service id="container.env_var_processors_locator" alias=".service_locator.pRu6x_4" public="true"/>
-    <service id="argument_resolver.controller_locator" alias=".service_locator.EX5DJhI"/>
+    <service id="argument_resolver.controller_locator" alias=".service_locator.bcOmtOa"/>
     <service id="doctrine.id_generator_locator" alias=".service_locator.BxSdgVt"/>
     <service id="Psr\Log\LoggerInterface" alias="logger"/>
     <service id=".service_locator.oiB6xeU" alias="messenger.receiver_locator"/>
@@ -12525,10 +12506,9 @@
     <service id=".service_locator._XkFWFd" alias=".service_locator.6nghiUy"/>
     <service id=".service_locator.x6QRsGg" alias=".service_locator.tlKOOBe"/>
     <service id=".service_locator.hNMhKaf" alias=".service_locator.OzEre6h"/>
-    <service id=".service_locator.YH11zII" alias=".service_locator.Gq.rOo8"/>
     <service id=".service_locator.uJwza1V" alias=".service_locator.X3lyi.v"/>
     <service id=".service_locator.fVj1eyh" alias=".service_locator.zdorlGT"/>
     <service id=".service_locator.DHDj2Yc" alias=".service_locator._8VsPQl"/>
-    <service id=".service_locator.i9yrr1E" alias=".service_locator.ZyP9f7K"/>
+    <service id=".service_locator.GI.8JCS" alias=".service_locator.ZyP9f7K"/>
   </services>
 </container>
