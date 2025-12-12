@@ -103,7 +103,12 @@ class AuthController extends AbstractController
                 return $this->json(['error' => 'Account is blocked'], 403);
             }
 
-            $token = JwtService::createToken(['sub' => $user->getId(), 'roles' => $user->getRoles()]);
+            $token = JwtService::createToken([
+                'sub' => $user->getId(),
+                'roles' => $user->getRoles(),
+                'email' => $user->getEmail(),
+                'name' => $user->getName()
+            ]);
             
             // Utwórz refresh token
             $refreshToken = $this->refreshTokenService->createRefreshToken($user, $request);

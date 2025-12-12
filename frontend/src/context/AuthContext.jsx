@@ -22,6 +22,8 @@ function decodeJwt(token) {
     const payload = JSON.parse(base64Decode(base64))
     return {
       id: payload.sub ?? null,
+      email: payload.email ?? null,
+      name: payload.name ?? null,
       roles: Array.isArray(payload.roles) ? payload.roles : [],
       raw: payload,
     }
@@ -33,62 +35,54 @@ function decodeJwt(token) {
 
 export function AuthProvider({ children }) {
   const [token, setToken] = useState(() => localStorage.getItem('token'))
-  const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const [user, setUser] = useState(() => {
+    // Initialize user immediately from token if available
+    const initialToken = localStorage.getItem('token')
+    if (initialToken) {
+      return decodeJwt(initialToken)
+    }
+    return null
+  })
   const navigate = useNavigate()
 
   useEffect(() => {
-    async function loadUser() {
-      if (token) {
-        localStorage.setItem('token', token)
-        try {
-          // Fetch full user data from server
-          const userData = await apiFetch('/api/auth/profile')
-          setUser(userData)
-        } catch (err) {
-          console.error('Failed to load user profile:', err)
-          // Fallback to JWT decode if profile fetch fails
-          const decoded = decodeJwt(token)
-          if (decoded) {
-            setUser(decoded)
-          } else {
-            // Invalid token, clear it
-            setToken(null)
-            localStorage.removeItem('token')
-          }
-        }
+    if (token) {
+      localStorage.setItem('token', token)
+      
+      // Decode JWT and set user immediately (no backend call needed)
+      const decoded = decodeJwt(token)
+      if (decoded) {
+        setUser(decoded)
       } else {
+        // Invalid token, clear it
+        setToken(null)
         localStorage.removeItem('token')
         setUser(null)
       }
-      setLoading(false)
+    } else {
+      localStorage.removeItem('token')
+      setUser(null)
     }
-
-    loadUser()
   }, [token])
 
   function login(tokenValue) {
     setToken(tokenValue)
-    // User will be loaded by useEffect
+    
+    // Immediately decode JWT and set user (no waiting)
+    const decoded = decodeJwt(tokenValue)
+    if (decoded) {
+      setUser(decoded)
+    }
+    
+    // Navigate instantly
     navigate('/')
+    // Full profile will be loaded by useEffect in the background
   }
 
   function logout() {
     setToken(null)
     setUser(null)
     navigate('/login')
-  }
-
-  if (loading) {
-    return (
-      <div className="app-shell">
-        <div className="page page--centered">
-          <div className="surface-card">
-            <p>Ładowanie...</p>
-          </div>
-        </div>
-      </div>
-    )
   }
 
   return (
