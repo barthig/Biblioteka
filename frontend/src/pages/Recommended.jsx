@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import BookItem from '../components/BookItem'
 import { apiFetch } from '../api'
 import { useResourceCache } from '../context/ResourceCacheContext'
+import { useAuth } from '../context/AuthContext'
 
 const CACHE_TTL = 60000
 const CACHE_KEY = 'recommended:/api/books/recommended'
@@ -10,15 +11,31 @@ export default function Recommended() {
   const [groups, setGroups] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const { getCachedResource, setCachedResource } = useResourceCache()
+  const [dismissedBooks, setDismissedBooks] = useState(new Set())
+  const { getCachedResource, setCachedResource, invalidateResource } = useResourceCache()
+  const { token } = useAuth()
+
+  async function dismissBook(bookId) {
+    if (!token) return
+
+    try {
+      await apiFetch('/api/recommendations/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bookId, feedbackType: 'dismiss' })
+      })
+
+      setDismissedBooks(prev => new Set([...prev, bookId]))
+      invalidateResource(CACHE_KEY)
+    } catch (err) {
+      console.error('Failed to dismiss book:', err)
+    }
+  }
 
   useEffect(() => {
     let active = true
 
     async function load() {
-      setLoading(true)
-      setError(null)
-
       const cached = getCachedResource(CACHE_KEY, CACHE_TTL)
       if (cached) {
         if (active) {
@@ -27,6 +44,9 @@ export default function Recommended() {
         }
         return
       }
+
+      setLoading(true)
+      setError(null)
 
       try {
         const response = await apiFetch('/api/books/recommended')
@@ -51,8 +71,17 @@ export default function Recommended() {
 
     load()
 
+    // Poll for cache changes every 2 seconds
+    const interval = setInterval(() => {
+      const cached = getCachedResource(CACHE_KEY, CACHE_TTL)
+      if (!cached) {
+        load()
+      }
+    }, 2000)
+
     return () => {
       active = false
+      clearInterval(interval)
     }
   }, [getCachedResource, setCachedResource])
 
@@ -75,13 +104,13 @@ export default function Recommended() {
         </div>
       )}
 
-      {!loading && !error && groups.length === 0 && (
+      {!loading && !error && (!Array.isArray(groups) || groups.length === 0) && (
         <div className="surface-card empty-state">
           Brak polecanych książek w tym momencie. Wróć do nas wkrótce!
         </div>
       )}
 
-      {!loading && !error && groups.length > 0 && (
+      {!loading && !error && Array.isArray(groups) && groups.length > 0 && (
         <div className="recommended-groups">
           {groups.map(group => (
             <section key={group.key} className="surface-card recommended-section">
@@ -94,9 +123,23 @@ export default function Recommended() {
                 <div className="empty-state">Brak polecanych tytułów w tej kategorii.</div>
               ) : (
                 <div className="books-grid">
-                  {group.books.map(book => (
-                    <BookItem key={book.id} book={book} />
-                  ))}
+                  {group.books
+                    .filter(book => !dismissedBooks.has(book.id))
+                    .map(book => (
+                      <div key={book.id} className="book-card--dismissable">
+                        {token && (
+                          <button
+                            className="dismiss-btn"
+                            onClick={() => dismissBook(book.id)}
+                            title="Nie interesuje mnie"
+                          >
+                            ×
+                          </button>
+                        )}
+                        <BookItem book={book} />
+                      </div>
+                    ))
+                  }
                 </div>
               )}
             </section>

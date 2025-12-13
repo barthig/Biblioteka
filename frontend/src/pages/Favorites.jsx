@@ -49,8 +49,20 @@ export default function Favorites() {
     }
 
     load()
-    return () => { active = false }
-  }, [getCachedResource, invalidateResource, setCachedResource, user?.id])
+
+    // Poll for cache changes every 2 seconds
+    const interval = setInterval(() => {
+      const cached = getCachedResource(`favorites:${CACHE_KEY}`, CACHE_TTL)
+      if (!cached) {
+        load()
+      }
+    }, 2000)
+
+    return () => {
+      active = false
+      clearInterval(interval)
+    }
+  }, [getCachedResource, invalidateResource, setCachedResource, user?.id, CACHE_KEY, CACHE_TTL])
 
   async function removeFavorite(bookId) {
     setActionError(null)
@@ -61,6 +73,8 @@ export default function Favorites() {
         setCachedResource(`favorites:${CACHE_KEY}`, next)
         return next
       })
+      // Invalidate recommended as favorites affect recommendations
+      invalidateResource('recommended:*')
     } catch (err) {
       setActionError(err.message || 'Nie udało się usunąć pozycji z ulubionych')
     }
@@ -104,7 +118,7 @@ export default function Favorites() {
         </div>
       )}
 
-      {favorites.length === 0 ? (
+      {!Array.isArray(favorites) || favorites.length === 0 ? (
         <section className="surface-card empty-state">
           Brak zapisanych tytułów. Otwórz katalog i dodaj książki do ulubionych.
         </section>

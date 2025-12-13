@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom'
 import { apiFetch } from '../api'
 import { useAuth } from '../context/AuthContext'
 import { useResourceCache } from '../context/ResourceCacheContext'
+import { StarRating, RatingDisplay } from '../components/StarRating'
 
 function formatDate(value, withTime = false) {
   if (!value) return '—'
@@ -31,7 +32,7 @@ function getInitials(name) {
 export default function BookDetails() {
   const { id } = useParams()
   const bookId = Number(id)
-  const { token } = useAuth()
+  const { token, isAuthenticated } = useAuth()
 
   const [book, setBook] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -55,6 +56,9 @@ export default function BookDetails() {
   const [reviewPending, setReviewPending] = useState(false)
   const [reviewActionError, setReviewActionError] = useState(null)
   const [reviewActionSuccess, setReviewActionSuccess] = useState(null)
+  const [ratingData, setRatingData] = useState({ average: 0, count: 0, userRating: null })
+  const [userRating, setUserRating] = useState(0)
+  const [ratingSubmitting, setRatingSubmitting] = useState(false)
   const { getCachedResource, setCachedResource, invalidateResource } = useResourceCache()
   const REVIEWS_CACHE_TTL = 60000
   const RESERVATIONS_CACHE_TTL = 45000
@@ -118,6 +122,57 @@ export default function BookDetails() {
   useEffect(() => {
     loadReviews()
   }, [loadReviews])
+
+  useEffect(() => {
+    if (!id || !isAuthenticated) return
+    
+    async function loadRatings() {
+      try {
+        const data = await apiFetch(`/api/books/${id}/ratings`)
+        setRatingData({
+          average: data.average || 0,
+          count: data.count || 0,
+          userRating: data.userRating || null
+        })
+        if (data.userRating) {
+          setUserRating(data.userRating.rating)
+        }
+      } catch (err) {
+        console.error('Failed to load ratings:', err)
+      }
+    }
+    
+    loadRatings()
+  }, [id, isAuthenticated])
+
+  const handleRatingSubmit = async (rating) => {
+    if (!isAuthenticated) return
+    
+    setRatingSubmitting(true)
+    try {
+      await apiFetch(`/api/books/${id}/rate`, {
+        method: 'POST',
+        body: JSON.stringify({ rating })
+      })
+      
+      setUserRating(rating)
+      
+      // Reload ratings
+      const data = await apiFetch(`/api/books/${id}/ratings`)
+      setRatingData({
+        average: data.average || 0,
+        count: data.count || 0,
+        userRating: data.userRating || null
+      })
+      
+      setActionSuccess('Ocena zapisana!')
+      setTimeout(() => setActionSuccess(null), 3000)
+    } catch (err) {
+      setActionError(err.message || 'Nie udało się zapisać oceny')
+    } finally {
+      setRatingSubmitting(false)
+    }
+  }
 
   useEffect(() => {
     aliveRef.current = true
@@ -249,6 +304,7 @@ export default function BookDetails() {
         setFavorite(false)
         setActionSuccess('Usunięto książkę z ulubionych.')
         invalidateResource('favorites:/api/favorites')
+        invalidateResource('recommended:*')
       } else {
         const response = await apiFetch('/api/favorites', {
           method: 'POST',
@@ -259,6 +315,7 @@ export default function BookDetails() {
         setFavorite(Boolean(created))
         setActionSuccess('Dodano książkę do ulubionych.')
         invalidateResource('favorites:/api/favorites')
+        invalidateResource('recommended:*')
       }
     } catch (err) {
       setActionError(err.message || 'Nie udało się zaktualizować ulubionych')
@@ -397,6 +454,26 @@ export default function BookDetails() {
             <dd>{book.openStackCopies ?? 0}</dd>
           </div>
         </dl>
+        
+        {isAuthenticated && ratingData && (
+          <div style={{ marginTop: '2rem', paddingTop: '2rem', borderTop: '1px solid var(--border-color)' }}>
+            <h3>Ocena czytelników</h3>
+            <RatingDisplay average={ratingData.average} count={ratingData.count} size="large" />
+            
+            {!ratingSubmitting && (
+              <div style={{ marginTop: '1.5rem' }}>
+                <h4 style={{ marginBottom: '0.75rem', fontSize: '1rem', fontWeight: 500 }}>
+                  {userRating > 0 ? 'Twoja ocena:' : 'Oceń tę książkę:'}
+                </h4>
+                <StarRating 
+                  rating={userRating} 
+                  onRate={handleRatingSubmit}
+                  size="large"
+                />
+              </div>
+            )}
+          </div>
+        )}
       </article>
 
       <section className="surface-card book-actions">

@@ -34,7 +34,8 @@ export default function MyLoans() {
     async function load() {
       const cached = getCachedResource(CACHE_KEY, CACHE_TTL)
       if (typeof cached !== 'undefined') {
-        setLoans(cached)
+        const loansList = Array.isArray(cached) ? cached : (Array.isArray(cached?.data) ? cached.data : [])
+        setLoans(loansList)
         setLoading(false)
         setError(null)
       } else {
@@ -63,16 +64,32 @@ export default function MyLoans() {
     }
 
     load()
+
+    // Poll for cache changes every 2 seconds
+    const interval = setInterval(() => {
+      if (token) {
+        const cached = getCachedResource(CACHE_KEY, CACHE_TTL)
+        if (!cached) {
+          load()
+        }
+      }
+    }, 2000)
+
     return () => {
       cancelled = true
+      clearInterval(interval)
     }
   }, [CACHE_KEY, CACHE_TTL, getCachedResource, invalidateResource, setCachedResource, token])
 
-  const activeLoans = useMemo(() => loans.filter(loan => !loan.returnedAt), [loans])
-  const historyLoans = useMemo(
-    () => loans.filter(loan => loan.returnedAt).sort((a, b) => new Date(b.returnedAt).getTime() - new Date(a.returnedAt).getTime()),
-    [loans]
-  )
+  const activeLoans = useMemo(() => {
+    const loansArray = Array.isArray(loans) ? loans : []
+    return loansArray.filter(loan => !loan.returnedAt)
+  }, [loans])
+  
+  const historyLoans = useMemo(() => {
+    const loansArray = Array.isArray(loans) ? loans : []
+    return loansArray.filter(loan => loan.returnedAt).sort((a, b) => new Date(b.returnedAt).getTime() - new Date(a.returnedAt).getTime())
+  }, [loans])
 
   async function extendLoan(id, days = 14) {
     setActionError(null)
@@ -90,6 +107,8 @@ export default function MyLoans() {
         setCachedResource(CACHE_KEY, next)
         return next
       })
+      // Invalidate reservations cache as book availability may have changed
+      invalidateResource('reservations:*')
       setActionSuccess(`Termin wypożyczenia został przedłużony do ${formatDate(updatedLoan.dueAt)}.`)
       setExtendDays(prev => ({ ...prev, [id]: 14 }))
     } catch (err) {

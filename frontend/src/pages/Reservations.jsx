@@ -24,7 +24,8 @@ export default function Reservations() {
     async function load() {
       const cached = getCachedResource(`reservations:${CACHE_KEY}`, CACHE_TTL)
       if (cached) {
-        setReservations(cached)
+        const list = Array.isArray(cached) ? cached : (Array.isArray(cached?.data) ? cached.data : [])
+        setReservations(list)
         setLoading(false)
         setError(null)
         return
@@ -58,19 +59,31 @@ export default function Reservations() {
       invalidateResource('reservations:/api/reservations*')
     }
 
+    // Poll for cache changes every 2 seconds
+    const interval = setInterval(() => {
+      if (user?.id) {
+        const cached = getCachedResource(`reservations:${CACHE_KEY}`, CACHE_TTL)
+        if (!cached) {
+          load()
+        }
+      }
+    }, 2000)
+
     return () => {
       active = false
+      clearInterval(interval)
     }
-  }, [getCachedResource, invalidateResource, setCachedResource, user?.id])
+  }, [getCachedResource, invalidateResource, setCachedResource, user?.id, CACHE_KEY, CACHE_TTL])
 
-  const activeReservations = useMemo(
-    () => reservations.filter(reservation => reservation.status === 'ACTIVE'),
-    [reservations]
-  )
-  const historicalReservations = useMemo(
-    () => reservations.filter(reservation => reservation.status !== 'ACTIVE'),
-    [reservations]
-  )
+  const activeReservations = useMemo(() => {
+    const reservationsArray = Array.isArray(reservations) ? reservations : []
+    return reservationsArray.filter(reservation => reservation.status === 'ACTIVE')
+  }, [reservations])
+  
+  const historicalReservations = useMemo(() => {
+    const reservationsArray = Array.isArray(reservations) ? reservations : []
+    return reservationsArray.filter(reservation => reservation.status !== 'ACTIVE')
+  }, [reservations])
 
   async function cancelReservation(id) {
     setActionError(null)
@@ -85,7 +98,10 @@ export default function Reservations() {
         setCachedResource(`reservations:${CACHE_KEY}`, next)
         return next
       })
+      // Invalidate recommended cache as book availability may have changed
+      invalidateResource('recommended:*')
     } catch (err) {
+      console.error('Error cancelling reservation:', err)
       setActionError(err.message || 'Nie udało się anulować rezerwacji')
     }
   }

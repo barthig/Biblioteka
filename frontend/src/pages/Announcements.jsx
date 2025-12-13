@@ -14,45 +14,41 @@ export default function Announcements() {
   const [error, setError] = useState(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
-  const loadingRef = useRef(false)
 
   const isAdmin = user?.roles?.includes('ROLE_ADMIN')
   const isLibrarian = user?.roles?.includes('ROLE_LIBRARIAN')
   const canManage = isAdmin || isLibrarian
 
   useEffect(() => {
-    let mounted = true
+    const abortController = new AbortController()
 
     async function fetchData() {
-      if (!mounted || loadingRef.current) return
-      
-      loadingRef.current = true
       setLoading(true)
       setError(null)
 
       try {
         if (id) {
-          const data = await apiFetch(`/api/announcements/${id}`)
-          if (mounted) {
+          const data = await apiFetch(`/api/announcements/${id}`, { signal: abortController.signal })
+          if (!abortController.signal.aborted) {
             setSelectedAnnouncement(data)
           }
         } else {
-          const data = await apiFetch(`/api/announcements?page=${currentPage}&limit=10`)
-          if (mounted) {
-            setAnnouncements(data.data || data.items || data || [])
+          const data = await apiFetch(`/api/announcements?page=${currentPage}&limit=10`, { signal: abortController.signal })
+          const announcementsArray = data.data || data.items || data || []
+          if (!abortController.signal.aborted) {
+            setAnnouncements(announcementsArray)
             setTotalPages(data.meta?.totalPages || data.totalPages || 1)
           }
         }
       } catch (err) {
         console.error('Błąd ładowania ogłoszeń:', err)
-        if (mounted) {
+        if (!abortController.signal.aborted) {
           setError(err.message || 'Nie udało się załadować ogłoszeń')
           setAnnouncements([])
         }
       } finally {
-        if (mounted) {
+        if (!abortController.signal.aborted) {
           setLoading(false)
-          loadingRef.current = false
         }
       }
     }
@@ -60,7 +56,7 @@ export default function Announcements() {
     fetchData()
 
     return () => {
-      mounted = false
+      abortController.abort()
     }
   }, [id, currentPage])
 
