@@ -18,6 +18,9 @@ use Symfony\Component\BrowserKit\Exception\JsonException;
  */
 final class Response
 {
+    private string $content;
+    private int $status;
+    private array $headers;
     private array $jsonData;
 
     /**
@@ -28,11 +31,11 @@ final class Response
      * @param int    $status  The response status code (302 "Found" by default)
      * @param array  $headers An array of headers
      */
-    public function __construct(
-        private string $content = '',
-        private int $status = 200,
-        private array $headers = [],
-    ) {
+    public function __construct(string $content = '', int $status = 200, array $headers = [])
+    {
+        $this->content = $content;
+        $this->status = $status;
+        $this->headers = $headers;
     }
 
     /**

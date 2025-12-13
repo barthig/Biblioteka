@@ -427,8 +427,8 @@ class DoctrineExtension extends Extension
             }
 
             if (
-                preg_match('/^(?: \*|\/\*\*) @.*' . $quotedMappingObjectName . '\b/m', $content)
-                || preg_match('/^(?: \*|\/\*\*) @.*Embeddable\b/m', $content)
+                self::textContainsAnnotation($quotedMappingObjectName, $content)
+                || self::textContainsAnnotation('Embeddable', $content)
             ) {
                 $type = 'annotation';
                 break;
@@ -436,6 +436,21 @@ class DoctrineExtension extends Extension
         }
 
         return $type;
+    }
+
+    /**
+     * Check if the file content contains a class-like annotation
+     *
+     * @internal
+     */
+    public static function textContainsAnnotation(string $quotedMappingObjectName, string $content): bool
+    {
+        return preg_match('/^(?:[ ]\*|\/\*\*)[ ]@               # Match phpdoc start or line with an at
+            \\\\?                                               # Can start with antislash
+            ([a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*\\\\)*     # Match namespace components ending with antislash
+            ' . $quotedMappingObjectName . '                    # The target class
+            \b                                                  # Match word boundary
+            /mx', $content) === 1;
     }
 
     /**

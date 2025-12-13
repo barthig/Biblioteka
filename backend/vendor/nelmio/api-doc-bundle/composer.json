@@ -1,7 +1,12 @@
 {
     "name": "nelmio/api-doc-bundle",
     "description": "Generates documentation for your REST API from annotations and attributes",
-    "keywords": ["api", "documentation", "doc", "rest"],
+    "keywords": [
+        "api",
+        "documentation",
+        "doc",
+        "rest"
+    ],
     "type": "symfony-bundle",
     "license": "MIT",
     "authors": [
@@ -61,7 +66,7 @@
         "willdurand/hateoas-bundle": "^1.0 || ^2.0"
     },
     "conflict": {
-        "zircote/swagger-php": "4.8.7"
+        "zircote/swagger-php": "4.8.7 || 5.5.0"
     },
     "suggest": {
         "api-platform/core": "For using an API oriented framework.",
@@ -89,7 +94,14 @@
         }
     },
     "config": {
-        "sort-packages": true
+        "sort-packages": true,
+        "audit": {
+            "ignore": [
+                "PKSA-365x-2zjk-pt47",
+                "PKSA-gs8r-6kz6-pp56",
+                "PKSA-gnn4-pxdg-q76m"
+            ]
+        }
     },
     "extra": {
         "branch-alias": {

@@ -26,7 +26,7 @@ class BuildPaths
                     $annotation->_context->logger->warning($annotation->identity() . ' is missing required property "path" in ' . $annotation->_context);
                 } elseif (isset($paths[$annotation->path])) {
                     $paths[$annotation->path]->mergeProperties($annotation);
-                    $analysis->annotations->detach($annotation);
+                    $analysis->annotations->offsetUnset($annotation);
                 } else {
                     $paths[$annotation->path] = $annotation;
                 }
@@ -40,12 +40,10 @@ class BuildPaths
         foreach ($operations as $operation) {
             if ($operation->path) {
                 if (empty($paths[$operation->path])) {
-                    $paths[$operation->path] = $pathItem = new OA\PathItem(
-                        [
+                    $paths[$operation->path] = $pathItem = new OA\PathItem([
                             'path' => $operation->path,
                             '_context' => new Context(['generated' => true], $operation->_context),
-                        ]
-                    );
+                        ]);
                     $analysis->addAnnotation($pathItem, $pathItem->_context);
                 }
                 if ($paths[$operation->path]->merge([$operation])) {

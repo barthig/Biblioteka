@@ -35,10 +35,15 @@ class Cookie
         'D M d H:i:s Y T',
     ];
 
-    protected string $value;
-    protected ?string $expires = null;
-    protected string $path;
-    protected string $rawValue;
+    protected $name;
+    protected $value;
+    protected $expires;
+    protected $path;
+    protected $domain;
+    protected $secure;
+    protected $httponly;
+    protected $rawValue;
+    private ?string $samesite;
 
     /**
      * Sets a cookie.
@@ -53,17 +58,8 @@ class Cookie
      * @param bool        $encodedValue Whether the value is encoded or not
      * @param string|null $samesite     The cookie samesite attribute
      */
-    public function __construct(
-        private string $name,
-        ?string $value,
-        ?string $expires = null,
-        ?string $path = null,
-        private string $domain = '',
-        private bool $secure = false,
-        private bool $httponly = true,
-        bool $encodedValue = false,
-        private ?string $samesite = null,
-    ) {
+    public function __construct(string $name, ?string $value, ?string $expires = null, ?string $path = null, string $domain = '', bool $secure = false, bool $httponly = true, bool $encodedValue = false, ?string $samesite = null)
+    {
         if ($encodedValue) {
             $this->rawValue = $value ?? '';
             $this->value = urldecode($this->rawValue);
@@ -71,7 +67,12 @@ class Cookie
             $this->value = $value ?? '';
             $this->rawValue = rawurlencode($this->value);
         }
-        $this->path = $path ?: '/';
+        $this->name = $name;
+        $this->path = empty($path) ? '/' : $path;
+        $this->domain = $domain;
+        $this->secure = $secure;
+        $this->httponly = $httponly;
+        $this->samesite = $samesite;
 
         if (null !== $expires) {
             $timestampAsDateTime = \DateTimeImmutable::createFromFormat('U', $expires);

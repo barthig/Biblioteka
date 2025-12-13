@@ -20,13 +20,15 @@ use Symfony\Component\BrowserKit\Exception\LogicException;
  */
 class History
 {
-    protected array $stack = [];
-    protected int $position = -1;
+    protected $stack = [];
+    protected $position = -1;
 
     /**
      * Clears the history.
+     *
+     * @return void
      */
-    public function clear(): void
+    public function clear()
     {
         $this->stack = [];
         $this->position = -1;
@@ -34,8 +36,10 @@ class History
 
     /**
      * Adds a Request to the history.
+     *
+     * @return void
      */
-    public function add(Request $request): void
+    public function add(Request $request)
     {
         $this->stack = \array_slice($this->stack, 0, $this->position + 1);
         $this->stack[] = clone $request;
