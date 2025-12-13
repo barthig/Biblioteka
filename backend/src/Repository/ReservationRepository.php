@@ -37,13 +37,14 @@ class ReservationRepository extends ServiceEntityRepository
     {
         $qb = $this->createQueryBuilder('r')
             ->andWhere('r.user = :user')
-            ->setParameter('user', $user)
-            ->orderBy('r.reservedAt', 'DESC');
+            ->setParameter('user', $user);
 
         if (!$includeHistory) {
             $qb->andWhere('r.status = :status')
                 ->setParameter('status', Reservation::STATUS_ACTIVE)
-                ->orderBy('r.reservedAt', 'ASC');
+                ->orderBy('r.reservedAt', 'ASC');  // Active: oldest first
+        } else {
+            $qb->orderBy('r.reservedAt', 'DESC');  // History: newest first
         }
 
         return $qb->getQuery()->getResult();

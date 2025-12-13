@@ -8,6 +8,7 @@ use App\Application\Query\Reservation\ListReservationsQuery;
 use App\Controller\Traits\ValidationTrait;
 use App\Request\CreateReservationRequest;
 use App\Service\SecurityService;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -23,7 +24,8 @@ class ReservationController extends AbstractController
     public function __construct(
         private MessageBusInterface $commandBus,
         private MessageBusInterface $queryBus,
-        private SecurityService $security
+        private SecurityService $security,
+        private EntityManagerInterface $em
     ) {
     }
 
@@ -46,6 +48,12 @@ class ReservationController extends AbstractController
                 return $this->json(['error' => 'Unauthorized'], 401);
             }
             $userId = (int)$payload['sub'];
+            
+            // Issue #16: Non-librarians can only see active reservations
+            $includeHistory = false;
+            if (!$status) {
+                $status = 'ACTIVE';  // Force active filter
+            }
         }
 
         $query = new ListReservationsQuery(
@@ -82,7 +90,7 @@ class ReservationController extends AbstractController
         $command = new CreateReservationCommand(
             userId: (int)$payload['sub'],
             bookId: (int)$dto->bookId,
-            expiresInDays: $dto->days ?? 2
+            expiresInDays: $dto->days ?? 3  // Default 3 days (unified)
         );
 
         try {
@@ -171,15 +179,8 @@ class ReservationController extends AbstractController
             return $this->json(['error' => 'Only librarians can fulfill reservations'], 403);
         }
 
-        // Fulfill reservation = create loan from reserved copy
-        // This will be handled by a command that:
-        // 1. Checks if reservation is ACTIVE with assigned copy
-        // 2. Creates loan for user with that copy
-        // 3. Marks reservation as FULFILLED
-        // 4. Updates copy status to LOANED
-
         try {
-            // For now, we'll use a simple approach - get reservation and create loan manually
+            // Get reservation
             $reservation = $this->queryBus->dispatch(new \App\Application\Query\Reservation\GetReservationQuery((int)$id))
                 ->last(HandledStamp::class)->getResult();
 
@@ -191,29 +192,50 @@ class ReservationController extends AbstractController
                 return $this->json(['error' => 'Reservation is not active'], 400);
             }
 
+            // Issue #17: Check if reservation has expired
+            $now = new \DateTimeImmutable();
+            if ($reservation->getExpiresAt() < $now) {
+                return $this->json(['error' => 'Reservation has expired'], 400);
+            }
+
             if (!$reservation->getBookCopy()) {
                 return $this->json(['error' => 'No book copy assigned to this reservation'], 400);
             }
 
-            // Create loan - default 30 days
-            $createLoanCommand = new \App\Application\Command\Loan\CreateLoanCommand(
-                userId: $reservation->getUser()->getId(),
-                copyId: $reservation->getBookCopy()->getId(),
-                durationDays: 30
-            );
+            // Issue #23: Validate copy status before creating loan
+            $copy = $reservation->getBookCopy();
+            if ($copy->getStatus() !== \App\Entity\BookCopy::STATUS_RESERVED) {
+                return $this->json(['error' => 'Book copy is not in RESERVED status'], 400);
+            }
 
-            // Dispatch loan creation and get result
-            $loanEnvelope = $this->commandBus->dispatch($createLoanCommand);
-            $loan = $loanEnvelope->last(HandledStamp::class)->getResult();
+            // Issue #8: Wrap in transaction to ensure atomicity
+            $this->em->beginTransaction();
+            try {
+                // Create loan - default 30 days
+                $createLoanCommand = new \App\Application\Command\Loan\CreateLoanCommand(
+                    userId: $reservation->getUser()->getId(),
+                    copyId: $copy->getId(),
+                    durationDays: 30
+                );
 
-            // Mark reservation as fulfilled (without releasing the copy)
-            $fulfillCommand = new FulfillReservationCommand(
-                reservationId: (int)$id,
-                loanId: $loan->getId()
-            );
-            $this->commandBus->dispatch($fulfillCommand);
+                // Dispatch loan creation and get result
+                $loanEnvelope = $this->commandBus->dispatch($createLoanCommand);
+                $loan = $loanEnvelope->last(HandledStamp::class)->getResult();
 
-            return $this->json(['message' => 'Reservation fulfilled, loan created'], 200);
+                // Mark reservation as fulfilled (without releasing the copy)
+                $fulfillCommand = new FulfillReservationCommand(
+                    reservationId: (int)$id,
+                    loanId: $loan->getId()
+                );
+                $this->commandBus->dispatch($fulfillCommand);
+
+                $this->em->commit();
+
+                return $this->json(['message' => 'Reservation fulfilled, loan created'], 200);
+            } catch (\Throwable $txException) {
+                $this->em->rollback();
+                throw $txException;
+            }
         } catch (\Throwable $e) {
             if ($e instanceof HandlerFailedException) {
                 $e = $e->getPrevious() ?? $e;

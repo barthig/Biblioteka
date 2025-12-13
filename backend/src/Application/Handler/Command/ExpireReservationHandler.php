@@ -39,6 +39,7 @@ class ExpireReservationHandler
         $reservation->expire();
         $copy = $reservation->getBookCopy();
         
+        // Issue #12: expire() must release copy and update counters
         if ($copy) {
             $copy->setStatus(BookCopy::STATUS_AVAILABLE);
             $reservation->clearBookCopy();

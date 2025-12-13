@@ -53,6 +53,10 @@ class Reservation
     #[Groups(['reservation:read'])]
     private ?\DateTimeImmutable $cancelledAt = null;
 
+    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
+    #[Groups(['reservation:read'])]
+    private ?\DateTimeImmutable $expiredAt = null;
+
     public function __construct()
     {
         $this->reservedAt = new \DateTimeImmutable();
@@ -163,10 +167,15 @@ class Reservation
         return $this;
     }
 
+    public function getExpiredAt(): ?\DateTimeImmutable
+    {
+        return $this->expiredAt;
+    }
+
     public function expire(): self
     {
         $this->status = self::STATUS_EXPIRED;
-        $this->cancelledAt = new \DateTimeImmutable();
+        $this->expiredAt = new \DateTimeImmutable();
         return $this;
     }
 }

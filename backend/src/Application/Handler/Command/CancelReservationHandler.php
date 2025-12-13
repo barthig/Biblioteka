@@ -53,6 +53,11 @@ class CancelReservationHandler
         $copy = $reservation->getBookCopy();
         
         if ($copy) {
+            // Issue #10: Validate copy status before releasing
+            if ($copy->getStatus() === BookCopy::STATUS_LOANED) {
+                throw new \RuntimeException('Cannot release copy that is currently loaned');
+            }
+            
             $copy->setStatus(BookCopy::STATUS_AVAILABLE);
             $reservation->clearBookCopy();
             $reservation->getBook()->recalculateInventoryCounters();

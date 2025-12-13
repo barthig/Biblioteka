@@ -25,6 +25,11 @@ class CreateReservationHandler
 
     public function __invoke(CreateReservationCommand $command): Reservation
     {
+        // Issue #14: Validate expiresInDays
+        if ($command->expiresInDays < 1 || $command->expiresInDays > 14) {
+            throw new \InvalidArgumentException('Reservation expiry must be between 1 and 14 days');
+        }
+
         $userRepo = $this->em->getRepository(User::class);
         $bookRepo = $this->em->getRepository(Book::class);
 
@@ -35,7 +40,15 @@ class CreateReservationHandler
             throw new \RuntimeException('User or book not found');
         }
 
-        if ($book->getCopies() > 0) {
+        // Issue #22: Check user's active reservation limit (max 5)
+        $activeCount = $this->reservationRepository->countActiveByUser($user);
+        if ($activeCount >= 5) {
+            throw new \RuntimeException('Osiągnięto limit aktywnych rezerwacji (max 5)');
+        }
+
+        // Issue #15: Check actual availability, not just copy count
+        $availableCopies = $book->getAvailable();
+        if ($availableCopies > 0) {
             throw new \RuntimeException('Book currently available, wypożycz zamiast rezerwować');
         }
 
