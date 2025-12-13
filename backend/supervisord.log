@@ -54,3 +54,10 @@
 2025-12-13 20:16:06,566 INFO spawned: 'nginx' with pid 11
 2025-12-13 20:16:07,631 INFO success: php-fpm entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
 2025-12-13 20:16:07,632 INFO success: nginx entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-12-13 20:51:19,586 INFO Set uid to user 0 succeeded
+2025-12-13 20:51:19,801 INFO supervisord started with pid 1
+2025-12-13 20:51:20,806 INFO spawned: 'php-fpm' with pid 35
+2025-12-13 20:51:21,035 INFO spawned: 'nginx' with pid 36
+2025-12-13 20:51:22,377 INFO success: php-fpm entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-12-13 20:51:22,377 INFO success: nginx entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-12-13 20:59:45,493 WARN received SIGQUIT indicating exit request

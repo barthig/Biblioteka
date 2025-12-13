@@ -8,7 +8,6 @@ use Doctrine\Bundle\FixturesBundle\DependencyInjection\CompilerPass\FixturesComp
 use Doctrine\Bundle\FixturesBundle\FixtureGroupInterface;
 use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 use Doctrine\Common\DataFixtures\FixtureInterface;
-use Doctrine\Common\DataFixtures\Loader;
 use LogicException;
 use ReflectionClass;
 
@@ -17,7 +16,7 @@ use function array_values;
 use function get_class;
 use function sprintf;
 
-final class SymfonyFixturesLoader extends Loader implements FixturesProvider
+final class SymfonyFixturesLoader extends SymfonyBridgeLoader
 {
     /** @var FixtureInterface[] */
     private array $loadedFixtures = [];
@@ -49,7 +48,7 @@ final class SymfonyFixturesLoader extends Loader implements FixturesProvider
 
     public function addFixture(FixtureInterface $fixture): void
     {
-        $class                        = $fixture::class;
+        $class                        = get_class($fixture);
         $this->loadedFixtures[$class] = $fixture;
 
         $reflection = new ReflectionClass($fixture);
@@ -66,7 +65,7 @@ final class SymfonyFixturesLoader extends Loader implements FixturesProvider
      * Overridden to not allow new fixture classes to be instantiated.
      * {@inheritDoc}
      */
-    protected function createFixture(string $class): FixtureInterface
+    protected function createFixture($class): FixtureInterface
     {
         /*
          * We don't actually need to create the fixture. We just
@@ -110,7 +109,7 @@ final class SymfonyFixturesLoader extends Loader implements FixturesProvider
 
         $filteredFixtures = [];
         foreach ($fixtures as $order => $fixture) {
-            $fixtureClass = $fixture::class;
+            $fixtureClass = get_class($fixture);
             if (isset($requiredFixtures[$fixtureClass])) {
                 $filteredFixtures[$order] = $fixture;
                 continue;

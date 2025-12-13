@@ -7,18 +7,13 @@ namespace Doctrine\Bundle\FixturesBundle\Purger;
 use Doctrine\Common\DataFixtures\Purger\PurgerInterface;
 use Doctrine\ORM\EntityManagerInterface;
 
-/** @template T of PurgerInterface */
 interface PurgerFactory
 {
-    /**
-     * @phpstan-param list<string> $excluded
-     *
-     * @return T
-     */
+    /** @phpstan-param list<string> $excluded */
     public function createForEntityManager(
-        string|null $emName,
+        ?string $emName,
         EntityManagerInterface $em,
         array $excluded = [],
-        bool $purgeWithTruncate = false,
+        bool $purgeWithTruncate = false
     ): PurgerInterface;
 }

@@ -13,13 +13,14 @@ use Symfony\Component\DependencyInjection\Loader\PhpFileLoader;
 
 use function dirname;
 
-/** @internal */
-final class DoctrineFixturesExtension extends Extension
+class DoctrineFixturesExtension extends Extension
 {
     /**
      * {@inheritDoc}
+     *
+     * @return void
      */
-    public function load(array $configs, ContainerBuilder $container): void
+    public function load(array $configs, ContainerBuilder $container)
     {
         $loader = new PhpFileLoader($container, new FileLocator(dirname(__DIR__) . '/../config'));
 

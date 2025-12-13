@@ -35,7 +35,7 @@
             'type' => 'library',
             'install_path' => __DIR__ . '/../doctrine/data-fixtures',
             'aliases' => array(),
-            'dev_requirement' => false,
+            'dev_requirement' => true,
         ),
         'doctrine/dbal' => array(
             'pretty_version' => '4.4.1',
@@ -65,13 +65,13 @@
             'dev_requirement' => false,
         ),
         'doctrine/doctrine-fixtures-bundle' => array(
-            'pretty_version' => '4.4.x-dev',
-            'version' => '4.4.9999999.9999999-dev',
-            'reference' => '9e013ed10d49bf7746b07204d336384a7d9b5a4d',
+            'pretty_version' => '3.7.3',
+            'version' => '3.7.3.0',
+            'reference' => '4c3dfcc819ba2725a574f4286aa3f6459f582d5b',
             'type' => 'symfony-bundle',
             'install_path' => __DIR__ . '/../doctrine/doctrine-fixtures-bundle',
             'aliases' => array(),
-            'dev_requirement' => false,
+            'dev_requirement' => true,
         ),
         'doctrine/doctrine-migrations-bundle' => array(
             'pretty_version' => '3.7.0',
@@ -1061,7 +1061,7 @@
             'type' => 'symfony-bundle',
             'install_path' => __DIR__ . '/../symfony/maker-bundle',
             'aliases' => array(),
-            'dev_requirement' => false,
+            'dev_requirement' => true,
         ),
         'symfony/messenger' => array(
             'pretty_version' => 'v6.4.28',
@@ -1214,7 +1214,7 @@
             'type' => 'library',
             'install_path' => __DIR__ . '/../symfony/process',
             'aliases' => array(),
-            'dev_requirement' => false,
+            'dev_requirement' => true,
         ),
         'symfony/property-access' => array(
             'pretty_version' => 'v7.4.0',
