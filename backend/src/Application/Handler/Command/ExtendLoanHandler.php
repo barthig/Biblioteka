@@ -49,7 +49,7 @@ class ExtendLoanHandler
         $newDue = $currentDue->modify("+{$loanDurationDays} days");
         $loan->setDueAt($newDue);
         $loan->incrementExtensions();
-        $loan->setLastExtendedAt(new \DateTime());
+        $loan->setLastExtendedAt(new \DateTimeImmutable());
 
         $this->em->persist($loan);
         $this->em->flush();

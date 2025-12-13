@@ -29,8 +29,8 @@ class AlertController extends AbstractController
         $fineRepo = $this->entityManager->getRepository(\App\Entity\Fine::class);
 
         $alerts = [];
-        $now = new \DateTime();
-        $tomorrow = (new \DateTime())->modify('+1 day');
+        $now = new \DateTimeImmutable();
+        $tomorrow = (new \DateTimeImmutable())->modify('+1 day');
 
         // Check loans due soon (within 24 hours)
         $loans = $loanRepo->findBy(['user' => $userId, 'returnedAt' => null]);

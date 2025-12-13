@@ -42,7 +42,7 @@ class ReturnLoanHandler
         }
 
         // Check if loan is overdue and create fine
-        $now = new \DateTime();
+        $now = new \DateTimeImmutable();
         $dueDate = $loan->getDueAt();
         $isOverdue = $now > $dueDate;
         
@@ -83,7 +83,7 @@ class ReturnLoanHandler
             $nextReservation = $queue[0];
             $copy->setStatus(BookCopy::STATUS_RESERVED);
             $nextReservation->assignBookCopy($copy);
-            $nextReservation->setExpiresAt((new \DateTime())->modify('+2 days'));
+            $nextReservation->setExpiresAt((new \DateTimeImmutable())->modify('+2 days'));
             $reservationForNotification = $nextReservation;
 
             $this->em->beginTransaction();

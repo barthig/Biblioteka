@@ -29,15 +29,15 @@ class Loan
     #[Groups(['loan:read'])]
     private User $user;
 
-    #[ORM\Column(type: 'datetime')]
+    #[ORM\Column(type: 'datetime_immutable')]
     #[Groups(['loan:read'])]
     private \DateTimeInterface $borrowedAt;
 
-    #[ORM\Column(type: 'datetime')]
+    #[ORM\Column(type: 'datetime_immutable')]
     #[Groups(['loan:read'])]
     private \DateTimeInterface $dueAt;
 
-    #[ORM\Column(type: 'datetime', nullable: true)]
+    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
     #[Groups(['loan:read'])]
     private ?\DateTimeInterface $returnedAt = null;
 
@@ -45,13 +45,13 @@ class Loan
     #[Groups(['loan:read'])]
     private int $extensionsCount = 0;
 
-    #[ORM\Column(type: 'datetime', nullable: true)]
+    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
     #[Groups(['loan:read'])]
     private ?\DateTimeInterface $lastExtendedAt = null;
 
     public function __construct()
     {
-        $this->borrowedAt = new \DateTime();
+        $this->borrowedAt = new \DateTimeImmutable();
     }
 
     public function getId(): ?int { return $this->id; }

@@ -93,7 +93,7 @@ class CreateLoanHandler
                 ->setBook($book)
                 ->setBookCopy($copy)
                 ->setUser($user)
-                ->setDueAt((new \DateTime())->modify("+{$loanDurationDays} days"));
+                ->setDueAt((new \DateTimeImmutable())->modify("+{$loanDurationDays} days"));
 
             $this->em->persist($loan);
             $this->em->flush();

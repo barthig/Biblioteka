@@ -9,7 +9,7 @@ class DashboardControllerTest extends ApiTestCase
 {
     public function testOverviewReturnsAggregatedCounts(): void
     {
-        $user1 = $this->createUser('user1@example.com');
+        $user1 = $this->createUser('user1@example.com', ['ROLE_LIBRARIAN']);
         $user2 = $this->createUser('user2@example.com');
         $book1 = $this->createBook('Book A', $this->createAuthor('Author A'));
         $book2 = $this->createBook('Book B', $this->createAuthor('Author B'));
@@ -19,7 +19,7 @@ class DashboardControllerTest extends ApiTestCase
         $loan2 = $this->createLoan($user2, $book2);
         $this->entityManager->flush();
 
-        $client = $this->createApiClient();
+        $client = $this->createAuthenticatedClient($user1);
         $this->sendRequest($client, 'GET', '/api/dashboard');
 
         $this->assertResponseStatusCodeSame(200);

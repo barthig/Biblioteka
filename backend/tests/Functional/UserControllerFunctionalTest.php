@@ -9,20 +9,22 @@ class UserControllerFunctionalTest extends ApiTestCase
     {
         $this->createUser('first@example.com');
         $this->createUser('second@example.com');
+        $librarian = $this->createUser('librarian@example.com', ['ROLE_LIBRARIAN']);
 
-        $client = $this->createApiClient();
+        $client = $this->createAuthenticatedClient($librarian);
         $this->sendRequest($client, 'GET', '/api/users');
 
         $this->assertResponseStatusCodeSame(200);
         $data = $this->getJsonResponse($client);
-        $this->assertCount(2, $data);
+        $this->assertCount(3, $data);
     }
 
     public function testGetUserById(): void
     {
         $user = $this->createUser('first@example.com');
+        $librarian = $this->createUser('librarian@example.com', ['ROLE_LIBRARIAN']);
 
-        $client = $this->createApiClient();
+        $client = $this->createAuthenticatedClient($librarian);
         $this->sendRequest($client, 'GET', '/api/users/' . $user->getId());
 
         $this->assertResponseStatusCodeSame(200);
@@ -32,7 +34,8 @@ class UserControllerFunctionalTest extends ApiTestCase
 
     public function testGetUserReturns404WhenMissing(): void
     {
-        $client = $this->createApiClient();
+        $librarian = $this->createUser('librarian@example.com', ['ROLE_LIBRARIAN']);
+        $client = $this->createAuthenticatedClient($librarian);
         $this->sendRequest($client, 'GET', '/api/users/999');
 
         $this->assertResponseStatusCodeSame(404);

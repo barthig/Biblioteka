@@ -68,7 +68,7 @@ class DashboardController extends AbstractController
                 ->select('COUNT(l.id)')
                 ->where('l.returnedAt IS NULL')
                 ->andWhere('l.dueAt < :now')
-                ->setParameter('now', new \DateTime())
+                ->setParameter('now', new \DateTimeImmutable())
                 ->getQuery()
                 ->getSingleScalarResult();
 
@@ -79,7 +79,7 @@ class DashboardController extends AbstractController
                 ->andWhere('r.bookCopy IS NOT NULL')
                 ->andWhere('r.expiresAt < :now')
                 ->setParameter('status', 'ACTIVE')
-                ->setParameter('now', new \DateTime())
+                ->setParameter('now', new \DateTimeImmutable())
                 ->getQuery()
                 ->getSingleScalarResult();
         }
@@ -92,7 +92,7 @@ class DashboardController extends AbstractController
             $stats['transactionsToday'] = $loanRepo->createQueryBuilder('l')
                 ->select('COUNT(l.id)')
                 ->where('l.borrowedAt >= :today')
-                ->setParameter('today', (new \DateTime())->setTime(0, 0))
+                ->setParameter('today', (new \DateTimeImmutable())->setTime(0, 0))
                 ->getQuery()
                 ->getSingleScalarResult();
         }

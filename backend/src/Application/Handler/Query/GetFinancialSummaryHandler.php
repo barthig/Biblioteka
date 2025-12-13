@@ -22,7 +22,6 @@ class GetFinancialSummaryHandler
             ->addSelect('SUM(b.spentAmount) AS spent')
             ->addSelect('MAX(b.currency) AS currency')
             ->from(AcquisitionBudget::class, 'b')
-            ->setParameter('defaultCurrency', 'PLN')
             ->getQuery()
             ->getSingleResult();
 
@@ -31,7 +30,6 @@ class GetFinancialSummaryHandler
             ->addSelect('SUM(CASE WHEN f.paidAt IS NOT NULL THEN f.amount ELSE 0 END) AS collected')
             ->addSelect('MAX(f.currency) AS currency')
             ->from(Fine::class, 'f')
-            ->setParameter('defaultCurrency', 'PLN')
             ->getQuery()
             ->getSingleResult();
 

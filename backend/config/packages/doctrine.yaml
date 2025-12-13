@@ -1,6 +1,11 @@
 doctrine:
   dbal:
     url: '%env(resolve:DATABASE_URL)%'
+    types:
+      datetime: Doctrine\DBAL\Types\DateTimeImmutableType
+      datetimetz: Doctrine\DBAL\Types\DateTimeTzImmutableType
+      date: Doctrine\DBAL\Types\DateImmutableType
+      time: Doctrine\DBAL\Types\TimeImmutableType
   orm:
     auto_generate_proxy_classes: true
     naming_strategy: doctrine.orm.naming_strategy.underscore

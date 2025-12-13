@@ -117,7 +117,7 @@ class Book
     #[Groups(['book:read', 'reservation:read'])]
     private ?string $targetAgeGroup = null;
 
-    #[ORM\Column(type: 'datetime')]
+    #[ORM\Column(type: 'datetime_immutable')]
     #[Groups(['book:read', 'reservation:read'])]
     private \DateTimeInterface $createdAt;
 
