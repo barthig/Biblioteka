@@ -1,0 +1,42 @@
+# Dependencies
+backend/vendor/
+frontend/node_modules/
+
+# Cache and temporary files
+backend/var/cache/
+backend/var/log/
+backend/tmp/
+
+# Test files
+backend/tests/
+frontend/tests/
+backend/test*.php
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Documentation and archives
+*.md
+!README.md
+!PROJECT_CONFIG.md
+archive/
+
+# Backups
+backend/var/backups/
+backend/*.sql
+backend/init-db-backup-*.sql
+
+# Environment files
+.env.local
+.env.*.local

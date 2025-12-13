@@ -10,7 +10,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./backend/init-db.sql:/docker-entrypoint-initdb.d/00-init-db.sql:ro
+      - ./backend/init-db-expanded-v2.sql:/docker-entrypoint-initdb.d/00-init-db.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U biblioteka -d biblioteka_dev"]
       interval: 5s
@@ -39,6 +39,41 @@ services:
     networks:
       - biblioteka-network
 
+  db-init:
+    image: postgres:15-alpine
+    restart: "no"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./backend/init-db-expanded-v2.sql:/init-db.sql:ro
+      - ./docker/db/init-db-if-needed.sh:/init-scripts/init-db-if-needed.sh:ro
+    entrypoint: ["/bin/sh", "/init-scripts/init-db-if-needed.sh"]
+    environment:
+      # Must match actual password in existing postgres_data volume
+      PGPASSWORD: biblioteka
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: biblioteka
+      DB_NAME: biblioteka_dev
+    networks:
+      - biblioteka-network
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - biblioteka-network
+
   backend:
     build:
       context: .
@@ -53,9 +88,10 @@ services:
     ports:
       - "8000:8000"
     environment:
-      APP_ENV: prod
-      APP_DEBUG: 0
-      DATABASE_URL: postgresql://biblioteka:biblioteka_secure_2024@db:5432/biblioteka_dev?serverVersion=15&charset=utf8
+      APP_ENV: dev
+      APP_DEBUG: 1
+      DATABASE_URL: postgresql://biblioteka:biblioteka@db:5432/biblioteka_dev?serverVersion=15&charset=utf8
+      REDIS_URL: redis://redis:6379
       MESSENGER_TRANSPORT_DSN: amqp://biblioteka_app:rabbitmq_secure_2024@rabbitmq:5672/%2f/messages
       API_SECRET: ${API_SECRET:-change_me_api_secret_production_key}
       JWT_SECRET: ${JWT_SECRET:-change_me_jwt_secret_production_key}
@@ -85,7 +121,8 @@ services:
     environment:
       APP_ENV: prod
       APP_DEBUG: 0
-      DATABASE_URL: postgresql://biblioteka:biblioteka_secure_2024@db:5432/biblioteka_dev?serverVersion=15&charset=utf8
+      DATABASE_URL: postgresql://biblioteka:biblioteka@db:5432/biblioteka_dev?serverVersion=15&charset=utf8
+      REDIS_URL: redis://redis:6379
       MESSENGER_TRANSPORT_DSN: amqp://biblioteka_app:rabbitmq_secure_2024@rabbitmq:5672/%2f/messages
       API_SECRET: ${API_SECRET:-change_me_api_secret_production_key}
       JWT_SECRET: ${JWT_SECRET:-change_me_jwt_secret_production_key}
@@ -122,4 +159,6 @@ volumes:
   rabbitmq_data:
     driver: local
   backend_var:
+    driver: local
+  redis_data:
     driver: local

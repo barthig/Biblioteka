@@ -132,6 +132,11 @@ RUN mkdir -p var/cache var/log && \
     chown -R www-data:www-data var && \
     chmod -R 775 var
 
+# Copy entrypoint and make it executable (ensures permissions on mounted volumes at container start)
+COPY docker/backend/entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
 EXPOSE 8000
 
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
