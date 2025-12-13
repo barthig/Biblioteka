@@ -81,3 +81,9 @@
 2025-12-13 21:25:09,078 INFO waiting for php-fpm, nginx to die
 2025-12-13 21:25:09,082 INFO stopped: nginx (exit status 0)
 2025-12-13 21:25:09,087 INFO stopped: php-fpm (exit status 0)
+2025-12-13 21:25:10,447 INFO Set uid to user 0 succeeded
+2025-12-13 21:25:10,451 INFO supervisord started with pid 1
+2025-12-13 21:25:11,454 INFO spawned: 'php-fpm' with pid 10
+2025-12-13 21:25:11,456 INFO spawned: 'nginx' with pid 11
+2025-12-13 21:25:12,500 INFO success: php-fpm entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-12-13 21:25:12,501 INFO success: nginx entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)

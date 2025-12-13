@@ -24,10 +24,29 @@ class CancelReservationHandler
             throw new \RuntimeException('Reservation not found');
         }
 
-        // Authorization check (happens in controller)
+        // Authorization check: non-librarians can only cancel their own reservations
+        if (!$command->isLibrarian && $reservation->getUser()->getId() !== $command->userId) {
+            throw new \RuntimeException('Forbidden');
+        }
         
+        // Cannot cancel fulfilled reservations
         if ($reservation->getStatus() === Reservation::STATUS_FULFILLED) {
             throw new \RuntimeException('Reservation already fulfilled');
+        }
+
+        // Cannot cancel already cancelled reservations
+        if ($reservation->getStatus() === Reservation::STATUS_CANCELLED) {
+            throw new \RuntimeException('Reservation already cancelled');
+        }
+
+        // Expired reservations should use expire() method, not cancel()
+        if ($reservation->getStatus() === Reservation::STATUS_EXPIRED) {
+            throw new \RuntimeException('Reservation already expired');
+        }
+
+        // Only cancel active reservations
+        if ($reservation->getStatus() !== Reservation::STATUS_ACTIVE) {
+            throw new \RuntimeException('Cannot cancel reservation with status: ' . $reservation->getStatus());
         }
 
         $reservation->cancel();

@@ -3,6 +3,7 @@ namespace App\Controller;
 
 use App\Application\Command\Reservation\CancelReservationCommand;
 use App\Application\Command\Reservation\CreateReservationCommand;
+use App\Application\Command\Reservation\FulfillReservationCommand;
 use App\Application\Query\Reservation\ListReservationsQuery;
 use App\Controller\Traits\ValidationTrait;
 use App\Request\CreateReservationRequest;
@@ -201,15 +202,16 @@ class ReservationController extends AbstractController
                 durationDays: 30
             );
 
-            $this->commandBus->dispatch($createLoanCommand);
+            // Dispatch loan creation and get result
+            $loanEnvelope = $this->commandBus->dispatch($createLoanCommand);
+            $loan = $loanEnvelope->last(HandledStamp::class)->getResult();
 
-            // Cancel reservation (mark as fulfilled)
-            $cancelCommand = new CancelReservationCommand(
+            // Mark reservation as fulfilled (without releasing the copy)
+            $fulfillCommand = new FulfillReservationCommand(
                 reservationId: (int)$id,
-                userId: $reservation->getUser()->getId(),
-                isLibrarian: true
+                loanId: $loan->getId()
             );
-            $this->commandBus->dispatch($cancelCommand);
+            $this->commandBus->dispatch($fulfillCommand);
 
             return $this->json(['message' => 'Reservation fulfilled, loan created'], 200);
         } catch (\Throwable $e) {
