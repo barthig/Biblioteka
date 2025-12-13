@@ -91,6 +91,8 @@ services:
   App\Controller\DashboardController:
     arguments:
       $queryBus: '@query.bus'
+      $security: '@App\Service\SecurityService'
+      $entityManager: '@doctrine.orm.entity_manager'
 
   App\Controller\ReportController:
     arguments:

@@ -4,6 +4,15 @@ doctrine:
   orm:
     auto_generate_proxy_classes: true
     naming_strategy: doctrine.orm.naming_strategy.underscore
+    result_cache_driver:
+      type: pool
+      pool: doctrine.result_cache_pool
+    query_cache_driver:
+      type: pool
+      pool: doctrine.system_cache_pool
+    metadata_cache_driver:
+      type: pool
+      pool: doctrine.system_cache_pool
     mappings:
       App:
         is_bundle: false

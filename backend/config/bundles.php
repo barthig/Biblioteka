@@ -25,4 +25,8 @@ if (class_exists(Nelmio\ApiDocBundle\NelmioApiDocBundle::class)) {
     $bundles[Nelmio\ApiDocBundle\NelmioApiDocBundle::class] = ['all' => true];
 }
 
+if (class_exists(Nelmio\CorsBundle\NelmioCorsBundle::class)) {
+    $bundles[Nelmio\CorsBundle\NelmioCorsBundle::class] = ['all' => true];
+}
+
 return $bundles;

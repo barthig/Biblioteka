@@ -7,9 +7,29 @@ health_check:
   methods: [GET]
 
 # Authentication
+api_auth_test:
+  path: /api/test-login
+  controller: App\Controller\TestAuthController::testLogin
+  methods: [POST]
+
 api_auth_login:
   path: /api/auth/login
   controller: App\Controller\AuthController::login
+  methods: [POST]
+
+api_auth_refresh:
+  path: /api/auth/refresh
+  controller: App\Controller\AuthController::refresh
+  methods: [POST]
+
+api_auth_logout:
+  path: /api/auth/logout
+  controller: App\Controller\AuthController::logout
+  methods: [POST]
+
+api_auth_logout_all:
+  path: /api/auth/logout-all
+  controller: App\Controller\AuthController::logoutAll
   methods: [POST]
 
 api_auth_profile:
@@ -29,9 +49,35 @@ api_users_list:
   controller: App\Controller\UserController::list
   methods: [GET]
 
+api_users_search:
+  path: /api/users/search
+  controller: App\Controller\UserController::search
+  methods: [GET]
+
+api_admin_user_update:
+  path: /api/admin/users/{id}
+  controller: App\Controller\AdminUserController::update
+  methods: [PUT]
+  requirements:
+    id: '[0-9]+'
+
+api_admin_user_delete:
+  path: /api/admin/users/{id}
+  controller: App\Controller\AdminUserController::delete
+  methods: [DELETE]
+  requirements:
+    id: '[0-9]+'
+
 api_users_get:
   path: /api/users/{id}
   controller: App\Controller\UserController::getUserById
+  methods: [GET]
+  requirements:
+    id: '[0-9]+'
+
+api_users_details:
+  path: /api/users/{id}/details
+  controller: App\Controller\UserController::getUserDetails
   methods: [GET]
   requirements:
     id: '[0-9]+'
@@ -104,12 +150,102 @@ api_books_recommended:
   controller: App\Controller\BookController::recommended
   methods: [GET]
 
+# Recommendation feedback
+api_recommendations_feedback_create:
+  path: /api/recommendations/feedback
+  controller: App\Controller\RecommendationFeedbackController::addFeedback
+  methods: [POST]
+
+api_recommendations_feedback_delete:
+  path: /api/recommendations/feedback/{bookId}
+  controller: App\Controller\RecommendationFeedbackController::removeFeedback
+  methods: [DELETE]
+  requirements:
+    bookId: '[0-9]+'
+
+# Collections
+api_collections_list:
+  path: /api/collections
+  controller: App\Controller\CollectionController::list
+  methods: [GET]
+
+api_collections_get:
+  path: /api/collections/{id}
+  controller: App\Controller\CollectionController::get
+  methods: [GET]
+  requirements:
+    id: '[0-9]+'
+
+api_collections_create:
+  path: /api/collections
+  controller: App\Controller\CollectionController::create
+  methods: [POST]
+
+api_collections_update:
+  path: /api/collections/{id}
+  controller: App\Controller\CollectionController::update
+  methods: [PUT]
+  requirements:
+    id: '[0-9]+'
+
+api_collections_delete:
+  path: /api/collections/{id}
+  controller: App\Controller\CollectionController::delete
+  methods: [DELETE]
+  requirements:
+    id: '[0-9]+'
+
+api_books_popular:
+  path: /api/books/popular
+  controller: App\Controller\BookController::popular
+  methods: [GET]
+
+api_books_new:
+  path: /api/books/new
+  controller: App\Controller\BookController::newest
+  methods: [GET]
+
 api_books_get:
   path: /api/books/{id}
   controller: App\Controller\BookController::getBook
   methods: [GET]
   requirements:
     id: '[0-9]+'
+
+api_books_availability:
+  path: /api/books/{id}/availability
+  controller: App\Controller\BookController::availability
+  methods: [GET]
+  requirements:
+    id: '[0-9]+'
+
+# Book ratings
+api_books_ratings_list:
+  path: /api/books/{id}/ratings
+  controller: App\Controller\RatingController::listRatings
+  methods: [GET]
+  requirements:
+    id: '[0-9]+'
+
+api_books_rate:
+  path: /api/books/{id}/rate
+  controller: App\Controller\RatingController::rateBook
+  methods: [POST]
+  requirements:
+    id: '[0-9]+'
+
+api_books_ratings_delete:
+  path: /api/books/{bookId}/ratings/{ratingId}
+  controller: App\Controller\RatingController::deleteRating
+  methods: [DELETE]
+  requirements:
+    bookId: '[0-9]+'
+    ratingId: '[0-9]+'
+
+api_users_ratings:
+  path: /api/users/me/ratings
+  controller: App\Controller\RatingController::userRatings
+  methods: [GET]
 
 api_books_create:
   path: /api/books
@@ -160,6 +296,11 @@ api_admin_book_copy_delete:
   requirements:
     id: '[0-9]+'
     copyId: '[0-9]+'
+
+api_admin_copy_by_barcode:
+  path: /api/admin/copies/barcode/{barcode}
+  controller: App\Controller\BookInventoryController::findByBarcode
+  methods: [GET]
 
 # Digital asset management
 api_admin_book_assets_list:
@@ -394,6 +535,42 @@ api_account_password:
   controller: App\Controller\AccountController::changePassword
   methods: [PUT]
 
+api_account_contact:
+  path: /api/me/contact
+  controller: App\Controller\AccountController::updateContact
+  methods: [PUT]
+
+api_account_preferences:
+  path: /api/me/preferences
+  controller: App\Controller\AccountController::updatePreferences
+  methods: [PUT]
+
+api_account_ui_preferences:
+  path: /api/me/ui-preferences
+  controller: App\Controller\AccountController::updateUIPreferences
+  methods: [PUT]
+
+api_account_pin:
+  path: /api/me/pin
+  controller: App\Controller\AccountController::updatePin
+  methods: [PUT]
+
+api_account_onboarding:
+  path: /api/users/me/onboarding
+  controller: App\Controller\AccountController::completeOnboarding
+  methods: [POST]
+
+# Alerts and Library Info
+api_alerts:
+  path: /api/alerts
+  controller: App\Controller\AlertController::getAlerts
+  methods: [GET]
+
+api_library_hours:
+  path: /api/library/hours
+  controller: App\Controller\AlertController::getLibraryHours
+  methods: [GET]
+
 # Loan operations
 api_loans_list:
   path: /api/loans
@@ -455,6 +632,13 @@ api_reservations_cancel:
   path: /api/reservations/{id}
   controller: App\Controller\ReservationController::cancel
   methods: [DELETE]
+  requirements:
+    id: '[0-9]+'
+
+api_reservations_fulfill:
+  path: /api/reservations/{id}/fulfill
+  controller: App\Controller\ReservationController::fulfill
+  methods: [POST]
   requirements:
     id: '[0-9]+'
 
@@ -650,6 +834,166 @@ api_announcements_acknowledge:
   path: /api/announcements/{id}/acknowledge
   controller: App\Controller\AnnouncementController::acknowledge
   methods: [POST]
+  requirements:
+    id: '[0-9]+'
+
+# Authors
+api_authors_list:
+  path: /api/authors
+  controller: App\Controller\AuthorController::list
+  methods: [GET]
+
+api_authors_get:
+  path: /api/authors/{id}
+  controller: App\Controller\AuthorController::get
+  methods: [GET]
+  requirements:
+    id: '[0-9]+'
+
+api_authors_create:
+  path: /api/authors
+  controller: App\Controller\AuthorController::create
+  methods: [POST]
+
+api_authors_update:
+  path: /api/authors/{id}
+  controller: App\Controller\AuthorController::update
+  methods: [PUT, PATCH]
+  requirements:
+    id: '[0-9]+'
+
+api_authors_delete:
+  path: /api/authors/{id}
+  controller: App\Controller\AuthorController::delete
+  methods: [DELETE]
+  requirements:
+    id: '[0-9]+'
+
+# Categories
+api_categories_list:
+  path: /api/categories
+  controller: App\Controller\CategoryController::list
+  methods: [GET]
+
+api_categories_get:
+  path: /api/categories/{id}
+  controller: App\Controller\CategoryController::get
+  methods: [GET]
+  requirements:
+    id: '[0-9]+'
+
+api_categories_create:
+  path: /api/categories
+  controller: App\Controller\CategoryController::create
+  methods: [POST]
+
+api_categories_update:
+  path: /api/categories/{id}
+  controller: App\Controller\CategoryController::update
+  methods: [PUT, PATCH]
+  requirements:
+    id: '[0-9]+'
+
+api_categories_delete:
+  path: /api/categories/{id}
+  controller: App\Controller\CategoryController::delete
+  methods: [DELETE]
+  requirements:
+    id: '[0-9]+'
+
+# Staff Roles
+api_staff_roles_list:
+  path: /api/staff-roles
+  controller: App\Controller\StaffRoleController::list
+  methods: [GET]
+
+api_staff_roles_get:
+  path: /api/staff-roles/{id}
+  controller: App\Controller\StaffRoleController::get
+  methods: [GET]
+  requirements:
+    id: '[0-9]+'
+
+api_staff_roles_create:
+  path: /api/staff-roles
+  controller: App\Controller\StaffRoleController::create
+  methods: [POST]
+
+api_staff_roles_update:
+  path: /api/staff-roles/{id}
+  controller: App\Controller\StaffRoleController::update
+  methods: [PUT, PATCH]
+  requirements:
+    id: '[0-9]+'
+
+api_staff_roles_delete:
+  path: /api/staff-roles/{id}
+  controller: App\Controller\StaffRoleController::delete
+  methods: [DELETE]
+  requirements:
+    id: '[0-9]+'
+
+# Integration Configs
+api_integration_configs_list:
+  path: /api/integration-configs
+  controller: App\Controller\IntegrationConfigController::list
+  methods: [GET]
+
+api_integration_configs_get:
+  path: /api/integration-configs/{id}
+  controller: App\Controller\IntegrationConfigController::get
+  methods: [GET]
+  requirements:
+    id: '[0-9]+'
+
+api_integration_configs_create:
+  path: /api/integration-configs
+  controller: App\Controller\IntegrationConfigController::create
+  methods: [POST]
+
+api_integration_configs_update:
+  path: /api/integration-configs/{id}
+  controller: App\Controller\IntegrationConfigController::update
+  methods: [PUT, PATCH]
+  requirements:
+    id: '[0-9]+'
+
+api_integration_configs_delete:
+  path: /api/integration-configs/{id}
+  controller: App\Controller\IntegrationConfigController::delete
+  methods: [DELETE]
+  requirements:
+    id: '[0-9]+'
+
+# System Settings
+api_system_settings_list:
+  path: /api/system-settings
+  controller: App\Controller\SystemSettingController::list
+  methods: [GET]
+
+api_system_settings_get:
+  path: /api/system-settings/{id}
+  controller: App\Controller\SystemSettingController::get
+  methods: [GET]
+  requirements:
+    id: '[0-9]+'
+
+api_system_settings_create:
+  path: /api/system-settings
+  controller: App\Controller\SystemSettingController::create
+  methods: [POST]
+
+api_system_settings_update:
+  path: /api/system-settings/{id}
+  controller: App\Controller\SystemSettingController::update
+  methods: [PUT, PATCH]
+  requirements:
+    id: '[0-9]+'
+
+api_system_settings_delete:
+  path: /api/system-settings/{id}
+  controller: App\Controller\SystemSettingController::delete
+  methods: [DELETE]
   requirements:
     id: '[0-9]+'
 
