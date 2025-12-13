@@ -700,22 +700,21 @@ Plik należy utworzyć manualnie – patrz instrukcja w sekcji 6.
 
 ## 6. Uruchomienie aplikacji
 
-### 6.0. Automatyczny start (Windows PowerShell)
+### 6.0. Automatyczny start (Docker)
 
-Jeśli pracujesz na Windowsie i chcesz jednym poleceniem uruchomić backend oraz frontend, skorzystaj ze skryptu `scripts/start-dev.ps1`:
+Chcesz postawić cały system jednym poleceniem? Użyj skryptu PowerShell `scripts/start-app.ps1`, który uruchomi stos Docker Compose w trybie deweloperskim (lub produkcyjnym po ustawieniu `-Mode prod`).
 
 ```powershell
-Set-Location Biblioteka
-Set-ExecutionPolicy -Scope Process Bypass -Force  # jeśli wcześniej nie zezwolono na skrypty
-./scripts/start-dev.ps1                          # pełny start (backend + frontend)
+cd Biblioteka
+./scripts/start-app.ps1             # start dev (frontend: http://localhost:5173, backend: http://localhost:8000)
+./scripts/start-app.ps1 -Mode prod  # start prod (frontend: http://localhost:3000, backend: http://localhost:8000)
 ```
 
 Skrypt:
 
-- Sprawdza obecność `php`, `composer` oraz `npm` i automatycznie zainstaluje zależności (`composer install`, `npm install`), jeśli jeszcze nie istnieją katalogi `vendor/` lub `node_modules/`.
-- Uruchamia backend na `http://127.0.0.1:8000` i frontend Vite na `http://127.0.0.1:5173` w oddzielnych oknach PowerShell, pozostawiając logi na ekranie.
-- Tworzy `frontend/.env.local` z wartościami domyślnymi, gdy plik nie istnieje (koniecznie zaktualizuj `VITE_API_SECRET`).
-- Przyjmuje opcjonalne parametry `-BackendOnly`, `-FrontendOnly` oraz `-NoBrowser` (nie otwiera przeglądarki).
+- Sprawdza dostępność `docker` oraz `docker compose` i przerywa z czytelnym komunikatem w razie braków.
+- Wybiera właściwy plik Compose (`docker-compose.dev.yml` lub `docker-compose.yml`) i uruchamia kontenery z parametrem `--build`.
+- Na koniec wypisuje adresy usług (Frontend, Backend, panel RabbitMQ) oraz podpowiada jak przeglądać logi lub zatrzymać stos.
 
 Możesz nadal wykonywać ręczne kroki z kolejnych sekcji – skrypt je tylko automatyzuje.
 

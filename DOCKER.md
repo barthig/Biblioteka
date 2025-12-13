@@ -79,7 +79,16 @@ docker-compose -f docker-compose.dev.yml logs -f backend
 ## Baza danych
 
 ### Inicjalizacja
-Baza danych jest automatycznie inicjalizowana przy pierwszym uruchomieniu z pliku `backend/database_full_schema.sql`.
+Baza danych jest automatycznie inicjalizowana przy pierwszym uruchomieniu z jednego pliku:
+
+- `backend/init-db.sql` – kompletny schemat wraz ze spójnymi danymi startowymi (użytkownicy, książki, egzemplarze, rezerwacje, płatności, role, integracje)
+
+Kontener Postgresa załaduje dane podczas pierwszego uruchomienia volume `postgres_data`. Jeśli potrzebujesz ponownej inicjalizacji, usuń volume (`docker volume rm biblioteka_postgres_data`) lub uruchom `docker-compose ... down -v`.
+
+#### Dostępne konta testowe
+- Administrator: `admin@biblioteka.local` / hasło `Password123!`
+- Bibliotekarz: `bibliotekarz@biblioteka.local` / hasło `Password123!`
+- Czytelnik: `marta.nowak@example.com` / hasło `Password123!`
 
 ### Ręczne wykonanie migracji (jeśli potrzebne)
 ```powershell

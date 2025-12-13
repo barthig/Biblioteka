@@ -24,9 +24,48 @@ COPY backend/composer.json backend/composer.lock* ./
 
 RUN composer install --no-scripts --no-autoloader --prefer-dist
 
-COPY backend /app
+COPY backend/bin ./bin
+COPY backend/config ./config
+COPY backend/migrations ./migrations
+COPY backend/public ./public
+COPY backend/src ./src
+COPY backend/tests ./tests
 
 RUN composer dump-autoload --optimize
+
+# Development FPM stage
+FROM php:8.2-fpm AS development-fpm
+
+RUN apt-get update && apt-get install -y \
+    git \
+    unzip \
+    libicu-dev \
+    libpq-dev \
+    librabbitmq-dev \
+    libssl-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN docker-php-ext-install \
+    intl \
+    pdo_pgsql \
+    opcache \
+    && pecl install amqp redis \
+    && docker-php-ext-enable amqp redis
+
+# Enable OPcache for development (with revalidation)
+RUN echo "opcache.enable=1" >> "$PHP_INI_DIR/conf.d/opcache.ini" \
+    && echo "opcache.memory_consumption=128" >> "$PHP_INI_DIR/conf.d/opcache.ini" \
+    && echo "opcache.max_accelerated_files=10000" >> "$PHP_INI_DIR/conf.d/opcache.ini" \
+    && echo "opcache.revalidate_freq=2" >> "$PHP_INI_DIR/conf.d/opcache.ini" \
+    && echo "opcache.validate_timestamps=1" >> "$PHP_INI_DIR/conf.d/opcache.ini"
+
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+WORKDIR /app
+
+EXPOSE 9000
+
+CMD ["php-fpm"]
 
 # Production stage
 FROM php:8.2-fpm AS production
