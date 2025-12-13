@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { FaSearch, FaTimes } from 'react-icons/fa'
 import { bookService } from '../services/bookService'
 
-export default function SearchBar({ placeholder = 'Szukaj książek...', onSearch }) {
+export default function SearchBar({ placeholder = 'Szukaj książek...', onResults, onSearch }) {
   const [query, setQuery] = useState('')
   const [suggestions, setSuggestions] = useState([])
   const [loading, setLoading] = useState(false)
@@ -28,21 +28,43 @@ export default function SearchBar({ placeholder = 'Szukaj książek...', onSearc
       clearTimeout(timeoutRef.current)
     }
 
-    if (query.length < 2) {
+    const trimmedQuery = query.trim()
+
+    if (trimmedQuery.length < 2) {
       setSuggestions([])
       setShowSuggestions(false)
+      if (onResults) {
+        onResults([])
+      }
       return
     }
 
     timeoutRef.current = setTimeout(async () => {
       setLoading(true)
+      setShowSuggestions(true)
+      setSuggestions([])
       try {
-        const results = await bookService.search(query)
-        setSuggestions(results.slice(0, 5))
-        setShowSuggestions(true)
+        const results = await bookService.search(trimmedQuery)
+        const items = Array.isArray(results)
+          ? results
+          : Array.isArray(results?.items)
+            ? results.items
+            : []
+
+        setSuggestions(items.slice(0, 5))
+        setShowSuggestions(items.length > 0)
+
+        if (onResults) {
+          const total = typeof results?.total === 'number' ? results.total : items.length
+          onResults(items, total)
+        }
       } catch (error) {
         console.error('Search error:', error)
         setSuggestions([])
+        if (onResults) {
+          onResults([])
+        }
+        setShowSuggestions(false)
       } finally {
         setLoading(false)
       }
@@ -53,16 +75,21 @@ export default function SearchBar({ placeholder = 'Szukaj książek...', onSearc
         clearTimeout(timeoutRef.current)
       }
     }
-  }, [query])
+  }, [onResults, query])
 
   function handleSubmit(e) {
     e.preventDefault()
+    const trimmedQuery = query.trim()
     setShowSuggestions(false)
-    
+
+    if (!trimmedQuery) {
+      return
+    }
+
     if (onSearch) {
-      onSearch(query)
+      onSearch(trimmedQuery)
     } else {
-      navigate(`/books?search=${encodeURIComponent(query)}`)
+      navigate(`/books?search=${encodeURIComponent(trimmedQuery)}`)
     }
   }
 

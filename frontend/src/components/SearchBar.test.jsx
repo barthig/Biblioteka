@@ -56,9 +56,30 @@ describe('SearchBar', () => {
     }, { timeout: 1000 })
   })
 
+  it('should show loading state while searching', async () => {
+    let resolveSearch
+    const searchPromise = new Promise(resolve => { resolveSearch = resolve })
+    vi.mocked(bookService.bookService.search).mockReturnValue(searchPromise)
+
+    renderWithRouter(<SearchBar onResults={mockOnResults} />)
+
+    const input = screen.getByPlaceholderText(/Szukaj/i)
+    await userEvent.type(input, 'query')
+
+    await waitFor(() => {
+      expect(screen.getByText(/Wyszukiwanie/i)).toBeInTheDocument()
+    })
+
+    resolveSearch({ items: [{ id: 1, title: 'Book', author: 'Author' }], total: 1 })
+
+    await waitFor(() => {
+      expect(screen.getByText('Book')).toBeInTheDocument()
+    })
+  })
+
   it('should not search with empty query', async () => {
     renderWithRouter(<SearchBar onResults={mockOnResults} />)
-    
+
     const input = screen.getByPlaceholderText(/Szukaj/i)
     await userEvent.type(input, '   ')
 

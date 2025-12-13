@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { apiFetch } from '../api'
 import { useAuth } from '../context/AuthContext'
+import { RatingDisplay } from './StarRating'
 
 export default function BookItem({ book, onBorrowed }) {
   const [loading, setLoading] = useState(false)
@@ -24,6 +25,15 @@ export default function BookItem({ book, onBorrowed }) {
   const resourceType = book?.resourceType
   const signature = book?.signature
   const ageGroupLabel = book?.targetAgeGroupLabel ?? book?.targetAgeGroup ?? null
+
+  // Determine availability status
+  const getAvailabilityStatus = () => {
+    if (available >= 3) return { label: `Dostępne ${available}/${total}`, className: '' }
+    if (available > 0) return { label: `Ostatnie egzemplarze (${available}/${total})`, className: 'is-warning' }
+    return { label: 'Brak wolnych egzemplarzy', className: 'is-danger' }
+  }
+
+  const availabilityStatus = getAvailabilityStatus()
 
   useEffect(() => {
     setFavorite(Boolean(book?.isFavorite))
@@ -129,10 +139,16 @@ export default function BookItem({ book, onBorrowed }) {
             </div>
           )}
         </div>
-        <span className={`status-pill ${isAvailable ? '' : 'is-danger'}`}>
-          {isAvailable ? `Dostępne ${available}/${total}` : 'Brak wolnych egzemplarzy'}
+        <span className={`status-pill ${availabilityStatus.className}`}>
+          {availabilityStatus.label}
         </span>
       </div>
+
+      {book.averageRating > 0 && (
+        <div style={{ marginTop: '0.75rem' }}>
+          <RatingDisplay average={book.averageRating} count={book.ratingCount || 0} size="small" />
+        </div>
+      )}
 
       {book.description && (
         <p className="support-copy">{book.description}</p>

@@ -1,8 +1,7 @@
 const ABSOLUTE_URL = /^https?:\/\//i
 const API_BASE = (import.meta.env?.VITE_API_URL || '').replace(/\/$/, '')
-const API_SECRET = import.meta.env?.VITE_API_SECRET || ''
 
-// Small helper that attaches Authorization/api-secret headers and returns parsed JSON or throws on error
+// Small helper that attaches Authorization headers and returns parsed JSON or throws on error
 export async function apiFetch(path, opts = {}) {
   const isAbsolute = ABSOLUTE_URL.test(path)
   const normalizedPath = path.startsWith('/') ? path : `/${path}`
@@ -12,9 +11,6 @@ export async function apiFetch(path, opts = {}) {
   const headers = opts.headers ? { ...opts.headers } : {}
   if (token && !headers['Authorization']) {
     headers['Authorization'] = `Bearer ${token}`
-  }
-  if (API_SECRET && !headers['X-API-SECRET'] && !headers['x-api-secret']) {
-    headers['X-API-SECRET'] = API_SECRET
   }
 
   const finalOpts = { ...opts, headers }

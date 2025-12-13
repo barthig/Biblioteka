@@ -17,6 +17,7 @@ import Recommended from './pages/Recommended'
 import AdminPanel from './pages/AdminPanel'
 import LibrarianPanel from './pages/LibrarianPanel'
 import Announcements from './pages/Announcements'
+import UserDetails from './pages/UserDetails'
 
 export default function App() {
   return (
@@ -25,44 +26,54 @@ export default function App() {
         <div className="app-shell">
           <Navbar />
           <main className="main">
-            <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/books" element={<Books />} />
-            <Route path="/books/:id" element={<BookDetails />} />
-            <Route path="/recommended" element={<Recommended />} />
-            <Route path="/announcements" element={<Announcements />} />
-            <Route path="/announcements/:id" element={<Announcements />} />
-            <Route path="/my-loans" element={<MyLoans />} />
-            <Route path="/reservations" element={<Reservations />} />
-            <Route path="/favorites" element={<Favorites />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route
-              path="/admin"
-              element={
-                <RequireRole allowed={['ROLE_ADMIN']}>
-                  <AdminPanel />
-                </RequireRole>
-              }
-            />
-            <Route
-              path="/librarian"
-              element={
-                <RequireRole allowed={['ROLE_LIBRARIAN', 'ROLE_ADMIN']}>
-                  <LibrarianPanel />
-                </RequireRole>
-              }
-            />
-            </Routes>
-            <footer className="footer">
-              <p>© 2025 Biblioteka. System zarządzania biblioteką i wypożyczeniami.</p>
-              <div className="footer__links">
-                <a href="#regulamin">Regulamin</a>
-                <a href="#prywatnosc">Polityka prywatności</a>
-                <a href="#kontakt">Kontakt</a>
-              </div>
-            </footer>
+            <div className="content-shell">
+              <Routes>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/books" element={<Books />} />
+                <Route path="/books/:id" element={<BookDetails />} />
+                <Route path="/recommended" element={<Recommended />} />
+                <Route path="/announcements" element={<Announcements />} />
+                <Route path="/announcements/:id" element={<Announcements />} />
+                <Route path="/my-loans" element={<MyLoans />} />
+                <Route path="/reservations" element={<Reservations />} />
+                <Route path="/favorites" element={<Favorites />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route
+                  path="/admin/*"
+                  element={
+                    <RequireRole allowed={['ROLE_ADMIN']}>
+                      <AdminPanel />
+                    </RequireRole>
+                  }
+                />
+                <Route
+                  path="/users/:id/details"
+                  element={
+                    <RequireRole allowed={['ROLE_LIBRARIAN', 'ROLE_ADMIN']}>
+                      <UserDetails />
+                    </RequireRole>
+                  }
+                />
+                <Route
+                  path="/librarian"
+                  element={
+                    <RequireRole allowed={['ROLE_LIBRARIAN', 'ROLE_ADMIN']}>
+                      <LibrarianPanel />
+                    </RequireRole>
+                  }
+                />
+              </Routes>
+              <footer className="footer">
+                <p>© 2025 Biblioteka. System zarządzania biblioteką i wypożyczeniami.</p>
+                <div className="footer__links">
+                  <a href="#regulamin">Regulamin</a>
+                  <a href="#prywatnosc">Polityka prywatności</a>
+                  <a href="#kontakt">Kontakt</a>
+                </div>
+              </footer>
+            </div>
           </main>
         </div>
       </ResourceCacheProvider>
