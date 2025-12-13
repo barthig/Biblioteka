@@ -54,13 +54,11 @@ class AuthController extends AbstractController
     )]
     public function login(Request $request, UserRepository $repo, ValidatorInterface $validator, LoggerInterface $logger): JsonResponse
     {
-        // Rate limiting tymczasowo wyłączone na prośbę użytkownika
-        /*
+        // Rate limiting enabled for security
         $limiter = $this->loginAttemptsLimiter->create($request->getClientIp());
         if (!$limiter->consume(1)->isAccepted()) {
             return $this->json(['error' => 'Zbyt wiele prób logowania. Spróbuj ponownie za 15 minut.'], 429);
         }
-        */
         
         try {
             $data = json_decode($request->getContent(), true) ?: [];
@@ -110,20 +108,19 @@ class AuthController extends AbstractController
                 'name' => $user->getName()
             ]);
             
-            // Utwórz refresh token - TYMCZASOWO WYŁĄCZONE DO DEBUGOWANIA
+            // Create refresh token - fail login if this fails
             try {
                 $refreshToken = $this->refreshTokenService->createRefreshToken($user, $request);
                 $refreshTokenString = $refreshToken->getToken();
             } catch (\Throwable $refreshError) {
-                error_log('REFRESH TOKEN ERROR: ' . $refreshError->getMessage());
-                error_log('REFRESH TOKEN TRACE: ' . $refreshError->getTraceAsString());
                 $logger->error('Failed to create refresh token', [
                     'error' => $refreshError->getMessage(),
                     'trace' => substr($refreshError->getTraceAsString(), 0, 1000),
                     'file' => $refreshError->getFile(),
                     'line' => $refreshError->getLine()
                 ]);
-                $refreshTokenString = null;
+                // Fail the entire login if refresh token creation fails
+                return $this->json(['error' => 'Failed to create session. Please try again.'], 500);
             }
             
             return $this->json([
@@ -206,12 +203,29 @@ class AuthController extends AbstractController
             return $this->json(['error' => 'Invalid or expired refresh token'], 401);
         }
 
-        // Generuj nowy access token
-        $token = JwtService::createToken(['sub' => $user->getId(), 'roles' => $user->getRoles()]);
+        // Rotate refresh token - revoke old one and issue new one
+        $this->refreshTokenService->revokeRefreshToken($refreshTokenString);
+        
+        try {
+            $newRefreshToken = $this->refreshTokenService->createRefreshToken($user, $request);
+            $newRefreshTokenString = $newRefreshToken->getToken();
+        } catch (\Throwable $e) {
+            return $this->json(['error' => 'Failed to rotate refresh token'], 500);
+        }
+
+        // Generate new access token
+        $token = JwtService::createToken([
+            'sub' => $user->getId(),
+            'roles' => $user->getRoles(),
+            'email' => $user->getEmail(),
+            'name' => $user->getName()
+        ]);
 
         return $this->json([
             'token' => $token,
-            'expiresIn' => 86400
+            'refreshToken' => $newRefreshTokenString,
+            'expiresIn' => 86400,
+            'refreshExpiresIn' => 2592000
         ], 200);
     }
 

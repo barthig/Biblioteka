@@ -40,14 +40,6 @@ class ApiAuthSubscriber implements EventSubscriberInterface
             return;
         }
 
-        $headerSecret = $request->headers->get('x-api-secret');
-        $auth = $request->headers->get('authorization');
-        $bearer = $auth && stripos($auth, 'bearer ') === 0 ? substr($auth, 7) : null;
-
-        $secret = $headerSecret ?: $bearer;
-        $envSecret = getenv('API_SECRET') ?: ($_ENV['API_SECRET'] ?? null);
-        $secretMatches = $secret && $envSecret !== null && hash_equals($envSecret, $secret);
-
         $jwtStatus = $this->attachJwtPayload($request);
 
         if ($this->isPublicRoute($path, $method)) {
@@ -80,11 +72,7 @@ class ApiAuthSubscriber implements EventSubscriberInterface
             return;
         }
 
-        // allow API secret as fallback after attempting JWT validation
-        if ($secretMatches) {
-            return;
-        }
-
+        // JWT validation required - no fallback authentication allowed
         $event->setResponse(new JsonResponse(['error' => 'Unauthorized'], 401));
     }
 

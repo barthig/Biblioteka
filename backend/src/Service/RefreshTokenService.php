@@ -49,9 +49,16 @@ class RefreshTokenService
      */
     public function validateRefreshToken(string $tokenString): ?User
     {
-        $token = $this->refreshTokenRepository->findValidToken($tokenString);
+        // Hash the provided token to look it up securely
+        $tokenHash = hash('sha256', $tokenString);
+        $token = $this->refreshTokenRepository->findOneBy(['tokenHash' => $tokenHash]);
 
         if (!$token || !$token->isValid()) {
+            return null;
+        }
+
+        // Double-check with constant-time comparison
+        if (!$token->verifyToken($tokenString)) {
             return null;
         }
 
@@ -63,7 +70,8 @@ class RefreshTokenService
      */
     public function revokeRefreshToken(string $tokenString): bool
     {
-        $token = $this->refreshTokenRepository->findOneBy(['token' => $tokenString]);
+        $tokenHash = hash('sha256', $tokenString);
+        $token = $this->refreshTokenRepository->findOneBy(['tokenHash' => $tokenHash]);
 
         if (!$token) {
             return false;

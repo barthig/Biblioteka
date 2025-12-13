@@ -28,6 +28,7 @@ final class Version20251211123131 extends AbstractMigration
                 id INT NOT NULL DEFAULT nextval(\'refresh_token_id_seq\'),
                 user_id INT NOT NULL,
                 token VARCHAR(255) NOT NULL,
+                token_hash VARCHAR(64) NOT NULL,
                 expires_at TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL,
                 created_at TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL,
                 ip_address VARCHAR(45) DEFAULT NULL,
@@ -41,7 +42,7 @@ final class Version20251211123131 extends AbstractMigration
         ');
         
         $this->addSql('CREATE UNIQUE INDEX uniq_refresh_token ON refresh_token (token)');
-        $this->addSql('CREATE INDEX idx_refresh_token ON refresh_token (token)');
+        $this->addSql('CREATE UNIQUE INDEX uniq_refresh_token_hash ON refresh_token (token_hash)');
         $this->addSql('CREATE INDEX idx_refresh_token_user ON refresh_token (user_id)');
         
         $this->addSql('COMMENT ON COLUMN refresh_token.expires_at IS \'(DC2Type:datetime_immutable)\'');

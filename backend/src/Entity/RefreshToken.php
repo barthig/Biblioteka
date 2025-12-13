@@ -19,6 +19,9 @@ class RefreshToken
     #[ORM\Column(type: 'string', length: 255, unique: true)]
     private string $token;
 
+    #[ORM\Column(type: 'string', length: 64, unique: true)]
+    private string $tokenHash;
+
     #[ORM\ManyToOne(targetEntity: User::class)]
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private User $user;
@@ -59,7 +62,27 @@ class RefreshToken
     public function setToken(string $token): self
     {
         $this->token = $token;
+        $this->tokenHash = hash('sha256', $token);
         return $this;
+    }
+
+    public function getTokenHash(): string
+    {
+        return $this->tokenHash;
+    }
+
+    public function setTokenHash(string $tokenHash): self
+    {
+        $this->tokenHash = $tokenHash;
+        return $this;
+    }
+
+    /**
+     * Verifies if the provided token matches the stored hash
+     */
+    public function verifyToken(string $token): bool
+    {
+        return hash_equals($this->tokenHash, hash('sha256', $token));
     }
 
     public function getUser(): User
