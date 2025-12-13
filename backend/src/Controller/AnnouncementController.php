@@ -43,28 +43,45 @@ class AnnouncementController extends AbstractController
     )]
     public function list(Request $request, SecurityService $security): JsonResponse
     {
-        $page = max(1, $request->query->getInt('page', 1));
-        $limit = min(100, max(5, $request->query->getInt('limit', 20)));
-        $status = $request->query->get('status');
-        $homepageOnly = $request->query->getBoolean('homepage', false);
+        try {
+            error_log('AnnouncementController::list - START');
+            $page = max(1, $request->query->getInt('page', 1));
+            $limit = min(100, max(5, $request->query->getInt('limit', 20)));
+            $status = $request->query->get('status');
+            $homepageOnly = $request->query->getBoolean('homepage', false);
+            error_log('AnnouncementController::list - page: ' . $page . ', limit: ' . $limit . ', status: ' . ($status ?? 'null'));
 
-        $payload = $security->getJwtPayload($request);
-        $user = null;
-        $isLibrarian = false;
-        
-        if ($payload && isset($payload['sub'])) {
-            $user = $this->userRepository->find((int) $payload['sub']);
-            if ($user) {
-                $isLibrarian = in_array('ROLE_LIBRARIAN', $user->getRoles());
+            $payload = $security->getJwtPayload($request);
+            $user = null;
+            $isLibrarian = false;
+            
+            if ($payload && isset($payload['sub'])) {
+                $user = $this->userRepository->find((int) $payload['sub']);
+                if ($user) {
+                    $isLibrarian = in_array('ROLE_LIBRARIAN', $user->getRoles());
+                }
             }
+            error_log('AnnouncementController::list - isLibrarian: ' . ($isLibrarian ? 'yes' : 'no'));
+
+            $query = new ListAnnouncementsQuery($user, $isLibrarian, $status, $homepageOnly, $page, $limit);
+            error_log('AnnouncementController::list - dispatching query');
+            $envelope = $this->queryBus->dispatch($query);
+            $result = $envelope->last(HandledStamp::class)?->getResult();
+            error_log('AnnouncementController::list - result type: ' . gettype($result));
+            if (is_array($result)) {
+                error_log('AnnouncementController::list - result keys: ' . json_encode(array_keys($result)));
+                if (isset($result['data'])) {
+                    error_log('AnnouncementController::list - data count: ' . count($result['data']));
+                }
+            }
+
+            $groups = $isLibrarian ? ['announcement:list', 'announcement:read'] : ['announcement:list'];
+            return $this->json($result, 200, [], ['groups' => $groups]);
+        } catch (\Exception $e) {
+            error_log('AnnouncementController::list - EXCEPTION: ' . $e->getMessage());
+            error_log('AnnouncementController::list - Stack: ' . $e->getTraceAsString());
+            return $this->json(['error' => 'Internal error: ' . $e->getMessage()], 500);
         }
-
-        $query = new ListAnnouncementsQuery($user, $isLibrarian, $status, $homepageOnly, $page, $limit);
-        $envelope = $this->queryBus->dispatch($query);
-        $result = $envelope->last(HandledStamp::class)?->getResult();
-
-        $groups = $isLibrarian ? ['announcement:list', 'announcement:read'] : ['announcement:list'];
-        return $this->json($result, 200, [], ['groups' => $groups]);
     }
 
     #[OA\Get(

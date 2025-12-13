@@ -94,6 +94,10 @@ class ReservationController extends AbstractController
                 $e = $e->getPrevious() ?? $e;
             }
             
+            // Log the full exception for debugging
+            error_log('ReservationController exception: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+            error_log('Stack trace: ' . $e->getTraceAsString());
+            
             if ($e instanceof \RuntimeException) {
                 $statusCode = match ($e->getMessage()) {
                     'User or book not found' => 404,
@@ -104,12 +108,13 @@ class ReservationController extends AbstractController
                 return $this->json(['error' => $e->getMessage()], $statusCode);
             }
             
-            return $this->json(['error' => 'Internal error'], 500);
+            return $this->json(['error' => 'Internal error: ' . $e->getMessage()], 500);
         }
     }
 
     public function cancel(string $id, Request $request): JsonResponse
     {
+        error_log('ReservationController::cancel - id: ' . $id);
         if (!ctype_digit($id) || (int)$id <= 0) {
             return $this->json(['error' => 'Invalid reservation id'], 400);
         }
@@ -122,6 +127,7 @@ class ReservationController extends AbstractController
         }
 
         $userId = (int)$payload['sub'];
+        error_log('ReservationController::cancel - userId: ' . $userId . ', isLibrarian: ' . ($isLibrarian ? 'yes' : 'no'));
 
         $command = new CancelReservationCommand(
             reservationId: (int)$id,
@@ -131,8 +137,10 @@ class ReservationController extends AbstractController
 
         try {
             $this->commandBus->dispatch($command);
+            error_log('ReservationController::cancel - SUCCESS, returning 204');
             return new JsonResponse(null, 204);
         } catch (\Throwable $e) {
+            error_log('ReservationController::cancel - EXCEPTION: ' . $e->getMessage());
             if ($e instanceof HandlerFailedException) {
                 $e = $e->getPrevious() ?? $e;
             }
@@ -148,6 +156,68 @@ class ReservationController extends AbstractController
             }
             
             return $this->json(['error' => 'Internal error'], 500);
+        }
+    }
+
+    public function fulfill(string $id, Request $request): JsonResponse
+    {
+        if (!ctype_digit($id) || (int)$id <= 0) {
+            return $this->json(['error' => 'Invalid reservation id'], 400);
+        }
+
+        $isLibrarian = $this->security->hasRole($request, 'ROLE_LIBRARIAN');
+        if (!$isLibrarian) {
+            return $this->json(['error' => 'Only librarians can fulfill reservations'], 403);
+        }
+
+        // Fulfill reservation = create loan from reserved copy
+        // This will be handled by a command that:
+        // 1. Checks if reservation is ACTIVE with assigned copy
+        // 2. Creates loan for user with that copy
+        // 3. Marks reservation as FULFILLED
+        // 4. Updates copy status to LOANED
+
+        try {
+            // For now, we'll use a simple approach - get reservation and create loan manually
+            $reservation = $this->queryBus->dispatch(new \App\Application\Query\Reservation\GetReservationQuery((int)$id))
+                ->last(HandledStamp::class)->getResult();
+
+            if (!$reservation) {
+                return $this->json(['error' => 'Reservation not found'], 404);
+            }
+
+            if ($reservation->getStatus() !== 'ACTIVE') {
+                return $this->json(['error' => 'Reservation is not active'], 400);
+            }
+
+            if (!$reservation->getBookCopy()) {
+                return $this->json(['error' => 'No book copy assigned to this reservation'], 400);
+            }
+
+            // Create loan - default 30 days
+            $createLoanCommand = new \App\Application\Command\Loan\CreateLoanCommand(
+                userId: $reservation->getUser()->getId(),
+                copyId: $reservation->getBookCopy()->getId(),
+                durationDays: 30
+            );
+
+            $this->commandBus->dispatch($createLoanCommand);
+
+            // Cancel reservation (mark as fulfilled)
+            $cancelCommand = new CancelReservationCommand(
+                reservationId: (int)$id,
+                userId: $reservation->getUser()->getId(),
+                isLibrarian: true
+            );
+            $this->commandBus->dispatch($cancelCommand);
+
+            return $this->json(['message' => 'Reservation fulfilled, loan created'], 200);
+        } catch (\Throwable $e) {
+            if ($e instanceof HandlerFailedException) {
+                $e = $e->getPrevious() ?? $e;
+            }
+            
+            return $this->json(['error' => $e->getMessage()], 500);
         }
     }
 }

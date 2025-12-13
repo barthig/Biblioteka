@@ -7,6 +7,7 @@ use App\Application\Command\BookInventory\UpdateBookCopyCommand;
 use App\Application\Query\BookInventory\ListBookCopiesQuery;
 use App\Controller\Traits\ValidationTrait;
 use App\Entity\BookCopy;
+use App\Repository\BookCopyRepository;
 use App\Request\CreateBookCopyRequest;
 use App\Request\UpdateBookCopyRequest;
 use App\Service\SecurityService;
@@ -137,6 +138,37 @@ class BookInventoryController extends AbstractController
         } catch (\RuntimeException $e) {
             return $this->json(['error' => $e->getMessage()], 400);
         }
+    }
+
+    public function findByBarcode(
+        string $barcode,
+        Request $request,
+        SecurityService $security,
+        BookCopyRepository $copyRepo
+    ): JsonResponse {
+        if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
+            return $this->json(['error' => 'Forbidden'], 403);
+        }
+
+        $copy = $copyRepo->findOneBy(['inventoryCode' => $barcode]);
+        if (!$copy) {
+            return $this->json(['error' => 'Nie znaleziono egzemplarza o tym kodzie kreskowym'], 404);
+        }
+
+        return $this->json([
+            'id' => $copy->getId(),
+            'inventoryCode' => $copy->getInventoryCode(),
+            'status' => $copy->getStatus(),
+            'accessType' => $copy->getAccessType(),
+            'location' => $copy->getLocation(),
+            'condition' => $copy->getConditionState(),
+            'bookId' => $copy->getBook()->getId(),
+            'book' => [
+                'id' => $copy->getBook()->getId(),
+                'title' => $copy->getBook()->getTitle(),
+                'author' => $copy->getBook()->getAuthor()?->getName(),
+            ],
+        ]);
     }
 
     private function serializeCopy(BookCopy $copy): array

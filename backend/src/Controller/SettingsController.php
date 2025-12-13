@@ -4,6 +4,7 @@ namespace App\Controller;
 use App\Controller\Traits\ValidationTrait;
 use App\Request\UpdateSettingsRequest;
 use App\Service\SecurityService;
+use App\Service\SystemSettingsService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -12,15 +13,11 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 class SettingsController extends AbstractController
 {
     use ValidationTrait;
-    private array $defaults = [
-        'loanLimitPerUser' => 5,
-        'loanDurationDays' => 14,
-        'notificationsEnabled' => true,
-        'integrations' => [
-            'queue' => 'ok',
-            'email' => 'ok',
-        ],
-    ];
+
+    public function __construct(
+        private SystemSettingsService $settingsService
+    ) {
+    }
 
     public function getSettings(Request $request, SecurityService $security): JsonResponse
     {
@@ -32,7 +29,15 @@ class SettingsController extends AbstractController
             return $this->json(['error' => 'Integration service unavailable'], 503);
         }
 
-        return $this->json($this->defaults, 200);
+        $settings = $this->settingsService->getAll();
+        
+        // Add integrations status (hardcoded for now)
+        $settings['integrations'] = [
+            'queue' => 'ok',
+            'email' => 'ok',
+        ];
+
+        return $this->json($settings, 200);
     }
 
     public function updateSettings(Request $request, SecurityService $security, ValidatorInterface $validator): JsonResponse
@@ -53,14 +58,14 @@ class SettingsController extends AbstractController
             return $this->validationErrorResponse($errors);
         }
 
-        $settings = $this->defaults;
+        $toUpdate = [];
 
         if (array_key_exists('loanLimitPerUser', $payload)) {
             $limit = (int)$payload['loanLimitPerUser'];
             if ($limit < 1 || $limit > 20) {
                 return $this->json(['error' => 'loanLimitPerUser must be between 1 and 20'], 422);
             }
-            $settings['loanLimitPerUser'] = $limit;
+            $toUpdate['loanLimitPerUser'] = $limit;
         }
 
         if (array_key_exists('loanDurationDays', $payload)) {
@@ -68,20 +73,23 @@ class SettingsController extends AbstractController
             if ($duration < 7 || $duration > 60) {
                 return $this->json(['error' => 'loanDurationDays must be between 7 and 60'], 422);
             }
-            $settings['loanDurationDays'] = $duration;
+            $toUpdate['loanDurationDays'] = $duration;
         }
 
         if (array_key_exists('notificationsEnabled', $payload)) {
-            $settings['notificationsEnabled'] = (bool)$payload['notificationsEnabled'];
+            $toUpdate['notificationsEnabled'] = (bool)$payload['notificationsEnabled'];
         }
 
         if ($request->headers->get('X-Config-Service') === 'offline') {
             return $this->json(['error' => 'Configuration backend unavailable'], 503);
         }
 
+        // Update settings in database
+        $this->settingsService->updateMany($toUpdate);
+
         return $this->json([
             'updated' => true,
-            'settings' => $settings,
+            'settings' => $this->settingsService->getAll(),
         ], 200);
     }
 }

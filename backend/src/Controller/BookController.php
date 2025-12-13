@@ -10,6 +10,8 @@ use App\Controller\Traits\ValidationTrait;
 use App\Entity\Book;
 use App\Request\CreateBookRequest;
 use App\Request\UpdateBookRequest;
+use App\Repository\UserRepository;
+use App\Service\PersonalizedRecommendationService;
 use App\Service\SecurityService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -26,7 +28,9 @@ class BookController extends AbstractController
     public function __construct(
         private readonly MessageBusInterface $commandBus,
         private readonly MessageBusInterface $queryBus,
-        private readonly SecurityService $security
+        private readonly SecurityService $security,
+        private readonly PersonalizedRecommendationService $recommendations,
+        private readonly UserRepository $userRepository
     ) {}
 
     #[OA\Get(
@@ -247,40 +251,60 @@ class BookController extends AbstractController
 
     public function recommended(Request $request): JsonResponse
     {
-        $query = new ListBooksQuery();
-        $envelope = $this->queryBus->dispatch($query);
-        $result = $envelope->last(HandledStamp::class)?->getResult();
+        try {
+            error_log('BookController::recommended - START');
+            $userId = $this->security->getCurrentUserId($request);
+            error_log('BookController::recommended - userId: ' . ($userId ?? 'null'));
+            
+            $user = $userId ? $this->userRepository->find($userId) : null;
+            error_log('BookController::recommended - user loaded: ' . ($user ? 'yes' : 'no'));
 
-        $ageGroupDefinitions = [
-            Book::AGE_GROUP_TODDLERS => '0-2 lata',
-            Book::AGE_GROUP_PRESCHOOL => '3-6 lat',
-            Book::AGE_GROUP_EARLY_SCHOOL => '7-9 lat',
-            Book::AGE_GROUP_MIDDLE_GRADE => '10-12 lat',
-            Book::AGE_GROUP_YA_EARLY => '13-15 lat',
-            Book::AGE_GROUP_YA_LATE => '16+ lat',
-        ];
+            error_log('BookController::recommended - calling getRecommendationsForUser');
+            $groups = $this->recommendations->getRecommendationsForUser($user);
+            error_log('BookController::recommended - got ' . count($groups) . ' groups');
 
-        $groupedBooks = [];
-        foreach ($result['data'] as $book) {
-            $ageGroup = $book->getTargetAgeGroup();
-            if ($ageGroup && isset($ageGroupDefinitions[$ageGroup])) {
-                if (!isset($groupedBooks[$ageGroup])) {
-                    $groupedBooks[$ageGroup] = [
-                        'key' => $ageGroup,
-                        'label' => $ageGroupDefinitions[$ageGroup],
-                        'books' => []
-                    ];
-                }
-                // Convert Book entity to array (simplified)
-                $groupedBooks[$ageGroup]['books'][] = [
-                    'id' => $book->getId(),
-                    'title' => $book->getTitle(),
-                    'author' => $book->getAuthor() ? ['name' => $book->getAuthor()->getName()] : null,
-                    'targetAgeGroup' => $book->getTargetAgeGroup(),
-                ];
-            }
+            return $this->json(['groups' => $groups], 200, [], ['groups' => ['book:read']]);
+        } catch (\Exception $e) {
+            error_log('BookController::recommended - EXCEPTION: ' . $e->getMessage());
+            error_log('BookController::recommended - Exception type: ' . get_class($e));
+            error_log('BookController::recommended - File: ' . $e->getFile() . ':' . $e->getLine());
+            error_log('BookController::recommended - Stack trace: ' . $e->getTraceAsString());
+            return $this->json(['error' => 'Internal error: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function popular(Request $request): JsonResponse
+    {
+        $limit = min(50, max(1, (int) $request->query->get('limit', 20)));
+        
+        $books = $this->queryBus->dispatch(
+            new \App\Application\Query\Book\ListPopularBooksQuery($limit)
+        )->last(HandledStamp::class)?->getResult() ?? [];
+
+        return $this->json(['data' => $books], 200, [], ['groups' => ['book:read']]);
+    }
+
+    public function newest(Request $request): JsonResponse
+    {
+        $limit = min(50, max(1, (int) $request->query->get('limit', 20)));
+        
+        $books = $this->queryBus->dispatch(
+            new \App\Application\Query\Book\ListNewestBooksQuery($limit)
+        )->last(HandledStamp::class)?->getResult() ?? [];
+
+        return $this->json(['data' => $books], 200, [], ['groups' => ['book:read']]);
+    }
+
+    public function availability(int $id): JsonResponse
+    {
+        $availability = $this->queryBus->dispatch(
+            new \App\Application\Query\Book\GetBookAvailabilityQuery($id)
+        )->last(HandledStamp::class)?->getResult();
+
+        if (!$availability) {
+            return $this->json(['error' => 'Book not found'], 404);
         }
 
-        return $this->json(['groups' => array_values($groupedBooks)]);
+        return $this->json($availability, 200);
     }
 }

@@ -12,10 +12,8 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
-use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
-#[Route('/api/system-settings')]
 class SystemSettingController extends AbstractController
 {
     public function __construct(
@@ -23,7 +21,6 @@ class SystemSettingController extends AbstractController
     ) {
     }
 
-    #[Route('', methods: ['GET'])]
     #[IsGranted('ROLE_ADMIN')]
     public function list(Request $request): JsonResponse
     {
@@ -37,7 +34,6 @@ class SystemSettingController extends AbstractController
         return $this->json($settings);
     }
 
-    #[Route('/{id}', methods: ['GET'])]
     #[IsGranted('ROLE_ADMIN')]
     public function get(int $id): JsonResponse
     {
@@ -48,7 +44,6 @@ class SystemSettingController extends AbstractController
         return $this->json($setting);
     }
 
-    #[Route('', methods: ['POST'])]
     #[IsGranted('ROLE_ADMIN')]
     public function create(Request $request): JsonResponse
     {
@@ -67,7 +62,6 @@ class SystemSettingController extends AbstractController
         return $this->json($setting, Response::HTTP_CREATED);
     }
 
-    #[Route('/{id}', methods: ['PUT', 'PATCH'])]
     #[IsGranted('ROLE_ADMIN')]
     public function update(int $id, Request $request): JsonResponse
     {
@@ -85,7 +79,6 @@ class SystemSettingController extends AbstractController
         return $this->json($setting);
     }
 
-    #[Route('/{id}', methods: ['DELETE'])]
     #[IsGranted('ROLE_ADMIN')]
     public function delete(int $id): JsonResponse
     {

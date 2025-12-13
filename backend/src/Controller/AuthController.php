@@ -110,17 +110,35 @@ class AuthController extends AbstractController
                 'name' => $user->getName()
             ]);
             
-            // Utwórz refresh token
-            $refreshToken = $this->refreshTokenService->createRefreshToken($user, $request);
+            // Utwórz refresh token - TYMCZASOWO WYŁĄCZONE DO DEBUGOWANIA
+            try {
+                $refreshToken = $this->refreshTokenService->createRefreshToken($user, $request);
+                $refreshTokenString = $refreshToken->getToken();
+            } catch (\Throwable $refreshError) {
+                error_log('REFRESH TOKEN ERROR: ' . $refreshError->getMessage());
+                error_log('REFRESH TOKEN TRACE: ' . $refreshError->getTraceAsString());
+                $logger->error('Failed to create refresh token', [
+                    'error' => $refreshError->getMessage(),
+                    'trace' => substr($refreshError->getTraceAsString(), 0, 1000),
+                    'file' => $refreshError->getFile(),
+                    'line' => $refreshError->getLine()
+                ]);
+                $refreshTokenString = null;
+            }
             
             return $this->json([
                 'token' => $token,
-                'refreshToken' => $refreshToken->getToken(),
+                'refreshToken' => $refreshTokenString,
                 'expiresIn' => 86400, // 24h w sekundach
                 'refreshExpiresIn' => 2592000 // 30 dni w sekundach
             ], 200);
         } catch (\Throwable $e) {
-            $logger->error('Login error', ['exception' => $e]);
+            $logger->error('Login error', [
+                'exception' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
             return $this->json(['error' => 'Wystąpił błąd logowania'], 500);
         }
     }

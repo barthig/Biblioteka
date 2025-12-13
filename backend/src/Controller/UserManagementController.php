@@ -108,6 +108,8 @@ public function create(Request $request, ValidatorInterface $validator): JsonRes
             addressLine: array_key_exists('addressLine', $data) ? (trim((string) $data['addressLine']) ?: null) : null,
             city: array_key_exists('city', $data) ? (trim((string) $data['city']) ?: null) : null,
             postalCode: array_key_exists('postalCode', $data) ? (trim((string) $data['postalCode']) ?: null) : null,
+            pesel: array_key_exists('pesel', $data) ? (trim((string) $data['pesel']) ?: null) : null,
+            cardNumber: array_key_exists('cardNumber', $data) ? (trim((string) $data['cardNumber']) ?: null) : null,
             pendingApproval: array_key_exists('pendingApproval', $data) ? (bool) $data['pendingApproval'] : null,
             verified: array_key_exists('verified', $data) ? (bool) $data['verified'] : null,
             membershipGroup: $data['membershipGroup'] ?? null,

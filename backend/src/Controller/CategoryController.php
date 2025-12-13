@@ -12,10 +12,8 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
-use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
-#[Route('/api/categories')]
 class CategoryController extends AbstractController
 {
     public function __construct(
@@ -23,7 +21,6 @@ class CategoryController extends AbstractController
     ) {
     }
 
-    #[Route('', methods: ['GET'])]
     public function list(Request $request): JsonResponse
     {
         $page = max(1, (int) $request->query->get('page', 1));
@@ -36,7 +33,6 @@ class CategoryController extends AbstractController
         return $this->json($categories, Response::HTTP_OK, [], ['groups' => ['book:read']]);
     }
 
-    #[Route('/{id}', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function get(int $id): JsonResponse
     {
         try {
@@ -50,7 +46,6 @@ class CategoryController extends AbstractController
         }
     }
 
-    #[Route('', methods: ['POST'])]
     #[IsGranted('ROLE_LIBRARIAN')]
     public function create(Request $request): JsonResponse
     {
@@ -67,7 +62,6 @@ class CategoryController extends AbstractController
         return $this->json($category, Response::HTTP_CREATED, [], ['groups' => ['book:read']]);
     }
 
-    #[Route('/{id}', methods: ['PUT', 'PATCH'], requirements: ['id' => '\d+'])]
     #[IsGranted('ROLE_LIBRARIAN')]
     public function update(int $id, Request $request): JsonResponse
     {
@@ -88,7 +82,6 @@ class CategoryController extends AbstractController
         }
     }
 
-    #[Route('/{id}', methods: ['DELETE'], requirements: ['id' => '\d+'])]
     #[IsGranted('ROLE_LIBRARIAN')]
     public function delete(int $id): JsonResponse
     {
