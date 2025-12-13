@@ -85,4 +85,37 @@ class LoanRepository extends ServiceEntityRepository
 
         return ((int) $count) > 0;
     }
+
+    /**
+     * @return Loan[]
+     */
+    public function findRecentByUser(User $user, int $limit = 10): array
+    {
+        return $this->createQueryBuilder('l')
+            ->leftJoin('l.book', 'b')->addSelect('b')
+            ->andWhere('l.user = :user')
+            ->setParameter('user', $user)
+            ->addSelect('CASE WHEN l.returnedAt IS NOT NULL THEN l.returnedAt ELSE l.borrowedAt END as HIDDEN sortDate')
+            ->orderBy('sortDate', 'DESC')
+            ->addOrderBy('l.id', 'DESC')
+            ->setMaxResults(max(1, $limit))
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * @return int[]
+     */
+    public function getUserIdsWithOverdueSince(\DateTimeImmutable $cutoff): array
+    {
+        $rows = $this->createQueryBuilder('l')
+            ->select('DISTINCT IDENTITY(l.user) AS userId')
+            ->andWhere('l.returnedAt IS NULL')
+            ->andWhere('l.dueAt <= :cutoff')
+            ->setParameter('cutoff', $cutoff)
+            ->getQuery()
+            ->getScalarResult();
+
+        return array_map(static fn (array $row) => (int) $row['userId'], $rows);
+    }
 }

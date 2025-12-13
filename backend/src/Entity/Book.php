@@ -124,6 +124,12 @@ class Book
     #[Groups(['book:read'])]
     private bool $isFavorite = false;
 
+    #[Groups(['book:read'])]
+    private ?float $averageRating = null;
+
+    #[Groups(['book:read'])]
+    private ?int $ratingCount = null;
+
     public function __construct()
     {
         $this->createdAt = new \DateTimeImmutable();
@@ -469,6 +475,30 @@ class Book
     public function setIsFavorite(bool $isFavorite): self
     {
         $this->isFavorite = $isFavorite;
+
+        return $this;
+    }
+
+    public function getAverageRating(): ?float
+    {
+        return $this->averageRating;
+    }
+
+    public function setAverageRating(?float $averageRating): self
+    {
+        $this->averageRating = $averageRating;
+
+        return $this;
+    }
+
+    public function getRatingCount(): ?int
+    {
+        return $this->ratingCount;
+    }
+
+    public function setRatingCount(?int $ratingCount): self
+    {
+        $this->ratingCount = $ratingCount;
 
         return $this;
     }

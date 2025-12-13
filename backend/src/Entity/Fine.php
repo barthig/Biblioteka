@@ -111,4 +111,15 @@ class Fine
         $this->paidAt = new \DateTimeImmutable();
         return $this;
     }
+
+    public function isPaid(): bool
+    {
+        return $this->paidAt !== null;
+    }
+
+    #[Groups(['fine:read'])]
+    public function getUser(): ?User
+    {
+        return $this->loan->getBorrower();
+    }
 }

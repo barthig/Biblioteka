@@ -31,4 +31,22 @@ class UserRepository extends ServiceEntityRepository
 
         return $qb->getQuery()->getResult();
     }
+
+    /**
+     * Search users by name, email, PESEL or card number
+     * @return User[]
+     */
+    public function searchUsers(string $query, int $limit = 20): array
+    {
+        $qb = $this->createQueryBuilder('u')
+            ->where('u.name LIKE :query')
+            ->orWhere('u.email LIKE :query')
+            ->orWhere('u.pesel LIKE :query')
+            ->orWhere('u.cardNumber LIKE :query')
+            ->setParameter('query', '%' . $query . '%')
+            ->setMaxResults($limit)
+            ->orderBy('u.name', 'ASC');
+
+        return $qb->getQuery()->getResult();
+    }
 }

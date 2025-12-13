@@ -43,7 +43,7 @@ class FineRepository extends ServiceEntityRepository
     public function sumOutstandingByUser(User $user): float
     {
         $total = $this->createQueryBuilder('f')
-            ->select('COALESCE(SUM(f.amount), 0) as total')
+            ->select('SUM(f.amount) as total')
             ->join('f.loan', 'l')
             ->andWhere('l.user = :user')
             ->andWhere('f.paidAt IS NULL')
@@ -51,6 +51,67 @@ class FineRepository extends ServiceEntityRepository
             ->getQuery()
             ->getSingleScalarResult();
 
-        return (float) $total;
+        return (float) ($total ?? 0.0);
+    }
+
+    /**
+     * @return Fine[]
+     */
+    public function findByUser(User $user): array
+    {
+        return $this->createQueryBuilder('f')
+            ->join('f.loan', 'l')
+            ->andWhere('l.user = :user')
+            ->setParameter('user', $user)
+            ->orderBy('f.createdAt', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * @param float $minimum
+     * @return int[] user IDs that meet or exceed the outstanding threshold
+     */
+    public function getUserIdsWithOutstandingAtLeast(float $minimum): array
+    {
+        $rows = $this->createQueryBuilder('f')
+            ->select('IDENTITY(l.user) AS userId', 'SUM(f.amount) AS total')
+            ->join('f.loan', 'l')
+            ->andWhere('f.paidAt IS NULL')
+            ->groupBy('l.user')
+            ->having('SUM(f.amount) >= :minimum')
+            ->setParameter('minimum', $minimum)
+            ->getQuery()
+            ->getScalarResult();
+
+        return array_map(static fn (array $row) => (int) $row['userId'], $rows);
+    }
+
+    /**
+     * @param int[] $userIds
+     * @return array<int, float> map of userId => outstanding amount
+     */
+    public function getOutstandingTotalsForUsers(array $userIds): array
+    {
+        if (empty($userIds)) {
+            return [];
+        }
+
+        $rows = $this->createQueryBuilder('f')
+            ->select('IDENTITY(l.user) AS userId', 'SUM(f.amount) AS total')
+            ->join('f.loan', 'l')
+            ->andWhere('f.paidAt IS NULL')
+            ->andWhere('l.user IN (:userIds)')
+            ->setParameter('userIds', $userIds)
+            ->groupBy('l.user')
+            ->getQuery()
+            ->getScalarResult();
+
+        $totals = [];
+        foreach ($rows as $row) {
+            $totals[(int) $row['userId']] = (float) $row['total'];
+        }
+
+        return $totals;
     }
 }

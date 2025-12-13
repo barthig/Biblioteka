@@ -8,7 +8,8 @@ use Symfony\Component\Serializer\Annotation\Groups;
 class Loan
 {
     #[ORM\Id]
-    #[ORM\GeneratedValue]
+    #[ORM\GeneratedValue(strategy: 'SEQUENCE')]
+    #[ORM\SequenceGenerator(sequenceName: 'loan_id_seq', allocationSize: 1, initialValue: 1)]
     #[ORM\Column(type: 'integer')]
     #[Groups(['loan:read'])]
     private ?int $id = null;
@@ -50,7 +51,7 @@ class Loan
 
     public function __construct()
     {
-        $this->borrowedAt = new \DateTimeImmutable();
+        $this->borrowedAt = new \DateTime();
     }
 
     public function getId(): ?int { return $this->id; }

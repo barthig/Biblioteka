@@ -43,7 +43,7 @@ class BookRepository extends ServiceEntityRepository
             ->select('b.id')
             ->leftJoin('b.author', 'a')
             ->leftJoin('b.categories', 'c')
-            ->groupBy('b.id');
+            ->groupBy('b.id, a.id, c.id');
 
         $parameters = [];
 
@@ -160,16 +160,103 @@ class BookRepository extends ServiceEntityRepository
     /**
      * @return Book[]
      */
-    public function findRecommendedByAgeGroup(string $ageGroup, int $limit = 8): array
+    public function findRecommendedByAgeGroup(string $ageGroup, int $limit = 8, array $excludeBookIds = []): array
     {
         $qb = $this->createQueryBuilder('b')
             ->leftJoin('b.author', 'a')->addSelect('a')
             ->leftJoin('b.categories', 'c')->addSelect('c')
             ->where('b.targetAgeGroup = :ageGroup')
             ->setParameter('ageGroup', $ageGroup)
+            ->groupBy('b.id, a.id')
             ->orderBy('b.copies', 'DESC')
             ->addOrderBy('b.createdAt', 'DESC')
             ->setMaxResults(max(1, $limit));
+
+        if (!empty($excludeBookIds)) {
+            $qb->andWhere('b.id NOT IN (:excludeIds)')
+               ->setParameter('excludeIds', $excludeBookIds);
+        }
+
+        return $qb->getQuery()->getResult();
+    }
+
+    /**
+     * Suggest books that match a set of preferred authors or categories, optionally scoped by age group.
+     *
+     * @param int[] $authorIds
+     * @param int[] $categoryIds
+     * @param int[] $excludeBookIds
+     * @return Book[]
+     */
+    public function findRecommendedByPreferences(
+        array $authorIds,
+        array $categoryIds,
+        ?string $ageGroup,
+        array $excludeBookIds,
+        int $limit = 8
+    ): array {
+        if (empty($authorIds) && empty($categoryIds)) {
+            return [];
+        }
+
+        $qb = $this->createQueryBuilder('b')
+            ->leftJoin('b.author', 'a')->addSelect('a')
+            ->leftJoin('b.categories', 'c')->addSelect('c')
+            ->groupBy('b.id, a.id, c.id')
+            ->orderBy('b.copies', 'DESC')
+            ->addOrderBy('b.createdAt', 'DESC')
+            ->setMaxResults(max(1, $limit));
+
+        $conditions = [];
+
+        if (!empty($authorIds)) {
+            $conditions[] = 'a.id IN (:authorIds)';
+            $qb->setParameter('authorIds', $authorIds);
+        }
+
+        if (!empty($categoryIds)) {
+            $conditions[] = 'c.id IN (:categoryIds)';
+            $qb->setParameter('categoryIds', $categoryIds);
+        }
+
+        if (!empty($conditions)) {
+            $qb->andWhere('(' . implode(' OR ', $conditions) . ')');
+        }
+
+        if ($ageGroup !== null) {
+            $qb->andWhere('b.targetAgeGroup = :ageGroup')
+                ->setParameter('ageGroup', $ageGroup);
+        }
+
+        if (!empty($excludeBookIds)) {
+            $qb->andWhere('b.id NOT IN (:excludeIds)')
+                ->setParameter('excludeIds', $excludeBookIds);
+        }
+
+        return $qb->getQuery()->getResult();
+    }
+
+    /**
+     * Find top N most borrowed books across all time.
+     * @return Book[]
+     */
+    public function findMostBorrowedBooks(int $limit = 10, array $excludeBookIds = []): array
+    {
+        $qb = $this->createQueryBuilder('b')
+            ->leftJoin('App\Entity\Loan', 'l', 'WITH', 'l.book = b')
+            ->addSelect('a')
+            ->leftJoin('b.author', 'a')
+            ->leftJoin('b.categories', 'c')
+            ->groupBy('b.id, a.id, c.id')
+            ->addSelect('COUNT(l.id) as HIDDEN loanCount')
+            ->orderBy('loanCount', 'DESC')
+            ->addOrderBy('b.title', 'ASC')
+            ->setMaxResults($limit);
+
+        if (!empty($excludeBookIds)) {
+            $qb->andWhere('b.id NOT IN (:excludeIds)')
+                ->setParameter('excludeIds', $excludeBookIds);
+        }
 
         return $qb->getQuery()->getResult();
     }
@@ -289,6 +376,67 @@ class BookRepository extends ServiceEntityRepository
     }
 
     /**
+     * Get popular books based on loan count
+     * @return Book[]
+     */
+    public function findPopularBooks(int $limit = 20): array
+    {
+        $qb = $this->createQueryBuilder('b')
+            ->leftJoin('b.author', 'a')
+            ->leftJoin('b.categories', 'c')
+            ->leftJoin(Loan::class, 'l', 'WITH', 'l.book = b')
+            ->groupBy('b.id, a.id, c.id')
+            ->orderBy('COUNT(l.id)', 'DESC')
+            ->addOrderBy('b.title', 'ASC')
+            ->setMaxResults(max(1, $limit));
+
+        return $qb->getQuery()->getResult();
+    }
+
+    /**
+     * Get newest books (recently added to catalog)
+     * @return Book[]
+     */
+    public function findNewestBooks(int $limit = 20): array
+    {
+        $qb = $this->createQueryBuilder('b')
+            ->orderBy('b.createdAt', 'DESC')
+            ->addOrderBy('b.id', 'DESC')
+            ->setMaxResults(max(1, $limit));
+
+        return $qb->getQuery()->getResult();
+    }
+
+    /**
+     * Get availability information for a book
+     * @return array{totalCopies: int, availableCopies: int, borrowedCopies: int, reservations: int}
+     */
+    public function getBookAvailability(int $bookId): ?array
+    {
+        $book = $this->find($bookId);
+        if (!$book) {
+            return null;
+        }
+
+        $qb = $this->getEntityManager()->createQueryBuilder();
+        $qb->select('COUNT(r.id) as reservationCount')
+            ->from(Reservation::class, 'r')
+            ->where('r.book = :book')
+            ->andWhere('r.status = :status')
+            ->setParameter('book', $book)
+            ->setParameter('status', Reservation::STATUS_ACTIVE);
+
+        $reservationCount = (int) $qb->getQuery()->getSingleScalarResult();
+
+        return [
+            'totalCopies' => $book->getTotalCopies(),
+            'availableCopies' => $book->getCopies(),
+            'borrowedCopies' => $book->getTotalCopies() - $book->getCopies(),
+            'reservations' => $reservationCount
+        ];
+    }
+
+    /**
      * @return array<int, array{
      *     bookId: int,
      *     title: string,
@@ -317,7 +465,9 @@ class BookRepository extends ServiceEntityRepository
             ->addSelect('SUM(CASE WHEN r.status = :activeStatus THEN 1 ELSE 0 END) AS activeReservations')
             ->leftJoin(Loan::class, 'l', 'WITH', 'l.book = b')
             ->leftJoin(Reservation::class, 'r', 'WITH', 'r.book = b')
-            ->groupBy('b.id')
+            ->leftJoin('b.author', 'a')
+            ->leftJoin('b.categories', 'c')
+            ->groupBy('b.id, a.id, c.id')
             ->having('(MAX(l.borrowedAt) IS NULL OR MAX(l.borrowedAt) <= :cutoff) OR COUNT(l.id) <= :minLoans')
             ->orderBy('totalLoans', 'ASC')
             ->addOrderBy('b.title', 'ASC')

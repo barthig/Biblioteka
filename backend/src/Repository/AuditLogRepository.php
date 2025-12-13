@@ -75,6 +75,28 @@ class AuditLogRepository extends ServiceEntityRepository
     {
         $offset = ($page - 1) * $limit;
 
+        // Build count query separately without joins
+        $countQb = $this->createQueryBuilder('a')
+            ->select('COUNT(a.id)');
+
+        if (isset($filters['entityType'])) {
+            $countQb->andWhere('a.entityType = :entityType')
+               ->setParameter('entityType', $filters['entityType']);
+        }
+
+        if (isset($filters['action'])) {
+            $countQb->andWhere('a.action = :action')
+               ->setParameter('action', $filters['action']);
+        }
+
+        if (isset($filters['userId'])) {
+            $countQb->andWhere('a.user = :userId')
+               ->setParameter('userId', (int)$filters['userId']);
+        }
+
+        $total = (int) $countQb->getQuery()->getSingleScalarResult();
+
+        // Build results query with joins
         $qb = $this->createQueryBuilder('a')
             ->leftJoin('a.user', 'u')->addSelect('u')
             ->orderBy('a.createdAt', 'DESC');
@@ -93,10 +115,6 @@ class AuditLogRepository extends ServiceEntityRepository
             $qb->andWhere('a.user = :userId')
                ->setParameter('userId', (int)$filters['userId']);
         }
-
-        $countQb = clone $qb;
-        $countQb->select('COUNT(a.id)');
-        $total = (int) $countQb->getQuery()->getSingleScalarResult();
 
         $results = $qb->setMaxResults($limit)
             ->setFirstResult($offset)

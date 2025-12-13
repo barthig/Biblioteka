@@ -18,6 +18,7 @@ class AnnouncementRepository extends ServiceEntityRepository
      */
     public function findActiveForUser(?User $user, bool $onlyPinned = false): array
     {
+        error_log('AnnouncementRepository::findActiveForUser - START, onlyPinned: ' . ($onlyPinned ? 'yes' : 'no'));
         $qb = $this->createQueryBuilder('a')
             ->leftJoin('a.createdBy', 'u')
             ->addSelect('u')
@@ -34,11 +35,15 @@ class AnnouncementRepository extends ServiceEntityRepository
         }
 
         $announcements = $qb->getQuery()->getResult();
+        error_log('AnnouncementRepository::findActiveForUser - found ' . count($announcements) . ' announcements before filtering');
 
         // Filtruj po targetAudience
-        return array_filter($announcements, function (Announcement $announcement) use ($user) {
+        $filtered = array_filter($announcements, function (Announcement $announcement) use ($user) {
             return $announcement->isVisibleForUser($user);
         });
+        error_log('AnnouncementRepository::findActiveForUser - after filtering: ' . count($filtered) . ' announcements');
+        
+        return $filtered;
     }
 
     /**

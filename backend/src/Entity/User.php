@@ -45,16 +45,19 @@ class User
     private string $password;
 
     #[ORM\Column(type: 'string', length: 30, nullable: true)]
-    #[Groups(['loan:read'])]
+    #[Groups(['user:read', 'loan:read'])]
     private ?string $phoneNumber = null;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    #[Groups(['user:read'])]
     private ?string $addressLine = null;
 
     #[ORM\Column(type: 'string', length: 120, nullable: true)]
+    #[Groups(['user:read'])]
     private ?string $city = null;
 
     #[ORM\Column(type: 'string', length: 12, nullable: true)]
+    #[Groups(['user:read'])]
     private ?string $postalCode = null;
 
     #[ORM\Column(type: 'boolean', options: ['default' => false])]
@@ -92,6 +95,59 @@ class User
 
     #[ORM\Column(type: 'boolean', options: ['default' => true])]
     private bool $newsletterSubscribed = true;
+
+    #[ORM\Column(type: 'string', length: 11, nullable: true)]
+    #[Groups(['user:read'])]
+    private ?string $pesel = null;
+
+    #[ORM\Column(type: 'string', length: 20, nullable: true)]
+    #[Groups(['user:read'])]
+    private ?string $cardNumber = null;
+
+    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
+    private ?\DateTimeImmutable $cardExpiry = null;
+
+    #[ORM\Column(type: 'string', length: 50, nullable: true)]
+    private ?string $accountStatus = 'Aktywne';
+
+    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    private bool $keepHistory = false;
+
+    #[ORM\Column(type: 'boolean', options: ['default' => true])]
+    private bool $emailLoans = true;
+
+    #[ORM\Column(type: 'boolean', options: ['default' => true])]
+    private bool $emailReservations = true;
+
+    #[ORM\Column(type: 'boolean', options: ['default' => true])]
+    private bool $emailFines = true;
+
+    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    private bool $emailAnnouncements = false;
+
+    #[ORM\Column(type: 'string', length: 20, nullable: true)]
+    private ?string $preferredContact = 'email';
+
+    #[ORM\Column(type: 'string', length: 50, nullable: true)]
+    private ?string $defaultBranch = null;
+
+    #[ORM\Column(type: 'string', length: 20, nullable: true)]
+    private ?string $theme = 'auto';
+
+    #[ORM\Column(type: 'json', nullable: true)]
+    private ?array $preferredCategories = null;
+
+    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    private bool $onboardingCompleted = false;
+
+    #[ORM\Column(type: 'string', length: 20, nullable: true)]
+    private ?string $fontSize = 'standard';
+
+    #[ORM\Column(type: 'string', length: 5, nullable: true)]
+    private ?string $language = 'pl';
+
+    #[ORM\Column(type: 'string', length: 4, nullable: true)]
+    private ?string $pin = null;
 
     public function __construct()
     {
@@ -278,4 +334,56 @@ class User
 
         return $trimmed;
     }
+
+    // New getters and setters
+    public function getPesel(): ?string { return $this->pesel; }
+    public function setPesel(?string $pesel): self { $this->pesel = $pesel; return $this; }
+
+    public function getCardNumber(): ?string { return $this->cardNumber; }
+    public function setCardNumber(?string $cardNumber): self { $this->cardNumber = $cardNumber; return $this; }
+
+    public function getCardExpiry(): ?\DateTimeImmutable { return $this->cardExpiry; }
+    public function setCardExpiry(?\DateTimeImmutable $cardExpiry): self { $this->cardExpiry = $cardExpiry; return $this; }
+
+    public function getAccountStatus(): ?string { return $this->accountStatus; }
+    public function setAccountStatus(?string $accountStatus): self { $this->accountStatus = $accountStatus; return $this; }
+
+    public function getKeepHistory(): bool { return $this->keepHistory; }
+    public function setKeepHistory(bool $keepHistory): self { $this->keepHistory = $keepHistory; return $this; }
+
+    public function getEmailLoans(): bool { return $this->emailLoans; }
+    public function setEmailLoans(bool $emailLoans): self { $this->emailLoans = $emailLoans; return $this; }
+
+    public function getEmailReservations(): bool { return $this->emailReservations; }
+    public function setEmailReservations(bool $emailReservations): self { $this->emailReservations = $emailReservations; return $this; }
+
+    public function getEmailFines(): bool { return $this->emailFines; }
+    public function setEmailFines(bool $emailFines): self { $this->emailFines = $emailFines; return $this; }
+
+    public function getEmailAnnouncements(): bool { return $this->emailAnnouncements; }
+    public function setEmailAnnouncements(bool $emailAnnouncements): self { $this->emailAnnouncements = $emailAnnouncements; return $this; }
+
+    public function getPreferredContact(): ?string { return $this->preferredContact; }
+    public function setPreferredContact(?string $preferredContact): self { $this->preferredContact = $preferredContact; return $this; }
+
+    public function getDefaultBranch(): ?string { return $this->defaultBranch; }
+    public function setDefaultBranch(?string $defaultBranch): self { $this->defaultBranch = $defaultBranch; return $this; }
+
+    public function getTheme(): ?string { return $this->theme; }
+    public function setTheme(?string $theme): self { $this->theme = $theme; return $this; }
+
+    public function getPreferredCategories(): ?array { return $this->preferredCategories; }
+    public function setPreferredCategories(?array $categories): self { $this->preferredCategories = $categories; return $this; }
+
+    public function isOnboardingCompleted(): bool { return $this->onboardingCompleted; }
+    public function setOnboardingCompleted(bool $completed): self { $this->onboardingCompleted = $completed; return $this; }
+
+    public function getFontSize(): ?string { return $this->fontSize; }
+    public function setFontSize(?string $fontSize): self { $this->fontSize = $fontSize; return $this; }
+
+    public function getLanguage(): ?string { return $this->language; }
+    public function setLanguage(?string $language): self { $this->language = $language; return $this; }
+
+    public function getPin(): ?string { return $this->pin; }
+    public function setPin(?string $pin): self { $this->pin = $pin; return $this; }
 }
