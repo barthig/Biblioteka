@@ -3,6 +3,7 @@ namespace App\Application\Handler\Command;
 
 use App\Application\Command\Loan\ReturnLoanCommand;
 use App\Entity\BookCopy;
+use App\Entity\Fine;
 use App\Entity\Loan;
 use App\Message\ReservationReadyMessage;
 use App\Repository\LoanRepository;
@@ -40,7 +41,36 @@ class ReturnLoanHandler
             throw new \RuntimeException('Loan already returned');
         }
 
-        $loan->setReturnedAt(new \DateTimeImmutable());
+        // Check if loan is overdue and create fine
+        $now = new \DateTime();
+        $dueDate = $loan->getDueAt();
+        $isOverdue = $now > $dueDate;
+        
+        if ($isOverdue) {
+            $interval = $now->diff($dueDate);
+            $daysOverdue = $interval->days;
+            
+            if ($daysOverdue > 0) {
+                // Create fine: 0.50 PLN per day
+                $fineAmount = $daysOverdue * 0.50;
+                
+                $fine = new Fine();
+                $fine->setLoan($loan);
+                $fine->setAmount((string) $fineAmount);
+                $fine->setCurrency('PLN');
+                $fine->setReason("Zwrot po terminie ({$daysOverdue} dni spóźnienia)");
+                
+                $this->em->persist($fine);
+                
+                $this->logger->info('Fine created for overdue loan', [
+                    'loanId' => $loan->getId(),
+                    'daysOverdue' => $daysOverdue,
+                    'fineAmount' => $fineAmount
+                ]);
+            }
+        }
+
+        $loan->setReturnedAt($now);
 
         // Check reservations waiting for this book
         $queue = $this->reservationRepository->findActiveByBook($loan->getBook());
@@ -53,7 +83,7 @@ class ReturnLoanHandler
             $nextReservation = $queue[0];
             $copy->setStatus(BookCopy::STATUS_RESERVED);
             $nextReservation->assignBookCopy($copy);
-            $nextReservation->setExpiresAt((new \DateTimeImmutable())->modify('+2 days'));
+            $nextReservation->setExpiresAt((new \DateTime())->modify('+2 days'));
             $reservationForNotification = $nextReservation;
 
             $this->em->beginTransaction();
@@ -61,11 +91,12 @@ class ReturnLoanHandler
                 $loan->getBook()->recalculateInventoryCounters();
                 $this->em->persist($loan);
                 $this->em->persist($nextReservation);
+                // Fine was already persisted above
                 $this->em->flush();
                 $this->em->commit();
             } catch (\Exception $e) {
                 $this->em->rollback();
-                throw new \RuntimeException('Nie udało się zwrócić wypożyczenia');
+                throw new \RuntimeException('Nie udało się zwrócić wypożyczenia: ' . $e->getMessage());
             }
 
             if ($reservationForNotification) {
@@ -85,6 +116,7 @@ class ReturnLoanHandler
         } else {
             $this->bookService->restore($loan->getBook(), $loan->getBookCopy());
             $this->em->persist($loan);
+            // Fine was already persisted above
             $this->em->flush();
         }
 

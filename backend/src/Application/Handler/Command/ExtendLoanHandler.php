@@ -5,6 +5,7 @@ use App\Application\Command\Loan\ExtendLoanCommand;
 use App\Entity\Loan;
 use App\Repository\LoanRepository;
 use App\Repository\ReservationRepository;
+use App\Service\SystemSettingsService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
@@ -14,7 +15,8 @@ class ExtendLoanHandler
     public function __construct(
         private EntityManagerInterface $em,
         private LoanRepository $loanRepository,
-        private ReservationRepository $reservationRepository
+        private ReservationRepository $reservationRepository,
+        private SystemSettingsService $settingsService
     ) {
     }
 
@@ -41,11 +43,13 @@ class ExtendLoanHandler
             throw new \RuntimeException('Nie można przedłużyć - książka jest zarezerwowana');
         }
 
+        $loanDurationDays = $this->settingsService->getLoanDurationDays();
+
         $currentDue = $loan->getDueAt();
-        $newDue = $currentDue->modify('+14 days');
+        $newDue = $currentDue->modify("+{$loanDurationDays} days");
         $loan->setDueAt($newDue);
         $loan->incrementExtensions();
-        $loan->setLastExtendedAt(new \DateTimeImmutable());
+        $loan->setLastExtendedAt(new \DateTime());
 
         $this->em->persist($loan);
         $this->em->flush();

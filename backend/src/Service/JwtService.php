@@ -15,7 +15,7 @@ class JwtService
         return base64_decode(strtr($data, '-_', '+/'));
     }
 
-    public static function createToken(array $claims, int $ttl = 3600): string
+    public static function createToken(array $claims, int $ttl = 86400): string
     {
         $secrets = self::getSecrets();
         if (empty($secrets)) {

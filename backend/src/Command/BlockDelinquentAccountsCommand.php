@@ -40,24 +40,45 @@ class BlockDelinquentAccountsCommand extends Command
         $cutoff = (new \DateTimeImmutable())->modify(sprintf('-%d days', $overdueDays));
         $blocked = 0;
 
-        foreach ($this->users->findAll() as $user) {
+        $overdueUserIds = $this->loans->getUserIdsWithOverdueSince($cutoff);
+        $checkOutstandingFines = $fineLimit > 0;
+        $outstandingUserIds = $checkOutstandingFines
+            ? $this->fines->getUserIdsWithOutstandingAtLeast($fineLimit)
+            : [];
+        $candidateUserIds = array_values(array_unique([...$overdueUserIds, ...$outstandingUserIds]));
+
+        if (empty($candidateUserIds)) {
+            $output->writeln('<info>No accounts matched the blocking criteria.</info>');
+            return Command::SUCCESS;
+        }
+
+        $outstandingByUser = $checkOutstandingFines
+            ? $this->fines->getOutstandingTotalsForUsers($candidateUserIds)
+            : [];
+        $overdueLookup = array_flip($overdueUserIds);
+        $users = $this->users->createQueryBuilder('u')
+            ->andWhere('u.id IN (:ids)')
+            ->andWhere('u.blocked = false')
+            ->setParameter('ids', $candidateUserIds)
+            ->getQuery()
+            ->getResult();
+
+        foreach ($users as $user) {
             if (in_array('ROLE_LIBRARIAN', $user->getRoles(), true)) {
                 continue;
             }
 
-            if ($user->isBlocked()) {
-                continue;
-            }
+            $userId = (int) $user->getId();
+            $outstanding = $outstandingByUser[$userId] ?? 0.0;
+            $hasLongOverdue = isset($overdueLookup[$userId]);
+            $hasOutstandingOverLimit = $checkOutstandingFines && $outstanding >= $fineLimit;
 
-            $outstanding = $this->fines->sumOutstandingByUser($user);
-            $hasLongOverdue = $this->loans->hasOverdueLongerThan($user, $cutoff);
-
-            if ($outstanding < $fineLimit && !$hasLongOverdue) {
+            if (!$hasOutstandingOverLimit && !$hasLongOverdue) {
                 continue;
             }
 
             $reasonParts = [];
-            if ($outstanding >= $fineLimit) {
+            if ($hasOutstandingOverLimit) {
                 $reasonParts[] = sprintf('kara %.2f PLN', $outstanding);
             }
             if ($hasLongOverdue) {

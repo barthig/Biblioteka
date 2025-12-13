@@ -11,6 +11,7 @@ use App\Repository\BookCopyRepository;
 use App\Repository\LoanRepository;
 use App\Repository\ReservationRepository;
 use App\Service\BookService;
+use App\Service\SystemSettingsService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
@@ -22,7 +23,8 @@ class CreateLoanHandler
         private BookService $bookService,
         private LoanRepository $loanRepository,
         private ReservationRepository $reservationRepository,
-        private BookCopyRepository $bookCopyRepository
+        private BookCopyRepository $bookCopyRepository,
+        private SystemSettingsService $settingsService
     ) {
     }
 
@@ -85,21 +87,27 @@ class CreateLoanHandler
                 throw new \RuntimeException('No copies available');
             }
 
+            $loanDurationDays = $this->settingsService->getLoanDurationDays();
+
             $loan = (new Loan())
                 ->setBook($book)
                 ->setBookCopy($copy)
                 ->setUser($user)
-                ->setDueAt((new \DateTimeImmutable())->modify('+14 days'));
+                ->setDueAt((new \DateTime())->modify("+{$loanDurationDays} days"));
 
             $this->em->persist($loan);
             $this->em->flush();
             $this->em->commit();
         } catch (\Exception $e) {
             $this->em->rollback();
+            error_log('CreateLoanHandler exception: ' . $e->getMessage());
+            error_log('Exception type: ' . get_class($e));
+            error_log('File: ' . $e->getFile() . ':' . $e->getLine());
+            error_log('Stack trace: ' . $e->getTraceAsString());
             if ($e instanceof \RuntimeException) {
                 throw $e;
             }
-            throw new \RuntimeException('Nie udało się utworzyć wypożyczenia');
+            throw new \RuntimeException('Nie udało się utworzyć wypożyczenia: ' . $e->getMessage());
         }
 
         return $loan;

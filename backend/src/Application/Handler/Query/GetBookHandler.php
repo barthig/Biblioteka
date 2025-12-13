@@ -5,6 +5,7 @@ use App\Application\Query\Book\GetBookQuery;
 use App\Entity\Book;
 use App\Entity\Favorite;
 use App\Repository\BookRepository;
+use App\Repository\RatingRepository;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
@@ -13,7 +14,8 @@ class GetBookHandler
 {
     public function __construct(
         private readonly BookRepository $bookRepository,
-        private readonly ManagerRegistry $doctrine
+        private readonly ManagerRegistry $doctrine,
+        private readonly RatingRepository $ratingRepository
     ) {
     }
 
@@ -23,6 +25,17 @@ class GetBookHandler
         
         if (!$book) {
             throw new \RuntimeException('Book not found');
+        }
+
+        // Add rating information
+        $averageRating = $this->ratingRepository->getAverageRatingForBook($book->getId());
+        $ratingCount = $this->ratingRepository->getRatingCountForBook($book->getId());
+        
+        if ($averageRating !== null) {
+            $book->setAverageRating($averageRating);
+        }
+        if ($ratingCount !== null) {
+            $book->setRatingCount($ratingCount);
         }
 
         // Mark as favorite if userId provided

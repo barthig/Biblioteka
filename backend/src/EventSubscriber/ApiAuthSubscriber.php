@@ -40,76 +40,44 @@ class ApiAuthSubscriber implements EventSubscriberInterface
             return;
         }
 
-        $publicRoutes = [
-            // allow authentication bootstrap without token
-            '/api/auth/login' => ['POST'],
-            '/api/auth/register' => ['POST'],
-        ];
+        $headerSecret = $request->headers->get('x-api-secret');
+        $auth = $request->headers->get('authorization');
+        $bearer = $auth && stripos($auth, 'bearer ') === 0 ? substr($auth, 7) : null;
 
-        if (isset($publicRoutes[$path]) && in_array($method, $publicRoutes[$path], true)) {
+        $secret = $headerSecret ?: $bearer;
+        $envSecret = getenv('API_SECRET') ?: ($_ENV['API_SECRET'] ?? null);
+        $secretMatches = $secret && $envSecret !== null && hash_equals($envSecret, $secret);
+
+        $jwtStatus = $this->attachJwtPayload($request);
+
+        if ($this->isPublicRoute($path, $method)) {
             return;
         }
 
-        $publicPatterns = [
-            ['pattern' => '#^/api/books$#', 'methods' => ['GET']],
-            ['pattern' => '#^/api/books/filters$#', 'methods' => ['GET']],
-            ['pattern' => '#^/api/books/\\d+$#', 'methods' => ['GET']],
-            ['pattern' => '#^/api/announcements$#', 'methods' => ['GET']],
-            ['pattern' => '#^/api/announcements/\\d+$#', 'methods' => ['GET']],
-            ['pattern' => '#^/api/auth/verify/[A-Za-z0-9]+$#', 'methods' => ['GET']],
-        ];
-
-        foreach ($publicPatterns as $entry) {
-            if (preg_match($entry['pattern'], $path) && in_array($method, $entry['methods'], true)) {
+        if ($jwtStatus === true) {
+            $user = $request->attributes->get('jwt_user');
+            $appEnv = getenv('APP_ENV') ?: ($_ENV['APP_ENV'] ?? null);
+            if ($user === null) {
+                $event->setResponse(new JsonResponse(['error' => 'Unauthorized'], 401));
                 return;
             }
-        }
 
-        $headerSecret = $request->headers->get('x-api-secret');
-        $auth = $request->headers->get('authorization');
-        $bearer = null;
-        if ($auth && stripos($auth, 'bearer ') === 0) {
-            $bearer = substr($auth, 7);
-        }
-
-        $secret = $headerSecret ?: $bearer;
-
-        $envSecret = getenv('API_SECRET') ?: ($_ENV['API_SECRET'] ?? null);
-
-        $secretMatches = $secret && $envSecret !== null && hash_equals($envSecret, $secret);
-
-        // always try JWT validation when bearer token provided so downstream controllers get payload
-        if ($bearer) {
-            $payload = JwtService::validateToken($bearer);
-            if ($payload) {
-                $userId = $payload['sub'] ?? null;
-                $user = $userId ? $this->users->find($userId) : null;
-                if (!$user) {
-                    $event->setResponse(new JsonResponse(['error' => 'Unauthorized'], 401));
-                    return;
-                }
-
-                $appEnv = getenv('APP_ENV') ?: ($_ENV['APP_ENV'] ?? null);
-                if ($appEnv !== 'test' && !$user->isVerified()) {
-                    $event->setResponse(new JsonResponse(['error' => 'Account not verified'], 403));
-                    return;
-                }
-
-                if ($user->isPendingApproval()) {
-                    $event->setResponse(new JsonResponse(['error' => 'Account awaiting approval'], 403));
-                    return;
-                }
-
-                if ($user->isBlocked()) {
-                    $event->setResponse(new JsonResponse(['error' => 'Account is blocked'], 403));
-                    return;
-                }
-
-                // attach payload to request for downstream role checks
-                $request->attributes->set('jwt_payload', $payload);
-                $request->attributes->set('jwt_user', $user);
+            if ($appEnv !== 'test' && !$user->isVerified()) {
+                $event->setResponse(new JsonResponse(['error' => 'Account not verified'], 403));
                 return;
             }
+
+            if ($user->isPendingApproval()) {
+                $event->setResponse(new JsonResponse(['error' => 'Account awaiting approval'], 403));
+                return;
+            }
+
+            if ($user->isBlocked()) {
+                $event->setResponse(new JsonResponse(['error' => 'Account is blocked'], 403));
+                return;
+            }
+
+            return;
         }
 
         // allow API secret as fallback after attempting JWT validation
@@ -117,7 +85,70 @@ class ApiAuthSubscriber implements EventSubscriberInterface
             return;
         }
 
-        // if API secret matched earlier we would have returned; otherwise unauthorized
         $event->setResponse(new JsonResponse(['error' => 'Unauthorized'], 401));
+    }
+
+    private function attachJwtPayload($request): ?bool
+    {
+        $auth = $request->headers->get('authorization');
+        if (!$auth || stripos($auth, 'bearer ') !== 0) {
+            return null;
+        }
+
+        $bearer = substr($auth, 7);
+        $payload = JwtService::validateToken($bearer);
+        if (!$payload) {
+            return false;
+        }
+
+        $userId = $payload['sub'] ?? null;
+        $user = $userId ? $this->users->find($userId) : null;
+
+        if (!$user) {
+            return false;
+        }
+
+        $request->attributes->set('jwt_payload', $payload);
+        $request->attributes->set('jwt_user', $user);
+
+        return true;
+    }
+
+    private function isPublicRoute(string $path, string $method): bool
+    {
+        $publicRoutes = [
+            '/api/auth/login' => ['POST'],
+            '/api/auth/register' => ['POST'],
+            '/api/auth/refresh' => ['POST'],
+            '/api/test-login' => ['POST'], // temporary debug endpoint
+        ];
+
+        if (isset($publicRoutes[$path]) && in_array($method, $publicRoutes[$path], true)) {
+            return true;
+        }
+
+        $publicPatterns = [
+            ['pattern' => '#^/api/books$#', 'methods' => ['GET']],
+            ['pattern' => '#^/api/books/filters$#', 'methods' => ['GET']],
+            ['pattern' => '#^/api/books/popular$#', 'methods' => ['GET']],
+            ['pattern' => '#^/api/books/new$#', 'methods' => ['GET']],
+            ['pattern' => '#^/api/books/\\d+$#', 'methods' => ['GET']],
+            ['pattern' => '#^/api/books/\\d+/availability$#', 'methods' => ['GET']],
+            ['pattern' => '#^/api/books/\\d+/ratings$#', 'methods' => ['GET']],
+            ['pattern' => '#^/api/collections$#', 'methods' => ['GET']],
+            ['pattern' => '#^/api/collections/\\d+$#', 'methods' => ['GET']],
+            ['pattern' => '#^/api/announcements$#', 'methods' => ['GET']],
+            ['pattern' => '#^/api/announcements/\\d+$#', 'methods' => ['GET']],
+            ['pattern' => '#^/api/auth/verify/[A-Za-z0-9]+$#', 'methods' => ['GET']],
+            ['pattern' => '#^/api/library/hours$#', 'methods' => ['GET']],
+        ];
+
+        foreach ($publicPatterns as $entry) {
+            if (preg_match($entry['pattern'], $path) && in_array($method, $entry['methods'], true)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

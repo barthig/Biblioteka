@@ -13,6 +13,9 @@ class CreateLoanRequest
     public ?int $userId = null;
 
     #[Assert\Positive]
+    public ?int $reservationId = null;
+
+    #[Assert\Positive]
     public ?int $bookCopyId = null;
 
     #[Assert\Type('\DateTimeInterface')]

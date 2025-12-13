@@ -6,6 +6,7 @@ use App\Entity\Book;
 use App\Entity\Favorite;
 use App\Repository\BookRepository;
 use App\Repository\FavoriteRepository;
+use App\Repository\RatingRepository;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
@@ -14,7 +15,8 @@ class ListBooksHandler
 {
     public function __construct(
         private readonly BookRepository $bookRepository,
-        private readonly ManagerRegistry $doctrine
+        private readonly ManagerRegistry $doctrine,
+        private readonly RatingRepository $ratingRepository
     ) {
     }
 
@@ -37,6 +39,30 @@ class ListBooksHandler
 
         $result = $this->bookRepository->searchPublic($filters);
         $books = $result['data'];
+
+        // Add rating information for all books in one query
+        if (!empty($books)) {
+            $bookIds = [];
+            foreach ($books as $book) {
+                if ($book instanceof Book && $book->getId() !== null) {
+                    $bookIds[] = $book->getId();
+                }
+            }
+            
+            if (!empty($bookIds)) {
+                $ratingStats = $this->ratingRepository->getRatingStatsForBooks($bookIds);
+                
+                foreach ($books as $book) {
+                    if ($book instanceof Book && $book->getId() !== null && isset($ratingStats[$book->getId()])) {
+                        $stats = $ratingStats[$book->getId()];
+                        if ($stats['avg'] !== null) {
+                            $book->setAverageRating($stats['avg']);
+                        }
+                        $book->setRatingCount($stats['count']);
+                    }
+                }
+            }
+        }
 
         // Mark favorites if userId provided
         if ($query->userId !== null && !empty($books)) {

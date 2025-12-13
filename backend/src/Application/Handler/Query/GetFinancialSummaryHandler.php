@@ -18,25 +18,25 @@ class GetFinancialSummaryHandler
     public function __invoke(GetFinancialSummaryQuery $query): array
     {
         $budgetTotals = $this->entityManager->createQueryBuilder()
-            ->select('COALESCE(SUM(b.allocatedAmount), 0) AS allocated')
-            ->addSelect('COALESCE(SUM(b.spentAmount), 0) AS spent')
-            ->addSelect('COALESCE(MAX(b.currency), :defaultCurrency) AS currency')
+            ->select('SUM(b.allocatedAmount) AS allocated')
+            ->addSelect('SUM(b.spentAmount) AS spent')
+            ->addSelect('MAX(b.currency) AS currency')
             ->from(AcquisitionBudget::class, 'b')
             ->setParameter('defaultCurrency', 'PLN')
             ->getQuery()
             ->getSingleResult();
 
         $fineTotals = $this->entityManager->createQueryBuilder()
-            ->select('COALESCE(SUM(CASE WHEN f.paidAt IS NULL THEN f.amount ELSE 0 END), 0) AS outstanding')
-            ->addSelect('COALESCE(SUM(CASE WHEN f.paidAt IS NOT NULL THEN f.amount ELSE 0 END), 0) AS collected')
-            ->addSelect('COALESCE(MAX(f.currency), :defaultCurrency) AS currency')
+            ->select('SUM(CASE WHEN f.paidAt IS NULL THEN f.amount ELSE 0 END) AS outstanding')
+            ->addSelect('SUM(CASE WHEN f.paidAt IS NOT NULL THEN f.amount ELSE 0 END) AS collected')
+            ->addSelect('MAX(f.currency) AS currency')
             ->from(Fine::class, 'f')
             ->setParameter('defaultCurrency', 'PLN')
             ->getQuery()
             ->getSingleResult();
 
-        $allocated = round((float) $budgetTotals['allocated'], 2);
-        $spent = round((float) $budgetTotals['spent'], 2);
+        $allocated = round((float) ($budgetTotals['allocated'] ?? 0), 2);
+        $spent = round((float) ($budgetTotals['spent'] ?? 0), 2);
         $remaining = max(0.0, round($allocated - $spent, 2));
 
         return [
@@ -44,12 +44,12 @@ class GetFinancialSummaryHandler
                 'allocated' => $allocated,
                 'spent' => $spent,
                 'remaining' => $remaining,
-                'currency' => $budgetTotals['currency'],
+                'currency' => $budgetTotals['currency'] ?? 'PLN',
             ],
             'fines' => [
-                'outstanding' => round((float) $fineTotals['outstanding'], 2),
-                'collected' => round((float) $fineTotals['collected'], 2),
-                'currency' => $fineTotals['currency'],
+                'outstanding' => round((float) ($fineTotals['outstanding'] ?? 0), 2),
+                'collected' => round((float) ($fineTotals['collected'] ?? 0), 2),
+                'currency' => $fineTotals['currency'] ?? 'PLN',
             ],
         ];
     }
