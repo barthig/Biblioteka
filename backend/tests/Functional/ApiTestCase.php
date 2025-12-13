@@ -358,6 +358,7 @@ abstract class ApiTestCase extends WebTestCase
     $this->entityManager->createQuery('DELETE FROM App\Entity\Book b')->execute();
     $this->entityManager->createQuery('DELETE FROM App\Entity\Category c')->execute();
     $this->entityManager->createQuery('DELETE FROM App\Entity\Author a')->execute();
+    $this->entityManager->createQuery('DELETE FROM App\Entity\Announcement an')->execute();
     $this->entityManager->createQuery('DELETE FROM App\Entity\User u')->execute();
         $this->entityManager->clear();
     }
