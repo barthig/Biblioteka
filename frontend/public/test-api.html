@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API Test - Diagnostyka</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f0;
+        }
+        .test-box {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #7c9dd1;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button:hover {
+            background: #5b7fb8;
+        }
+        .loading {
+            color: #7c9dd1;
+            font-weight: bold;
+        }
+        .error {
+            color: #de9a9a;
+        }
+        .success {
+            color: #86c5a8;
+        }
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            max-height: 300px;
+        }
+        .timing {
+            font-weight: bold;
+            color: #2d3748;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Diagnostyka API - System Biblioteczny</h1>
+    
+    <div class="test-box">
+        <h2>Test 1: Prosty endpoint (/health)</h2>
+        <button onclick="testHealth()">Testuj /health</button>
+        <div id="healthResult"></div>
+    </div>
+
+    <div class="test-box">
+        <h2>Test 2: Lista książek (/api/books)</h2>
+        <button onclick="testBooks()">Testuj /api/books</button>
+        <button onclick="testBooksLimit()">Testuj /api/books?limit=3</button>
+        <div id="booksResult"></div>
+    </div>
+
+    <div class="test-box">
+        <h2>Test 3: Logowanie</h2>
+        <button onclick="testLogin()">Zaloguj jako admin</button>
+        <div id="loginResult"></div>
+    </div>
+
+    <div class="test-box">
+        <h2>Test 4: Dashboard (wymaga logowania)</h2>
+        <button onclick="testDashboard()">Testuj /api/dashboard</button>
+        <div id="dashboardResult"></div>
+    </div>
+
+    <div class="test-box">
+        <h2>Informacje</h2>
+        <p><strong>API URL:</strong> http://localhost:8000</p>
+        <p><strong>Frontend URL:</strong> http://localhost:5173</p>
+        <p><strong>Problem:</strong> Backend odpowiada bardzo wolno (~5-6 sekund) przez Docker volumes na Windows</p>
+        <p><strong>Rozwiązanie tymczasowe:</strong> Cierpliwość - dane się ładują, tylko wolno</p>
+        <p><strong>Rozwiązanie stałe:</strong> Użyć WSL2 lub przenieść vendor poza volume</p>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8000';
+        let token = localStorage.getItem('token');
+
+        async function testEndpoint(url, options = {}, resultId) {
+            const resultDiv = document.getElementById(resultId);
+            resultDiv.innerHTML = '<p class="loading">⏳ Ładowanie... (może zająć 5-10 sekund)</p>';
+            
+            const startTime = performance.now();
+            
+            try {
+                const response = await fetch(url, options);
+                const endTime = performance.now();
+                const duration = ((endTime - startTime) / 1000).toFixed(2);
+                
+                const data = await response.json();
+                
+                resultDiv.innerHTML = `
+                    <p class="success">✅ Sukces!</p>
+                    <p class="timing">⏱️ Czas odpowiedzi: ${duration}s</p>
+                    <p><strong>Status:</strong> ${response.status}</p>
+                    <pre>${JSON.stringify(data, null, 2).substring(0, 500)}${JSON.stringify(data).length > 500 ? '...' : ''}</pre>
+                `;
+            } catch (error) {
+                const endTime = performance.now();
+                const duration = ((endTime - startTime) / 1000).toFixed(2);
+                
+                resultDiv.innerHTML = `
+                    <p class="error">❌ Błąd!</p>
+                    <p class="timing">⏱️ Czas: ${duration}s</p>
+                    <p><strong>Błąd:</strong> ${error.message}</p>
+                `;
+            }
+        }
+
+        function testHealth() {
+            testEndpoint(`${API_URL}/health`, {}, 'healthResult');
+        }
+
+        function testBooks() {
+            testEndpoint(`${API_URL}/api/books`, {}, 'booksResult');
+        }
+
+        function testBooksLimit() {
+            testEndpoint(`${API_URL}/api/books?limit=3`, {}, 'booksResult');
+        }
+
+        async function testLogin() {
+            const resultDiv = document.getElementById('loginResult');
+            resultDiv.innerHTML = '<p class="loading">⏳ Logowanie...</p>';
+            
+            const startTime = performance.now();
+            
+            try {
+                const response = await fetch(`${API_URL}/api/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: 'admin@example.com',
+                        password: 'Admin1234'
+                    })
+                });
+                
+                const endTime = performance.now();
+                const duration = ((endTime - startTime) / 1000).toFixed(2);
+                const data = await response.json();
+                
+                if (data.token) {
+                    token = data.token;
+                    localStorage.setItem('token', token);
+                    resultDiv.innerHTML = `
+                        <p class="success">✅ Zalogowano!</p>
+                        <p class="timing">⏱️ Czas: ${duration}s</p>
+                        <p><strong>Token zapisany do localStorage</strong></p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <p class="error">❌ Błąd logowania</p>
+                        <p class="timing">⏱️ Czas: ${duration}s</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                const endTime = performance.now();
+                const duration = ((endTime - startTime) / 1000).toFixed(2);
+                resultDiv.innerHTML = `
+                    <p class="error">❌ Błąd: ${error.message}</p>
+                    <p class="timing">⏱️ Czas: ${duration}s</p>
+                `;
+            }
+        }
+
+        function testDashboard() {
+            if (!token) {
+                document.getElementById('dashboardResult').innerHTML = 
+                    '<p class="error">❌ Najpierw zaloguj się!</p>';
+                return;
+            }
+            
+            testEndpoint(`${API_URL}/api/dashboard`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            }, 'dashboardResult');
+        }
+    </script>
+</body>
+</html>
