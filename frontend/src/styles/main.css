@@ -6,37 +6,37 @@
 }
 
 :root {
-  --primary-color: #2563eb;
-  --primary-dark: #1d4ed8;
-  --primary-light: #3b82f6;
-  --secondary-color: #64748b;
-  --success-color: #10b981;
-  --warning-color: #f59e0b;
-  --error-color: #ef4444;
-  --info-color: #06b6d4;
-  
-  --bg-primary: #ffffff;
-  --bg-secondary: #f8fafc;
-  --bg-tertiary: #f1f5f9;
-  
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --text-muted: #94a3b8;
-  
-  --border-color: #e2e8f0;
-  --border-radius: 8px;
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-  
-  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --primary-color: #7c9dd1;
+  --primary-dark: #5b7fb8;
+  --primary-light: #a3bde3;
+  --secondary-color: #b4a7d6;
+  --success-color: #86c5a8;
+  --warning-color: #e8c47c;
+  --error-color: #de9a9a;
+  --info-color: #8ec5d1;
+
+  --bg-primary: #f5f5f0;
+  --bg-secondary: #f5f5f0;
+  --bg-tertiary: #ebebeb;
+
+  --text-primary: #2d3748;
+  --text-secondary: #4a5568;
+  --text-muted: #718096;
+
+  --border-color: #d4d4ce;
+  --border-radius: 12px;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 2px 6px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.1);
+
+  --font-sans: 'Inter', 'Space Grotesk', 'Segoe UI', Roboto, sans-serif;
   --transition: all 0.2s ease;
 }
 
 body {
   font-family: var(--font-sans);
   color: var(--text-primary);
-  background-color: var(--bg-secondary);
+  background: #f5f5f0;
   line-height: 1.6;
 }
 
@@ -47,7 +47,7 @@ a {
 }
 
 a:hover {
-  color: var(--primary-dark);
+  color: var(--primary-light);
 }
 
 /* ===== BUTTONS ===== */
@@ -55,11 +55,11 @@ a:hover {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.625rem 1.25rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  border: 1px solid transparent;
-  border-radius: var(--border-radius);
+  padding: 0.65rem 1.35rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
   cursor: pointer;
   transition: var(--transition);
   white-space: nowrap;
@@ -71,46 +71,48 @@ a:hover {
 }
 
 .btn-primary {
-  background-color: var(--primary-color);
-  color: white;
+  background: #7c9dd1;
+  color: #ffffff;
+  box-shadow: 0 2px 4px rgba(124, 157, 209, 0.2);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background-color: var(--primary-dark);
+  background: #5b7fb8;
+  transform: translateY(-1px);
 }
 
 .btn-secondary {
-  background-color: var(--secondary-color);
-  color: white;
+  background-color: #b4a7d6;
+  color: #ffffff;
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background-color: #475569;
+  background-color: #9d8fc7;
 }
 
 .btn-success {
-  background-color: var(--success-color);
-  color: white;
+  background-color: #86c5a8;
+  color: #ffffff;
 }
 
 .btn-warning {
-  background-color: var(--warning-color);
-  color: white;
+  background-color: #e8c47c;
+  color: #ffffff;
 }
 
 .btn-danger {
-  background-color: var(--error-color);
-  color: white;
+  background-color: #de9a9a;
+  color: #ffffff;
 }
 
 .btn-outline {
-  background-color: transparent;
-  border-color: var(--border-color);
+  background-color: #ffffff;
+  border-color: #7c9dd1;
   color: var(--text-primary);
 }
 
 .btn-outline:hover:not(:disabled) {
-  background-color: var(--bg-tertiary);
+  background-color: #e8eef5;
 }
 
 .btn-link {
@@ -132,7 +134,7 @@ a:hover {
 
 /* ===== CARDS ===== */
 .card {
-  background-color: var(--bg-primary);
+  background-color: #ffffff;
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius);
   padding: 1.5rem;
@@ -142,6 +144,7 @@ a:hover {
 
 .card:hover {
   box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
 }
 
 .card-header {
@@ -264,7 +267,7 @@ a:hover {
 }
 
 .modal-container {
-  background-color: var(--bg-primary);
+  background-color: #ffffff;
   border-radius: var(--border-radius);
   max-width: 500px;
   width: 100%;
@@ -303,6 +306,46 @@ a:hover {
   padding: 1.5rem;
 }
 
+.modal-content {
+  background-color: #ffffff;
+  border-radius: var(--border-radius);
+  max-width: 600px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+  padding: 2rem;
+}
+
+.modal-content h3 {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.modal-content .modal-body p {
+  margin: 0.5rem 0;
+  line-height: 1.6;
+}
+
+.modal-content .fine-warning {
+  background-color: #fff3e0;
+  border: 1px solid #ff9800;
+  border-radius: var(--border-radius);
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-color);
+}
+
 .modal-footer {
   display: flex;
   gap: 0.75rem;
@@ -325,14 +368,15 @@ a:hover {
   height: 2.5rem;
   padding: 0.5rem;
   border: 1px solid var(--border-color);
-  background-color: var(--bg-primary);
+  background-color: #ffffff;
   border-radius: var(--border-radius);
   cursor: pointer;
   transition: var(--transition);
+  color: var(--text-primary);
 }
 
 .page-button:hover:not(:disabled) {
-  background-color: var(--bg-tertiary);
+  background-color: #e8eef5;
   border-color: var(--primary-color);
 }
 
@@ -343,7 +387,9 @@ a:hover {
 
 .page-button-active {
   background-color: var(--primary-color);
-  color: white;
+  color: #ffffff;
+  border-color: var(--primary-color);
+}
   border-color: var(--primary-color);
 }
 
@@ -365,7 +411,7 @@ a:hover {
   align-items: center;
   gap: 1rem;
   padding: 1.5rem;
-  background-color: var(--bg-primary);
+  background-color: #ffffff;
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius);
   box-shadow: var(--shadow-sm);
@@ -459,6 +505,8 @@ a:hover {
   border-radius: var(--border-radius);
   font-size: 0.875rem;
   transition: var(--transition);
+  background-color: #ffffff;
+  color: var(--text-primary);
 }
 
 .search-input:focus {
@@ -484,7 +532,7 @@ a:hover {
   top: 100%;
   left: 0;
   right: 0;
-  background-color: var(--bg-primary);
+  background-color: #ffffff;
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius);
   margin-top: 0.25rem;
@@ -506,7 +554,7 @@ a:hover {
 }
 
 .search-suggestion-item:hover {
-  background-color: var(--bg-tertiary);
+  background-color: #e8eef5;
 }
 
 .suggestion-title {
@@ -550,7 +598,7 @@ a:hover {
   top: 100%;
   right: 0;
   margin-top: 0.5rem;
-  background-color: var(--bg-primary);
+  background-color: #ffffff;
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius);
   box-shadow: var(--shadow-lg);
@@ -599,7 +647,8 @@ a:hover {
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius);
   font-size: 0.875rem;
-  background-color: var(--bg-primary);
+  background-color: #ffffff;
+  color: var(--text-primary);
 }
 
 .filter-footer {
