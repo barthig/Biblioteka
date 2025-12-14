@@ -35,10 +35,12 @@ class DashboardOverviewHandler
         $reservationRepo = $this->entityManager->getRepository(Reservation::class);
         $favoriteRepo = $this->entityManager->getRepository(Favorite::class);
 
-        $userCount = (int) $this->entityManager
-            ->createQuery('SELECT COUNT(u.id) FROM App\\Entity\\User u WHERE u.roles NOT LIKE :systemRole')
-            ->setParameter('systemRole', '%ROLE_SYSTEM%')
-            ->getSingleScalarResult();
+        $userCount = 0;
+        foreach ($userRepo->findAll() as $account) {
+            if (!in_array('ROLE_SYSTEM', $account->getRoles(), true)) {
+                $userCount++;
+            }
+        }
 
         $stats = [
             'booksCount' => $bookRepo->count([]),

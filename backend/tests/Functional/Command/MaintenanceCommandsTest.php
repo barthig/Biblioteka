@@ -1,6 +1,8 @@
 <?php
 namespace App\Tests\Functional\Command;
 
+use App\Entity\BackupRecord;
+use App\Entity\Book;
 use App\Entity\Loan;
 use App\Entity\User;
 use App\Repository\BackupRecordRepository;
@@ -46,7 +48,7 @@ class MaintenanceCommandsTest extends ApiTestCase
         }
 
         /** @var BookRepository $books */
-        $books = self::getContainer()->get(BookRepository::class);
+        $books = $this->entityManager->getRepository(Book::class);
         $book = $books->findOneBy(['isbn' => '9788324234234']);
         self::assertNotNull($book);
         self::assertSame('Nowa książka', $book->getTitle());
@@ -67,7 +69,7 @@ class MaintenanceCommandsTest extends ApiTestCase
         $this->entityManager->clear();
 
         /** @var UserRepository $users */
-        $users = self::getContainer()->get(UserRepository::class);
+        $users = $this->entityManager->getRepository(User::class);
         $fresh = $users->find($user->getId());
         self::assertNotNull($fresh);
         self::assertStringContainsString('@example.invalid', $fresh->getEmail());
@@ -108,7 +110,7 @@ class MaintenanceCommandsTest extends ApiTestCase
     public function testCreateBackupCommandPersistsRecord(): void
     {
         /** @var BackupRecordRepository $repo */
-        $repo = self::getContainer()->get(BackupRecordRepository::class);
+        $repo = $this->entityManager->getRepository(BackupRecord::class);
         self::assertCount(0, $repo->findAll());
 
         $this->runCommand('maintenance:create-backup', [

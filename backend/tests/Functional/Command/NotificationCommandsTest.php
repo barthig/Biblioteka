@@ -3,6 +3,7 @@ namespace App\Tests\Functional\Command;
 
 use App\Entity\BookCopy;
 use App\Entity\Reservation;
+use App\Entity\NotificationLog;
 use App\Repository\NotificationLogRepository;
 use App\Tests\Functional\ApiTestCase;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
@@ -32,7 +33,7 @@ class NotificationCommandsTest extends ApiTestCase
 
         $this->assertStringContainsString('reminder', $tester->getDisplay());
 
-        $logs = self::getContainer()->get(NotificationLogRepository::class)->findAll();
+        $logs = $this->entityManager->getRepository(NotificationLog::class)->findAll();
         $this->assertCount(1, $logs);
         $this->assertSame('loan_due', $logs[0]->getType());
     }
@@ -60,7 +61,7 @@ class NotificationCommandsTest extends ApiTestCase
 
         $this->assertStringContainsString('reservation notification', $tester->getDisplay());
 
-        $logs = self::getContainer()->get(NotificationLogRepository::class)->findAll();
+        $logs = $this->entityManager->getRepository(NotificationLog::class)->findAll();
         $this->assertCount(1, $logs);
         $this->assertSame('reservation_ready', $logs[0]->getType());
     }
@@ -78,7 +79,7 @@ class NotificationCommandsTest extends ApiTestCase
 
         $this->assertStringContainsString('[DRY]', $tester->getDisplay());
 
-        $logs = self::getContainer()->get(NotificationLogRepository::class)->findAll();
+        $logs = $this->entityManager->getRepository(NotificationLog::class)->findAll();
         $this->assertCount(0, $logs);
     }
 }

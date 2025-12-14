@@ -2,7 +2,9 @@
 namespace App\Tests\Functional\Command;
 
 use App\Entity\BookCopy;
+use App\Entity\Fine;
 use App\Entity\Reservation;
+use App\Entity\User;
 use App\Repository\FineRepository;
 use App\Repository\ReservationRepository;
 use App\Repository\UserRepository;
@@ -37,7 +39,7 @@ class AutomationCommandsTest extends ApiTestCase
         ]);
 
         /** @var FineRepository $repo */
-        $repo = self::getContainer()->get(FineRepository::class);
+        $repo = $this->entityManager->getRepository(Fine::class);
         $fine = $repo->findActiveOverdueFine($loan);
         self::assertNotNull($fine);
         self::assertSame('4.00', $fine->getAmount());
@@ -74,7 +76,7 @@ class AutomationCommandsTest extends ApiTestCase
         $this->runCommand('reservations:expire-ready', ['--pickup-hours' => 24]);
 
         $this->entityManager->clear();
-        $reservationRepository = self::getContainer()->get(ReservationRepository::class);
+        $reservationRepository = $this->entityManager->getRepository(Reservation::class);
         $copyRepository = $this->entityManager->getRepository(BookCopy::class);
 
         $firstFresh = $reservationRepository->find($firstReservation->getId());
@@ -102,7 +104,7 @@ class AutomationCommandsTest extends ApiTestCase
         ]);
 
         /** @var UserRepository $repo */
-        $repo = self::getContainer()->get(UserRepository::class);
+        $repo = $this->entityManager->getRepository(User::class);
         $fresh = $repo->find($user->getId());
         self::assertTrue($fresh->isBlocked());
         self::assertNotNull($fresh->getBlockedReason());
