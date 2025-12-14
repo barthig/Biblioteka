@@ -3,6 +3,12 @@ declare(strict_types=1);
 
 require dirname(__DIR__) . '/vendor/autoload.php';
 
+$testEnv = 'test';
+putenv('APP_ENV=' . $testEnv);
+$_ENV['APP_ENV'] = $_SERVER['APP_ENV'] = $testEnv;
+putenv('APP_DEBUG=1');
+$_ENV['APP_DEBUG'] = $_SERVER['APP_DEBUG'] = '1';
+
 $cacheDir = dirname(__DIR__) . '/var/cache/test';
 if (is_dir($cacheDir)) {
     $files = new \RecursiveIteratorIterator(
@@ -23,7 +29,7 @@ if (is_dir($cacheDir)) {
 }
 
 // Ensure test database schema exists and seed baseline user for auth tests
-$kernel = new \App\Kernel('test', false);
+$kernel = new \App\Kernel('test', true);
 $kernel->boot();
 
 $em = $kernel->getContainer()->get('doctrine')->getManager();

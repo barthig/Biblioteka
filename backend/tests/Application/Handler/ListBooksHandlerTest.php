@@ -4,6 +4,7 @@ namespace App\Tests\Application\Handler;
 use App\Application\Query\Book\ListBooksQuery;
 use App\Application\Handler\Query\ListBooksHandler;
 use App\Repository\BookRepository;
+use App\Repository\RatingRepository;
 use Doctrine\Persistence\ManagerRegistry;
 use PHPUnit\Framework\TestCase;
 
@@ -11,30 +12,30 @@ class ListBooksHandlerTest extends TestCase
 {
     private BookRepository $bookRepository;
     private ManagerRegistry $doctrine;
+    private RatingRepository $ratingRepository;
     private ListBooksHandler $handler;
 
     protected function setUp(): void
     {
         $this->bookRepository = $this->createMock(BookRepository::class);
         $this->doctrine = $this->createMock(ManagerRegistry::class);
-        $this->handler = new ListBooksHandler($this->bookRepository, $this->doctrine);
+        $this->ratingRepository = $this->createMock(RatingRepository::class);
+        $this->handler = new ListBooksHandler($this->bookRepository, $this->doctrine, $this->ratingRepository);
     }
 
     public function testListBooksSuccess(): void
     {
-        $qb = $this->createMock(\Doctrine\ORM\QueryBuilder::class);
-        $doctrineQuery = $this->createMock(\Doctrine\ORM\Query::class);
-        
-        $qb->method('select')->willReturnSelf();
-        $qb->method('from')->willReturnSelf();
-        $qb->method('leftJoin')->willReturnSelf();
-        $qb->method('addSelect')->willReturnSelf();
-        $qb->method('setMaxResults')->willReturnSelf();
-        $qb->method('setFirstResult')->willReturnSelf();
-        $qb->method('getQuery')->willReturn($doctrineQuery);
-        $doctrineQuery->method('getResult')->willReturn([]);
-
-        $this->bookRepository->method('createQueryBuilder')->willReturn($qb);
+        $this->bookRepository
+            ->method('searchPublic')
+            ->willReturn([
+                'data' => [],
+                'meta' => [
+                    'page' => 1,
+                    'limit' => 20,
+                    'total' => 0,
+                    'totalPages' => 0,
+                ],
+            ]);
 
         $query = new ListBooksQuery(page: 1, limit: 20);
         $result = ($this->handler)($query);
@@ -44,19 +45,20 @@ class ListBooksHandlerTest extends TestCase
 
     public function testListBooksWithPagination(): void
     {
-        $qb = $this->createMock(\Doctrine\ORM\QueryBuilder::class);
-        $doctrineQuery = $this->createMock(\Doctrine\ORM\Query::class);
-        
-        $qb->method('select')->willReturnSelf();
-        $qb->method('from')->willReturnSelf();
-        $qb->method('leftJoin')->willReturnSelf();
-        $qb->method('addSelect')->willReturnSelf();
-        $qb->method('setFirstResult')->with(20)->willReturnSelf();
-        $qb->method('setMaxResults')->with(10)->willReturnSelf();
-        $qb->method('getQuery')->willReturn($doctrineQuery);
-        $doctrineQuery->method('getResult')->willReturn([]);
-
-        $this->bookRepository->method('createQueryBuilder')->willReturn($qb);
+        $this->bookRepository
+            ->method('searchPublic')
+            ->with($this->callback(function (array $filters): bool {
+                return $filters['page'] === 3 && $filters['limit'] === 10;
+            }))
+            ->willReturn([
+                'data' => [],
+                'meta' => [
+                    'page' => 3,
+                    'limit' => 10,
+                    'total' => 0,
+                    'totalPages' => 0,
+                ],
+            ]);
 
         $query = new ListBooksQuery(page: 3, limit: 10);
         $result = ($this->handler)($query);

@@ -14,6 +14,17 @@ services:
       - '../src/Entity/'
       - '../src/Kernel.php'
 
+  # Force handler namespaces onto dedicated buses
+  App\Application\Handler\Command\:
+    resource: '../src/Application/Handler/Command'
+    tags:
+      - { name: messenger.message_handler, bus: command.bus }
+
+  App\Application\Handler\Query\:
+    resource: '../src/Application/Handler/Query'
+    tags:
+      - { name: messenger.message_handler, bus: query.bus }
+
   App\DataFixtures\:
     resource: '../src/DataFixtures/'
     tags: ['doctrine.fixture.orm']
@@ -160,6 +171,11 @@ services:
   App\Controller\RecommendationFeedbackController:
     arguments:
       $commandBus: '@command.bus'
+      $security: '@App\Service\SecurityService'
+
+  App\Controller\AlertController:
+    arguments:
+      $queryBus: '@query.bus'
       $security: '@App\Service\SecurityService'
 
   App\Controller\Admin\RoleAdminController:

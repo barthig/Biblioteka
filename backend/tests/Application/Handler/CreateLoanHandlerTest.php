@@ -21,6 +21,7 @@ class CreateLoanHandlerTest extends TestCase
     private LoanRepository $loanRepository;
     private ReservationRepository $reservationRepository;
     private BookCopyRepository $bookCopyRepository;
+    private \App\Service\SystemSettingsService $settingsService;
     private CreateLoanHandler $handler;
 
     protected function setUp(): void
@@ -30,13 +31,15 @@ class CreateLoanHandlerTest extends TestCase
         $this->loanRepository = $this->createMock(LoanRepository::class);
         $this->reservationRepository = $this->createMock(ReservationRepository::class);
         $this->bookCopyRepository = $this->createMock(BookCopyRepository::class);
+        $this->settingsService = $this->createMock(\App\Service\SystemSettingsService::class);
 
         $this->handler = new CreateLoanHandler(
             $this->em,
             $this->bookService,
             $this->loanRepository,
             $this->reservationRepository,
-            $this->bookCopyRepository
+            $this->bookCopyRepository,
+            $this->settingsService
         );
     }
 
@@ -67,7 +70,8 @@ class CreateLoanHandlerTest extends TestCase
 
         $this->loanRepository->method('countActiveByUser')->with($user)->willReturn(2);
         $this->reservationRepository->method('findFirstActiveForUserAndBook')->willReturn(null);
-        $this->bookService->method('borrow')->with($book, null, null)->willReturn($copy);
+        $this->bookService->method('borrow')->with($book, null, null, false)->willReturn($copy);
+        $this->settingsService->method('getLoanDurationDays')->willReturn(14);
 
         $this->em->expects($this->once())->method('beginTransaction');
         $this->em->expects($this->once())->method('persist')->with($this->isInstanceOf(Loan::class));
@@ -97,6 +101,8 @@ class CreateLoanHandlerTest extends TestCase
                 default => $this->createMock(\Doctrine\ORM\EntityRepository::class)
             };
         });
+
+        $this->settingsService->method('getLoanDurationDays')->willReturn(14);
 
         $command = new CreateLoanCommand(userId: 999, bookId: 10);
         ($this->handler)($command);
@@ -150,6 +156,7 @@ class CreateLoanHandlerTest extends TestCase
         });
 
         $this->loanRepository->method('countActiveByUser')->with($user)->willReturn(3);
+        $this->settingsService->method('getLoanDurationDays')->willReturn(14);
 
         $command = new CreateLoanCommand(userId: 1, bookId: 10);
         ($this->handler)($command);
@@ -178,6 +185,7 @@ class CreateLoanHandlerTest extends TestCase
             });
 
         $this->loanRepository->method('countActiveByUser')->with($user)->willReturn(0);
+        $this->settingsService->method('getLoanDurationDays')->willReturn(14);
 
         $command = new CreateLoanCommand(userId: 1, bookId: 999);
         ($this->handler)($command);
@@ -210,7 +218,8 @@ class CreateLoanHandlerTest extends TestCase
         $this->loanRepository->method('countActiveByUser')->with($user)->willReturn(0);
         $this->reservationRepository->method('findFirstActiveForUserAndBook')->willReturn(null);
         $this->reservationRepository->method('findActiveByBook')->willReturn([]);
-        $this->bookService->method('borrow')->with($book, null, null)->willReturn(null);
+        $this->bookService->method('borrow')->with($book, null, null, false)->willReturn(null);
+        $this->settingsService->method('getLoanDurationDays')->willReturn(14);
 
         $command = new CreateLoanCommand(userId: 1, bookId: 10);
         ($this->handler)($command);

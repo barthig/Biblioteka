@@ -16,6 +16,7 @@ use App\Service\JwtService;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpKernel\HttpKernelBrowser;
 
 abstract class ApiTestCase extends WebTestCase
@@ -54,6 +55,15 @@ abstract class ApiTestCase extends WebTestCase
 
         $this->purgeDatabase();
         $this->seedDefaultUsers();
+    }
+
+    protected static function getContainer(): ContainerInterface
+    {
+        if (!static::$booted) {
+            static::bootKernel();
+        }
+
+        return static::$kernel->getContainer();
     }
 
     protected function tearDown(): void

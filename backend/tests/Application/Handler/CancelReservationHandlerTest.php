@@ -31,6 +31,9 @@ class CancelReservationHandlerTest extends TestCase
         $reservation = $this->createMock(Reservation::class);
         $reservation->method('getStatus')->willReturn(Reservation::STATUS_ACTIVE);
         $reservation->method('getBookCopy')->willReturn(null);
+        $user = $this->createMock(\App\Entity\User::class);
+        $user->method('getId')->willReturn(1);
+        $reservation->method('getUser')->willReturn($user);
         $reservation->expects($this->once())->method('cancel');
 
         $this->reservationRepository->method('find')->with(1)->willReturn($reservation);
@@ -60,6 +63,9 @@ class CancelReservationHandlerTest extends TestCase
 
         $reservation = $this->createMock(Reservation::class);
         $reservation->method('getStatus')->willReturn(Reservation::STATUS_FULFILLED);
+        $user = $this->createMock(\App\Entity\User::class);
+        $user->method('getId')->willReturn(1);
+        $reservation->method('getUser')->willReturn($user);
 
         $this->reservationRepository->method('find')->with(1)->willReturn($reservation);
 

@@ -3,12 +3,11 @@ namespace App\Controller;
 
 use App\Application\Command\Reservation\CancelReservationCommand;
 use App\Application\Command\Reservation\CreateReservationCommand;
-use App\Application\Command\Reservation\FulfillReservationCommand;
+use App\Application\Command\Reservation\FulfillReservationWorkflowCommand;
 use App\Application\Query\Reservation\ListReservationsQuery;
 use App\Controller\Traits\ValidationTrait;
 use App\Request\CreateReservationRequest;
 use App\Service\SecurityService;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -24,8 +23,7 @@ class ReservationController extends AbstractController
     public function __construct(
         private MessageBusInterface $commandBus,
         private MessageBusInterface $queryBus,
-        private SecurityService $security,
-        private EntityManagerInterface $em
+        private SecurityService $security
     ) {
     }
 
@@ -180,68 +178,24 @@ class ReservationController extends AbstractController
         }
 
         try {
-            // Get reservation
-            $reservation = $this->queryBus->dispatch(new \App\Application\Query\Reservation\GetReservationQuery((int)$id))
-                ->last(HandledStamp::class)->getResult();
+            $this->commandBus->dispatch(
+                new FulfillReservationWorkflowCommand(
+                    reservationId: (int) $id,
+                    actingUserId: $this->security->getCurrentUserId($request) ?? 0
+                )
+            );
 
-            if (!$reservation) {
-                return $this->json(['error' => 'Reservation not found'], 404);
-            }
-
-            if ($reservation->getStatus() !== 'ACTIVE') {
-                return $this->json(['error' => 'Reservation is not active'], 400);
-            }
-
-            // Issue #17: Check if reservation has expired
-            $now = new \DateTimeImmutable();
-            if ($reservation->getExpiresAt() < $now) {
-                return $this->json(['error' => 'Reservation has expired'], 400);
-            }
-
-            if (!$reservation->getBookCopy()) {
-                return $this->json(['error' => 'No book copy assigned to this reservation'], 400);
-            }
-
-            // Issue #23: Validate copy status before creating loan
-            $copy = $reservation->getBookCopy();
-            if ($copy->getStatus() !== \App\Entity\BookCopy::STATUS_RESERVED) {
-                return $this->json(['error' => 'Book copy is not in RESERVED status'], 400);
-            }
-
-            // Issue #8: Wrap in transaction to ensure atomicity
-            $this->em->beginTransaction();
-            try {
-                // Create loan - default 30 days
-                $createLoanCommand = new \App\Application\Command\Loan\CreateLoanCommand(
-                    userId: $reservation->getUser()->getId(),
-                    copyId: $copy->getId(),
-                    durationDays: 30
-                );
-
-                // Dispatch loan creation and get result
-                $loanEnvelope = $this->commandBus->dispatch($createLoanCommand);
-                $loan = $loanEnvelope->last(HandledStamp::class)->getResult();
-
-                // Mark reservation as fulfilled (without releasing the copy)
-                $fulfillCommand = new FulfillReservationCommand(
-                    reservationId: (int)$id,
-                    loanId: $loan->getId()
-                );
-                $this->commandBus->dispatch($fulfillCommand);
-
-                $this->em->commit();
-
-                return $this->json(['message' => 'Reservation fulfilled, loan created'], 200);
-            } catch (\Throwable $txException) {
-                $this->em->rollback();
-                throw $txException;
-            }
+            return $this->json(['message' => 'Reservation fulfilled, loan created'], 200);
         } catch (\Throwable $e) {
             if ($e instanceof HandlerFailedException) {
                 $e = $e->getPrevious() ?? $e;
             }
-            
-            return $this->json(['error' => $e->getMessage()], 500);
+
+            $statusCode = ($e instanceof \Symfony\Component\HttpKernel\Exception\HttpExceptionInterface)
+                ? $e->getStatusCode()
+                : 500;
+
+            return $this->json(['error' => $e->getMessage()], $statusCode);
         }
     }
 }

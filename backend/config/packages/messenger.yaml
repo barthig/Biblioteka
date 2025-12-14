@@ -51,7 +51,6 @@ framework:
       App\Application\Command\Category\CreateCategoryCommand: sync
       App\Application\Command\Category\UpdateCategoryCommand: sync
       App\Application\Command\Category\DeleteCategoryCommand: sync
-      App\Application\Command\IntegrationConfig\UpdateIntegrationConfigCommand: sync
       
       # Queries - synchronous
       App\Application\Query\Loan\GetLoanQuery: sync

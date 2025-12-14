@@ -15,6 +15,7 @@ class ExtendLoanHandlerTest extends TestCase
     private EntityManagerInterface $em;
     private LoanRepository $loanRepository;
     private ReservationRepository $reservationRepository;
+    private \App\Service\SystemSettingsService $settingsService;
     private ExtendLoanHandler $handler;
 
     protected function setUp(): void
@@ -22,11 +23,13 @@ class ExtendLoanHandlerTest extends TestCase
         $this->em = $this->createMock(EntityManagerInterface::class);
         $this->loanRepository = $this->createMock(LoanRepository::class);
         $this->reservationRepository = $this->createMock(ReservationRepository::class);
+        $this->settingsService = $this->createMock(\App\Service\SystemSettingsService::class);
 
         $this->handler = new ExtendLoanHandler(
             $this->em,
             $this->loanRepository,
-            $this->reservationRepository
+            $this->reservationRepository,
+            $this->settingsService
         );
     }
 
@@ -42,13 +45,14 @@ class ExtendLoanHandlerTest extends TestCase
         $loan->method('getDueAt')->willReturn($originalDue);
         
         $loan->expects($this->once())->method('setDueAt')->with($this->callback(function ($newDue) use ($originalDue) {
-            return $newDue > $originalDue;
+            return $newDue->getTimestamp() === $originalDue->modify('+14 days')->getTimestamp();
         }));
         $loan->expects($this->once())->method('incrementExtensions');
         $loan->expects($this->once())->method('setLastExtendedAt')->with($this->isInstanceOf(\DateTimeImmutable::class));
 
         $this->loanRepository->method('find')->with(1)->willReturn($loan);
         $this->reservationRepository->method('findActiveByBook')->with($book)->willReturn([]);
+        $this->settingsService->method('getLoanDurationDays')->willReturn(14);
 
         $this->em->expects($this->once())->method('persist')->with($loan);
         $this->em->expects($this->once())->method('flush');
@@ -65,6 +69,7 @@ class ExtendLoanHandlerTest extends TestCase
         $this->expectExceptionMessage('Loan not found');
 
         $this->loanRepository->method('find')->with(999)->willReturn(null);
+        $this->settingsService->method('getLoanDurationDays')->willReturn(14);
 
         $command = new ExtendLoanCommand(loanId: 999, userId: 1);
         ($this->handler)($command);
@@ -79,6 +84,7 @@ class ExtendLoanHandlerTest extends TestCase
         $loan->method('getReturnedAt')->willReturn(new \DateTimeImmutable());
 
         $this->loanRepository->method('find')->with(1)->willReturn($loan);
+        $this->settingsService->method('getLoanDurationDays')->willReturn(14);
 
         $command = new ExtendLoanCommand(loanId: 1, userId: 1);
         ($this->handler)($command);
@@ -94,6 +100,7 @@ class ExtendLoanHandlerTest extends TestCase
         $loan->method('getExtensionsCount')->willReturn(1);
 
         $this->loanRepository->method('find')->with(1)->willReturn($loan);
+        $this->settingsService->method('getLoanDurationDays')->willReturn(14);
 
         $command = new ExtendLoanCommand(loanId: 1, userId: 1);
         ($this->handler)($command);
@@ -113,6 +120,7 @@ class ExtendLoanHandlerTest extends TestCase
 
         $this->loanRepository->method('find')->with(1)->willReturn($loan);
         $this->reservationRepository->method('findActiveByBook')->with($book)->willReturn(['reservation1']);
+        $this->settingsService->method('getLoanDurationDays')->willReturn(14);
 
         $command = new ExtendLoanCommand(loanId: 1, userId: 1);
         ($this->handler)($command);
