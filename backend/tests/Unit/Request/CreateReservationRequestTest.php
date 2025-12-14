@@ -36,6 +36,7 @@ class CreateReservationRequestTest extends TestCase
         $request->days = 7;
 
         $violations = $this->validator->validate($request);
+        $this->assertCount(0, $violations, 'Valid days should not trigger validation errors');
         
         foreach ($violations as $violation) {
             $this->assertStringNotContainsString('days', $violation->getPropertyPath());

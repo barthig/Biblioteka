@@ -47,7 +47,7 @@ class CreateReservationHandler
         }
 
         // Issue #15: Check actual availability, not just copy count
-        $availableCopies = $book->getAvailable();
+        $availableCopies = $book->getCopies();
         if ($availableCopies > 0) {
             throw new \RuntimeException('Book currently available, wypożycz zamiast rezerwować');
         }

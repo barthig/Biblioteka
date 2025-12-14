@@ -118,6 +118,7 @@ class ApiAuthSubscriber implements EventSubscriberInterface
         $publicPatterns = [
             ['pattern' => '#^/api/books$#', 'methods' => ['GET']],
             ['pattern' => '#^/api/books/filters$#', 'methods' => ['GET']],
+            ['pattern' => '#^/api/books/recommended$#', 'methods' => ['GET']],
             ['pattern' => '#^/api/books/popular$#', 'methods' => ['GET']],
             ['pattern' => '#^/api/books/new$#', 'methods' => ['GET']],
             ['pattern' => '#^/api/books/\\d+$#', 'methods' => ['GET']],

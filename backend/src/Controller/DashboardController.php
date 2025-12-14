@@ -1,19 +1,20 @@
 <?php
 namespace App\Controller;
 
-use App\Application\Query\Dashboard\GetOverviewQuery;
+use App\Entity\Book;
+use App\Entity\Favorite;
+use App\Entity\Loan;
+use App\Entity\Reservation;
+use App\Entity\User;
 use App\Service\SecurityService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Messenger\MessageBusInterface;
-use Symfony\Component\Messenger\Stamp\HandledStamp;
 
 class DashboardController extends AbstractController
 {
     public function __construct(
-        private readonly MessageBusInterface $queryBus,
         private readonly SecurityService $security,
         private readonly EntityManagerInterface $entityManager
     ) {
@@ -26,7 +27,7 @@ class DashboardController extends AbstractController
             return $this->json(['error' => 'Unauthorized'], 401);
         }
 
-        $user = $this->entityManager->getRepository(\App\Entity\User::class)->find($userId);
+        $user = $this->entityManager->getRepository(User::class)->find($userId);
         if (!$user) {
             return $this->json(['error' => 'User not found'], 404);
         }
@@ -35,15 +36,23 @@ class DashboardController extends AbstractController
         $isAdmin = in_array('ROLE_ADMIN', $user->getRoles());
 
         // Base stats
-        $envelope = $this->queryBus->dispatch(new GetOverviewQuery());
-        $baseStats = $envelope->last(HandledStamp::class)?->getResult();
+        $bookRepo = $this->entityManager->getRepository(Book::class);
+        $userRepo = $this->entityManager->getRepository(User::class);
+        $loanRepo = $this->entityManager->getRepository(Loan::class);
+        $reservationRepo = $this->entityManager->getRepository(Reservation::class);
+        $favoriteRepo = $this->entityManager->getRepository(Favorite::class);
 
-        $stats = $baseStats ?? [];
+        $userCount = (int) $this->entityManager
+            ->createQuery('SELECT COUNT(u.id) FROM App\\Entity\\User u WHERE u.roles NOT LIKE :systemRole')
+            ->setParameter('systemRole', '%ROLE_SYSTEM%')
+            ->getSingleScalarResult();
 
-        // Get repositories
-        $loanRepo = $this->entityManager->getRepository(\App\Entity\Loan::class);
-        $reservationRepo = $this->entityManager->getRepository(\App\Entity\Reservation::class);
-        $favoriteRepo = $this->entityManager->getRepository(\App\Entity\Favorite::class);
+        $stats = [
+            'booksCount' => $bookRepo->count([]),
+            'usersCount' => $userCount,
+            'loansCount' => $loanRepo->count(['returnedAt' => null]),
+            'reservationsQueue' => $reservationRepo->count(['status' => Reservation::STATUS_ACTIVE]),
+        ];
 
         // User-specific stats
         if (!$isLibrarian && !$isAdmin) {

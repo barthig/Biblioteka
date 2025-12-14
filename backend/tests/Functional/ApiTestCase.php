@@ -53,6 +53,7 @@ abstract class ApiTestCase extends WebTestCase
         }
 
         $this->purgeDatabase();
+        $this->seedDefaultUsers();
     }
 
     protected function tearDown(): void
@@ -361,5 +362,19 @@ abstract class ApiTestCase extends WebTestCase
     $this->entityManager->createQuery('DELETE FROM App\Entity\Announcement an')->execute();
     $this->entityManager->createQuery('DELETE FROM App\Entity\User u')->execute();
         $this->entityManager->clear();
+        if (self::getContainer()->has('cache.rate_limiter')) {
+            self::getContainer()->get('cache.rate_limiter')->clear();
+        }
+    }
+
+    private function seedDefaultUsers(): void
+    {
+        $existing = $this->entityManager
+            ->getRepository(User::class)
+            ->findOneBy(['email' => 'verified@example.com']);
+
+        if ($existing === null) {
+            $this->createUser('verified@example.com', ['ROLE_USER', 'ROLE_SYSTEM'], 'password123', 'Verified User');
+        }
     }
 }

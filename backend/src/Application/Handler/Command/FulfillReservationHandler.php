@@ -28,7 +28,7 @@ class FulfillReservationHandler
         }
 
         if (!$reservation->getBookCopy()) {
-            throw new \RuntimeException('No book copy assigned to reservation');
+            throw new \RuntimeException('No book copy assigned');
         }
 
         // Mark reservation as fulfilled - do NOT release the book copy

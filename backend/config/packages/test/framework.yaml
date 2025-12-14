@@ -2,12 +2,27 @@ framework:
   test: true
   session:
     storage_factory_id: session.storage.factory.mock_file
-  
-  # Wyłączenie rate limiting w testach
+
+  cache:
+    app: cache.adapter.filesystem
+    system: cache.adapter.filesystem
+    default_redis_provider: null
+    pools:
+      doctrine.result_cache_pool:
+        adapter: cache.adapter.filesystem
+      doctrine.system_cache_pool:
+        adapter: cache.adapter.filesystem
+
   rate_limiter:
     login_attempts:
-      policy: 'no_limit'
+      policy: 'sliding_window'
+      limit: 5
+      interval: '15 minutes'
     registration_attempts:
-      policy: 'no_limit'
+      policy: 'sliding_window'
+      limit: 3
+      interval: '1 hour'
     api_global:
-      policy: 'no_limit'
+      policy: 'token_bucket'
+      limit: 200
+      rate: { interval: '1 minute', amount: 200 }

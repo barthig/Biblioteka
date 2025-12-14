@@ -1,19 +1,14 @@
-# Disable rate limiting in test environment
 framework:
-    rate_limiter:
-        anonymous_api:
-            policy: 'sliding_window'
-            limit: 999999
-            interval: '1 minute'
-        authenticated_api:
-            policy: 'sliding_window'
-            limit: 999999
-            interval: '1 minute'
-        login_attempts:
-            policy: 'fixed_window'
-            limit: 999999
-            interval: '1 minute'
-        registration_attempts:
-            policy: 'fixed_window'
-            limit: 999999
-            interval: '1 minute'
+  rate_limiter:
+    login_attempts:
+      policy: 'sliding_window'
+      limit: 5
+      interval: '15 minutes'
+    registration_attempts:
+      policy: 'sliding_window'
+      limit: 3
+      interval: '1 hour'
+    api_global:
+      policy: 'token_bucket'
+      limit: 200
+      rate: { interval: '1 minute', amount: 200 }

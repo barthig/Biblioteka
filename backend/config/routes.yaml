@@ -37,6 +37,11 @@ api_auth_profile:
   controller: App\Controller\AuthController::profile
   methods: [GET]
 
+api_profile:
+  path: /api/profile
+  controller: App\Controller\AuthController::profile
+  methods: [GET]
+
 # Dashboard overview
 api_dashboard_overview:
   path: /api/dashboard

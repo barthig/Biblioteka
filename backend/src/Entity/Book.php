@@ -306,7 +306,7 @@ class Book
         return $this;
     }
 
-    public function recalculateInventoryCounters(): self
+    public function recalculateInventoryCounters(): ?self
     {
         $total = 0;
         $available = 0;

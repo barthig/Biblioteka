@@ -120,6 +120,6 @@ class Fine
     #[Groups(['fine:read'])]
     public function getUser(): ?User
     {
-        return $this->loan->getBorrower();
+        return $this->loan->getUser();
     }
 }

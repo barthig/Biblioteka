@@ -2,6 +2,7 @@
 namespace App\Controller;
 
 use App\Application\Query\User\GetUserDetailsQuery;
+use App\Entity\User;
 use App\Repository\UserRepository;
 use App\Service\SecurityService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -29,7 +30,10 @@ class UserController extends AbstractController
             return $this->json(['error' => 'Forbidden'], 403);
         }
 
-        $users = $repo->findAll();
+        $users = array_values(array_filter(
+            $repo->findAll(),
+            static fn(User $user) => !in_array('ROLE_SYSTEM', $user->getRoles(), true)
+        ));
         return $this->json($users, 200, [], ['groups' => ['user:read']]);
     }
 

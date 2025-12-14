@@ -12,12 +12,47 @@ if (is_dir($cacheDir)) {
 
     foreach ($files as $file) {
         if ($file->isDir()) {
-            rmdir($file->getPathname());
+            @rmdir($file->getPathname());
             continue;
         }
 
-        unlink($file->getPathname());
+        @unlink($file->getPathname());
     }
 
-    rmdir($cacheDir);
+    @rmdir($cacheDir);
 }
+
+// Ensure test database schema exists and seed baseline user for auth tests
+$kernel = new \App\Kernel('test', false);
+$kernel->boot();
+
+$em = $kernel->getContainer()->get('doctrine')->getManager();
+$metadata = $em->getMetadataFactory()->getAllMetadata();
+if (!empty($metadata)) {
+    $tool = new \Doctrine\ORM\Tools\SchemaTool($em);
+    $tool->updateSchema($metadata, true);
+}
+
+$userRepo = $em->getRepository(\App\Entity\User::class);
+$seedEmail = 'verified@example.com';
+
+if (!$userRepo->findOneBy(['email' => $seedEmail])) {
+    $user = new \App\Entity\User();
+    $user->setEmail($seedEmail)
+        ->setName('Verified User')
+        ->setRoles(['ROLE_USER', 'ROLE_SYSTEM'])
+        ->setPassword(password_hash('password123', PASSWORD_BCRYPT))
+        ->markVerified();
+
+    $em->persist($user);
+    $em->flush();
+}
+
+$cachePool = $kernel->getContainer()->has('cache.rate_limiter')
+    ? $kernel->getContainer()->get('cache.rate_limiter')
+    : null;
+if ($cachePool) {
+    $cachePool->clear();
+}
+
+$kernel->shutdown();

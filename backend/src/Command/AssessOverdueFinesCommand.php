@@ -69,7 +69,7 @@ class AssessOverdueFinesCommand extends Command
                 continue;
             }
 
-            $daysLate = (int) ceil($secondsLate / 86400);
+            $daysLate = max(1, (int) floor($secondsLate / 86400));
             $chargeableDays = max(0, $daysLate - $graceDays);
             if ($chargeableDays === 0) {
                 continue;

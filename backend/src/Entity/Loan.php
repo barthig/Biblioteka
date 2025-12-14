@@ -8,8 +8,7 @@ use Symfony\Component\Serializer\Annotation\Groups;
 class Loan
 {
     #[ORM\Id]
-    #[ORM\GeneratedValue(strategy: 'SEQUENCE')]
-    #[ORM\SequenceGenerator(sequenceName: 'loan_id_seq', allocationSize: 1, initialValue: 1)]
+    #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
     #[Groups(['loan:read'])]
     private ?int $id = null;
