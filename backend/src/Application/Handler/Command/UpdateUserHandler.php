@@ -36,6 +36,18 @@ class UpdateUserHandler
             $user->setRoles(array_values(array_unique($command->roles)));
         }
 
+        if ($command->accountStatus !== null) {
+            $user->setAccountStatus($command->accountStatus);
+        }
+
+        if ($command->pesel !== null) {
+            $user->setPesel($command->pesel);
+        }
+
+        if ($command->cardNumber !== null) {
+            $user->setCardNumber($command->cardNumber);
+        }
+
         // Apply contact data
         if ($command->phoneNumber !== null) {
             $user->setPhoneNumber($command->phoneNumber);
@@ -80,6 +92,8 @@ class UpdateUserHandler
             } else {
                 $user->unblock();
             }
+        } elseif ($command->blockedReason !== null) {
+            $user->setBlockedReason($command->blockedReason);
         }
 
         $this->entityManager->persist($user);

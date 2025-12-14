@@ -33,6 +33,10 @@ class UpdateSystemSettingHandler
             $setting->setDescription($command->description);
         }
 
+        if ($command->valueType !== null) {
+            $setting->setValueType($command->valueType);
+        }
+
         $this->entityManager->flush();
 
         return $setting;

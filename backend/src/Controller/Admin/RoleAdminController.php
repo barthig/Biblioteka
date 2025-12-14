@@ -1,20 +1,27 @@
 <?php
 namespace App\Controller\Admin;
 
+use App\Application\Command\StaffRole\CreateStaffRoleCommand;
+use App\Application\Command\StaffRole\UpdateStaffRoleCommand;
+use App\Application\Command\User\UpdateUserCommand;
 use App\Entity\StaffRole;
 use App\Entity\User;
 use App\Repository\StaffRoleRepository;
 use App\Repository\UserRepository;
 use App\Service\SecurityService;
-use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Messenger\MessageBusInterface;
+use Symfony\Component\Messenger\Stamp\HandledStamp;
 
 class RoleAdminController extends AbstractController
 {
-    public function __construct(private StaffRoleRepository $roles, private UserRepository $users)
-    {
+    public function __construct(
+        private StaffRoleRepository $roles,
+        private UserRepository $users,
+        private MessageBusInterface $commandBus
+    ) {
     }
 
     public function list(Request $request, SecurityService $security): JsonResponse
@@ -36,7 +43,7 @@ class RoleAdminController extends AbstractController
         return $this->json(['roles' => $items], 200);
     }
 
-    public function create(Request $request, SecurityService $security, ManagerRegistry $doctrine): JsonResponse
+    public function create(Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_ADMIN')) {
             return $this->json(['error' => 'Forbidden'], 403);
@@ -55,15 +62,13 @@ class RoleAdminController extends AbstractController
             return $this->json(['error' => 'Role already exists'], 409);
         }
 
-        $role = (new StaffRole())
-            ->setName($name)
-            ->setRoleKey($roleKey)
-            ->setModules($modules)
-            ->setDescription($data['description'] ?? null);
-
-        $em = $doctrine->getManager();
-        $em->persist($role);
-        $em->flush();
+        $envelope = $this->commandBus->dispatch(new CreateStaffRoleCommand(
+            name: $name,
+            roleKey: $roleKey,
+            modules: $modules,
+            description: $data['description'] ?? null
+        ));
+        $role = $envelope->last(HandledStamp::class)?->getResult();
 
         return $this->json([
             'id' => $role->getId(),
@@ -73,7 +78,7 @@ class RoleAdminController extends AbstractController
         ], 201);
     }
 
-    public function update(string $roleKey, Request $request, SecurityService $security, ManagerRegistry $doctrine): JsonResponse
+    public function update(string $roleKey, Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_ADMIN')) {
             return $this->json(['error' => 'Forbidden'], 403);
@@ -85,16 +90,12 @@ class RoleAdminController extends AbstractController
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
-        if (isset($data['modules']) && is_array($data['modules'])) {
-            $role->setModules($data['modules']);
-        }
-        if (array_key_exists('description', $data)) {
-            $role->setDescription($data['description']);
-        }
-
-        $em = $doctrine->getManager();
-        $em->persist($role);
-        $em->flush();
+        $envelope = $this->commandBus->dispatch(new UpdateStaffRoleCommand(
+            roleId: $role->getId(),
+            modules: isset($data['modules']) && is_array($data['modules']) ? $data['modules'] : null,
+            description: array_key_exists('description', $data) ? $data['description'] : null
+        ));
+        $role = $envelope->last(HandledStamp::class)?->getResult();
 
         return $this->json([
             'id' => $role->getId(),
@@ -105,7 +106,7 @@ class RoleAdminController extends AbstractController
         ], 200);
     }
 
-    public function assign(string $roleKey, Request $request, SecurityService $security, ManagerRegistry $doctrine): JsonResponse
+    public function assign(string $roleKey, Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_ADMIN')) {
             return $this->json(['error' => 'Forbidden'], 403);
@@ -131,16 +132,16 @@ class RoleAdminController extends AbstractController
         $roles = $user->getRoles();
         if (!in_array($role->getRoleKey(), $roles, true)) {
             $roles[] = $role->getRoleKey();
-            $user->setRoles(array_values(array_unique($roles)));
+            $roles = array_values(array_unique($roles));
+            $this->commandBus->dispatch(new UpdateUserCommand(
+                userId: $user->getId(),
+                roles: $roles
+            ));
         }
-
-        $em = $doctrine->getManager();
-        $em->persist($user);
-        $em->flush();
 
         return $this->json([
             'userId' => $user->getId(),
-            'roles' => $user->getRoles(),
+            'roles' => $roles,
         ], 200);
     }
 }

@@ -3,12 +3,16 @@ namespace App\Controller;
 
 use App\Application\Command\Account\ChangePasswordCommand;
 use App\Application\Command\Account\UpdateAccountCommand;
+use App\Application\Command\Account\UpdateAccountContactCommand;
+use App\Application\Command\Account\UpdateAccountPreferencesCommand;
+use App\Application\Command\Account\UpdateAccountUiPreferencesCommand;
+use App\Application\Command\Account\UpdateAccountPinCommand;
+use App\Application\Command\Account\CompleteOnboardingCommand;
+use App\Application\Query\Account\GetAccountDetailsQuery;
 use App\Controller\Traits\ValidationTrait;
-use App\Entity\User;
 use App\Request\ChangePasswordRequest;
 use App\Request\UpdateAccountRequest;
 use App\Service\SecurityService;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -22,8 +26,8 @@ class AccountController extends AbstractController
 
     public function __construct(
         private readonly MessageBusInterface $commandBus,
-        private readonly SecurityService $security,
-        private readonly EntityManagerInterface $entityManager
+        private readonly MessageBusInterface $queryBus,
+        private readonly SecurityService $security
     ) {}
     public function me(Request $request): JsonResponse
     {
@@ -32,38 +36,10 @@ class AccountController extends AbstractController
             return $this->json(['error' => 'Unauthorized'], 401);
         }
 
-        $user = $this->entityManager->getRepository(User::class)->find($userId);
-        if (!$user) {
-            return $this->json(['error' => 'User not found'], 404);
-        }
+        $envelope = $this->queryBus->dispatch(new GetAccountDetailsQuery($userId));
+        $payload = $envelope->last(HandledStamp::class)?->getResult();
 
-        return $this->json([
-            'id' => $user->getId(),
-            'email' => $user->getEmail(),
-            'name' => $user->getName(),
-            'phoneNumber' => $user->getPhoneNumber(),
-            'addressLine' => $user->getAddressLine(),
-            'city' => $user->getCity(),
-            'postalCode' => $user->getPostalCode(),
-            'pesel' => $user->getPesel(),
-            'cardNumber' => $user->getCardNumber(),
-            'cardExpiry' => $user->getCardExpiry()?->format('Y-m-d'),
-            'accountStatus' => $user->getAccountStatus() ?? 'Aktywne',
-            'newsletterSubscribed' => $user->isNewsletterSubscribed(),
-            'newsletter' => $user->isNewsletterSubscribed(),
-            'keepHistory' => $user->getKeepHistory() ?? false,
-            'emailLoans' => $user->getEmailLoans() ?? true,
-            'emailReservations' => $user->getEmailReservations() ?? true,
-            'emailFines' => $user->getEmailFines() ?? true,
-            'emailAnnouncements' => $user->getEmailAnnouncements() ?? false,
-            'preferredContact' => $user->getPreferredContact() ?? 'email',
-            'defaultBranch' => $user->getDefaultBranch(),
-            'theme' => $user->getTheme() ?? 'auto',
-            'fontSize' => $user->getFontSize() ?? 'standard',
-            'language' => $user->getLanguage() ?? 'pl',
-            'membershipGroup' => $user->getMembershipGroup(),
-            'createdAt' => $user->getCreatedAt()?->format('c'),
-        ]);
+        return $this->json($payload);
     }
 
     public function update(Request $request, ValidatorInterface $validator): JsonResponse
@@ -167,29 +143,13 @@ class AccountController extends AbstractController
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
-        
-        $user = $this->entityManager->getRepository(User::class)->find($userId);
-        if (!$user) {
-            return $this->json(['error' => 'User not found'], 404);
-        }
-
-        if (isset($data['phoneNumber'])) {
-            $user->setPhoneNumber($data['phoneNumber']);
-        }
-        if (isset($data['addressLine'])) {
-            $user->setAddressLine($data['addressLine']);
-        }
-        if (isset($data['city'])) {
-            $user->setCity($data['city']);
-        }
-        if (isset($data['postalCode'])) {
-            $user->setPostalCode($data['postalCode']);
-        }
-        if (isset($data['preferredContact'])) {
-            $user->setPreferredContact($data['preferredContact']);
-        }
-
-        $this->entityManager->flush();
+        $this->commandBus->dispatch(new UpdateAccountContactCommand(
+            userId: $userId,
+            phoneNumber: $data['phoneNumber'] ?? null,
+            addressLine: $data['addressLine'] ?? null,
+            city: $data['city'] ?? null,
+            postalCode: $data['postalCode'] ?? null
+        ));
 
         return $this->json(['message' => 'Contact information updated']);
     }

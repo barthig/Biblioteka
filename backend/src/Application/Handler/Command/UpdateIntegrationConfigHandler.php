@@ -28,6 +28,10 @@ class UpdateIntegrationConfigHandler
         if ($command->name !== null) {
             $config->setName($command->name);
         }
+
+        if ($command->provider !== null) {
+            $config->setProvider($command->provider);
+        }
         
         if ($command->enabled !== null) {
             $config->setEnabled($command->enabled);
@@ -35,6 +39,14 @@ class UpdateIntegrationConfigHandler
         
         if ($command->settings !== null) {
             $config->setSettings($command->settings);
+        }
+
+        if ($command->lastStatus !== null) {
+            $config->setLastStatus($command->lastStatus);
+        }
+
+        if ($command->lastTestedAt !== null) {
+            $config->setLastTestedAt($command->lastTestedAt);
         }
 
         $this->entityManager->flush();

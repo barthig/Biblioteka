@@ -71,6 +71,11 @@ services:
       $commandBus: '@command.bus'
       $security: '@App\Service\SecurityService'
 
+  App\Controller\AdminUserController:
+    arguments:
+      $commandBus: '@command.bus'
+      $security: '@App\Service\SecurityService'
+
   App\Controller\AccountController:
     arguments:
       $commandBus: '@command.bus'
@@ -141,3 +146,13 @@ services:
     arguments:
       $queryBus: '@query.bus'
       $commandBus: '@command.bus'
+
+  App\Controller\Admin\IntegrationAdminController:
+    arguments:
+      $commandBus: '@command.bus'
+      $queryBus: '@query.bus'
+
+  App\Controller\Admin\SystemConfigController:
+    arguments:
+      $commandBus: '@command.bus'
+      $queryBus: '@query.bus'

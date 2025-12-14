@@ -14,6 +14,7 @@ class UpdateUserCommand
         public readonly ?string $postalCode = null,
         public readonly ?string $pesel = null,
         public readonly ?string $cardNumber = null,
+        public readonly ?string $accountStatus = null,
         public readonly ?bool $pendingApproval = null,
         public readonly ?bool $verified = null,
         public readonly ?string $membershipGroup = null,

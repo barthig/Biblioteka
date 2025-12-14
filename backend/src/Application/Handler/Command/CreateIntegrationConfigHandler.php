@@ -20,6 +20,7 @@ class CreateIntegrationConfigHandler
         $config->setName($command->name);
         $config->setProvider($command->provider);
         $config->setEnabled($command->enabled);
+        $config->setLastStatus('configured');
         
         if (!empty($command->settings)) {
             $config->setSettings($command->settings);
