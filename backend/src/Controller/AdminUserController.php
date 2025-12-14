@@ -3,7 +3,6 @@ namespace App\Controller;
 
 use App\Application\Command\User\DeleteUserCommand;
 use App\Application\Command\User\UpdateUserCommand;
-use App\Repository\UserRepository;
 use App\Service\SecurityService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -21,7 +20,7 @@ class AdminUserController extends AbstractController
     }
 
     #[IsGranted('ROLE_ADMIN')]
-    public function update(int $id, Request $request, UserRepository $repo): JsonResponse
+    public function update(int $id, Request $request): JsonResponse
     {
         if (!$this->security->hasRole($request, 'ROLE_ADMIN')) {
             return $this->json(['error' => 'Forbidden'], 403);
@@ -52,10 +51,15 @@ class AdminUserController extends AbstractController
     }
 
     #[IsGranted('ROLE_ADMIN')]
-    public function delete(int $id, Request $request, UserRepository $repo): JsonResponse
+    public function delete(int $id, Request $request): JsonResponse
     {
         if (!$this->security->hasRole($request, 'ROLE_ADMIN')) {
             return $this->json(['error' => 'Forbidden'], 403);
+        }
+
+        $currentUserId = $this->security->getCurrentUserId($request);
+        if ($currentUserId === $id) {
+            return $this->json(['error' => 'Cannot delete your own account'], 400);
         }
 
         $this->commandBus->dispatch(new DeleteUserCommand($id));

@@ -79,6 +79,7 @@ services:
   App\Controller\AccountController:
     arguments:
       $commandBus: '@command.bus'
+      $queryBus: '@query.bus'
       $security: '@App\Service\SecurityService'
 
   App\Controller\FavoriteController:
@@ -96,7 +97,7 @@ services:
   App\Controller\DashboardController:
     arguments:
       $security: '@App\Service\SecurityService'
-      $entityManager: '@doctrine.orm.entity_manager'
+      $queryBus: '@query.bus'
 
   App\Controller\ReportController:
     arguments:
@@ -145,6 +146,24 @@ services:
   App\Controller\AcquisitionSupplierController:
     arguments:
       $queryBus: '@query.bus'
+      $commandBus: '@command.bus'
+
+  App\Controller\CollectionController:
+    arguments:
+      $commandBus: '@command.bus'
+
+  App\Controller\RatingController:
+    arguments:
+      $commandBus: '@command.bus'
+      $security: '@App\Service\SecurityService'
+
+  App\Controller\RecommendationFeedbackController:
+    arguments:
+      $commandBus: '@command.bus'
+      $security: '@App\Service\SecurityService'
+
+  App\Controller\Admin\RoleAdminController:
+    arguments:
       $commandBus: '@command.bus'
 
   App\Controller\Admin\IntegrationAdminController:

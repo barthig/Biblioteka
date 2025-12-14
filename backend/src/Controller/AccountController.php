@@ -18,6 +18,8 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
+use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class AccountController extends AbstractController
@@ -162,35 +164,16 @@ class AccountController extends AbstractController
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
-        
-        $user = $this->entityManager->getRepository(User::class)->find($userId);
-        if (!$user) {
-            return $this->json(['error' => 'User not found'], 404);
-        }
-
-        if (isset($data['defaultBranch'])) {
-            $user->setDefaultBranch($data['defaultBranch']);
-        }
-        if (isset($data['newsletter'])) {
-            $user->setNewsletterSubscribed($this->normalizeBoolean($data['newsletter']));
-        }
-        if (isset($data['keepHistory'])) {
-            $user->setKeepHistory($this->normalizeBoolean($data['keepHistory']));
-        }
-        if (isset($data['emailLoans'])) {
-            $user->setEmailLoans($this->normalizeBoolean($data['emailLoans']));
-        }
-        if (isset($data['emailReservations'])) {
-            $user->setEmailReservations($this->normalizeBoolean($data['emailReservations']));
-        }
-        if (isset($data['emailFines'])) {
-            $user->setEmailFines($this->normalizeBoolean($data['emailFines']));
-        }
-        if (isset($data['emailAnnouncements'])) {
-            $user->setEmailAnnouncements($this->normalizeBoolean($data['emailAnnouncements']));
-        }
-
-        $this->entityManager->flush();
+        $this->commandBus->dispatch(new UpdateAccountPreferencesCommand(
+            userId: $userId,
+            defaultBranch: $data['defaultBranch'] ?? null,
+            newsletterSubscribed: isset($data['newsletter']) ? $this->normalizeBoolean($data['newsletter']) : null,
+            keepHistory: isset($data['keepHistory']) ? $this->normalizeBoolean($data['keepHistory']) : null,
+            emailLoans: isset($data['emailLoans']) ? $this->normalizeBoolean($data['emailLoans']) : null,
+            emailReservations: isset($data['emailReservations']) ? $this->normalizeBoolean($data['emailReservations']) : null,
+            emailFines: isset($data['emailFines']) ? $this->normalizeBoolean($data['emailFines']) : null,
+            emailAnnouncements: isset($data['emailAnnouncements']) ? $this->normalizeBoolean($data['emailAnnouncements']) : null
+        ));
 
         return $this->json(['message' => 'Preferences updated']);
     }
@@ -203,23 +186,12 @@ class AccountController extends AbstractController
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
-        
-        $user = $this->entityManager->getRepository(User::class)->find($userId);
-        if (!$user) {
-            return $this->json(['error' => 'User not found'], 404);
-        }
-
-        if (isset($data['theme'])) {
-            $user->setTheme($data['theme']);
-        }
-        if (isset($data['fontSize'])) {
-            $user->setFontSize($data['fontSize']);
-        }
-        if (isset($data['language'])) {
-            $user->setLanguage($data['language']);
-        }
-
-        $this->entityManager->flush();
+        $this->commandBus->dispatch(new UpdateAccountUiPreferencesCommand(
+            userId: $userId,
+            theme: $data['theme'] ?? null,
+            fontSize: $data['fontSize'] ?? null,
+            language: $data['language'] ?? null
+        ));
 
         return $this->json(['message' => 'UI preferences updated']);
     }
@@ -232,28 +204,19 @@ class AccountController extends AbstractController
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
-        
+
         if (!isset($data['currentPin']) || !isset($data['newPin'])) {
             return $this->json(['error' => 'Current PIN and new PIN are required'], 400);
         }
-
-        $user = $this->entityManager->getRepository(User::class)->find($userId);
-        if (!$user) {
-            return $this->json(['error' => 'User not found'], 404);
+        try {
+            $this->commandBus->dispatch(new UpdateAccountPinCommand(
+                userId: $userId,
+                currentPin: (string) $data['currentPin'],
+                newPin: (string) $data['newPin']
+            ));
+        } catch (\RuntimeException|HttpExceptionInterface $e) {
+            return $this->json(['error' => $e->getMessage()], $e->getStatusCode() ?? 400);
         }
-
-        // Verify current PIN
-        if ($user->getPin() !== $data['currentPin']) {
-            return $this->json(['error' => 'Current PIN is incorrect'], 400);
-        }
-
-        // Validate new PIN format
-        if (!preg_match('/^[0-9]{4}$/', $data['newPin'])) {
-            return $this->json(['error' => 'PIN must be 4 digits'], 400);
-        }
-
-        $user->setPin($data['newPin']);
-        $this->entityManager->flush();
 
         return $this->json(['message' => 'PIN updated']);
     }
@@ -267,22 +230,17 @@ class AccountController extends AbstractController
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
-        
-        $user = $this->entityManager->getRepository(User::class)->find($userId);
-        if (!$user) {
-            return $this->json(['error' => 'User not found'], 404);
-        }
-
-        if (isset($data['preferredCategories']) && is_array($data['preferredCategories'])) {
-            $user->setPreferredCategories($data['preferredCategories']);
-        }
-
-        $user->setOnboardingCompleted(true);
-        $this->entityManager->flush();
+        $envelope = $this->commandBus->dispatch(new CompleteOnboardingCommand(
+            userId: $userId,
+            preferredCategories: isset($data['preferredCategories']) && is_array($data['preferredCategories'])
+                ? $data['preferredCategories']
+                : null
+        ));
+        $user = $envelope->last(HandledStamp::class)?->getResult();
 
         return $this->json([
             'message' => 'Onboarding completed',
-            'preferredCategories' => $user->getPreferredCategories()
+            'preferredCategories' => $user?->getPreferredCategories()
         ]);
     }
 }

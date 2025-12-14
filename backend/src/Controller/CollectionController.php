@@ -1,22 +1,26 @@
 <?php
 namespace App\Controller;
 
+use App\Application\Command\Collection\CreateCollectionCommand;
+use App\Application\Command\Collection\UpdateCollectionCommand;
+use App\Application\Command\Collection\DeleteCollectionCommand;
 use App\Entity\BookCollection;
 use App\Repository\BookRepository;
 use App\Repository\CollectionRepository;
 use App\Service\SecurityService;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Messenger\MessageBusInterface;
+use Symfony\Component\Messenger\Stamp\HandledStamp;
 
 class CollectionController extends AbstractController
 {
     public function __construct(
         private readonly SecurityService $security,
-        private readonly EntityManagerInterface $em,
         private readonly CollectionRepository $collectionRepo,
-        private readonly BookRepository $bookRepo
+        private readonly BookRepository $bookRepo,
+        private readonly MessageBusInterface $commandBus
     ) {}
 
     public function list(Request $request): JsonResponse
@@ -83,35 +87,16 @@ class CollectionController extends AbstractController
             return $this->json(['error' => 'Forbidden'], 403);
         }
 
-        $user = $this->em->getRepository(\App\Entity\User::class)->find($userId);
-        if (!$user) {
-            return $this->json(['error' => 'User not found'], 404);
-        }
-
         $data = json_decode($request->getContent(), true);
-
-        if (!isset($data['name']) || trim($data['name']) === '') {
-            return $this->json(['error' => 'Collection name is required'], 400);
-        }
-
-        $collection = new BookCollection();
-        $collection->setName($data['name'])
-            ->setDescription($data['description'] ?? null)
-            ->setCuratedBy($user)
-            ->setFeatured($data['featured'] ?? false)
-            ->setDisplayOrder($data['displayOrder'] ?? 0);
-
-        if (isset($data['bookIds']) && is_array($data['bookIds'])) {
-            foreach ($data['bookIds'] as $bookId) {
-                $book = $this->bookRepo->find($bookId);
-                if ($book) {
-                    $collection->addBook($book);
-                }
-            }
-        }
-
-        $this->em->persist($collection);
-        $this->em->flush();
+        $envelope = $this->commandBus->dispatch(new CreateCollectionCommand(
+            userId: $userId,
+            name: $data['name'] ?? '',
+            description: $data['description'] ?? null,
+            featured: $data['featured'] ?? false,
+            displayOrder: $data['displayOrder'] ?? 0,
+            bookIds: isset($data['bookIds']) && is_array($data['bookIds']) ? $data['bookIds'] : []
+        ));
+        $collection = $envelope->last(HandledStamp::class)?->getResult();
 
         return $this->json([
             'success' => true,
@@ -131,39 +116,15 @@ class CollectionController extends AbstractController
             return $this->json(['error' => 'Forbidden'], 403);
         }
 
-        $collection = $this->collectionRepo->find($id);
-        if (!$collection) {
-            return $this->json(['error' => 'Collection not found'], 404);
-        }
-
         $data = json_decode($request->getContent(), true);
-
-        if (isset($data['name'])) {
-            $collection->setName($data['name']);
-        }
-        if (isset($data['description'])) {
-            $collection->setDescription($data['description']);
-        }
-        if (isset($data['featured'])) {
-            $collection->setFeatured($data['featured']);
-        }
-        if (isset($data['displayOrder'])) {
-            $collection->setDisplayOrder($data['displayOrder']);
-        }
-
-        if (isset($data['bookIds']) && is_array($data['bookIds'])) {
-            foreach ($collection->getBooks()->toArray() as $book) {
-                $collection->removeBook($book);
-            }
-            foreach ($data['bookIds'] as $bookId) {
-                $book = $this->bookRepo->find($bookId);
-                if ($book) {
-                    $collection->addBook($book);
-                }
-            }
-        }
-
-        $this->em->flush();
+        $this->commandBus->dispatch(new UpdateCollectionCommand(
+            collectionId: $id,
+            name: $data['name'] ?? null,
+            description: $data['description'] ?? null,
+            featured: array_key_exists('featured', $data) ? (bool) $data['featured'] : null,
+            displayOrder: array_key_exists('displayOrder', $data) ? (int) $data['displayOrder'] : null,
+            bookIds: isset($data['bookIds']) && is_array($data['bookIds']) ? $data['bookIds'] : null
+        ));
 
         return $this->json(['success' => true, 'message' => 'Collection updated']);
     }
@@ -175,13 +136,7 @@ class CollectionController extends AbstractController
             return $this->json(['error' => 'Forbidden'], 403);
         }
 
-        $collection = $this->collectionRepo->find($id);
-        if (!$collection) {
-            return $this->json(['error' => 'Collection not found'], 404);
-        }
-
-        $this->em->remove($collection);
-        $this->em->flush();
+        $this->commandBus->dispatch(new DeleteCollectionCommand($id));
 
         return $this->json(['success' => true, 'message' => 'Collection deleted']);
     }

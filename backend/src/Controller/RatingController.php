@@ -1,23 +1,27 @@
 <?php
 namespace App\Controller;
 
-use App\Entity\Book;
+use App\Application\Command\Rating\DeleteRatingCommand;
+use App\Application\Command\Rating\RateBookCommand;
 use App\Entity\Rating;
 use App\Repository\BookRepository;
 use App\Repository\RatingRepository;
+use App\Repository\UserRepository;
 use App\Service\SecurityService;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Messenger\MessageBusInterface;
+use Symfony\Component\Messenger\Stamp\HandledStamp;
 
 class RatingController extends AbstractController
 {
     public function __construct(
         private readonly SecurityService $security,
-        private readonly EntityManagerInterface $em,
         private readonly RatingRepository $ratingRepo,
-        private readonly BookRepository $bookRepo
+        private readonly BookRepository $bookRepo,
+        private readonly UserRepository $userRepository,
+        private readonly MessageBusInterface $commandBus
     ) {}
 
     public function listRatings(int $id, Request $request): JsonResponse
@@ -67,54 +71,26 @@ class RatingController extends AbstractController
             return $this->json(['error' => 'Unauthorized'], 401);
         }
 
-        $book = $this->bookRepo->find($id);
-        if (!$book) {
-            return $this->json(['error' => 'Book not found'], 404);
-        }
-
-        $user = $this->em->getRepository(\App\Entity\User::class)->find($userId);
-        if (!$user) {
-            return $this->json(['error' => 'User not found'], 404);
-        }
-
         $data = json_decode($request->getContent(), true);
         $ratingValue = $data['rating'] ?? null;
         $review = $data['review'] ?? null;
-
-        if (!is_int($ratingValue) || $ratingValue < 1 || $ratingValue > 5) {
+        if (!is_int($ratingValue)) {
             return $this->json(['error' => 'Rating must be between 1 and 5'], 400);
         }
 
-        // Check if user already rated this book
-        $existingRating = $this->ratingRepo->findOneBy(['user' => $userId, 'book' => $book->getId()]);
-
-        if ($existingRating) {
-            $existingRating->setRating($ratingValue);
-            if ($review !== null) {
-                $existingRating->setReview($review);
-            }
-        } else {
-            $existingRating = new Rating();
-            $existingRating->setUser($user)
-                ->setBook($book)
-                ->setRating($ratingValue);
-            if ($review) {
-                $existingRating->setReview($review);
-            }
-            $this->em->persist($existingRating);
-        }
-
-        $this->em->flush();
+        $envelope = $this->commandBus->dispatch(new RateBookCommand(
+            userId: $userId,
+            bookId: $id,
+            rating: $ratingValue,
+            review: $review
+        ));
+        $result = $envelope->last(HandledStamp::class)?->getResult();
 
         return $this->json([
             'success' => true,
-            'rating' => [
-                'id' => $existingRating->getId(),
-                'rating' => $existingRating->getRating(),
-                'review' => $existingRating->getReview(),
-            ],
-            'averageRating' => $this->ratingRepo->getAverageRatingForBook($book->getId()),
-            'ratingCount' => $this->ratingRepo->getRatingCountForBook($book->getId())
+            'rating' => $result['rating'],
+            'averageRating' => $result['averageRating'],
+            'ratingCount' => $result['ratingCount']
         ]);
     }
 
@@ -125,24 +101,18 @@ class RatingController extends AbstractController
             return $this->json(['error' => 'Unauthorized'], 401);
         }
 
-        $rating = $this->ratingRepo->find($ratingId);
-        if (!$rating) {
-            return $this->json(['error' => 'Rating not found'], 404);
-        }
-
-        if ($rating->getUser()->getId() !== $userId && 
-            !$this->security->hasRole($request, 'ROLE_ADMIN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
-        }
-
-        $book = $rating->getBook();
-        $this->em->remove($rating);
-        $this->em->flush();
+        $isAdmin = $this->security->hasRole($request, 'ROLE_ADMIN');
+        $envelope = $this->commandBus->dispatch(new DeleteRatingCommand(
+            userId: $userId,
+            ratingId: $ratingId,
+            isAdmin: $isAdmin
+        ));
+        $result = $envelope->last(HandledStamp::class)?->getResult();
 
         return $this->json([
             'success' => true,
-            'averageRating' => $this->ratingRepo->getAverageRatingForBook($book->getId()),
-            'ratingCount' => $this->ratingRepo->getRatingCountForBook($book->getId())
+            'averageRating' => $result['averageRating'],
+            'ratingCount' => $result['ratingCount']
         ]);
     }
 
@@ -153,7 +123,7 @@ class RatingController extends AbstractController
             return $this->json(['error' => 'Unauthorized'], 401);
         }
 
-        $user = $this->em->getRepository(\App\Entity\User::class)->find($userId);
+        $user = $this->userRepository->find($userId);
         if (!$user) {
             return $this->json(['error' => 'User not found'], 404);
         }
