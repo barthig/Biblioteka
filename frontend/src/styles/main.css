@@ -665,7 +665,7 @@ a:hover {
 /* ===== BOOKS GRID ===== */
 .books-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 1.5rem;
   margin: 2rem 0;
 }
@@ -677,8 +677,27 @@ a:hover {
   }
 
   .books-grid {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
     gap: 1rem;
+  }
+
+  /* Generic helper for two-column grids (e.g., reports, acquisitions) */
+  .grid {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
+
+  /* Prevent horizontal overflow on small screens */
+  .surface-card {
+    overflow-x: auto;
+  }
+
+  .book-card {
+    word-break: break-word;
   }
 
   .modal-container {

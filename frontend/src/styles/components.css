@@ -26,6 +26,16 @@
   margin-bottom: 2rem;
 }
 
+/* Generic responsive helpers */
+.grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.grid-2 {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
 .announcement-card {
   background-color: #ffffff;
   border: 1px solid var(--border-color);
@@ -436,6 +446,14 @@
 
   .actions-grid {
     grid-template-columns: 1fr;
+  }
+
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
+
+  .surface-card {
+    overflow-x: auto;
   }
 }
 

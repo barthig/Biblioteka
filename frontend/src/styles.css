@@ -863,11 +863,14 @@ select:disabled {
 .books-grid {
 	display: grid;
 	gap: var(--space-3);
+	grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
 }
 
 .book-card {
 	display: grid;
 	gap: var(--space-3);
+	min-height: 100%;
+	word-break: break-word;
 }
 
 .book-card__header {
@@ -888,6 +891,7 @@ select:disabled {
 	gap: .8rem;
 	color: var(--color-muted);
 	font-size: .9rem;
+	overflow-wrap: anywhere;
 }
 
 .recommended-groups {
