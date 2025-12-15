@@ -115,6 +115,13 @@ export default function Navbar() {
               </svg>
               Profil
             </NavLink>
+            <NavLink to="/notifications" className={navClass} onClick={closeMenu}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+              </svg>
+              Powiadomienia
+            </NavLink>
             {isLibrarian && (
               <NavLink to="/librarian" className={navClass} onClick={closeMenu}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -125,6 +132,52 @@ export default function Navbar() {
                 </svg>
                 Panel bibliotekarza
               </NavLink>
+            )}
+            {isLibrarian && (
+              <NavLink to="/reports" className={navClass} onClick={closeMenu}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polyline points="4 17 10 11 13 14 20 7"></polyline>
+                  <polyline points="4 7 4 17 20 17"></polyline>
+                </svg>
+                Raporty
+              </NavLink>
+            )}
+            {isLibrarian && (
+              <NavLink to="/admin/assets" className={navClass} onClick={closeMenu}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="3" y="3" width="18" height="14" rx="2" ry="2"></rect>
+                  <path d="M3 7h18"></path>
+                </svg>
+                Pliki książek
+              </NavLink>
+            )}
+            {isAdmin && (
+              <>
+                <NavLink to="/admin/catalog" className={navClass} onClick={closeMenu}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                  </svg>
+                  Katalog import/eksport
+                </NavLink>
+                <NavLink to="/admin/acquisitions" className={navClass} onClick={closeMenu}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M3 3h18v4H3z"></path>
+                    <path d="M3 9h18v4H3z"></path>
+                    <path d="M3 15h18v4H3z"></path>
+                  </svg>
+                  Akcesje
+                </NavLink>
+                <NavLink to="/admin/logs" className={navClass} onClick={closeMenu}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M3 3h18v18H3z"></path>
+                    <path d="M7 7h10"></path>
+                    <path d="M7 12h6"></path>
+                    <path d="M7 17h4"></path>
+                  </svg>
+                  Logi
+                </NavLink>
+              </>
             )}
             {isAdmin && (
               <NavLink to="/admin" className={navClass} onClick={closeMenu}>

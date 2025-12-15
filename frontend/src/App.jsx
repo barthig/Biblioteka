@@ -18,6 +18,12 @@ import AdminPanel from './pages/AdminPanel'
 import LibrarianPanel from './pages/LibrarianPanel'
 import Announcements from './pages/Announcements'
 import UserDetails from './pages/UserDetails'
+import Notifications from './pages/Notifications'
+import Reports from './pages/Reports'
+import DigitalAssets from './pages/DigitalAssets'
+import CatalogAdmin from './pages/CatalogAdmin'
+import Acquisitions from './pages/Acquisitions'
+import SystemLogs from './pages/SystemLogs'
 
 export default function App() {
   return (
@@ -37,6 +43,7 @@ export default function App() {
                 <Route path="/my-loans" element={<MyLoans />} />
                 <Route path="/reservations" element={<Reservations />} />
                 <Route path="/favorites" element={<Favorites />} />
+                <Route path="/notifications" element={<Notifications />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/profile" element={<Profile />} />
@@ -61,6 +68,46 @@ export default function App() {
                   element={
                     <RequireRole allowed={['ROLE_LIBRARIAN', 'ROLE_ADMIN']}>
                       <LibrarianPanel />
+                    </RequireRole>
+                  }
+                />
+                <Route
+                  path="/reports"
+                  element={
+                    <RequireRole allowed={['ROLE_LIBRARIAN', 'ROLE_ADMIN']}>
+                      <Reports />
+                    </RequireRole>
+                  }
+                />
+                <Route
+                  path="/admin/assets"
+                  element={
+                    <RequireRole allowed={['ROLE_LIBRARIAN', 'ROLE_ADMIN']}>
+                      <DigitalAssets />
+                    </RequireRole>
+                  }
+                />
+                <Route
+                  path="/admin/catalog"
+                  element={
+                    <RequireRole allowed={['ROLE_ADMIN']}>
+                      <CatalogAdmin />
+                    </RequireRole>
+                  }
+                />
+                <Route
+                  path="/admin/acquisitions"
+                  element={
+                    <RequireRole allowed={['ROLE_ADMIN']}>
+                      <Acquisitions />
+                    </RequireRole>
+                  }
+                />
+                <Route
+                  path="/admin/logs"
+                  element={
+                    <RequireRole allowed={['ROLE_ADMIN']}>
+                      <SystemLogs />
                     </RequireRole>
                   }
                 />

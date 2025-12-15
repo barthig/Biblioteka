@@ -74,5 +74,23 @@ export const announcementService = {
     return await apiFetch(`/api/announcements/${id}/archive`, {
       method: 'POST'
     })
+  },
+
+  /**
+   * Restore an archived announcement (librarian/admin)
+   */
+  async restoreAnnouncement(id) {
+    return await apiFetch(`/api/announcements/${id}/restore`, {
+      method: 'POST'
+    })
+  },
+
+  /**
+   * Acknowledge an announcement (logged-in user)
+   */
+  async acknowledgeAnnouncement(id) {
+    return await apiFetch(`/api/announcements/${id}/acknowledge`, {
+      method: 'POST'
+    })
   }
 }

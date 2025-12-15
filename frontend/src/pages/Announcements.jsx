@@ -1,8 +1,9 @@
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { apiFetch } from '../api'
 import { FaBullhorn, FaPlus } from 'react-icons/fa'
 import { useAuth } from '../context/AuthContext'
+import { announcementService } from '../services/announcementService'
 
 export default function Announcements() {
   const { id } = useParams()
@@ -12,6 +13,8 @@ export default function Announcements() {
   const [selectedAnnouncement, setSelectedAnnouncement] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [actionMessage, setActionMessage] = useState(null)
+  const [actionError, setActionError] = useState(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
 
@@ -25,6 +28,8 @@ export default function Announcements() {
     async function fetchData() {
       setLoading(true)
       setError(null)
+      setActionMessage(null)
+      setActionError(null)
 
       try {
         if (id) {
@@ -87,7 +92,7 @@ export default function Announcements() {
     return (
       <div className="page">
         <button onClick={() => navigate('/announcements')} className="btn btn-outline">
-          ← Powrót do listy
+          ⇠ Powrót do listy
         </button>
 
         <div className="surface-card" style={{ marginTop: '1rem' }}>
@@ -95,8 +100,48 @@ export default function Announcements() {
           <p style={{ color: 'var(--color-muted)', marginTop: '0.5rem' }}>
             {new Date(selectedAnnouncement.createdAt).toLocaleDateString('pl-PL')}
           </p>
+          {actionMessage && <p className="success" style={{ marginTop: '0.5rem' }}>{actionMessage}</p>}
+          {actionError && <p className="error" style={{ marginTop: '0.5rem' }}>{actionError}</p>}
           <div style={{ marginTop: '2rem' }}>
             {selectedAnnouncement.content}
+          </div>
+          <div style={{ marginTop: '1.5rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            {user && (
+              <button
+                className="btn btn-outline"
+                onClick={async (e) => {
+                  e.stopPropagation()
+                  setActionError(null)
+                  setActionMessage(null)
+                  try {
+                    await announcementService.acknowledgeAnnouncement(selectedAnnouncement.id)
+                    setActionMessage('Potwierdzono przeczytanie ogłoszenia.')
+                  } catch (err) {
+                    setActionError(err.message || 'Nie udało się potwierdzić ogłoszenia.')
+                  }
+                }}
+              >
+                Potwierdź
+              </button>
+            )}
+            {canManage && (
+              <button
+                className="btn btn-primary"
+                onClick={async (e) => {
+                  e.stopPropagation()
+                  setActionError(null)
+                  setActionMessage(null)
+                  try {
+                    await announcementService.restoreAnnouncement(selectedAnnouncement.id)
+                    setActionMessage('Przywrócono ogłoszenie.')
+                  } catch (err) {
+                    setActionError(err.message || 'Nie udało się przywrócić ogłoszenia.')
+                  }
+                }}
+              >
+                Przywróć
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -128,9 +173,9 @@ export default function Announcements() {
       ) : (
         <div style={{ display: 'grid', gap: '1rem' }}>
           {announcements.map(announcement => (
-            <div 
+            <div
               key={announcement.id}
-              className="surface-card" 
+              className="surface-card"
               onClick={() => navigate(`/announcements/${announcement.id}`)}
               style={{ cursor: 'pointer', transition: 'all 0.2s' }}
             >
@@ -140,8 +185,8 @@ export default function Announcements() {
               </p>
               {announcement.content && (
                 <p style={{ marginTop: '1rem' }}>
-                  {announcement.content.length > 200 
-                    ? `${announcement.content.substring(0, 200)}...` 
+                  {announcement.content.length > 200
+                    ? `${announcement.content.substring(0, 200)}...`
                     : announcement.content}
                 </p>
               )}

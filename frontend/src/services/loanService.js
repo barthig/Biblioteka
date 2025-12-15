@@ -8,7 +8,7 @@ export const loanService = {
    * Get current user's loans
    */
   async getMyLoans() {
-    return await apiFetch('/api/loans/my')
+    return await apiFetch('/api/loans')
   },
 
   /**
@@ -43,7 +43,7 @@ export const loanService = {
    */
   async returnLoan(loanId) {
     return await apiFetch(`/api/loans/${loanId}/return`, {
-      method: 'POST'
+      method: 'PUT'
     })
   },
 
@@ -52,7 +52,7 @@ export const loanService = {
    */
   async extendLoan(loanId) {
     return await apiFetch(`/api/loans/${loanId}/extend`, {
-      method: 'POST'
+      method: 'PUT'
     })
   },
 
@@ -60,6 +60,6 @@ export const loanService = {
    * Get loan statistics
    */
   async getStatistics() {
-    return await apiFetch('/api/loans/statistics')
+    return await apiFetch('/api/reports/usage')
   }
 }

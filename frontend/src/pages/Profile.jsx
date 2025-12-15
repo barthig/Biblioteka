@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { apiFetch } from '../api'
 import { useAuth } from '../context/AuthContext'
+import { ratingService } from '../services/ratingService'
 
 const blankProfile = {
   name: '',
@@ -58,6 +59,8 @@ export default function Profile() {
   
   const [profileImage, setProfileImage] = useState(null)
   const [imagePreview, setImagePreview] = useState(null)
+  const [ratings, setRatings] = useState([])
+  const [ratingsError, setRatingsError] = useState(null)
 
   useEffect(() => {
     let active = true
@@ -113,6 +116,19 @@ export default function Profile() {
     }
 
     loadProfile()
+    async function loadRatings() {
+      if (!user?.id) return
+      try {
+        const data = await ratingService.getMyRatings()
+        const list = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : []
+        if (active) {
+          setRatings(list)
+        }
+      } catch (err) {
+        if (active) setRatingsError(err.message || 'Nie udało się pobrać ocen')
+      }
+    }
+    loadRatings()
     return () => {
       active = false
     }
@@ -219,6 +235,16 @@ export default function Profile() {
       setError(err.message || 'Nie udało się zmienić PIN')
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function handleDeleteRating(bookId, ratingId) {
+    setRatingsError(null)
+    try {
+      await ratingService.deleteRating(bookId, ratingId)
+      setRatings(prev => prev.filter(r => r.id !== ratingId))
+    } catch (err) {
+      setRatingsError(err.message || 'Nie udało się usunąć oceny')
     }
   }
 
@@ -880,6 +906,31 @@ export default function Profile() {
           </div>
         </div>
       )}
+
+      <div className="surface-card" style={{ marginTop: '1.5rem' }}>
+        <h3>Twoje oceny</h3>
+        {ratingsError && <p className="error">{ratingsError}</p>}
+        {ratings.length === 0 ? (
+          <p>Nie masz jeszcze ocen.</p>
+        ) : (
+          <ul className="list list--bordered">
+            {ratings.map(r => (
+              <li key={r.id}>
+                <div className="list__title">{r.book?.title || 'Książka'}</div>
+                <div className="list__meta">
+                  <span>Ocena: {r.rating}/5</span>
+                  {r.createdAt && <span>{new Date(r.createdAt).toLocaleDateString('pl-PL')}</span>}
+                </div>
+                {r.id && r.book?.id && (
+                  <button className="btn btn-outline btn-sm" onClick={() => handleDeleteRating(r.book.id, r.id)}>
+                    Usuń ocenę
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   )
 }

@@ -21,7 +21,7 @@ describe('loanService', () => {
 
       const result = await loanService.getMyLoans()
 
-      expect(api.apiFetch).toHaveBeenCalledWith('/api/loans/my')
+      expect(api.apiFetch).toHaveBeenCalledWith('/api/loans')
       expect(result).toEqual(mockLoans)
     })
   })
@@ -81,7 +81,7 @@ describe('loanService', () => {
       const result = await loanService.returnLoan(1)
 
       expect(api.apiFetch).toHaveBeenCalledWith('/api/loans/1/return', {
-        method: 'POST'
+        method: 'PUT'
       })
       expect(result).toEqual(mockResponse)
     })
@@ -95,7 +95,7 @@ describe('loanService', () => {
       const result = await loanService.extendLoan(1)
 
       expect(api.apiFetch).toHaveBeenCalledWith('/api/loans/1/extend', {
-        method: 'POST'
+        method: 'PUT'
       })
       expect(result).toEqual(mockResponse)
     })

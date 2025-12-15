@@ -16,8 +16,8 @@ describe('userService', () => {
     await userService.getProfile()
     await userService.updateProfile({ name: 'Jan' })
 
-    expect(apiFetch).toHaveBeenNthCalledWith(1, '/api/users/me')
-    expect(apiFetch).toHaveBeenNthCalledWith(2, '/api/users/me', {
+    expect(apiFetch).toHaveBeenNthCalledWith(1, '/api/me')
+    expect(apiFetch).toHaveBeenNthCalledWith(2, '/api/me', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: 'Jan' })
@@ -27,7 +27,7 @@ describe('userService', () => {
   it('changes password', async () => {
     await userService.changePassword('old', 'new')
 
-    expect(apiFetch).toHaveBeenCalledWith('/api/users/me/password', {
+    expect(apiFetch).toHaveBeenCalledWith('/api/me/password', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ currentPassword: 'old', newPassword: 'new' })
@@ -39,13 +39,13 @@ describe('userService', () => {
     await userService.addFavorite(10)
     await userService.removeFavorite(20)
 
-    expect(apiFetch).toHaveBeenNthCalledWith(1, '/api/users/me/favorites')
-    expect(apiFetch).toHaveBeenNthCalledWith(2, '/api/users/me/favorites', {
+    expect(apiFetch).toHaveBeenNthCalledWith(1, '/api/favorites')
+    expect(apiFetch).toHaveBeenNthCalledWith(2, '/api/favorites', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ bookId: 10 })
     })
-    expect(apiFetch).toHaveBeenNthCalledWith(3, '/api/users/me/favorites/20', {
+    expect(apiFetch).toHaveBeenNthCalledWith(3, '/api/favorites/20', {
       method: 'DELETE'
     })
   })

@@ -186,7 +186,7 @@ export default function LibrarianPanel() {
       return
     }
     try {
-      const data = await apiFetch(`/api/books?search=${encodeURIComponent(query)}&limit=10`)
+      const data = await apiFetch(`/api/books?q=${encodeURIComponent(query)}&limit=10`)
       setAvailableBooks(Array.isArray(data?.data) ? data.data : [])
     } catch (err) {
       console.error('Błąd wyszukiwania książek:', err)

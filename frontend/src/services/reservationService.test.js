@@ -16,7 +16,7 @@ describe('reservationService', () => {
     await reservationService.getMyReservations()
     await reservationService.getAllReservations({ status: 'open', query: '' })
 
-    expect(apiFetch).toHaveBeenNthCalledWith(1, '/api/reservations/my')
+    expect(apiFetch).toHaveBeenNthCalledWith(1, '/api/reservations')
     expect(apiFetch).toHaveBeenNthCalledWith(2, '/api/reservations?status=open')
   })
 

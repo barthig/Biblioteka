@@ -8,7 +8,7 @@ export const reservationService = {
    * Get current user's reservations
    */
   async getMyReservations() {
-    return await apiFetch('/api/reservations/my')
+    return await apiFetch('/api/reservations')
   },
 
   /**

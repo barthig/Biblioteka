@@ -8,14 +8,14 @@ export const userService = {
    * Get current user profile
    */
   async getProfile() {
-    return await apiFetch('/api/users/me')
+    return await apiFetch('/api/me')
   },
 
   /**
    * Update current user profile
    */
   async updateProfile(data) {
-    return await apiFetch('/api/users/me', {
+    return await apiFetch('/api/me', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
@@ -26,7 +26,7 @@ export const userService = {
    * Change password
    */
   async changePassword(currentPassword, newPassword) {
-    return await apiFetch('/api/users/me/password', {
+    return await apiFetch('/api/me/password', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ currentPassword, newPassword })
@@ -37,14 +37,14 @@ export const userService = {
    * Get user favorites
    */
   async getFavorites() {
-    return await apiFetch('/api/users/me/favorites')
+    return await apiFetch('/api/favorites')
   },
 
   /**
    * Add book to favorites
    */
   async addFavorite(bookId) {
-    return await apiFetch('/api/users/me/favorites', {
+    return await apiFetch('/api/favorites', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ bookId })
@@ -54,8 +54,8 @@ export const userService = {
   /**
    * Remove book from favorites
    */
-  async removeFavorite(favoriteId) {
-    return await apiFetch(`/api/users/me/favorites/${favoriteId}`, {
+  async removeFavorite(bookId) {
+    return await apiFetch(`/api/favorites/${bookId}`, {
       method: 'DELETE'
     })
   },
