@@ -197,3 +197,7 @@ services:
     arguments:
       $commandBus: '@command.bus'
       $queryBus: '@query.bus'
+
+  App\ApiDoc\DefaultOperationDescriber:
+    tags:
+      - { name: nelmio_api_doc.describer, priority: -2000 }

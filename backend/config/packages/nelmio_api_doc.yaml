@@ -17,6 +17,235 @@ nelmio_api_doc:
           type: apiKey
           in: header
           name: X-API-SECRET
+      schemas:
+        Book:
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 1
+            title:
+              type: string
+              example: Example title
+            isbn:
+              type: string
+              nullable: true
+              example: ISBN-00001
+            publisher:
+              type: string
+              nullable: true
+              example: Example Publisher
+            publicationYear:
+              type: integer
+              nullable: true
+              example: 2024
+            resourceType:
+              type: string
+              nullable: true
+              example: Printed
+            signature:
+              type: string
+              nullable: true
+              example: SIG-001-01
+            description:
+              type: string
+              nullable: true
+              example: Short description
+            copies:
+              type: integer
+              example: 2
+            totalCopies:
+              type: integer
+              example: 5
+            storageCopies:
+              type: integer
+              example: 1
+            openStackCopies:
+              type: integer
+              example: 1
+            targetAgeGroup:
+              type: string
+              nullable: true
+              example: 10-12
+            targetAgeGroupLabel:
+              type: string
+              nullable: true
+              example: 10-12 lat
+            averageRating:
+              type: number
+              format: float
+              nullable: true
+              example: 4.5
+            ratingCount:
+              type: integer
+              nullable: true
+              example: 12
+            createdAt:
+              type: string
+              format: date-time
+            author:
+              type: object
+              properties:
+                id:
+                  type: integer
+                  example: 10
+                name:
+                  type: string
+                  example: Author Name
+            categories:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    example: 3
+                  name:
+                    type: string
+                    example: Fantasy
+        Author:
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 10
+            name:
+              type: string
+              example: Author Name
+        Category:
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 3
+            name:
+              type: string
+              example: Fantasy
+        User:
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 284
+            name:
+              type: string
+              example: Verified User
+            email:
+              type: string
+              example: verified@example.com
+            roles:
+              type: array
+              items:
+                type: string
+              example: [ROLE_USER]
+            verified:
+              type: boolean
+              example: true
+            blocked:
+              type: boolean
+              example: false
+        Loan:
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 120
+            book:
+              $ref: '#/components/schemas/Book'
+            bookCopyId:
+              type: integer
+              example: 501
+            user:
+              $ref: '#/components/schemas/User'
+            borrowedAt:
+              type: string
+              format: date-time
+            dueAt:
+              type: string
+              format: date-time
+            returnedAt:
+              type: string
+              format: date-time
+              nullable: true
+            extensionsCount:
+              type: integer
+              example: 1
+        Reservation:
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 45
+            book:
+              $ref: '#/components/schemas/Book'
+            user:
+              $ref: '#/components/schemas/User'
+            status:
+              type: string
+              example: active
+            reservedAt:
+              type: string
+              format: date-time
+            expiresAt:
+              type: string
+              format: date-time
+              nullable: true
+            fulfilledAt:
+              type: string
+              format: date-time
+              nullable: true
+        Fine:
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 77
+            amount:
+              type: string
+              example: "15.00"
+            currency:
+              type: string
+              example: PLN
+            reason:
+              type: string
+              example: Overdue
+            paidAt:
+              type: string
+              format: date-time
+              nullable: true
+        Announcement:
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 12
+            title:
+              type: string
+              example: New announcement
+            content:
+              type: string
+              example: Content body
+            type:
+              type: string
+              example: info
+            status:
+              type: string
+              example: published
+            isPinned:
+              type: boolean
+              example: false
+            showOnHomepage:
+              type: boolean
+              example: true
+            targetAudience:
+              type: array
+              items:
+                type: string
+              example: [all]
+            expiresAt:
+              type: string
+              format: date-time
+              nullable: true
     security:
       - BearerAuth: []
       - ApiSecret: []
