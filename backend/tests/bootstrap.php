@@ -33,6 +33,7 @@ $kernel = new \App\Kernel('test', true);
 $kernel->boot();
 
 $em = $kernel->getContainer()->get('doctrine')->getManager();
+$em->getConnection()->executeStatement('CREATE EXTENSION IF NOT EXISTS vector');
 $metadata = $em->getMetadataFactory()->getAllMetadata();
 if (!empty($metadata)) {
     $tool = new \Doctrine\ORM\Tools\SchemaTool($em);

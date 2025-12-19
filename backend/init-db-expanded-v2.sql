@@ -136,6 +136,7 @@ CREATE TABLE book (
     storage_copies INT NOT NULL,
     open_stack_copies INT NOT NULL,
     description TEXT DEFAULT NULL,
+    embedding vector(1536) DEFAULT NULL,
     publisher VARCHAR(180) DEFAULT NULL,
     publication_year SMALLINT DEFAULT NULL,
     resource_type VARCHAR(60) DEFAULT NULL,

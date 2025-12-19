@@ -14,6 +14,7 @@ import Profile from './pages/Profile'
 import Reservations from './pages/Reservations'
 import Favorites from './pages/Favorites'
 import Recommended from './pages/Recommended'
+import SemanticSearchPage from './pages/SemanticSearchPage'
 import AdminPanel from './pages/AdminPanel'
 import LibrarianPanel from './pages/LibrarianPanel'
 import Announcements from './pages/Announcements'
@@ -38,6 +39,7 @@ export default function App() {
                 <Route path="/books" element={<Books />} />
                 <Route path="/books/:id" element={<BookDetails />} />
                 <Route path="/recommended" element={<Recommended />} />
+                <Route path="/semantic-search" element={<SemanticSearchPage />} />
                 <Route path="/announcements" element={<Announcements />} />
                 <Route path="/announcements/:id" element={<Announcements />} />
                 <Route path="/my-loans" element={<MyLoans />} />

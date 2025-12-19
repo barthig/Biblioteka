@@ -79,6 +79,13 @@ export default function Navbar() {
           </svg>
           Polecane
         </NavLink>
+        <NavLink to="/semantic-search" className={navClass} onClick={closeMenu}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="11" cy="11" r="7"></circle>
+            <line x1="16.65" y1="16.65" x2="21" y2="21"></line>
+          </svg>
+          Wyszukiwanie semantyczne
+        </NavLink>
         <NavLink to="/announcements" className={navClass} onClick={closeMenu}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>

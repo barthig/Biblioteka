@@ -109,6 +109,8 @@ RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
 # Configure Nginx
 COPY docker/backend/nginx.conf /etc/nginx/nginx.conf
 COPY docker/backend/default.conf /etc/nginx/sites-available/default
+RUN mkdir -p /etc/nginx/sites-enabled \
+    && ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
 
 # Configure Supervisor
 COPY docker/backend/supervisord.conf /etc/supervisor/conf.d/supervisord.conf

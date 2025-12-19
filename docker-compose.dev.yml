@@ -68,8 +68,8 @@ services:
       redis:
         condition: service_healthy
     environment:
-      APP_ENV: prod
-      APP_DEBUG: 0
+      APP_ENV: dev
+      APP_DEBUG: 1
       DATABASE_URL: postgresql://biblioteka:biblioteka@db:5432/biblioteka_dev?serverVersion=16&charset=utf8
       MESSENGER_TRANSPORT_DSN: amqp://app:app@rabbitmq:5672/%2f/messages
       REDIS_URL: redis://redis:6379
@@ -83,6 +83,11 @@ services:
       - backend_var:/app/var
     networks:
       - biblioteka-network
+    command: >
+      sh -c "
+        composer install --no-interaction &&
+        php-fpm -F
+      "
 
   nginx:
     image: nginx:alpine
@@ -111,8 +116,8 @@ services:
       redis:
         condition: service_healthy
     environment:
-      APP_ENV: prod
-      APP_DEBUG: 0
+      APP_ENV: dev
+      APP_DEBUG: 1
       DATABASE_URL: postgresql://biblioteka:biblioteka@db:5432/biblioteka_dev?serverVersion=16&charset=utf8
       MESSENGER_TRANSPORT_DSN: amqp://app:app@rabbitmq:5672/%2f/messages
       REDIS_URL: redis://redis:6379
