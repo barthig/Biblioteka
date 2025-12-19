@@ -1,6 +1,6 @@
 services:
   db:
-    image: postgres:15-alpine
+    image: pgvector/pgvector:pg16
     restart: unless-stopped
     environment:
       POSTGRES_USER: biblioteka
@@ -40,7 +40,7 @@ services:
       - biblioteka-network
 
   db-init:
-    image: postgres:15-alpine
+    image: pgvector/pgvector:pg16
     restart: "no"
     depends_on:
       db:
@@ -90,11 +90,12 @@ services:
     environment:
       APP_ENV: dev
       APP_DEBUG: 1
-      DATABASE_URL: postgresql://biblioteka:biblioteka@db:5432/biblioteka_dev?serverVersion=15&charset=utf8
+      DATABASE_URL: postgresql://biblioteka:biblioteka@db:5432/biblioteka_dev?serverVersion=16&charset=utf8
       REDIS_URL: redis://redis:6379
       MESSENGER_TRANSPORT_DSN: amqp://biblioteka_app:rabbitmq_secure_2024@rabbitmq:5672/%2f/messages
       API_SECRET: ${API_SECRET:-change_me_api_secret_production_key}
       JWT_SECRET: ${JWT_SECRET:-change_me_jwt_secret_production_key}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-change_me_openai_key}
       CORS_ALLOW_ORIGIN: http://localhost:3000
     volumes:
       - ./backend:/app
@@ -121,7 +122,7 @@ services:
     environment:
       APP_ENV: prod
       APP_DEBUG: 0
-      DATABASE_URL: postgresql://biblioteka:biblioteka@db:5432/biblioteka_dev?serverVersion=15&charset=utf8
+      DATABASE_URL: postgresql://biblioteka:biblioteka@db:5432/biblioteka_dev?serverVersion=16&charset=utf8
       REDIS_URL: redis://redis:6379
       MESSENGER_TRANSPORT_DSN: amqp://biblioteka_app:rabbitmq_secure_2024@rabbitmq:5672/%2f/messages
       API_SECRET: ${API_SECRET:-change_me_api_secret_production_key}

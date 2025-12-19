@@ -97,6 +97,9 @@ class Book
     #[Groups(['book:read', 'reservation:read'])]
     private ?string $description = null;
 
+    #[ORM\Column(type: 'vector', nullable: true, options: ['dimensions' => 1536], columnDefinition: 'vector(1536)')]
+    private ?array $embedding = null;
+
     #[ORM\Column(type: 'string', length: 180, nullable: true)]
     #[Groups(['book:read', 'loan:read', 'reservation:read'])]
     private ?string $publisher = null;
@@ -348,6 +351,18 @@ class Book
     public function setDescription(?string $description): self
     {
         $this->description = $description;
+
+        return $this;
+    }
+
+    public function getEmbedding(): ?array
+    {
+        return $this->embedding;
+    }
+
+    public function setEmbedding(?array $embedding): self
+    {
+        $this->embedding = $embedding;
 
         return $this;
     }

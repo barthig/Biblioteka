@@ -1,6 +1,6 @@
 services:
   db:
-    image: postgres:15-alpine
+    image: pgvector/pgvector:pg16
     restart: unless-stopped
     environment:
       POSTGRES_USER: biblioteka
@@ -70,11 +70,12 @@ services:
     environment:
       APP_ENV: prod
       APP_DEBUG: 0
-      DATABASE_URL: postgresql://biblioteka:biblioteka@db:5432/biblioteka_dev?serverVersion=15&charset=utf8
+      DATABASE_URL: postgresql://biblioteka:biblioteka@db:5432/biblioteka_dev?serverVersion=16&charset=utf8
       MESSENGER_TRANSPORT_DSN: amqp://app:app@rabbitmq:5672/%2f/messages
       REDIS_URL: redis://redis:6379
       API_SECRET: dev_api_secret
       JWT_SECRET: dev_jwt_secret
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-change_me_openai_key}
       CORS_ALLOW_ORIGIN: http://localhost:5173
     volumes:
       - ./backend:/app:delegated
@@ -112,7 +113,7 @@ services:
     environment:
       APP_ENV: prod
       APP_DEBUG: 0
-      DATABASE_URL: postgresql://biblioteka:biblioteka@db:5432/biblioteka_dev?serverVersion=15&charset=utf8
+      DATABASE_URL: postgresql://biblioteka:biblioteka@db:5432/biblioteka_dev?serverVersion=16&charset=utf8
       MESSENGER_TRANSPORT_DSN: amqp://app:app@rabbitmq:5672/%2f/messages
       REDIS_URL: redis://redis:6379
       API_SECRET: dev_api_secret

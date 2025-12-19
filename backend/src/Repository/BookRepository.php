@@ -5,6 +5,7 @@ use App\Entity\Book;
 use App\Entity\Loan;
 use App\Entity\Reservation;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\Query\ResultSetMappingBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 
 class BookRepository extends ServiceEntityRepository
@@ -12,6 +13,37 @@ class BookRepository extends ServiceEntityRepository
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Book::class);
+    }
+
+    /**
+     * @param float[] $queryVector
+     * @return Book[]
+     */
+    public function findSimilarBooks(array $queryVector, int $limit = 5): array
+    {
+        if ($queryVector === []) {
+            return [];
+        }
+
+        $limit = max(1, $limit);
+
+        $sql = <<<'SQL'
+            SELECT b.*
+            FROM book b
+            WHERE b.embedding IS NOT NULL
+            ORDER BY b.embedding <=> (:queryVector)::vector
+            LIMIT :limit
+        SQL;
+
+        $em = $this->getEntityManager();
+        $rsm = new ResultSetMappingBuilder($em);
+        $rsm->addRootEntityFromClassMetadata(Book::class, 'b');
+
+        $query = $em->createNativeQuery($sql, $rsm);
+        $query->setParameter('queryVector', $queryVector, 'vector');
+        $query->setParameter('limit', $limit, \PDO::PARAM_INT);
+
+        return $query->getResult();
     }
 
     /**

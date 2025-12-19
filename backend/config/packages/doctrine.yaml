@@ -2,6 +2,7 @@ doctrine:
   dbal:
     url: '%env(resolve:DATABASE_URL)%'
     types:
+      vector: App\Doctrine\Type\VectorType
       datetime: Doctrine\DBAL\Types\DateTimeImmutableType
       datetimetz: Doctrine\DBAL\Types\DateTimeTzImmutableType
       date: Doctrine\DBAL\Types\DateImmutableType

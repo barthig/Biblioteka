@@ -155,6 +155,13 @@ api_books_recommended:
   controller: App\Controller\BookController::recommended
   methods: [GET]
 
+
+# Semantic recommendations
+api_recommend:
+  path: /api/recommend
+  controller: App\Controller\RecommendationController::recommend
+  methods: [POST]
+
 # Recommendation feedback
 api_recommendations_feedback_create:
   path: /api/recommendations/feedback

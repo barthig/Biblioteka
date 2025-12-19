@@ -1,4 +1,5 @@
 \set ON_ERROR_STOP on
+CREATE EXTENSION IF NOT EXISTS vector;
 \echo 'Creating schema and demo data for Biblioteka...'
 -- ============================================
 -- Pełna struktura bazy danych systemu bibliotecznego
