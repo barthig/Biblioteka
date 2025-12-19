@@ -1122,7 +1122,6 @@ frontend/
 ### Potencjalne ulepszenia (nie wymagane)
 
 **Backend:**
-- [ ] GraphQL API (obok REST)
 - [ ] WebSocket dla real-time notifications
 - [ ] Redis cache dla często używanych zapytań
 - [ ] Elasticsearch dla zaawansowanego wyszukiwania

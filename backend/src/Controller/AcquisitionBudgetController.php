@@ -6,6 +6,7 @@ use App\Application\Command\Acquisition\CreateBudgetCommand;
 use App\Application\Command\Acquisition\UpdateBudgetCommand;
 use App\Application\Query\Acquisition\GetBudgetSummaryQuery;
 use App\Application\Query\Acquisition\ListBudgetsQuery;
+use App\Controller\Traits\ExceptionHandlingTrait;
 use App\Controller\Traits\ValidationTrait;
 use App\Request\CreateAcquisitionBudgetRequest;
 use App\Service\SecurityService;
@@ -19,6 +20,7 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 class AcquisitionBudgetController extends AbstractController
 {
     use ValidationTrait;
+    use ExceptionHandlingTrait;
     
     public function __construct(
         private readonly MessageBusInterface $queryBus,
@@ -66,7 +68,11 @@ class AcquisitionBudgetController extends AbstractController
             $budget = $envelope->last(HandledStamp::class)?->getResult();
             
             return $this->json($budget, 201, [], ['groups' => ['budget:read']]);
-        } catch (\RuntimeException $e) {
+        } catch (\Throwable $e) {
+            $e = $this->unwrapThrowable($e);
+            if ($response = $this->jsonFromHttpException($e)) {
+                return $response;
+            }
             return $this->json(['error' => $e->getMessage()], 400);
         }
     }
@@ -95,7 +101,11 @@ class AcquisitionBudgetController extends AbstractController
             $budget = $envelope->last(HandledStamp::class)?->getResult();
             
             return $this->json($budget, 200, [], ['groups' => ['budget:read']]);
-        } catch (\RuntimeException $e) {
+        } catch (\Throwable $e) {
+            $e = $this->unwrapThrowable($e);
+            if ($response = $this->jsonFromHttpException($e)) {
+                return $response;
+            }
             return $this->json(['error' => $e->getMessage()], 404);
         }
     }
@@ -130,7 +140,11 @@ class AcquisitionBudgetController extends AbstractController
             $expense = $envelope->last(HandledStamp::class)?->getResult();
             
             return $this->json($expense, 201, [], ['groups' => ['budget:read', 'acquisition:read']]);
-        } catch (\RuntimeException $e) {
+        } catch (\Throwable $e) {
+            $e = $this->unwrapThrowable($e);
+            if ($response = $this->jsonFromHttpException($e)) {
+                return $response;
+            }
             $statusCode = str_contains($e->getMessage(), 'not found') ? 404 : 400;
             return $this->json(['error' => $e->getMessage()], $statusCode);
         }
@@ -150,7 +164,11 @@ class AcquisitionBudgetController extends AbstractController
             $payload = $envelope->last(HandledStamp::class)?->getResult();
             
             return $this->json($payload, 200, [], ['json_encode_options' => \JSON_PRESERVE_ZERO_FRACTION]);
-        } catch (\RuntimeException $e) {
+        } catch (\Throwable $e) {
+            $e = $this->unwrapThrowable($e);
+            if ($response = $this->jsonFromHttpException($e)) {
+                return $response;
+            }
             return $this->json(['error' => $e->getMessage()], 404);
         }
     }

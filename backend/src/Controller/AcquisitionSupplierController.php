@@ -5,6 +5,7 @@ use App\Application\Command\Acquisition\CreateSupplierCommand;
 use App\Application\Command\Acquisition\DeactivateSupplierCommand;
 use App\Application\Command\Acquisition\UpdateSupplierCommand;
 use App\Application\Query\Acquisition\ListSuppliersQuery;
+use App\Controller\Traits\ExceptionHandlingTrait;
 use App\Controller\Traits\ValidationTrait;
 use App\Request\CreateSupplierRequest;
 use App\Service\SecurityService;
@@ -18,6 +19,7 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 class AcquisitionSupplierController extends AbstractController
 {
     use ValidationTrait;
+    use ExceptionHandlingTrait;
     
     public function __construct(
         private readonly MessageBusInterface $queryBus,
@@ -118,7 +120,11 @@ class AcquisitionSupplierController extends AbstractController
             $supplier = $envelope->last(HandledStamp::class)?->getResult();
 
             return $this->json($supplier, 200, [], ['groups' => ['supplier:read']]);
-        } catch (\RuntimeException $e) {
+        } catch (\Throwable $e) {
+            $e = $this->unwrapThrowable($e);
+            if ($response = $this->jsonFromHttpException($e)) {
+                return $response;
+            }
             return $this->json(['error' => $e->getMessage()], 404);
         }
     }
@@ -137,7 +143,11 @@ class AcquisitionSupplierController extends AbstractController
             $this->commandBus->dispatch($command);
 
             return new JsonResponse(null, 204);
-        } catch (\RuntimeException $e) {
+        } catch (\Throwable $e) {
+            $e = $this->unwrapThrowable($e);
+            if ($response = $this->jsonFromHttpException($e)) {
+                return $response;
+            }
             return $this->json(['error' => $e->getMessage()], 404);
         }
     }

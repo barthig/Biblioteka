@@ -2,6 +2,7 @@
 namespace App\Controller;
 
 use App\Application\Query\User\GetUserDetailsQuery;
+use App\Controller\Traits\ExceptionHandlingTrait;
 use App\Entity\User;
 use App\Repository\UserRepository;
 use App\Service\SecurityService;
@@ -15,6 +16,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class UserController extends AbstractController
 {
     use HandleTrait;
+    use ExceptionHandlingTrait;
 
     public function __construct(
         private SecurityService $security,
@@ -93,7 +95,11 @@ class UserController extends AbstractController
             return $this->json($result, 200, [], [
                 'groups' => ['user:read', 'loan:read', 'fine:read']
             ]);
-        } catch (\RuntimeException $e) {
+        } catch (\Throwable $e) {
+            $e = $this->unwrapThrowable($e);
+            if ($response = $this->jsonFromHttpException($e)) {
+                return $response;
+            }
             return $this->json(['error' => $e->getMessage()], 404);
         }
     }
@@ -155,7 +161,7 @@ class UserController extends AbstractController
         }
 
         $repo->remove($user, true);
-        
-        return $this->json(['message' => 'User deleted successfully'], 200);
+
+        return new JsonResponse(null, 204);
     }
 }

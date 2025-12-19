@@ -3,6 +3,7 @@ namespace App\Controller;
 
 use App\Application\Command\Weeding\CreateWeedingRecordCommand;
 use App\Application\Query\Weeding\ListWeedingRecordsQuery;
+use App\Controller\Traits\ExceptionHandlingTrait;
 use App\Controller\Traits\ValidationTrait;
 use App\Request\CreateWeedingRecordRequest;
 use App\Service\SecurityService;
@@ -16,6 +17,7 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 class WeedingController extends AbstractController
 {
     use ValidationTrait;
+    use ExceptionHandlingTrait;
     
     public function __construct(
         private readonly MessageBusInterface $queryBus,
@@ -72,7 +74,11 @@ class WeedingController extends AbstractController
             $record = $envelope->last(HandledStamp::class)?->getResult();
             
             return $this->json($record, 201, [], ['groups' => ['weeding:read', 'book:read', 'inventory:read']]);
-        } catch (\RuntimeException $e) {
+        } catch (\Throwable $e) {
+            $e = $this->unwrapThrowable($e);
+            if ($response = $this->jsonFromHttpException($e)) {
+                return $response;
+            }
             $statusCode = 400;
             if (str_contains($e->getMessage(), 'not found')) {
                 $statusCode = 404;

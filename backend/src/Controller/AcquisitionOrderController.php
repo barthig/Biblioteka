@@ -6,6 +6,7 @@ use App\Application\Command\Acquisition\CreateOrderCommand;
 use App\Application\Command\Acquisition\ReceiveOrderCommand;
 use App\Application\Command\Acquisition\UpdateOrderStatusCommand;
 use App\Application\Query\Acquisition\ListOrdersQuery;
+use App\Controller\Traits\ExceptionHandlingTrait;
 use App\Controller\Traits\ValidationTrait;
 use App\Request\CreateAcquisitionOrderRequest;
 use App\Service\SecurityService;
@@ -19,6 +20,7 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 class AcquisitionOrderController extends AbstractController
 {
     use ValidationTrait;
+    use ExceptionHandlingTrait;
     
     public function __construct(
         private readonly MessageBusInterface $queryBus,
@@ -100,7 +102,11 @@ class AcquisitionOrderController extends AbstractController
             $order = $envelope->last(HandledStamp::class)?->getResult();
             
             return $this->json($order, 201, [], ['groups' => ['acquisition:read', 'supplier:read', 'budget:read']]);
-        } catch (\RuntimeException $e) {
+        } catch (\Throwable $e) {
+            $e = $this->unwrapThrowable($e);
+            if ($response = $this->jsonFromHttpException($e)) {
+                return $response;
+            }
             $statusCode = 400;
             if (str_contains($e->getMessage(), 'not found')) {
                 $statusCode = 404;
@@ -140,7 +146,11 @@ class AcquisitionOrderController extends AbstractController
             $order = $envelope->last(HandledStamp::class)?->getResult();
             
             return $this->json($order, 200, [], ['groups' => ['acquisition:read', 'supplier:read', 'budget:read']]);
-        } catch (\RuntimeException $e) {
+        } catch (\Throwable $e) {
+            $e = $this->unwrapThrowable($e);
+            if ($response = $this->jsonFromHttpException($e)) {
+                return $response;
+            }
             $statusCode = str_contains($e->getMessage(), 'not found') ? 404 : 409;
             return $this->json(['error' => $e->getMessage()], $statusCode);
         }
@@ -171,7 +181,11 @@ class AcquisitionOrderController extends AbstractController
             $order = $envelope->last(HandledStamp::class)?->getResult();
             
             return $this->json($order, 200, [], ['groups' => ['acquisition:read', 'supplier:read', 'budget:read']]);
-        } catch (\RuntimeException $e) {
+        } catch (\Throwable $e) {
+            $e = $this->unwrapThrowable($e);
+            if ($response = $this->jsonFromHttpException($e)) {
+                return $response;
+            }
             return $this->json(['error' => $e->getMessage()], 404);
         }
     }
@@ -188,7 +202,11 @@ class AcquisitionOrderController extends AbstractController
         try {
             $this->commandBus->dispatch(new CancelOrderCommand((int) $id));
             return new JsonResponse(null, 204);
-        } catch (\RuntimeException $e) {
+        } catch (\Throwable $e) {
+            $e = $this->unwrapThrowable($e);
+            if ($response = $this->jsonFromHttpException($e)) {
+                return $response;
+            }
             $statusCode = str_contains($e->getMessage(), 'not found') ? 404 : 409;
             return $this->json(['error' => $e->getMessage()], $statusCode);
         }

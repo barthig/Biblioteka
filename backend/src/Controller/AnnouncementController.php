@@ -8,6 +8,7 @@ use App\Application\Command\Announcement\PublishAnnouncementCommand;
 use App\Application\Command\Announcement\UpdateAnnouncementCommand;
 use App\Application\Query\Announcement\GetAnnouncementQuery;
 use App\Application\Query\Announcement\ListAnnouncementsQuery;
+use App\Controller\Traits\ExceptionHandlingTrait;
 use App\Entity\User;
 use App\Repository\UserRepository;
 use App\Service\SecurityService;
@@ -21,6 +22,7 @@ use OpenApi\Attributes as OA;
 #[OA\Tag(name: 'Announcements')]
 class AnnouncementController extends AbstractController
 {
+    use ExceptionHandlingTrait;
     public function __construct(
         private readonly MessageBusInterface $queryBus,
         private readonly MessageBusInterface $commandBus,
@@ -77,7 +79,11 @@ class AnnouncementController extends AbstractController
 
             $groups = $isLibrarian ? ['announcement:list', 'announcement:read'] : ['announcement:list'];
             return $this->json($result, 200, [], ['groups' => $groups]);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            $e = $this->unwrapThrowable($e);
+            if ($response = $this->jsonFromHttpException($e)) {
+                return $response;
+            }
             error_log('AnnouncementController::list - EXCEPTION: ' . $e->getMessage());
             error_log('AnnouncementController::list - Stack: ' . $e->getTraceAsString());
             return $this->json(['error' => 'Internal error: ' . $e->getMessage()], 500);
@@ -114,7 +120,11 @@ class AnnouncementController extends AbstractController
             $announcement = $envelope->last(HandledStamp::class)?->getResult();
             
             return $this->json($announcement, 200, [], ['groups' => ['announcement:read']]);
-        } catch (\RuntimeException $e) {
+        } catch (\Throwable $e) {
+            $e = $this->unwrapThrowable($e);
+            if ($response = $this->jsonFromHttpException($e)) {
+                return $response;
+            }
             return $this->json(['error' => $e->getMessage()], 404);
         }
     }
@@ -180,7 +190,11 @@ class AnnouncementController extends AbstractController
             $announcement = $envelope->last(HandledStamp::class)?->getResult();
             
             return $this->json($announcement, 201, [], ['groups' => ['announcement:read']]);
-        } catch (\RuntimeException $e) {
+        } catch (\Throwable $e) {
+            $e = $this->unwrapThrowable($e);
+            if ($response = $this->jsonFromHttpException($e)) {
+                return $response;
+            }
             return $this->json(['error' => $e->getMessage()], 400);
         }
     }
@@ -226,7 +240,11 @@ class AnnouncementController extends AbstractController
             $announcement = $envelope->last(HandledStamp::class)?->getResult();
             
             return $this->json($announcement, 200, [], ['groups' => ['announcement:read']]);
-        } catch (\RuntimeException $e) {
+        } catch (\Throwable $e) {
+            $e = $this->unwrapThrowable($e);
+            if ($response = $this->jsonFromHttpException($e)) {
+                return $response;
+            }
             return $this->json(['error' => $e->getMessage()], 404);
         }
     }
@@ -258,7 +276,11 @@ class AnnouncementController extends AbstractController
             $announcement = $envelope->last(HandledStamp::class)?->getResult();
             
             return $this->json($announcement, 200, [], ['groups' => ['announcement:read']]);
-        } catch (\RuntimeException $e) {
+        } catch (\Throwable $e) {
+            $e = $this->unwrapThrowable($e);
+            if ($response = $this->jsonFromHttpException($e)) {
+                return $response;
+            }
             return $this->json(['error' => $e->getMessage()], 404);
         }
     }
@@ -290,7 +312,11 @@ class AnnouncementController extends AbstractController
             $announcement = $envelope->last(HandledStamp::class)?->getResult();
             
             return $this->json($announcement, 200, [], ['groups' => ['announcement:read']]);
-        } catch (\RuntimeException $e) {
+        } catch (\Throwable $e) {
+            $e = $this->unwrapThrowable($e);
+            if ($response = $this->jsonFromHttpException($e)) {
+                return $response;
+            }
             return $this->json(['error' => $e->getMessage()], 404);
         }
     }
@@ -320,7 +346,11 @@ class AnnouncementController extends AbstractController
         try {
             $this->commandBus->dispatch(new DeleteAnnouncementCommand($id));
             return $this->json(null, 204);
-        } catch (\RuntimeException $e) {
+        } catch (\Throwable $e) {
+            $e = $this->unwrapThrowable($e);
+            if ($response = $this->jsonFromHttpException($e)) {
+                return $response;
+            }
             return $this->json(['error' => $e->getMessage()], 404);
         }
     }

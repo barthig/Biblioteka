@@ -12,12 +12,8 @@ return [
     
     // API & Serialization
     Nelmio\ApiDocBundle\NelmioApiDocBundle::class => ['all' => true],
-    Nelmio\CorsBundle\NelmioCorsBundle::class => ['all' => true],
-    
-    // GraphQL
-    Overblog\GraphQLBundle\OverblogGraphQLBundle::class => ['all' => true],
-    
-    // Development tools
+    Nelmio\CorsBundle\NelmioCorsBundle::class => ['all' => true],    // Development tools
     Symfony\Bundle\MakerBundle\MakerBundle::class => ['dev' => true],
     Symfony\Bundle\DebugBundle\DebugBundle::class => ['dev' => true, 'test' => true],
 ];
+

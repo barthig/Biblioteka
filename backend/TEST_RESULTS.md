@@ -67,8 +67,6 @@ Te błędy były **tylko w skrypcie testowym**, nie w bazie danych ani encjach.
 
 ### ❓ CO MOŻE NIE DZIAŁAĆ:
 Problem "nic poza użytkownikiem nie działa" musi być w:
-- **GraphQL resolvers** - możliwe błędy w resolverach
-- **Frontend** - możliwe błędy w zapytaniach GraphQL z frontendu
 - **Kontrolery** - możliwe błędy w kontrolerach HTTP
 - **Message Handlers** - możliwe problemy z Symfony Messenger
 
@@ -76,8 +74,6 @@ Problem "nic poza użytkownikiem nie działa" musi być w:
 
 1. ✅ Baza danych - PRZETESTOWANA, DZIAŁA
 2. ✅ Repozytoria - PRZETESTOWANE, DZIAŁAJĄ  
-3. ⏭️ GraphQL resolvers - WYMAGA TESTÓW
-4. ⏭️ Frontend GraphQL queries - WYMAGA SPRAWDZENIA
 5. ⏭️ Message Bus handlers - WYMAGA TESTÓW
 
 ## Jak uruchomić testy

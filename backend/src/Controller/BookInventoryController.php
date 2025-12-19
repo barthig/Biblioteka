@@ -5,6 +5,7 @@ use App\Application\Command\BookInventory\CreateBookCopyCommand;
 use App\Application\Command\BookInventory\DeleteBookCopyCommand;
 use App\Application\Command\BookInventory\UpdateBookCopyCommand;
 use App\Application\Query\BookInventory\ListBookCopiesQuery;
+use App\Controller\Traits\ExceptionHandlingTrait;
 use App\Controller\Traits\ValidationTrait;
 use App\Entity\BookCopy;
 use App\Repository\BookCopyRepository;
@@ -21,6 +22,7 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 class BookInventoryController extends AbstractController
 {
     use ValidationTrait;
+    use ExceptionHandlingTrait;
     
     public function __construct(
         private readonly MessageBusInterface $queryBus,
@@ -38,7 +40,11 @@ class BookInventoryController extends AbstractController
             $envelope = $this->queryBus->dispatch(new ListBookCopiesQuery($id));
             $result = $envelope->last(HandledStamp::class)?->getResult();
             return $this->json($result);
-        } catch (\RuntimeException $e) {
+        } catch (\Throwable $e) {
+            $e = $this->unwrapThrowable($e);
+            if ($response = $this->jsonFromHttpException($e)) {
+                return $response;
+            }
             return $this->json(['error' => $e->getMessage()], 404);
         }
     }
@@ -75,7 +81,11 @@ class BookInventoryController extends AbstractController
             $copy = $envelope->last(HandledStamp::class)?->getResult();
             
             return $this->json($this->serializeCopy($copy), 201);
-        } catch (\RuntimeException $e) {
+        } catch (\Throwable $e) {
+            $e = $this->unwrapThrowable($e);
+            if ($response = $this->jsonFromHttpException($e)) {
+                return $response;
+            }
             $statusCode = str_contains($e->getMessage(), 'not found') ? 404 : 400;
             if (str_contains($e->getMessage(), 'already exists')) {
                 $statusCode = 409;
@@ -117,7 +127,11 @@ class BookInventoryController extends AbstractController
             $copy = $envelope->last(HandledStamp::class)?->getResult();
             
             return $this->json($this->serializeCopy($copy));
-        } catch (\RuntimeException $e) {
+        } catch (\Throwable $e) {
+            $e = $this->unwrapThrowable($e);
+            if ($response = $this->jsonFromHttpException($e)) {
+                return $response;
+            }
             return $this->json(['error' => $e->getMessage()], 404);
         }
     }
@@ -135,7 +149,11 @@ class BookInventoryController extends AbstractController
         try {
             $this->commandBus->dispatch(new DeleteBookCopyCommand($id, $copyId));
             return new JsonResponse(null, 204);
-        } catch (\RuntimeException $e) {
+        } catch (\Throwable $e) {
+            $e = $this->unwrapThrowable($e);
+            if ($response = $this->jsonFromHttpException($e)) {
+                return $response;
+            }
             return $this->json(['error' => $e->getMessage()], 400);
         }
     }

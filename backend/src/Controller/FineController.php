@@ -5,6 +5,7 @@ use App\Application\Command\Fine\CancelFineCommand;
 use App\Application\Command\Fine\CreateFineCommand;
 use App\Application\Command\Fine\PayFineCommand;
 use App\Application\Query\Fine\ListFinesQuery;
+use App\Controller\Traits\ExceptionHandlingTrait;
 use App\Controller\Traits\ValidationTrait;
 use App\Request\CreateFineRequest;
 use App\Service\SecurityService;
@@ -18,6 +19,7 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 class FineController extends AbstractController
 {
     use ValidationTrait;
+    use ExceptionHandlingTrait;
 
     public function __construct(
         private MessageBusInterface $commandBus,
@@ -86,7 +88,11 @@ class FineController extends AbstractController
                 'groups' => ['fine:read', 'loan:read'],
                 'json_encode_options' => \JSON_PRESERVE_ZERO_FRACTION,
             ]);
-        } catch (\RuntimeException $e) {
+        } catch (\Throwable $e) {
+            $e = $this->unwrapThrowable($e);
+            if ($response = $this->jsonFromHttpException($e)) {
+                return $response;
+            }
             $statusCode = match ($e->getMessage()) {
                 'Loan not found' => 404,
                 default => 500
@@ -118,7 +124,11 @@ class FineController extends AbstractController
                 'groups' => ['fine:read', 'loan:read'],
                 'json_encode_options' => \JSON_PRESERVE_ZERO_FRACTION,
             ]);
-        } catch (\RuntimeException $e) {
+        } catch (\Throwable $e) {
+            $e = $this->unwrapThrowable($e);
+            if ($response = $this->jsonFromHttpException($e)) {
+                return $response;
+            }
             $statusCode = match ($e->getMessage()) {
                 'Fine not found' => 404,
                 'Fine already paid' => 400,
@@ -143,7 +153,11 @@ class FineController extends AbstractController
         try {
             $this->commandBus->dispatch($command);
             return new JsonResponse(null, 204);
-        } catch (\RuntimeException $e) {
+        } catch (\Throwable $e) {
+            $e = $this->unwrapThrowable($e);
+            if ($response = $this->jsonFromHttpException($e)) {
+                return $response;
+            }
             $statusCode = match ($e->getMessage()) {
                 'Fine not found' => 404,
                 'Cannot cancel a paid fine' => 400,

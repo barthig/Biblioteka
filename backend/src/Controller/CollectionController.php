@@ -138,6 +138,6 @@ class CollectionController extends AbstractController
 
         $this->commandBus->dispatch(new DeleteCollectionCommand($id));
 
-        return $this->json(['success' => true, 'message' => 'Collection deleted']);
+        return new JsonResponse(null, 204);
     }
 }

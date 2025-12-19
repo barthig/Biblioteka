@@ -4,6 +4,7 @@ namespace App\Controller;
 use App\Application\Command\Review\CreateReviewCommand;
 use App\Application\Command\Review\DeleteReviewCommand;
 use App\Application\Query\Review\ListBookReviewsQuery;
+use App\Controller\Traits\ExceptionHandlingTrait;
 use App\Controller\Traits\ValidationTrait;
 use App\Request\CreateReviewRequest;
 use App\Service\SecurityService;
@@ -17,6 +18,7 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 class ReviewController extends AbstractController
 {
     use ValidationTrait;
+    use ExceptionHandlingTrait;
 
     public function __construct(
         private MessageBusInterface $commandBus,
@@ -33,7 +35,11 @@ class ReviewController extends AbstractController
             $envelope = $this->queryBus->dispatch($query);
             $result = $envelope->last(HandledStamp::class)?->getResult();
             return $this->json($result, 200, [], ['groups' => ['review:read', 'book:read']]);
-        } catch (\RuntimeException $e) {
+        } catch (\Throwable $e) {
+            $e = $this->unwrapThrowable($e);
+            if ($response = $this->jsonFromHttpException($e)) {
+                return $response;
+            }
             $statusCode = match ($e->getMessage()) {
                 'Book not found' => 404,
                 default => 500
@@ -71,7 +77,11 @@ class ReviewController extends AbstractController
             // Check if it was a new review (would need additional info from handler)
             // For now, always return 200 as the handler does upsert
             return $this->json($review, 200, [], ['groups' => ['review:read', 'book:read']]);
-        } catch (\RuntimeException $e) {
+        } catch (\Throwable $e) {
+            $e = $this->unwrapThrowable($e);
+            if ($response = $this->jsonFromHttpException($e)) {
+                return $response;
+            }
             $statusCode = match ($e->getMessage()) {
                 'User or book not found' => 404,
                 default => 500
@@ -98,7 +108,11 @@ class ReviewController extends AbstractController
         try {
             $this->commandBus->dispatch($command);
             return new JsonResponse(null, 204);
-        } catch (\RuntimeException $e) {
+        } catch (\Throwable $e) {
+            $e = $this->unwrapThrowable($e);
+            if ($response = $this->jsonFromHttpException($e)) {
+                return $response;
+            }
             $statusCode = match ($e->getMessage()) {
                 'Review not found' => 404,
                 default => str_contains($e->getMessage(), 'Forbidden') ? 403 : 500

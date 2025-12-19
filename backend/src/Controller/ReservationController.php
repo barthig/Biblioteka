@@ -11,6 +11,7 @@ use App\Service\SecurityService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\Messenger\Exception\HandlerFailedException;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
@@ -100,6 +101,14 @@ class ReservationController extends AbstractController
             if ($e instanceof HandlerFailedException) {
                 $e = $e->getPrevious() ?? $e;
             }
+
+            if ($e instanceof HttpExceptionInterface) {
+                return $this->json(['error' => $e->getMessage()], $e->getStatusCode());
+            }
+
+            if ($e instanceof \InvalidArgumentException) {
+                return $this->json(['error' => $e->getMessage()], 400);
+            }
             
             // Log the full exception for debugging
             error_log('ReservationController exception: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
@@ -151,14 +160,26 @@ class ReservationController extends AbstractController
             if ($e instanceof HandlerFailedException) {
                 $e = $e->getPrevious() ?? $e;
             }
+
+            if ($e instanceof HttpExceptionInterface) {
+                return $this->json(['error' => $e->getMessage()], $e->getStatusCode());
+            }
             
             if ($e instanceof \RuntimeException) {
                 $statusCode = match ($e->getMessage()) {
                     'Reservation not found' => 404,
                     'Reservation already fulfilled' => 400,
                     'Forbidden' => 403,
+                    'Reservation already cancelled' => 400,
+                    'Reservation already expired' => 400,
                     default => 500
                 };
+                if ($statusCode === 500 && str_contains($e->getMessage(), 'Cannot cancel reservation')) {
+                    $statusCode = 400;
+                }
+                if ($statusCode === 500 && str_contains($e->getMessage(), 'Cannot release copy')) {
+                    $statusCode = 400;
+                }
                 return $this->json(['error' => $e->getMessage()], $statusCode);
             }
             
@@ -191,7 +212,7 @@ class ReservationController extends AbstractController
                 $e = $e->getPrevious() ?? $e;
             }
 
-            $statusCode = ($e instanceof \Symfony\Component\HttpKernel\Exception\HttpExceptionInterface)
+            $statusCode = ($e instanceof HttpExceptionInterface)
                 ? $e->getStatusCode()
                 : 500;
 

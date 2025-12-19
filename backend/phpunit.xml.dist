@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<phpunit bootstrap="tests/bootstrap.php" colors="true" displayDetailsOnPhpunitDeprecations="true">
+<phpunit bootstrap="tests/bootstrap.php" colors="true" displayDetailsOnPhpunitDeprecations="false">
     <testsuites>
         <testsuite name="Unit">
             <directory>tests/Unit</directory>
@@ -25,5 +25,6 @@
         <env name="JWT_SECRET" value="test_jwt_secret"/>
         <env name="API_SECRET" value="test-secret"/>
         <env name="MESSENGER_TRANSPORT_DSN" value="sync://"/>
+        <env name="SYMFONY_DEPRECATIONS_HELPER" value="disabled"/>
     </php>
 </phpunit>

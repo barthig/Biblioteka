@@ -6,6 +6,7 @@ use App\Application\Command\User\CreateUserCommand;
 use App\Application\Command\User\DeleteUserCommand;
 use App\Application\Command\User\UnblockUserCommand;
 use App\Application\Command\User\UpdateUserCommand;
+use App\Controller\Traits\ExceptionHandlingTrait;
 use App\Controller\Traits\ValidationTrait;
 use App\Request\CreateUserRequest;
 use App\Request\UpdateUserRequest;
@@ -20,6 +21,7 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 class UserManagementController extends AbstractController
 {
     use ValidationTrait;
+    use ExceptionHandlingTrait;
 
     public function __construct(
         private readonly MessageBusInterface $commandBus,
@@ -60,7 +62,11 @@ public function create(Request $request, ValidatorInterface $validator): JsonRes
             $envelope = $this->commandBus->dispatch($command);
             $user = $envelope->last(HandledStamp::class)?->getResult();
             return $this->json($user, 201);
-        } catch (\RuntimeException $e) {
+        } catch (\Throwable $e) {
+            $e = $this->unwrapThrowable($e);
+            if ($response = $this->jsonFromHttpException($e)) {
+                return $response;
+            }
             $statusCode = str_contains($e->getMessage(), 'Unknown membership group') ? 400 : 500;
             return $this->json(['error' => $e->getMessage()], $statusCode);
         }
@@ -122,7 +128,11 @@ public function create(Request $request, ValidatorInterface $validator): JsonRes
             $envelope = $this->commandBus->dispatch($command);
             $user = $envelope->last(HandledStamp::class)?->getResult();
             return $this->json($user, 200);
-        } catch (\RuntimeException $e) {
+        } catch (\Throwable $e) {
+            $e = $this->unwrapThrowable($e);
+            if ($response = $this->jsonFromHttpException($e)) {
+                return $response;
+            }
             $statusCode = match (true) {
                 str_contains($e->getMessage(), 'User not found') => 404,
                 str_contains($e->getMessage(), 'Unknown membership group') => 400,
@@ -146,7 +156,11 @@ public function create(Request $request, ValidatorInterface $validator): JsonRes
         try {
             $this->commandBus->dispatch($command);
             return $this->json(null, 204);
-        } catch (\RuntimeException $e) {
+        } catch (\Throwable $e) {
+            $e = $this->unwrapThrowable($e);
+            if ($response = $this->jsonFromHttpException($e)) {
+                return $response;
+            }
             return $this->json(['error' => $e->getMessage()], 404);
         }
     }
@@ -170,7 +184,11 @@ public function create(Request $request, ValidatorInterface $validator): JsonRes
             $envelope = $this->commandBus->dispatch($command);
             $user = $envelope->last(HandledStamp::class)?->getResult();
             return $this->json($user, 200);
-        } catch (\RuntimeException $e) {
+        } catch (\Throwable $e) {
+            $e = $this->unwrapThrowable($e);
+            if ($response = $this->jsonFromHttpException($e)) {
+                return $response;
+            }
             return $this->json(['error' => $e->getMessage()], 404);
         }
     }
@@ -190,7 +208,11 @@ public function create(Request $request, ValidatorInterface $validator): JsonRes
             $envelope = $this->commandBus->dispatch($command);
             $user = $envelope->last(HandledStamp::class)?->getResult();
             return $this->json($user, 200);
-        } catch (\RuntimeException $e) {
+        } catch (\Throwable $e) {
+            $e = $this->unwrapThrowable($e);
+            if ($response = $this->jsonFromHttpException($e)) {
+                return $response;
+            }
             return $this->json(['error' => $e->getMessage()], 404);
         }
     }

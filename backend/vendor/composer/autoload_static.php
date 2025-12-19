@@ -94,7 +94,6 @@ class ComposerStaticInit65ce50d89d4e417b146049a1d141d5ee
             'Symfony\\Component\\HttpClient\\' => 29,
             'Symfony\\Component\\Finder\\' => 25,
             'Symfony\\Component\\Filesystem\\' => 29,
-            'Symfony\\Component\\ExpressionLanguage\\' => 37,
             'Symfony\\Component\\EventDispatcher\\' => 34,
             'Symfony\\Component\\ErrorHandler\\' => 31,
             'Symfony\\Component\\DomCrawler\\' => 29,
@@ -139,7 +138,6 @@ class ComposerStaticInit65ce50d89d4e417b146049a1d141d5ee
         ),
         'O' =>
         array (
-            'Overblog\\GraphQLBundle\\' => 23,
             'OpenTelemetry\\Context\\' => 22,
             'OpenTelemetry\\API\\' => 18,
             'OpenApi\\' => 8,
@@ -151,7 +149,6 @@ class ComposerStaticInit65ce50d89d4e417b146049a1d141d5ee
         ),
         'M' =>
         array (
-            'Murtukov\\PHPCodeGenerator\\' => 26,
             'Masterminds\\' => 12,
         ),
         'J' =>
@@ -169,7 +166,6 @@ class ComposerStaticInit65ce50d89d4e417b146049a1d141d5ee
             'GuzzleHttp\\Psr7\\' => 16,
             'GuzzleHttp\\Promise\\' => 19,
             'GuzzleHttp\\' => 11,
-            'GraphQL\\' => 8,
         ),
         'F' =>
         array (
@@ -399,10 +395,6 @@ class ComposerStaticInit65ce50d89d4e417b146049a1d141d5ee
         array (
             0 => __DIR__ . '/..' . '/symfony/filesystem',
         ),
-        'Symfony\\Component\\ExpressionLanguage\\' =>
-        array (
-            0 => __DIR__ . '/..' . '/symfony/expression-language',
-        ),
         'Symfony\\Component\\EventDispatcher\\' =>
         array (
             0 => __DIR__ . '/..' . '/symfony/event-dispatcher',
@@ -556,10 +548,6 @@ class ComposerStaticInit65ce50d89d4e417b146049a1d141d5ee
         array (
             0 => __DIR__ . '/..' . '/phpstan/phpdoc-parser/src',
         ),
-        'Overblog\\GraphQLBundle\\' =>
-        array (
-            0 => __DIR__ . '/..' . '/overblog/graphql-bundle/src',
-        ),
         'OpenTelemetry\\Context\\' =>
         array (
             0 => __DIR__ . '/..' . '/open-telemetry/context',
@@ -579,10 +567,6 @@ class ComposerStaticInit65ce50d89d4e417b146049a1d141d5ee
         'Nelmio\\ApiDocBundle\\' =>
         array (
             0 => __DIR__ . '/..' . '/nelmio/api-doc-bundle/src',
-        ),
-        'Murtukov\\PHPCodeGenerator\\' =>
-        array (
-            0 => __DIR__ . '/..' . '/murtukov/php-code-generator/src',
         ),
         'Masterminds\\' =>
         array (
@@ -615,10 +599,6 @@ class ComposerStaticInit65ce50d89d4e417b146049a1d141d5ee
         'GuzzleHttp\\' =>
         array (
             0 => __DIR__ . '/..' . '/guzzlehttp/guzzle/src',
-        ),
-        'GraphQL\\' =>
-        array (
-            0 => __DIR__ . '/..' . '/webonyx/graphql-php/src',
         ),
         'FOS\\ElasticaBundle\\' =>
         array (

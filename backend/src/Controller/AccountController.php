@@ -17,6 +17,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Messenger\MessageBusInterface;
+use Symfony\Component\Messenger\Exception\HandlerFailedException;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
@@ -74,7 +75,13 @@ class AccountController extends AbstractController
             $envelope = $this->commandBus->dispatch($command);
             $user = $envelope->last(HandledStamp::class)?->getResult();
             return $this->json($user, 200);
-        } catch (\RuntimeException $e) {
+        } catch (\Throwable $e) {
+            if ($e instanceof HandlerFailedException) {
+                $e = $e->getPrevious() ?? $e;
+            }
+            if ($e instanceof HttpExceptionInterface) {
+                return $this->json(['error' => $e->getMessage()], $e->getStatusCode());
+            }
             $statusCode = match (true) {
                 str_contains($e->getMessage(), 'User not found') => 404,
                 str_contains($e->getMessage(), 'Email is already taken') => 409,
@@ -110,7 +117,13 @@ class AccountController extends AbstractController
         try {
             $this->commandBus->dispatch($command);
             return $this->json(['message' => 'Hasło zostało zaktualizowane']);
-        } catch (\RuntimeException $e) {
+        } catch (\Throwable $e) {
+            if ($e instanceof HandlerFailedException) {
+                $e = $e->getPrevious() ?? $e;
+            }
+            if ($e instanceof HttpExceptionInterface) {
+                return $this->json(['error' => $e->getMessage()], $e->getStatusCode());
+            }
             $statusCode = match (true) {
                 str_contains($e->getMessage(), 'User not found') => 404,
                 default => 400

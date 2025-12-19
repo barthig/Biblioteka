@@ -11,6 +11,8 @@ use App\Service\SecurityService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
+use Symfony\Component\Messenger\Exception\HandlerFailedException;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -64,10 +66,17 @@ class FavoriteController extends AbstractController
             $envelope = $this->commandBus->dispatch($command);
             $favorite = $envelope->last(HandledStamp::class)?->getResult();
             return $this->json(['data' => $favorite], 201, [], ['groups' => ['favorite:read', 'book:read']]);
-        } catch (\RuntimeException $e) {
+        } catch (\Throwable $e) {
+            if ($e instanceof HandlerFailedException) {
+                $e = $e->getPrevious() ?? $e;
+            }
+            if ($e instanceof HttpExceptionInterface) {
+                return $this->json(['error' => $e->getMessage()], $e->getStatusCode());
+            }
+
             $statusCode = match ($e->getMessage()) {
                 'User or book not found' => 404,
-                'Książka znajduje się już na Twojej półce' => 409,
+                'Ksi????ka znajduje si?? ju?? na Twojej p????ce' => 409,
                 default => 500
             };
             return $this->json(['error' => $e->getMessage()], $statusCode);
@@ -102,7 +111,7 @@ class FavoriteController extends AbstractController
         }
 
         if (!$favorite) {
-            return $this->json(['error' => 'Pozycja nie znajduje się na Twojej półce'], 404);
+            return $this->json(['error' => 'Pozycja nie znajduje si?? na Twojej p????ce'], 404);
         }
 
         $command = new RemoveFavoriteCommand(
@@ -113,7 +122,14 @@ class FavoriteController extends AbstractController
         try {
             $this->commandBus->dispatch($command);
             return new JsonResponse(null, 204);
-        } catch (\RuntimeException $e) {
+        } catch (\Throwable $e) {
+            if ($e instanceof HandlerFailedException) {
+                $e = $e->getPrevious() ?? $e;
+            }
+            if ($e instanceof HttpExceptionInterface) {
+                return $this->json(['error' => $e->getMessage()], $e->getStatusCode());
+            }
+
             $statusCode = match ($e->getMessage()) {
                 'Favorite not found' => 404,
                 'You can only remove your own favorites' => 403,
@@ -123,3 +139,9 @@ class FavoriteController extends AbstractController
         }
     }
 }
+
+
+
+
+
+

@@ -6,6 +6,7 @@ use App\Application\Command\Book\DeleteBookCommand;
 use App\Application\Command\Book\UpdateBookCommand;
 use App\Application\Query\Book\GetBookQuery;
 use App\Application\Query\Book\ListBooksQuery;
+use App\Controller\Traits\ExceptionHandlingTrait;
 use App\Controller\Traits\ValidationTrait;
 use App\Entity\Book;
 use App\Request\CreateBookRequest;
@@ -16,7 +17,9 @@ use App\Service\SecurityService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
+use Symfony\Component\Messenger\Exception\HandlerFailedException;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use OpenApi\Attributes as OA;
@@ -24,6 +27,7 @@ use OpenApi\Attributes as OA;
 class BookController extends AbstractController
 {
     use ValidationTrait;
+    use ExceptionHandlingTrait;
 
     public function __construct(
         private readonly MessageBusInterface $commandBus,
@@ -131,7 +135,11 @@ class BookController extends AbstractController
             $envelope = $this->queryBus->dispatch($query);
             $book = $envelope->last(HandledStamp::class)?->getResult();
             return $this->json($book, 200, [], ['groups' => ['book:read']]);
-        } catch (\RuntimeException $e) {
+        } catch (\Throwable $e) {
+            $e = $this->unwrapThrowable($e);
+            if ($response = $this->jsonFromHttpException($e)) {
+                return $response;
+            }
             return $this->json(['error' => $e->getMessage()], 404);
         }
     }
@@ -173,7 +181,13 @@ class BookController extends AbstractController
             $envelope = $this->commandBus->dispatch($command);
             $book = $envelope->last(HandledStamp::class)?->getResult();
             return $this->json($book, 201, [], ['groups' => ['book:read']]);
-        } catch (\RuntimeException $e) {
+        } catch (\Throwable $e) {
+            if ($e instanceof HandlerFailedException) {
+                $e = $e->getPrevious() ?? $e;
+            }
+            if ($e instanceof HttpExceptionInterface) {
+                return $this->json(['error' => $e->getMessage()], $e->getStatusCode());
+            }
             $statusCode = match (true) {
                 str_contains($e->getMessage(), 'Author not found') => 404,
                 str_contains($e->getMessage(), 'categories not found') => 404,
@@ -221,7 +235,13 @@ class BookController extends AbstractController
             $envelope = $this->commandBus->dispatch($command);
             $book = $envelope->last(HandledStamp::class)?->getResult();
             return $this->json($book, 200, [], ['groups' => ['book:read']]);
-        } catch (\RuntimeException $e) {
+        } catch (\Throwable $e) {
+            if ($e instanceof HandlerFailedException) {
+                $e = $e->getPrevious() ?? $e;
+            }
+            if ($e instanceof HttpExceptionInterface) {
+                return $this->json(['error' => $e->getMessage()], $e->getStatusCode());
+            }
             $statusCode = match (true) {
                 str_contains($e->getMessage(), 'Book not found') => 404,
                 str_contains($e->getMessage(), 'Author not found') => 404,
@@ -244,7 +264,11 @@ class BookController extends AbstractController
         try {
             $this->commandBus->dispatch($command);
             return new JsonResponse(null, 204);
-        } catch (\RuntimeException $e) {
+        } catch (\Throwable $e) {
+            $e = $this->unwrapThrowable($e);
+            if ($response = $this->jsonFromHttpException($e)) {
+                return $response;
+            }
             return $this->json(['error' => $e->getMessage()], 404);
         }
     }
