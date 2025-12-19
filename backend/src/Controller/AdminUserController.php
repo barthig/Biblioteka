@@ -23,7 +23,7 @@ class AdminUserController extends AbstractController
     public function update(int $id, Request $request): JsonResponse
     {
         if (!$this->security->hasRole($request, 'ROLE_ADMIN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
 
         $data = json_decode($request->getContent(), true) ?? [];
@@ -54,12 +54,12 @@ class AdminUserController extends AbstractController
     public function delete(int $id, Request $request): JsonResponse
     {
         if (!$this->security->hasRole($request, 'ROLE_ADMIN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
 
         $currentUserId = $this->security->getCurrentUserId($request);
         if ($currentUserId === $id) {
-            return $this->json(['error' => 'Cannot delete your own account'], 400);
+            return $this->json(['message' => 'Cannot delete your own account'], 400);
         }
 
         $this->commandBus->dispatch(new DeleteUserCommand($id));

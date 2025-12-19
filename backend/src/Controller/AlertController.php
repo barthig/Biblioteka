@@ -21,7 +21,7 @@ class AlertController extends AbstractController
     {
         $userId = $this->security->getCurrentUserId($request);
         if ($userId === null) {
-            return $this->json(['error' => 'Unauthorized'], 401);
+            return $this->json(['message' => 'Unauthorized'], 401);
         }
 
         $envelope = $this->queryBus->dispatch(new UserAlertsQuery($userId));

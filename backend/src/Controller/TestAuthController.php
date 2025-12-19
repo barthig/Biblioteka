@@ -24,12 +24,12 @@ class TestAuthController extends AbstractController
             $password = $data['password'] ?? '';
 
             if (!$email || !$password) {
-                return $this->json(['error' => 'Email i hasło są wymagane'], 400);
+                return $this->json(['message' => 'Email i hasło są wymagane'], 400);
             }
 
             $user = $repo->findOneBy(['email' => $email]);
             if (!$user) {
-                return $this->json(['error' => 'Użytkownik nie znaleziony', 'email' => $email], 404);
+                return $this->json(['message' => 'Użytkownik nie znaleziony', 'email' => $email], 404);
             }
 
             if (!password_verify($password, $user->getPassword())) {

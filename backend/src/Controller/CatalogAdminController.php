@@ -21,7 +21,7 @@ class CatalogAdminController extends AbstractController
     public function export(Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
 
         $envelope = $this->queryBus->dispatch(new ExportCatalogQuery());
@@ -33,12 +33,12 @@ class CatalogAdminController extends AbstractController
     public function import(Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
 
         $data = json_decode($request->getContent(), true);
         if (!is_array($data) || !isset($data['items']) || !is_array($data['items'])) {
-            return $this->json(['error' => 'Invalid payload structure'], 400);
+            return $this->json(['message' => 'Invalid payload structure'], 400);
         }
 
         $envelope = $this->commandBus->dispatch(new ImportCatalogCommand($data['items']));

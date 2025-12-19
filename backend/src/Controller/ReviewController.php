@@ -44,7 +44,7 @@ class ReviewController extends AbstractController
                 'Book not found' => 404,
                 default => 500
             };
-            return $this->json(['error' => $e->getMessage()], $statusCode);
+            return $this->json(['message' => $e->getMessage()], $statusCode);
         }
     }
 
@@ -52,7 +52,7 @@ class ReviewController extends AbstractController
     {
         $payload = $this->security->getJwtPayload($request);
         if (!$payload || !isset($payload['sub'])) {
-            return $this->json(['error' => 'Unauthorized'], 401);
+            return $this->json(['message' => 'Unauthorized'], 401);
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
@@ -86,7 +86,7 @@ class ReviewController extends AbstractController
                 'User or book not found' => 404,
                 default => 500
             };
-            return $this->json(['error' => $e->getMessage()], $statusCode);
+            return $this->json(['message' => $e->getMessage()], $statusCode);
         }
     }
 
@@ -94,7 +94,7 @@ class ReviewController extends AbstractController
     {
         $payload = $this->security->getJwtPayload($request);
         if (!$payload || !isset($payload['sub'])) {
-            return $this->json(['error' => 'Unauthorized'], 401);
+            return $this->json(['message' => 'Unauthorized'], 401);
         }
 
         $isLibrarian = $this->security->hasRole($request, 'ROLE_LIBRARIAN');
@@ -117,7 +117,7 @@ class ReviewController extends AbstractController
                 'Review not found' => 404,
                 default => str_contains($e->getMessage(), 'Forbidden') ? 403 : 500
             };
-            return $this->json(['error' => $e->getMessage()], $statusCode);
+            return $this->json(['message' => $e->getMessage()], $statusCode);
         }
     }
 }

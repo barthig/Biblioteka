@@ -50,22 +50,22 @@ class ApiAuthSubscriber implements EventSubscriberInterface
             $user = $request->attributes->get('jwt_user');
             $appEnv = getenv('APP_ENV') ?: ($_ENV['APP_ENV'] ?? null);
             if ($user === null) {
-                $event->setResponse(new JsonResponse(['error' => 'Unauthorized'], 401));
+                $event->setResponse(new JsonResponse(['message' => 'Unauthorized'], 401));
                 return;
             }
 
             if ($appEnv !== 'test' && !$user->isVerified()) {
-                $event->setResponse(new JsonResponse(['error' => 'Account not verified'], 403));
+                $event->setResponse(new JsonResponse(['message' => 'Account not verified'], 403));
                 return;
             }
 
             if ($user->isPendingApproval()) {
-                $event->setResponse(new JsonResponse(['error' => 'Account awaiting approval'], 403));
+                $event->setResponse(new JsonResponse(['message' => 'Account awaiting approval'], 403));
                 return;
             }
 
             if ($user->isBlocked()) {
-                $event->setResponse(new JsonResponse(['error' => 'Account is blocked'], 403));
+                $event->setResponse(new JsonResponse(['message' => 'Account is blocked'], 403));
                 return;
             }
 
@@ -73,7 +73,7 @@ class ApiAuthSubscriber implements EventSubscriberInterface
         }
 
         // JWT validation required - no fallback authentication allowed
-        $event->setResponse(new JsonResponse(['error' => 'Unauthorized'], 401));
+        $event->setResponse(new JsonResponse(['message' => 'Unauthorized'], 401));
     }
 
     private function attachJwtPayload($request): ?bool

@@ -55,7 +55,7 @@ class CollectionController extends AbstractController
     {
         $collection = $this->collectionRepo->find($id);
         if (!$collection) {
-            return $this->json(['error' => 'Collection not found'], 404);
+            return $this->json(['message' => 'Collection not found'], 404);
         }
 
         return $this->json([
@@ -84,7 +84,7 @@ class CollectionController extends AbstractController
     {
         $userId = $this->security->getCurrentUserId($request);
         if (!$userId || !$this->security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
 
         $data = json_decode($request->getContent(), true);
@@ -113,7 +113,7 @@ class CollectionController extends AbstractController
     {
         $userId = $this->security->getCurrentUserId($request);
         if (!$userId || !$this->security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
 
         $data = json_decode($request->getContent(), true);
@@ -133,7 +133,7 @@ class CollectionController extends AbstractController
     {
         $userId = $this->security->getCurrentUserId($request);
         if (!$userId || !$this->security->hasRole($request, 'ROLE_ADMIN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
 
         $this->commandBus->dispatch(new DeleteCollectionCommand($id));

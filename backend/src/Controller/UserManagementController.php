@@ -30,7 +30,7 @@ class UserManagementController extends AbstractController
 public function create(Request $request, ValidatorInterface $validator): JsonResponse
     {
         if (!$this->security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
@@ -68,14 +68,14 @@ public function create(Request $request, ValidatorInterface $validator): JsonRes
                 return $response;
             }
             $statusCode = str_contains($e->getMessage(), 'Unknown membership group') ? 400 : 500;
-            return $this->json(['error' => $e->getMessage()], $statusCode);
+            return $this->json(['message' => $e->getMessage()], $statusCode);
         }
     }
 
     public function update(string $id, Request $request, ValidatorInterface $validator): JsonResponse
     {
         if (!ctype_digit($id) || (int) $id <= 0) {
-            return $this->json(['error' => 'Invalid id parameter'], 400);
+            return $this->json(['message' => 'Invalid id parameter'], 400);
         }
 
         $isAdmin = $this->security->hasRole($request, 'ROLE_ADMIN');
@@ -85,7 +85,7 @@ public function create(Request $request, ValidatorInterface $validator): JsonRes
         $isOwner = $payload && isset($payload['sub']) && (int) $payload['sub'] === (int) $id;
 
         if (!($canManage || $isOwner)) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
@@ -98,11 +98,11 @@ public function create(Request $request, ValidatorInterface $validator): JsonRes
 
         // Authorization checks for specific fields
         if (isset($data['roles']) && !$isAdmin) {
-            return $this->json(['error' => 'Forbidden to change roles'], 403);
+            return $this->json(['message' => 'Forbidden to change roles'], 403);
         }
         if ((array_key_exists('pendingApproval', $data) || array_key_exists('verified', $data) || 
              isset($data['membershipGroup']) || isset($data['loanLimit']) || isset($data['blocked'])) && !$isLibrarian) {
-            return $this->json(['error' => 'Forbidden to change this field'], 403);
+            return $this->json(['message' => 'Forbidden to change this field'], 403);
         }
 
         $command = new UpdateUserCommand(
@@ -138,17 +138,17 @@ public function create(Request $request, ValidatorInterface $validator): JsonRes
                 str_contains($e->getMessage(), 'Unknown membership group') => 400,
                 default => 500
             };
-            return $this->json(['error' => $e->getMessage()], $statusCode);
+            return $this->json(['message' => $e->getMessage()], $statusCode);
         }
     }
 
     public function delete(string $id, Request $request): JsonResponse
     {
         if (!$this->security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
         if (!ctype_digit($id) || (int) $id <= 0) {
-            return $this->json(['error' => 'Invalid id parameter'], 400);
+            return $this->json(['message' => 'Invalid id parameter'], 400);
         }
 
         $command = new DeleteUserCommand(userId: (int) $id);
@@ -161,17 +161,17 @@ public function create(Request $request, ValidatorInterface $validator): JsonRes
             if ($response = $this->jsonFromHttpException($e)) {
                 return $response;
             }
-            return $this->json(['error' => $e->getMessage()], 404);
+            return $this->json(['message' => $e->getMessage()], 404);
         }
     }
 
     public function block(string $id, Request $request): JsonResponse
     {
         if (!$this->security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
         if (!ctype_digit($id) || (int) $id <= 0) {
-            return $this->json(['error' => 'Invalid id parameter'], 400);
+            return $this->json(['message' => 'Invalid id parameter'], 400);
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
@@ -189,17 +189,17 @@ public function create(Request $request, ValidatorInterface $validator): JsonRes
             if ($response = $this->jsonFromHttpException($e)) {
                 return $response;
             }
-            return $this->json(['error' => $e->getMessage()], 404);
+            return $this->json(['message' => $e->getMessage()], 404);
         }
     }
 
     public function unblock(string $id, Request $request): JsonResponse
     {
         if (!$this->security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
         if (!ctype_digit($id) || (int) $id <= 0) {
-            return $this->json(['error' => 'Invalid id parameter'], 400);
+            return $this->json(['message' => 'Invalid id parameter'], 400);
         }
 
         $command = new UnblockUserCommand(userId: (int) $id);
@@ -213,7 +213,7 @@ public function create(Request $request, ValidatorInterface $validator): JsonRes
             if ($response = $this->jsonFromHttpException($e)) {
                 return $response;
             }
-            return $this->json(['error' => $e->getMessage()], 404);
+            return $this->json(['message' => $e->getMessage()], 404);
         }
     }
 

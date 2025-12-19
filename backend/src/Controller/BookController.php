@@ -140,14 +140,14 @@ class BookController extends AbstractController
             if ($response = $this->jsonFromHttpException($e)) {
                 return $response;
             }
-            return $this->json(['error' => $e->getMessage()], 404);
+            return $this->json(['message' => $e->getMessage()], 404);
         }
     }
 
     public function create(Request $request, ValidatorInterface $validator): JsonResponse
     {
         if (!$this->security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
 
         $data = json_decode($request->getContent(), true) ?? [];
@@ -186,7 +186,7 @@ class BookController extends AbstractController
                 $e = $e->getPrevious() ?? $e;
             }
             if ($e instanceof HttpExceptionInterface) {
-                return $this->json(['error' => $e->getMessage()], $e->getStatusCode());
+                return $this->json(['message' => $e->getMessage()], $e->getStatusCode());
             }
             $statusCode = match (true) {
                 str_contains($e->getMessage(), 'Author not found') => 404,
@@ -194,20 +194,20 @@ class BookController extends AbstractController
                 str_contains($e->getMessage(), 'At least one category') => 400,
                 default => 500
             };
-            return $this->json(['error' => $e->getMessage()], $statusCode);
+            return $this->json(['message' => $e->getMessage()], $statusCode);
         }
     }
 
     public function update(int $id, Request $request, ValidatorInterface $validator): JsonResponse
     {
         if (!$this->security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
 
         $data = json_decode($request->getContent(), true) ?? [];
         
         if (isset($data['copies']) || isset($data['totalCopies'])) {
-            return $this->json(['error' => 'Inventory is managed automatycznie przez system wypożyczeń i nie może być edytowane ręcznie'], 400);
+            return $this->json(['message' => 'Inventory is managed automatycznie przez system wypożyczeń i nie może być edytowane ręcznie'], 400);
         }
         
         $dto = $this->mapArrayToDto($data, new UpdateBookRequest());
@@ -240,7 +240,7 @@ class BookController extends AbstractController
                 $e = $e->getPrevious() ?? $e;
             }
             if ($e instanceof HttpExceptionInterface) {
-                return $this->json(['error' => $e->getMessage()], $e->getStatusCode());
+                return $this->json(['message' => $e->getMessage()], $e->getStatusCode());
             }
             $statusCode = match (true) {
                 str_contains($e->getMessage(), 'Book not found') => 404,
@@ -249,14 +249,14 @@ class BookController extends AbstractController
                 str_contains($e->getMessage(), 'At least one category') => 400,
                 default => 500
             };
-            return $this->json(['error' => $e->getMessage()], $statusCode);
+            return $this->json(['message' => $e->getMessage()], $statusCode);
         }
     }
 
     public function delete(int $id, Request $request): JsonResponse
     {
         if (!$this->security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
 
         $command = new DeleteBookCommand(bookId: $id);
@@ -269,7 +269,7 @@ class BookController extends AbstractController
             if ($response = $this->jsonFromHttpException($e)) {
                 return $response;
             }
-            return $this->json(['error' => $e->getMessage()], 404);
+            return $this->json(['message' => $e->getMessage()], 404);
         }
     }
 
@@ -293,7 +293,7 @@ class BookController extends AbstractController
             error_log('BookController::recommended - Exception type: ' . get_class($e));
             error_log('BookController::recommended - File: ' . $e->getFile() . ':' . $e->getLine());
             error_log('BookController::recommended - Stack trace: ' . $e->getTraceAsString());
-            return $this->json(['error' => 'Internal error: ' . $e->getMessage()], 500);
+            return $this->json(['message' => 'Internal error: ' . $e->getMessage()], 500);
         }
     }
 
@@ -326,7 +326,7 @@ class BookController extends AbstractController
         )->last(HandledStamp::class)?->getResult();
 
         if (!$availability) {
-            return $this->json(['error' => 'Book not found'], 404);
+            return $this->json(['message' => 'Book not found'], 404);
         }
 
         return $this->json($availability, 200);

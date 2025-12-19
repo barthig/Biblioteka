@@ -28,7 +28,7 @@ class RatingController extends AbstractController
     {
         $book = $this->bookRepo->find($id);
         if (!$book) {
-            return $this->json(['error' => 'Book not found'], 404);
+            return $this->json(['message' => 'Book not found'], 404);
         }
 
         $ratings = $this->ratingRepo->findByBook($book);
@@ -68,14 +68,14 @@ class RatingController extends AbstractController
     {
         $userId = $this->security->getCurrentUserId($request);
         if (!$userId) {
-            return $this->json(['error' => 'Unauthorized'], 401);
+            return $this->json(['message' => 'Unauthorized'], 401);
         }
 
         $data = json_decode($request->getContent(), true);
         $ratingValue = $data['rating'] ?? null;
         $review = $data['review'] ?? null;
         if (!is_int($ratingValue)) {
-            return $this->json(['error' => 'Rating must be between 1 and 5'], 400);
+            return $this->json(['message' => 'Rating must be between 1 and 5'], 400);
         }
 
         $envelope = $this->commandBus->dispatch(new RateBookCommand(
@@ -98,7 +98,7 @@ class RatingController extends AbstractController
     {
         $userId = $this->security->getCurrentUserId($request);
         if (!$userId) {
-            return $this->json(['error' => 'Unauthorized'], 401);
+            return $this->json(['message' => 'Unauthorized'], 401);
         }
 
         $isAdmin = $this->security->hasRole($request, 'ROLE_ADMIN');
@@ -120,12 +120,12 @@ class RatingController extends AbstractController
     {
         $userId = $this->security->getCurrentUserId($request);
         if (!$userId) {
-            return $this->json(['error' => 'Unauthorized'], 401);
+            return $this->json(['message' => 'Unauthorized'], 401);
         }
 
         $user = $this->userRepository->find($userId);
         if (!$user) {
-            return $this->json(['error' => 'User not found'], 404);
+            return $this->json(['message' => 'User not found'], 404);
         }
 
         $ratings = $this->ratingRepo->findBy(['user' => $userId]);

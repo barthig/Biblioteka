@@ -20,7 +20,7 @@ class RecommendationController extends AbstractController
         $query = is_array($payload) ? trim((string) ($payload['query'] ?? '')) : '';
 
         if ($query === '') {
-            return $this->json(['error' => 'Query is required.'], 400);
+            return $this->json(['message' => 'Query is required.'], 400);
         }
 
         $vector = $this->embeddingService->getVector($query);

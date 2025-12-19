@@ -28,7 +28,7 @@ class WeedingController extends AbstractController
     public function list(Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
 
         $limit = $request->query->getInt('limit', 200);
@@ -41,7 +41,7 @@ class WeedingController extends AbstractController
     public function create(Request $request, SecurityService $security, ValidatorInterface $validator): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
@@ -85,7 +85,7 @@ class WeedingController extends AbstractController
             } elseif (str_contains($e->getMessage(), 'borrowed') || str_contains($e->getMessage(), 'reserved') || str_contains($e->getMessage(), 'withdrawn') || str_contains($e->getMessage(), 'active')) {
                 $statusCode = 409;
             }
-            return $this->json(['error' => $e->getMessage()], $statusCode);
+            return $this->json(['message' => $e->getMessage()], $statusCode);
         }
     }
 }

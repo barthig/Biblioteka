@@ -33,7 +33,7 @@ class BookInventoryController extends AbstractController
     public function list(int $id, Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
 
         try {
@@ -45,7 +45,7 @@ class BookInventoryController extends AbstractController
             if ($response = $this->jsonFromHttpException($e)) {
                 return $response;
             }
-            return $this->json(['error' => $e->getMessage()], 404);
+            return $this->json(['message' => $e->getMessage()], 404);
         }
     }
 
@@ -56,7 +56,7 @@ class BookInventoryController extends AbstractController
         ValidatorInterface $validator
     ): JsonResponse {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
 
         $data = json_decode($request->getContent(), true) ?? [];
@@ -90,7 +90,7 @@ class BookInventoryController extends AbstractController
             if (str_contains($e->getMessage(), 'already exists')) {
                 $statusCode = 409;
             }
-            return $this->json(['error' => $e->getMessage()], $statusCode);
+            return $this->json(['message' => $e->getMessage()], $statusCode);
         }
     }
 
@@ -102,7 +102,7 @@ class BookInventoryController extends AbstractController
         ValidatorInterface $validator
     ): JsonResponse {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
 
         $data = json_decode($request->getContent(), true) ?? [];
@@ -132,7 +132,7 @@ class BookInventoryController extends AbstractController
             if ($response = $this->jsonFromHttpException($e)) {
                 return $response;
             }
-            return $this->json(['error' => $e->getMessage()], 404);
+            return $this->json(['message' => $e->getMessage()], 404);
         }
     }
 
@@ -143,7 +143,7 @@ class BookInventoryController extends AbstractController
         SecurityService $security
     ): JsonResponse {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
 
         try {
@@ -154,7 +154,7 @@ class BookInventoryController extends AbstractController
             if ($response = $this->jsonFromHttpException($e)) {
                 return $response;
             }
-            return $this->json(['error' => $e->getMessage()], 400);
+            return $this->json(['message' => $e->getMessage()], 400);
         }
     }
 
@@ -165,12 +165,12 @@ class BookInventoryController extends AbstractController
         BookCopyRepository $copyRepo
     ): JsonResponse {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
 
         $copy = $copyRepo->findOneBy(['inventoryCode' => $barcode]);
         if (!$copy) {
-            return $this->json(['error' => 'Nie znaleziono egzemplarza o tym kodzie kreskowym'], 404);
+            return $this->json(['message' => 'Nie znaleziono egzemplarza o tym kodzie kreskowym'], 404);
         }
 
         return $this->json([

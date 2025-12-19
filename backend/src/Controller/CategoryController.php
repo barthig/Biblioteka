@@ -42,7 +42,7 @@ class CategoryController extends AbstractController
 
             return $this->json($category, Response::HTTP_OK, [], ['groups' => ['book:read']]);
         } catch (\Symfony\Component\HttpKernel\Exception\NotFoundHttpException $e) {
-            return $this->json(['error' => $e->getMessage()], Response::HTTP_NOT_FOUND);
+            return $this->json(['message' => $e->getMessage()], Response::HTTP_NOT_FOUND);
         }
     }
 
@@ -52,7 +52,7 @@ class CategoryController extends AbstractController
         $data = json_decode($request->getContent(), true);
 
         if (empty($data['name'])) {
-            return $this->json(['error' => 'Name is required'], Response::HTTP_BAD_REQUEST);
+            return $this->json(['message' => 'Name is required'], Response::HTTP_BAD_REQUEST);
         }
 
         $command = new CreateCategoryCommand(name: $data['name']);
@@ -78,7 +78,7 @@ class CategoryController extends AbstractController
 
             return $this->json($category, Response::HTTP_OK, [], ['groups' => ['book:read']]);
         } catch (\Symfony\Component\HttpKernel\Exception\NotFoundHttpException $e) {
-            return $this->json(['error' => $e->getMessage()], Response::HTTP_NOT_FOUND);
+            return $this->json(['message' => $e->getMessage()], Response::HTTP_NOT_FOUND);
         }
     }
 
@@ -91,7 +91,7 @@ class CategoryController extends AbstractController
 
             return $this->json(null, Response::HTTP_NO_CONTENT);
         } catch (\Symfony\Component\HttpKernel\Exception\NotFoundHttpException $e) {
-            return $this->json(['error' => $e->getMessage()], Response::HTTP_NOT_FOUND);
+            return $this->json(['message' => $e->getMessage()], Response::HTTP_NOT_FOUND);
         }
     }
 }

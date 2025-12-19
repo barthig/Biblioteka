@@ -44,7 +44,7 @@ class ReservationController extends AbstractController
         if (!$isLibrarian) {
             $payload = $this->security->getJwtPayload($request);
             if (!$payload || !isset($payload['sub'])) {
-                return $this->json(['error' => 'Unauthorized'], 401);
+                return $this->json(['message' => 'Unauthorized'], 401);
             }
             $userId = (int)$payload['sub'];
             
@@ -75,7 +75,7 @@ class ReservationController extends AbstractController
     {
         $payload = $this->security->getJwtPayload($request);
         if (!$payload || !isset($payload['sub'])) {
-            return $this->json(['error' => 'Unauthorized'], 401);
+            return $this->json(['message' => 'Unauthorized'], 401);
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
@@ -103,11 +103,11 @@ class ReservationController extends AbstractController
             }
 
             if ($e instanceof HttpExceptionInterface) {
-                return $this->json(['error' => $e->getMessage()], $e->getStatusCode());
+                return $this->json(['message' => $e->getMessage()], $e->getStatusCode());
             }
 
             if ($e instanceof \InvalidArgumentException) {
-                return $this->json(['error' => $e->getMessage()], 400);
+                return $this->json(['message' => $e->getMessage()], 400);
             }
             
             // Log the full exception for debugging
@@ -121,10 +121,10 @@ class ReservationController extends AbstractController
                     'Masz już aktywną rezerwację na tę książkę' => 409,
                     default => 500
                 };
-                return $this->json(['error' => $e->getMessage()], $statusCode);
+                return $this->json(['message' => $e->getMessage()], $statusCode);
             }
             
-            return $this->json(['error' => 'Internal error: ' . $e->getMessage()], 500);
+            return $this->json(['message' => 'Internal error: ' . $e->getMessage()], 500);
         }
     }
 
@@ -132,14 +132,14 @@ class ReservationController extends AbstractController
     {
         error_log('ReservationController::cancel - id: ' . $id);
         if (!ctype_digit($id) || (int)$id <= 0) {
-            return $this->json(['error' => 'Invalid reservation id'], 400);
+            return $this->json(['message' => 'Invalid reservation id'], 400);
         }
 
         $payload = $this->security->getJwtPayload($request);
         $isLibrarian = $this->security->hasRole($request, 'ROLE_LIBRARIAN');
 
         if (!$payload || !isset($payload['sub'])) {
-            return $this->json(['error' => 'Unauthorized'], 401);
+            return $this->json(['message' => 'Unauthorized'], 401);
         }
 
         $userId = (int)$payload['sub'];
@@ -162,7 +162,7 @@ class ReservationController extends AbstractController
             }
 
             if ($e instanceof HttpExceptionInterface) {
-                return $this->json(['error' => $e->getMessage()], $e->getStatusCode());
+                return $this->json(['message' => $e->getMessage()], $e->getStatusCode());
             }
             
             if ($e instanceof \RuntimeException) {
@@ -180,22 +180,22 @@ class ReservationController extends AbstractController
                 if ($statusCode === 500 && str_contains($e->getMessage(), 'Cannot release copy')) {
                     $statusCode = 400;
                 }
-                return $this->json(['error' => $e->getMessage()], $statusCode);
+                return $this->json(['message' => $e->getMessage()], $statusCode);
             }
             
-            return $this->json(['error' => 'Internal error'], 500);
+            return $this->json(['message' => 'Internal error'], 500);
         }
     }
 
     public function fulfill(string $id, Request $request): JsonResponse
     {
         if (!ctype_digit($id) || (int)$id <= 0) {
-            return $this->json(['error' => 'Invalid reservation id'], 400);
+            return $this->json(['message' => 'Invalid reservation id'], 400);
         }
 
         $isLibrarian = $this->security->hasRole($request, 'ROLE_LIBRARIAN');
         if (!$isLibrarian) {
-            return $this->json(['error' => 'Only librarians can fulfill reservations'], 403);
+            return $this->json(['message' => 'Only librarians can fulfill reservations'], 403);
         }
 
         try {
@@ -216,7 +216,7 @@ class ReservationController extends AbstractController
                 ? $e->getStatusCode()
                 : 500;
 
-            return $this->json(['error' => $e->getMessage()], $statusCode);
+            return $this->json(['message' => $e->getMessage()], $statusCode);
         }
     }
 }

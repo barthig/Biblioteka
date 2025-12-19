@@ -23,14 +23,14 @@ class ReportController extends AbstractController
     public function usage(Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
 
         $from = $request->query->get('from');
         $to = $request->query->get('to');
 
         if (($from && !strtotime($from)) || ($to && !strtotime($to))) {
-            return $this->json(['error' => 'Invalid date range'], 400);
+            return $this->json(['message' => 'Invalid date range'], 400);
         }
 
         $envelope = $this->queryBus->dispatch(new GetUsageReportQuery($from, $to));
@@ -46,20 +46,20 @@ class ReportController extends AbstractController
     public function export(Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
 
         $format = $request->query->get('format');
         if ($format === null) {
-            return $this->json(['error' => 'Format query parameter is required'], 400);
+            return $this->json(['message' => 'Format query parameter is required'], 400);
         }
 
         if (!in_array($format, ['csv', 'json', 'pdf'], true)) {
-            return $this->json(['error' => 'Unsupported export format'], 422);
+            return $this->json(['message' => 'Unsupported export format'], 422);
         }
 
         if ($format === 'pdf' && $request->query->getBoolean('simulateFailure')) {
-            return $this->json(['error' => 'Failed to generate PDF report'], 500);
+            return $this->json(['message' => 'Failed to generate PDF report'], 500);
         }
 
         $content = match ($format) {
@@ -78,7 +78,7 @@ class ReportController extends AbstractController
     public function popularTitles(Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
 
         $limit = max(1, min(50, $request->query->getInt('limit', 10)));
@@ -93,7 +93,7 @@ class ReportController extends AbstractController
     public function patronSegments(Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
 
         $envelope = $this->queryBus->dispatch(new GetPatronSegmentsQuery());
@@ -105,7 +105,7 @@ class ReportController extends AbstractController
     public function financialSummary(Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
 
         $envelope = $this->queryBus->dispatch(new GetFinancialSummaryQuery());
@@ -117,7 +117,7 @@ class ReportController extends AbstractController
     public function inventoryOverview(Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
 
         $envelope = $this->queryBus->dispatch(new GetInventoryOverviewQuery());

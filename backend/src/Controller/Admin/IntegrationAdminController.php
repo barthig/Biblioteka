@@ -23,7 +23,7 @@ class IntegrationAdminController extends AbstractController
     public function list(Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_ADMIN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
 
         $envelope = $this->queryBus->dispatch(new ListIntegrationConfigsQuery(page: 1, limit: 200));
@@ -48,7 +48,7 @@ class IntegrationAdminController extends AbstractController
     public function create(Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_ADMIN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
@@ -58,7 +58,7 @@ class IntegrationAdminController extends AbstractController
         $enabled = isset($data['enabled']) ? (bool) $data['enabled'] : true;
 
         if ($name === '' || $provider === '') {
-            return $this->json(['error' => 'name and provider are required'], 400);
+            return $this->json(['message' => 'name and provider are required'], 400);
         }
 
         $command = new CreateIntegrationConfigCommand(
@@ -82,7 +82,7 @@ class IntegrationAdminController extends AbstractController
     public function update(int $id, Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_ADMIN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
@@ -109,7 +109,7 @@ class IntegrationAdminController extends AbstractController
     public function testConnection(int $id, Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_ADMIN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
 
         $configEnvelope = $this->queryBus->dispatch(new GetIntegrationConfigQuery(configId: $id));

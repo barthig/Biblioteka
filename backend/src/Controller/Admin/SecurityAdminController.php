@@ -18,7 +18,7 @@ class SecurityAdminController extends AbstractController
     public function createBackup(Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_ADMIN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
 
         $payload = $security->getJwtPayload($request);
@@ -37,7 +37,7 @@ class SecurityAdminController extends AbstractController
     public function listBackups(Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_ADMIN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
 
         $records = array_map(static function ($record): array {
@@ -55,7 +55,7 @@ class SecurityAdminController extends AbstractController
     public function viewLogs(Request $request, SecurityService $security, KernelInterface $kernel): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_ADMIN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
 
     $limit = max(1, min(200, $request->query->getInt('limit', 50)));

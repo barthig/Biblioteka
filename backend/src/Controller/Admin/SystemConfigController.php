@@ -27,7 +27,7 @@ class SystemConfigController extends AbstractController
     public function list(Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_ADMIN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
 
         $envelope = $this->queryBus->dispatch(new ListSystemSettingsQuery(page: 1, limit: 500));
@@ -49,7 +49,7 @@ class SystemConfigController extends AbstractController
     public function create(Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_ADMIN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
@@ -58,11 +58,11 @@ class SystemConfigController extends AbstractController
         $type = $data['type'] ?? SystemSetting::TYPE_STRING;
 
         if (!$key || $value === null) {
-            return $this->json(['error' => 'Key and value are required'], 400);
+            return $this->json(['message' => 'Key and value are required'], 400);
         }
 
         if ($this->settingsRepository->findOneByKey($key)) {
-            return $this->json(['error' => 'Setting already exists'], 409);
+            return $this->json(['message' => 'Setting already exists'], 409);
         }
 
         $command = new CreateSystemSettingCommand(
@@ -86,7 +86,7 @@ class SystemConfigController extends AbstractController
     public function update(string $key, Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_ADMIN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
 
         $settingEnvelope = $this->queryBus->dispatch(new GetSystemSettingByKeyQuery($key));

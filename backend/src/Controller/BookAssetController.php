@@ -33,7 +33,7 @@ class BookAssetController extends AbstractController
     public function list(int $id, Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
 
         try {
@@ -45,14 +45,14 @@ class BookAssetController extends AbstractController
             if ($response = $this->jsonFromHttpException($e)) {
                 return $response;
             }
-            return $this->json(['error' => $e->getMessage()], 404);
+            return $this->json(['message' => $e->getMessage()], 404);
         }
     }
 
     public function upload(int $id, Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
 
         $data = json_decode($request->getContent(), true) ?? [];
@@ -62,7 +62,7 @@ class BookAssetController extends AbstractController
         $content = isset($data['content']) && is_string($data['content']) ? $data['content'] : null;
 
         if ($content === null) {
-            return $this->json(['error' => 'Missing content payload (base64)'], 400);
+            return $this->json(['message' => 'Missing content payload (base64)'], 400);
         }
 
         try {
@@ -76,21 +76,21 @@ class BookAssetController extends AbstractController
                 $e = $e->getPrevious() ?? $e;
             }
             if ($e instanceof HttpExceptionInterface) {
-                return $this->json(['error' => $e->getMessage()], $e->getStatusCode());
+                return $this->json(['message' => $e->getMessage()], $e->getStatusCode());
             }
             $statusCode = match (true) {
                 str_contains($e->getMessage(), 'not found') => 404,
                 str_contains($e->getMessage(), 'Invalid base64 payload') => 400,
                 default => 500,
             };
-            return $this->json(['error' => $e->getMessage()], $statusCode);
+            return $this->json(['message' => $e->getMessage()], $statusCode);
         }
     }
 
     public function download(int $id, int $assetId, Request $request, SecurityService $security): BinaryFileResponse|JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
 
         try {
@@ -99,7 +99,7 @@ class BookAssetController extends AbstractController
             
             $path = $this->assetDirectory() . DIRECTORY_SEPARATOR . $asset->getStorageName();
             if (!is_file($path)) {
-                return $this->json(['error' => 'File has been removed from storage'], 410);
+                return $this->json(['message' => 'File has been removed from storage'], 410);
             }
 
             $response = new BinaryFileResponse($path);
@@ -115,14 +115,14 @@ class BookAssetController extends AbstractController
             if ($response = $this->jsonFromHttpException($e)) {
                 return $response;
             }
-            return $this->json(['error' => $e->getMessage()], 404);
+            return $this->json(['message' => $e->getMessage()], 404);
         }
     }
 
     public function delete(int $id, int $assetId, Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
 
         try {
@@ -133,7 +133,7 @@ class BookAssetController extends AbstractController
             if ($response = $this->jsonFromHttpException($e)) {
                 return $response;
             }
-            return $this->json(['error' => $e->getMessage()], 404);
+            return $this->json(['message' => $e->getMessage()], 404);
         }
     }
 

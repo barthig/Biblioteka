@@ -43,7 +43,6 @@ class ApiExceptionSubscriber implements EventSubscriberInterface
 
         $event->setResponse(new JsonResponse([
             'message' => $message,
-            'error' => $message,
         ], $statusCode));
     }
 

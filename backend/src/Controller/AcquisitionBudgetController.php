@@ -31,7 +31,7 @@ class AcquisitionBudgetController extends AbstractController
     public function list(Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
 
         $year = $request->query->get('year');
@@ -44,7 +44,7 @@ class AcquisitionBudgetController extends AbstractController
     public function create(Request $request, SecurityService $security, ValidatorInterface $validator): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
@@ -73,17 +73,17 @@ class AcquisitionBudgetController extends AbstractController
             if ($response = $this->jsonFromHttpException($e)) {
                 return $response;
             }
-            return $this->json(['error' => $e->getMessage()], 400);
+            return $this->json(['message' => $e->getMessage()], 400);
         }
     }
 
     public function update(string $id, Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
         if (!ctype_digit($id) || (int) $id <= 0) {
-            return $this->json(['error' => 'Invalid budget id'], 400);
+            return $this->json(['message' => 'Invalid budget id'], 400);
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
@@ -106,25 +106,25 @@ class AcquisitionBudgetController extends AbstractController
             if ($response = $this->jsonFromHttpException($e)) {
                 return $response;
             }
-            return $this->json(['error' => $e->getMessage()], 404);
+            return $this->json(['message' => $e->getMessage()], 404);
         }
     }
 
     public function addExpense(string $id, Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
         if (!ctype_digit($id) || (int) $id <= 0) {
-            return $this->json(['error' => 'Invalid budget id'], 400);
+            return $this->json(['message' => 'Invalid budget id'], 400);
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
         if (!isset($data['amount']) || !is_numeric($data['amount'])) {
-            return $this->json(['error' => 'Amount must be numeric'], 400);
+            return $this->json(['message' => 'Amount must be numeric'], 400);
         }
         if (empty($data['description'])) {
-            return $this->json(['error' => 'Description is required'], 400);
+            return $this->json(['message' => 'Description is required'], 400);
         }
 
         try {
@@ -146,17 +146,17 @@ class AcquisitionBudgetController extends AbstractController
                 return $response;
             }
             $statusCode = str_contains($e->getMessage(), 'not found') ? 404 : 400;
-            return $this->json(['error' => $e->getMessage()], $statusCode);
+            return $this->json(['message' => $e->getMessage()], $statusCode);
         }
     }
 
     public function summary(string $id, Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
         if (!ctype_digit($id) || (int) $id <= 0) {
-            return $this->json(['error' => 'Invalid budget id'], 400);
+            return $this->json(['message' => 'Invalid budget id'], 400);
         }
 
         try {
@@ -169,7 +169,7 @@ class AcquisitionBudgetController extends AbstractController
             if ($response = $this->jsonFromHttpException($e)) {
                 return $response;
             }
-            return $this->json(['error' => $e->getMessage()], 404);
+            return $this->json(['message' => $e->getMessage()], 404);
         }
     }
 }

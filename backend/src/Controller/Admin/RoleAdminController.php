@@ -27,7 +27,7 @@ class RoleAdminController extends AbstractController
     public function list(Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_ADMIN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
 
         $items = array_map(static function (StaffRole $role): array {
@@ -46,7 +46,7 @@ class RoleAdminController extends AbstractController
     public function create(Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_ADMIN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
@@ -55,11 +55,11 @@ class RoleAdminController extends AbstractController
         $modules = isset($data['modules']) && is_array($data['modules']) ? $data['modules'] : [];
 
         if ($name === '' || $roleKey === '') {
-            return $this->json(['error' => 'name and roleKey are required'], 400);
+            return $this->json(['message' => 'name and roleKey are required'], 400);
         }
 
         if ($this->roles->findOneBy(['name' => $name]) || $this->roles->findOneByRoleKey($roleKey)) {
-            return $this->json(['error' => 'Role already exists'], 409);
+            return $this->json(['message' => 'Role already exists'], 409);
         }
 
         $envelope = $this->commandBus->dispatch(new CreateStaffRoleCommand(
@@ -81,12 +81,12 @@ class RoleAdminController extends AbstractController
     public function update(string $roleKey, Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_ADMIN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
 
         $role = $this->roles->findOneByRoleKey($roleKey);
         if (!$role) {
-            return $this->json(['error' => 'Role not found'], 404);
+            return $this->json(['message' => 'Role not found'], 404);
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
@@ -109,24 +109,24 @@ class RoleAdminController extends AbstractController
     public function assign(string $roleKey, Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_ADMIN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
 
         $role = $this->roles->findOneByRoleKey($roleKey);
         if (!$role) {
-            return $this->json(['error' => 'Role not found'], 404);
+            return $this->json(['message' => 'Role not found'], 404);
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
         $userId = isset($data['userId']) ? (int) $data['userId'] : 0;
         if ($userId <= 0) {
-            return $this->json(['error' => 'Valid userId is required'], 400);
+            return $this->json(['message' => 'Valid userId is required'], 400);
         }
 
         /** @var User|null $user */
         $user = $this->users->find($userId);
         if (!$user) {
-            return $this->json(['error' => 'User not found'], 404);
+            return $this->json(['message' => 'User not found'], 404);
         }
 
         $roles = $user->getRoles();

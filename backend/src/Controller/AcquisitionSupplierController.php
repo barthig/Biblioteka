@@ -30,7 +30,7 @@ class AcquisitionSupplierController extends AbstractController
     public function list(Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
 
         $activeParam = $request->query->get('active');
@@ -49,7 +49,7 @@ class AcquisitionSupplierController extends AbstractController
     public function create(Request $request, SecurityService $security, ValidatorInterface $validator): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
@@ -62,7 +62,7 @@ class AcquisitionSupplierController extends AbstractController
 
         $activeFlag = filter_var($data['active'] ?? true, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
         if ($activeFlag === null) {
-            return $this->json(['error' => 'Invalid active flag'], 400);
+            return $this->json(['message' => 'Invalid active flag'], 400);
         }
 
         $command = new CreateSupplierCommand(
@@ -86,10 +86,10 @@ class AcquisitionSupplierController extends AbstractController
     public function update(string $id, Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
         if (!ctype_digit($id) || (int) $id <= 0) {
-            return $this->json(['error' => 'Invalid supplier id'], 400);
+            return $this->json(['message' => 'Invalid supplier id'], 400);
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
@@ -98,7 +98,7 @@ class AcquisitionSupplierController extends AbstractController
         if (isset($data['active'])) {
             $activeValue = filter_var($data['active'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
             if ($activeValue === null && $data['active'] !== null) {
-                return $this->json(['error' => 'Invalid active flag'], 400);
+                return $this->json(['message' => 'Invalid active flag'], 400);
             }
         }
 
@@ -125,17 +125,17 @@ class AcquisitionSupplierController extends AbstractController
             if ($response = $this->jsonFromHttpException($e)) {
                 return $response;
             }
-            return $this->json(['error' => $e->getMessage()], 404);
+            return $this->json(['message' => $e->getMessage()], 404);
         }
     }
 
     public function deactivate(string $id, Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
         if (!ctype_digit($id) || (int) $id <= 0) {
-            return $this->json(['error' => 'Invalid supplier id'], 400);
+            return $this->json(['message' => 'Invalid supplier id'], 400);
         }
 
         try {
@@ -148,7 +148,7 @@ class AcquisitionSupplierController extends AbstractController
             if ($response = $this->jsonFromHttpException($e)) {
                 return $response;
             }
-            return $this->json(['error' => $e->getMessage()], 404);
+            return $this->json(['message' => $e->getMessage()], 404);
         }
     }
 }

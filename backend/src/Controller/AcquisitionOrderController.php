@@ -31,7 +31,7 @@ class AcquisitionOrderController extends AbstractController
     public function list(Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
 
         $page = max(1, $request->query->getInt('page', 1));
@@ -65,7 +65,7 @@ class AcquisitionOrderController extends AbstractController
     public function create(Request $request, SecurityService $security, ValidatorInterface $validator): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
@@ -79,7 +79,7 @@ class AcquisitionOrderController extends AbstractController
         $budgetId = null;
         if (!empty($data['budgetId'])) {
             if (!ctype_digit((string) $data['budgetId'])) {
-                return $this->json(['error' => 'Invalid budgetId'], 400);
+                return $this->json(['message' => 'Invalid budgetId'], 400);
             }
             $budgetId = (int) $data['budgetId'];
         }
@@ -113,22 +113,22 @@ class AcquisitionOrderController extends AbstractController
             } elseif (str_contains($e->getMessage(), 'inactive') || str_contains($e->getMessage(), 'mismatch')) {
                 $statusCode = 409;
             }
-            return $this->json(['error' => $e->getMessage()], $statusCode);
+            return $this->json(['message' => $e->getMessage()], $statusCode);
         }
     }
 
     public function updateStatus(string $id, Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
         if (!ctype_digit($id) || (int) $id <= 0) {
-            return $this->json(['error' => 'Invalid order id'], 400);
+            return $this->json(['message' => 'Invalid order id'], 400);
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
         if (empty($data['status'])) {
-            return $this->json(['error' => 'Status is required'], 400);
+            return $this->json(['message' => 'Status is required'], 400);
         }
 
         try {
@@ -152,17 +152,17 @@ class AcquisitionOrderController extends AbstractController
                 return $response;
             }
             $statusCode = str_contains($e->getMessage(), 'not found') ? 404 : 409;
-            return $this->json(['error' => $e->getMessage()], $statusCode);
+            return $this->json(['message' => $e->getMessage()], $statusCode);
         }
     }
 
     public function receive(string $id, Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
         if (!ctype_digit($id) || (int) $id <= 0) {
-            return $this->json(['error' => 'Invalid order id'], 400);
+            return $this->json(['message' => 'Invalid order id'], 400);
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
@@ -186,17 +186,17 @@ class AcquisitionOrderController extends AbstractController
             if ($response = $this->jsonFromHttpException($e)) {
                 return $response;
             }
-            return $this->json(['error' => $e->getMessage()], 404);
+            return $this->json(['message' => $e->getMessage()], 404);
         }
     }
 
     public function cancel(string $id, Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
         if (!ctype_digit($id) || (int) $id <= 0) {
-            return $this->json(['error' => 'Invalid order id'], 400);
+            return $this->json(['message' => 'Invalid order id'], 400);
         }
 
         try {
@@ -208,7 +208,7 @@ class AcquisitionOrderController extends AbstractController
                 return $response;
             }
             $statusCode = str_contains($e->getMessage(), 'not found') ? 404 : 409;
-            return $this->json(['error' => $e->getMessage()], $statusCode);
+            return $this->json(['message' => $e->getMessage()], $statusCode);
         }
     }
 }

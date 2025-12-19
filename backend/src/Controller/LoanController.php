@@ -51,10 +51,10 @@ class LoanController extends AbstractController
                 'No copies available' => 409,
                 default => 500
             };
-            return $this->json(['error' => $e->getMessage()], $statusCode);
+            return $this->json(['message' => $e->getMessage()], $statusCode);
         }
         
-        return $this->json(['error' => 'Internal error'], 500);
+        return $this->json(['message' => 'Internal error'], 500);
     }
 
     public function list(Request $request): JsonResponse
@@ -70,7 +70,7 @@ class LoanController extends AbstractController
         if (!$isLibrarian) {
             $payload = $this->security->getJwtPayload($request);
             if (!$payload || !isset($payload['sub'])) {
-                return $this->json(['error' => 'Unauthorized'], 401);
+                return $this->json(['message' => 'Unauthorized'], 401);
             }
             $userId = (int)$payload['sub'];
         }
@@ -93,7 +93,7 @@ class LoanController extends AbstractController
     public function getLoan(string $id, Request $request): JsonResponse
     {
         if (!ctype_digit($id) || (int)$id <= 0) {
-            return $this->json(['error' => 'Invalid id parameter'], 400);
+            return $this->json(['message' => 'Invalid id parameter'], 400);
         }
 
         $payload = $this->security->getJwtPayload($request);
@@ -111,7 +111,7 @@ class LoanController extends AbstractController
             $loan = $envelope->last(HandledStamp::class)->getResult();
 
             if (!$loan) {
-                return $this->json(['error' => 'Loan not found'], 404);
+                return $this->json(['message' => 'Loan not found'], 404);
             }
 
             return $this->json(['data' => $loan], 200, [], ['groups' => ['loan:read']]);
@@ -124,7 +124,7 @@ class LoanController extends AbstractController
     {
         $payload = $this->security->getJwtPayload($request);
         if ($payload === null) {
-            return $this->json(['error' => 'Unauthorized'], 401);
+            return $this->json(['message' => 'Unauthorized'], 401);
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
@@ -138,7 +138,7 @@ class LoanController extends AbstractController
         $isLibrarian = $this->security->hasRole($request, 'ROLE_LIBRARIAN');
         if (!$isLibrarian) {
             if (!isset($payload['sub']) || (int)$payload['sub'] !== (int)$dto->userId) {
-                return $this->json(['error' => 'Forbidden'], 403);
+                return $this->json(['message' => 'Forbidden'], 403);
             }
         }
 
@@ -162,7 +162,7 @@ class LoanController extends AbstractController
     public function listByUser(string $id, Request $request): JsonResponse
     {
         if (!ctype_digit($id) || (int)$id <= 0) {
-            return $this->json(['error' => 'Invalid id parameter'], 400);
+            return $this->json(['message' => 'Invalid id parameter'], 400);
         }
 
         $userId = (int)$id;
@@ -171,7 +171,7 @@ class LoanController extends AbstractController
         $isOwner = $payload && isset($payload['sub']) && (int)$payload['sub'] === $userId;
 
         if (!($isLibrarian || $isOwner)) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
 
         $page = max(1, $request->query->getInt('page', 1));
@@ -196,12 +196,12 @@ class LoanController extends AbstractController
     public function returnLoan(string $id, Request $request): JsonResponse
     {
         if (!ctype_digit($id) || (int)$id <= 0) {
-            return $this->json(['error' => 'Invalid id parameter'], 400);
+            return $this->json(['message' => 'Invalid id parameter'], 400);
         }
 
         $payload = $this->security->getJwtPayload($request);
         if (!$payload || !isset($payload['sub'])) {
-            return $this->json(['error' => 'Unauthorized'], 401);
+            return $this->json(['message' => 'Unauthorized'], 401);
         }
 
         $userId = (int)$payload['sub'];
@@ -219,7 +219,7 @@ class LoanController extends AbstractController
             $loan = $loanEnvelope->last(HandledStamp::class)->getResult();
             
             if (!$loan) {
-                return $this->json(['error' => 'Loan not found'], 404);
+                return $this->json(['message' => 'Loan not found'], 404);
             }
         } catch (\Throwable $e) {
             return $this->handleException($e);
@@ -244,12 +244,12 @@ class LoanController extends AbstractController
     {
         error_log('LoanController::extend - id: ' . $id);
         if (!ctype_digit($id) || (int)$id <= 0) {
-            return $this->json(['error' => 'Invalid id parameter'], 400);
+            return $this->json(['message' => 'Invalid id parameter'], 400);
         }
 
         $payload = $this->security->getJwtPayload($request);
         if (!$payload || !isset($payload['sub'])) {
-            return $this->json(['error' => 'Unauthorized'], 401);
+            return $this->json(['message' => 'Unauthorized'], 401);
         }
 
         $userId = (int)$payload['sub'];
@@ -269,7 +269,7 @@ class LoanController extends AbstractController
             
             if (!$loan) {
                 error_log('LoanController::extend - loan not found');
-                return $this->json(['error' => 'Loan not found'], 404);
+                return $this->json(['message' => 'Loan not found'], 404);
             }
             error_log('LoanController::extend - loan found, dispatching ExtendLoanCommand');
         } catch (\Throwable $e) {
@@ -297,11 +297,11 @@ class LoanController extends AbstractController
     public function delete(string $id, Request $request): JsonResponse
     {
         if (!$this->security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
 
         if (!ctype_digit($id) || (int) $id <= 0) {
-            return $this->json(['error' => 'Invalid loan id'], 400);
+            return $this->json(['message' => 'Invalid loan id'], 400);
         }
 
         $command = new DeleteLoanCommand(loanId: (int)$id);

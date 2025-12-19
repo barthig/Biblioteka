@@ -19,11 +19,11 @@ trait ExceptionHandlingTrait
     protected function jsonFromHttpException(\Throwable $e): ?JsonResponse
     {
         if ($e instanceof HttpExceptionInterface) {
-            return $this->json(['error' => $e->getMessage()], $e->getStatusCode());
+            return $this->json(['message' => $e->getMessage()], $e->getStatusCode());
         }
 
         if ($e instanceof \InvalidArgumentException) {
-            return $this->json(['error' => $e->getMessage()], 400);
+            return $this->json(['message' => $e->getMessage()], 400);
         }
 
         return null;

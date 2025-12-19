@@ -27,7 +27,7 @@ trait ValidationTrait
             }
         }
         
-        return $this->json(['errors' => $messages], 400);
+        return $this->json(['message' => 'Validation failed', 'errors' => $messages], 400);
     }
 
     /**

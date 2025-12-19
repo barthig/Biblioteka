@@ -39,7 +39,7 @@ class FineController extends AbstractController
 
         if (!$isLibrarian) {
             if (!$payload || !isset($payload['sub'])) {
-                return $this->json(['error' => 'Unauthorized'], 401);
+                return $this->json(['message' => 'Unauthorized'], 401);
             }
             $userId = (int) $payload['sub'];
         }
@@ -63,7 +63,7 @@ class FineController extends AbstractController
     public function create(Request $request, ValidatorInterface $validator): JsonResponse
     {
         if (!$this->security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
@@ -97,14 +97,14 @@ class FineController extends AbstractController
                 'Loan not found' => 404,
                 default => 500
             };
-            return $this->json(['error' => $e->getMessage()], $statusCode);
+            return $this->json(['message' => $e->getMessage()], $statusCode);
         }
     }
 
     public function pay(string $id, Request $request): JsonResponse
     {
         if (!ctype_digit($id) || (int) $id <= 0) {
-            return $this->json(['error' => 'Invalid fine id'], 400);
+            return $this->json(['message' => 'Invalid fine id'], 400);
         }
 
         $payload = $this->security->getJwtPayload($request);
@@ -135,17 +135,17 @@ class FineController extends AbstractController
                 'Forbidden' => 403,
                 default => 500
             };
-            return $this->json(['error' => $e->getMessage()], $statusCode);
+            return $this->json(['message' => $e->getMessage()], $statusCode);
         }
     }
 
     public function cancel(string $id, Request $request): JsonResponse
     {
         if (!$this->security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
         if (!ctype_digit($id) || (int) $id <= 0) {
-            return $this->json(['error' => 'Invalid fine id'], 400);
+            return $this->json(['message' => 'Invalid fine id'], 400);
         }
 
         $command = new CancelFineCommand(fineId: (int) $id);
@@ -163,7 +163,7 @@ class FineController extends AbstractController
                 'Cannot cancel a paid fine' => 400,
                 default => 500
             };
-            return $this->json(['error' => $e->getMessage()], $statusCode);
+            return $this->json(['message' => $e->getMessage()], $statusCode);
         }
     }
 }

@@ -36,7 +36,7 @@ class AccountController extends AbstractController
     {
         $userId = $this->security->getCurrentUserId($request);
         if ($userId === null) {
-            return $this->json(['error' => 'Unauthorized'], 401);
+            return $this->json(['message' => 'Unauthorized'], 401);
         }
 
         $envelope = $this->queryBus->dispatch(new GetAccountDetailsQuery($userId));
@@ -49,7 +49,7 @@ class AccountController extends AbstractController
     {
         $userId = $this->security->getCurrentUserId($request);
         if ($userId === null) {
-            return $this->json(['error' => 'Unauthorized'], 401);
+            return $this->json(['message' => 'Unauthorized'], 401);
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
@@ -80,7 +80,7 @@ class AccountController extends AbstractController
                 $e = $e->getPrevious() ?? $e;
             }
             if ($e instanceof HttpExceptionInterface) {
-                return $this->json(['error' => $e->getMessage()], $e->getStatusCode());
+                return $this->json(['message' => $e->getMessage()], $e->getStatusCode());
             }
             $statusCode = match (true) {
                 str_contains($e->getMessage(), 'User not found') => 404,
@@ -88,7 +88,7 @@ class AccountController extends AbstractController
                 str_contains($e->getMessage(), 'cannot be empty') => 400,
                 default => 500
             };
-            return $this->json(['error' => $e->getMessage()], $statusCode);
+            return $this->json(['message' => $e->getMessage()], $statusCode);
         }
     }
 
@@ -96,7 +96,7 @@ class AccountController extends AbstractController
     {
         $userId = $this->security->getCurrentUserId($request);
         if ($userId === null) {
-            return $this->json(['error' => 'Unauthorized'], 401);
+            return $this->json(['message' => 'Unauthorized'], 401);
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
@@ -122,13 +122,13 @@ class AccountController extends AbstractController
                 $e = $e->getPrevious() ?? $e;
             }
             if ($e instanceof HttpExceptionInterface) {
-                return $this->json(['error' => $e->getMessage()], $e->getStatusCode());
+                return $this->json(['message' => $e->getMessage()], $e->getStatusCode());
             }
             $statusCode = match (true) {
                 str_contains($e->getMessage(), 'User not found') => 404,
                 default => 400
             };
-            return $this->json(['error' => $e->getMessage()], $statusCode);
+            return $this->json(['message' => $e->getMessage()], $statusCode);
         }
     }
 
@@ -154,7 +154,7 @@ class AccountController extends AbstractController
     {
         $userId = $this->security->getCurrentUserId($request);
         if ($userId === null) {
-            return $this->json(['error' => 'Unauthorized'], 401);
+            return $this->json(['message' => 'Unauthorized'], 401);
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
@@ -173,7 +173,7 @@ class AccountController extends AbstractController
     {
         $userId = $this->security->getCurrentUserId($request);
         if ($userId === null) {
-            return $this->json(['error' => 'Unauthorized'], 401);
+            return $this->json(['message' => 'Unauthorized'], 401);
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
@@ -195,7 +195,7 @@ class AccountController extends AbstractController
     {
         $userId = $this->security->getCurrentUserId($request);
         if ($userId === null) {
-            return $this->json(['error' => 'Unauthorized'], 401);
+            return $this->json(['message' => 'Unauthorized'], 401);
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
@@ -213,13 +213,13 @@ class AccountController extends AbstractController
     {
         $userId = $this->security->getCurrentUserId($request);
         if ($userId === null) {
-            return $this->json(['error' => 'Unauthorized'], 401);
+            return $this->json(['message' => 'Unauthorized'], 401);
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
 
         if (!isset($data['currentPin']) || !isset($data['newPin'])) {
-            return $this->json(['error' => 'Current PIN and new PIN are required'], 400);
+            return $this->json(['message' => 'Current PIN and new PIN are required'], 400);
         }
         try {
             $this->commandBus->dispatch(new UpdateAccountPinCommand(
@@ -228,7 +228,7 @@ class AccountController extends AbstractController
                 newPin: (string) $data['newPin']
             ));
         } catch (\RuntimeException|HttpExceptionInterface $e) {
-            return $this->json(['error' => $e->getMessage()], $e->getStatusCode() ?? 400);
+            return $this->json(['message' => $e->getMessage()], $e->getStatusCode() ?? 400);
         }
 
         return $this->json(['message' => 'PIN updated']);
@@ -239,7 +239,7 @@ class AccountController extends AbstractController
     {
         $userId = $this->security->getCurrentUserId($request);
         if ($userId === null) {
-            return $this->json(['error' => 'Unauthorized'], 401);
+            return $this->json(['message' => 'Unauthorized'], 401);
         }
 
         $data = json_decode($request->getContent(), true) ?: [];

@@ -25,7 +25,7 @@ class RegistrationController extends AbstractController
         // Rate limiting - max 3 rejestracje na godzinę z tego samego IP
         $limiter = $this->registrationAttemptsLimiter->create($request->getClientIp());
         if (!$limiter->consume(1)->isAccepted()) {
-            return $this->json(['error' => 'Zbyt wiele prób rejestracji. Spróbuj ponownie później.'], 429);
+            return $this->json(['message' => 'Zbyt wiele prób rejestracji. Spróbuj ponownie później.'], 429);
         }
         
         $data = json_decode($request->getContent(), true) ?: [];
@@ -63,9 +63,9 @@ class RegistrationController extends AbstractController
                 $status = 400;
             }
 
-            return $this->json(['error' => $exception->getMessage()], $status);
+            return $this->json(['message' => $exception->getMessage()], $status);
         } catch (\Throwable $error) {
-            return $this->json(['error' => 'Nie udało się utworzyć konta.'], 500);
+            return $this->json(['message' => 'Nie udało się utworzyć konta.'], 500);
         }
 
         return $this->json([
@@ -85,9 +85,9 @@ class RegistrationController extends AbstractController
                 $status = 400;
             }
 
-            return $this->json(['error' => $exception->getMessage()], $status);
+            return $this->json(['message' => $exception->getMessage()], $status);
         } catch (\Throwable $error) {
-            return $this->json(['error' => 'Nie udało się zweryfikować konta.'], 500);
+            return $this->json(['message' => 'Nie udało się zweryfikować konta.'], 500);
         }
 
         $response = [

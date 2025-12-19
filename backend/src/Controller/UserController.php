@@ -29,7 +29,7 @@ class UserController extends AbstractController
     {
         // Only librarians can list all users
         if (!$this->security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
 
         $users = array_values(array_filter(
@@ -43,7 +43,7 @@ class UserController extends AbstractController
     {
         // validate id — should be positive integer
         if (!ctype_digit($id) || (int)$id <= 0) {
-            return $this->json(['error' => 'Invalid id parameter'], 400);
+            return $this->json(['message' => 'Invalid id parameter'], 400);
         }
         
         $userId = (int)$id;
@@ -51,12 +51,12 @@ class UserController extends AbstractController
         
         // Users can only see their own profile unless they're librarians
         if ($currentUserId !== $userId && !$this->security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
 
         $user = $repo->find($userId);
         if (!$user) {
-            return $this->json(['error' => 'User not found'], 404);
+            return $this->json(['message' => 'User not found'], 404);
         }
         
         return $this->json($user, 200, [], ['groups' => ['user:read']]);
@@ -66,7 +66,7 @@ class UserController extends AbstractController
     public function search(UserRepository $repo, Request $request): JsonResponse
     {
         if (!$this->security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
 
         $query = $request->query->get('q', '');
@@ -82,11 +82,11 @@ class UserController extends AbstractController
     public function getUserDetails(string $id, Request $request): JsonResponse
     {
         if (!$this->security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
 
         if (!ctype_digit($id) || (int)$id <= 0) {
-            return $this->json(['error' => 'Invalid id parameter'], 400);
+            return $this->json(['message' => 'Invalid id parameter'], 400);
         }
 
         try {
@@ -100,7 +100,7 @@ class UserController extends AbstractController
             if ($response = $this->jsonFromHttpException($e)) {
                 return $response;
             }
-            return $this->json(['error' => $e->getMessage()], 404);
+            return $this->json(['message' => $e->getMessage()], 404);
         }
     }
 
@@ -108,13 +108,13 @@ class UserController extends AbstractController
     public function update(string $id, UserRepository $repo, Request $request): JsonResponse
     {
         if (!$this->security->hasRole($request, 'ROLE_ADMIN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
 
         $userId = (int)$id;
         $user = $repo->find($userId);
         if (!$user) {
-            return $this->json(['error' => 'User not found'], 404);
+            return $this->json(['message' => 'User not found'], 404);
         }
 
         $data = json_decode($request->getContent(), true);
@@ -144,7 +144,7 @@ class UserController extends AbstractController
     public function delete(string $id, UserRepository $repo, Request $request): JsonResponse
     {
         if (!$this->security->hasRole($request, 'ROLE_ADMIN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
 
         $userId = (int)$id;
@@ -152,12 +152,12 @@ class UserController extends AbstractController
         
         // Prevent admin from deleting themselves
         if ($userId === $currentUserId) {
-            return $this->json(['error' => 'Cannot delete your own account'], 400);
+            return $this->json(['message' => 'Cannot delete your own account'], 400);
         }
 
         $user = $repo->find($userId);
         if (!$user) {
-            return $this->json(['error' => 'User not found'], 404);
+            return $this->json(['message' => 'User not found'], 404);
         }
 
         $repo->remove($user, true);

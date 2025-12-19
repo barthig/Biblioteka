@@ -37,7 +37,7 @@ class AuthController extends AbstractController
                 foreach ($errors as $error) {
                     $messages[] = $error->getMessage();
                 }
-                return $this->json(['error' => implode(', ', $messages)], 400);
+                return $this->json(['message' => implode(', ', $messages)], 400);
             }
 
             $email = $loginRequest->email;
@@ -47,9 +47,9 @@ class AuthController extends AbstractController
             if (!$user || !password_verify($password, $user->getPassword())) {
                 $limit = $limiter->consume(1);
                 if (!$limit->isAccepted()) {
-                    return $this->json(['error' => 'Zbyt wiele prób logowania. Spróbuj ponownie za 15 minut.'], 429);
+                    return $this->json(['message' => 'Zbyt wiele prób logowania. Spróbuj ponownie za 15 minut.'], 429);
                 }
-                return $this->json(['error' => 'Invalid credentials'], 401);
+                return $this->json(['message' => 'Invalid credentials'], 401);
             }
 
             // Successful login resets limiter attempts
@@ -59,15 +59,15 @@ class AuthController extends AbstractController
 
             $appEnv = getenv('APP_ENV') ?: ($_ENV['APP_ENV'] ?? null);
             if ($appEnv !== 'test' && !$user->isVerified()) {
-                return $this->json(['error' => 'Account not verified'], 403);
+                return $this->json(['message' => 'Account not verified'], 403);
             }
 
             if ($user->isPendingApproval()) {
-                return $this->json(['error' => 'Account awaiting librarian approval'], 403);
+                return $this->json(['message' => 'Account awaiting librarian approval'], 403);
             }
 
             if ($user->isBlocked()) {
-                return $this->json(['error' => 'Account is blocked'], 403);
+                return $this->json(['message' => 'Account is blocked'], 403);
             }
 
             $token = JwtService::createToken([
@@ -87,7 +87,7 @@ class AuthController extends AbstractController
                     'file' => $refreshError->getFile(),
                     'line' => $refreshError->getLine(),
                 ]);
-                return $this->json(['error' => 'Failed to create session. Please try again.'], 500);
+                return $this->json(['message' => 'Failed to create session. Please try again.'], 500);
             }
             
             return $this->json([
@@ -103,7 +103,7 @@ class AuthController extends AbstractController
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
             ]);
-            return $this->json(['error' => 'Wystąpił błąd logowania'], 500);
+            return $this->json(['message' => 'Wystąpił błąd logowania'], 500);
         }
     }
 
@@ -111,17 +111,17 @@ class AuthController extends AbstractController
     {
         $payload = $request->attributes->get('jwt_payload');
         if (!$payload) {
-            return $this->json(['error' => 'Unauthorized'], 401);
+            return $this->json(['message' => 'Unauthorized'], 401);
         }
 
         $userId = $payload['sub'] ?? null;
         if (!$userId) {
-            return $this->json(['error' => 'Invalid token'], 401);
+            return $this->json(['message' => 'Invalid token'], 401);
         }
 
         $user = $repo->find($userId);
         if (!$user) {
-            return $this->json(['error' => 'User not found'], 404);
+            return $this->json(['message' => 'User not found'], 404);
         }
 
         return $this->json($user, 200, [], ['groups' => ['user:read']]);
@@ -133,13 +133,13 @@ class AuthController extends AbstractController
         $refreshTokenString = $data['refreshToken'] ?? null;
 
         if (!$refreshTokenString) {
-            return $this->json(['error' => 'Refresh token is required'], 400);
+            return $this->json(['message' => 'Refresh token is required'], 400);
         }
 
         $user = $this->refreshTokenService->validateRefreshToken($refreshTokenString);
 
         if (!$user) {
-            return $this->json(['error' => 'Invalid or expired refresh token'], 401);
+            return $this->json(['message' => 'Invalid or expired refresh token'], 401);
         }
 
         $this->refreshTokenService->revokeRefreshToken($refreshTokenString);
@@ -148,7 +148,7 @@ class AuthController extends AbstractController
             $newRefreshToken = $this->refreshTokenService->createRefreshToken($user, $request);
             $newRefreshTokenString = $newRefreshToken->getToken();
         } catch (\Throwable $e) {
-            return $this->json(['error' => 'Failed to rotate refresh token'], 500);
+            return $this->json(['message' => 'Failed to rotate refresh token'], 500);
         }
 
         $token = JwtService::createToken([
@@ -182,12 +182,12 @@ class AuthController extends AbstractController
     {
         $payload = $request->attributes->get('jwt_payload');
         if (!$payload) {
-            return $this->json(['error' => 'Unauthorized'], 401);
+            return $this->json(['message' => 'Unauthorized'], 401);
         }
 
         $user = $userRepository->find($payload['sub']);
         if (!$user) {
-            return $this->json(['error' => 'User not found'], 404);
+            return $this->json(['message' => 'User not found'], 404);
         }
 
         $count = $this->refreshTokenService->revokeAllUserTokens($user);

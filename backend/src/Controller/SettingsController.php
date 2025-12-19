@@ -22,11 +22,11 @@ class SettingsController extends AbstractController
     public function getSettings(Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
 
         if ($request->query->getBoolean('integrationsDown', false)) {
-            return $this->json(['error' => 'Integration service unavailable'], 503);
+            return $this->json(['message' => 'Integration service unavailable'], 503);
         }
 
         $settings = $this->settingsService->getAll();
@@ -43,12 +43,12 @@ class SettingsController extends AbstractController
     public function updateSettings(Request $request, SecurityService $security, ValidatorInterface $validator): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['error' => 'Forbidden'], 403);
+            return $this->json(['message' => 'Forbidden'], 403);
         }
 
         $payload = json_decode($request->getContent(), true);
         if (!is_array($payload)) {
-            return $this->json(['error' => 'Invalid JSON payload'], 400);
+            return $this->json(['message' => 'Invalid JSON payload'], 400);
         }
         
         // Walidacja DTO
@@ -63,7 +63,7 @@ class SettingsController extends AbstractController
         if (array_key_exists('loanLimitPerUser', $payload)) {
             $limit = (int)$payload['loanLimitPerUser'];
             if ($limit < 1 || $limit > 20) {
-                return $this->json(['error' => 'loanLimitPerUser must be between 1 and 20'], 422);
+                return $this->json(['message' => 'loanLimitPerUser must be between 1 and 20'], 422);
             }
             $toUpdate['loanLimitPerUser'] = $limit;
         }
@@ -71,7 +71,7 @@ class SettingsController extends AbstractController
         if (array_key_exists('loanDurationDays', $payload)) {
             $duration = (int)$payload['loanDurationDays'];
             if ($duration < 7 || $duration > 60) {
-                return $this->json(['error' => 'loanDurationDays must be between 7 and 60'], 422);
+                return $this->json(['message' => 'loanDurationDays must be between 7 and 60'], 422);
             }
             $toUpdate['loanDurationDays'] = $duration;
         }
@@ -81,7 +81,7 @@ class SettingsController extends AbstractController
         }
 
         if ($request->headers->get('X-Config-Service') === 'offline') {
-            return $this->json(['error' => 'Configuration backend unavailable'], 503);
+            return $this->json(['message' => 'Configuration backend unavailable'], 503);
         }
 
         // Update settings in database

@@ -33,8 +33,11 @@ class ApiResponseNormalizationSubscriber implements EventSubscriberInterface
         }
 
         $modified = false;
-        if (isset($data['error']) && !isset($data['message'])) {
-            $data['message'] = $data['error'];
+        if (isset($data['error'])) {
+            if (!isset($data['message'])) {
+                $data['message'] = $data['error'];
+            }
+            unset($data['error']);
             $modified = true;
         }
 

@@ -32,7 +32,7 @@ class FavoriteController extends AbstractController
     {
         $payload = $this->security->getJwtPayload($request);
         if (!$payload || !isset($payload['sub'])) {
-            return $this->json(['error' => 'Unauthorized'], 401);
+            return $this->json(['message' => 'Unauthorized'], 401);
         }
 
         $query = new ListUserFavoritesQuery(userId: (int) $payload['sub']);
@@ -46,7 +46,7 @@ class FavoriteController extends AbstractController
     {
         $payload = $this->security->getJwtPayload($request);
         if (!$payload || !isset($payload['sub'])) {
-            return $this->json(['error' => 'Unauthorized'], 401);
+            return $this->json(['message' => 'Unauthorized'], 401);
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
@@ -71,7 +71,7 @@ class FavoriteController extends AbstractController
                 $e = $e->getPrevious() ?? $e;
             }
             if ($e instanceof HttpExceptionInterface) {
-                return $this->json(['error' => $e->getMessage()], $e->getStatusCode());
+                return $this->json(['message' => $e->getMessage()], $e->getStatusCode());
             }
 
             $statusCode = match ($e->getMessage()) {
@@ -79,19 +79,19 @@ class FavoriteController extends AbstractController
                 'Ksi????ka znajduje si?? ju?? na Twojej p????ce' => 409,
                 default => 500
             };
-            return $this->json(['error' => $e->getMessage()], $statusCode);
+            return $this->json(['message' => $e->getMessage()], $statusCode);
         }
     }
 
     public function remove(string $bookId, Request $request): JsonResponse
     {
         if (!ctype_digit($bookId) || (int) $bookId <= 0) {
-            return $this->json(['error' => 'Invalid book id'], 400);
+            return $this->json(['message' => 'Invalid book id'], 400);
         }
 
         $payload = $this->security->getJwtPayload($request);
         if (!$payload || !isset($payload['sub'])) {
-            return $this->json(['error' => 'Unauthorized'], 401);
+            return $this->json(['message' => 'Unauthorized'], 401);
         }
 
         // Note: RemoveFavoriteCommand uses favoriteId, but the route uses bookId
@@ -111,7 +111,7 @@ class FavoriteController extends AbstractController
         }
 
         if (!$favorite) {
-            return $this->json(['error' => 'Pozycja nie znajduje si?? na Twojej p????ce'], 404);
+            return $this->json(['message' => 'Pozycja nie znajduje si?? na Twojej p????ce'], 404);
         }
 
         $command = new RemoveFavoriteCommand(
@@ -127,7 +127,7 @@ class FavoriteController extends AbstractController
                 $e = $e->getPrevious() ?? $e;
             }
             if ($e instanceof HttpExceptionInterface) {
-                return $this->json(['error' => $e->getMessage()], $e->getStatusCode());
+                return $this->json(['message' => $e->getMessage()], $e->getStatusCode());
             }
 
             $statusCode = match ($e->getMessage()) {
@@ -135,7 +135,7 @@ class FavoriteController extends AbstractController
                 'You can only remove your own favorites' => 403,
                 default => 500
             };
-            return $this->json(['error' => $e->getMessage()], $statusCode);
+            return $this->json(['message' => $e->getMessage()], $statusCode);
         }
     }
 }

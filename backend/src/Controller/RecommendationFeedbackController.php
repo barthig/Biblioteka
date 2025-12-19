@@ -23,7 +23,7 @@ class RecommendationFeedbackController extends AbstractController
     {
         $userId = $this->security->getCurrentUserId($request);
         if (!$userId) {
-            return $this->json(['error' => 'Unauthorized'], 401);
+            return $this->json(['message' => 'Unauthorized'], 401);
         }
 
         $data = json_decode($request->getContent(), true);
@@ -31,11 +31,11 @@ class RecommendationFeedbackController extends AbstractController
         $feedbackType = $data['feedbackType'] ?? null;
 
         if (!$bookId || !$feedbackType) {
-            return $this->json(['error' => 'bookId and feedbackType are required'], 400);
+            return $this->json(['message' => 'bookId and feedbackType are required'], 400);
         }
 
         if (!in_array($feedbackType, [RecommendationFeedback::TYPE_DISMISS, RecommendationFeedback::TYPE_INTERESTED])) {
-            return $this->json(['error' => 'Invalid feedbackType'], 400);
+            return $this->json(['message' => 'Invalid feedbackType'], 400);
         }
 
         $this->commandBus->dispatch(new UpsertRecommendationFeedbackCommand(
@@ -56,7 +56,7 @@ class RecommendationFeedbackController extends AbstractController
     {
         $userId = $this->security->getCurrentUserId($request);
         if (!$userId) {
-            return $this->json(['error' => 'Unauthorized'], 401);
+            return $this->json(['message' => 'Unauthorized'], 401);
         }
 
         $this->commandBus->dispatch(new RemoveRecommendationFeedbackCommand($userId, $bookId));
