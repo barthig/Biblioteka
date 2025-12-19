@@ -106,10 +106,6 @@ class ImportIsbnMetadataCommand extends Command
         $headers = null;
         foreach ($lines as $line) {
              $row = str_getcsv($line, $delimiter, '"', '\\');
-            if ($row === null) {
-                continue;
-            }
-
             if ($headers === null) {
                 $headers = array_map('trim', $row);
                 continue;

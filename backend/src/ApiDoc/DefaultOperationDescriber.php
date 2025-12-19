@@ -3,6 +3,8 @@ namespace App\ApiDoc;
 
 use Nelmio\ApiDocBundle\Describer\DescriberInterface;
 use Nelmio\ApiDocBundle\OpenApiPhp\Util;
+use OpenApi\Annotations\JsonContent;
+use OpenApi\Annotations\MediaType;
 use OpenApi\Annotations\OpenApi;
 use OpenApi\Annotations\Operation;
 use OpenApi\Generator;
@@ -16,7 +18,7 @@ class DefaultOperationDescriber implements DescriberInterface
         }
 
         foreach ($api->paths as $pathItem) {
-            if (!isset($pathItem->path) || Generator::isDefault($pathItem->path)) {
+            if (Generator::isDefault($pathItem->path)) {
                 continue;
             }
 
@@ -29,6 +31,7 @@ class DefaultOperationDescriber implements DescriberInterface
 
             foreach ($pathItem->operations() as $operation) {
                 $this->applyDefaults($operation, $tagName, $path);
+                $this->applyResponseSchemas($operation, $path);
             }
         }
     }
@@ -44,6 +47,101 @@ class DefaultOperationDescriber implements DescriberInterface
             $operation->summary = sprintf('%s %s', $method, $path);
         }
     }
+
+    private function applyResponseSchemas(Operation $operation, string $path): void
+    {
+        if (Generator::isDefault($operation->responses)) {
+            return;
+        }
+
+        foreach ($operation->responses as $response) {
+            if (Generator::isDefault($response->response)) {
+                continue;
+            }
+
+            $code = (string) $response->response;
+            if ($code === '204') {
+                continue;
+            }
+
+            if ($this->hasJsonContent($response)) {
+                continue;
+            }
+
+            $schemaRef = $this->schemaForResponse($operation, $path, $code);
+
+            $schemaObject = (object) ['$ref' => $schemaRef];
+            $response->content = [
+                new MediaType([
+                    'mediaType' => 'application/json',
+                    'schema' => $schemaObject,
+                ]),
+            ];
+        }
+    }
+
+    private function hasJsonContent(object $response): bool
+    {
+        if (!Generator::isDefault($response->content)) {
+            if ($response->content instanceof JsonContent) {
+                return true;
+            }
+            if ($response->content instanceof MediaType && $response->content->mediaType === 'application/json') {
+                return true;
+            }
+            if (is_array($response->content)) {
+                foreach ($response->content as $content) {
+                    if ($content instanceof JsonContent) {
+                        return true;
+                    }
+                    if ($content instanceof MediaType && $content->mediaType === 'application/json') {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        if (!Generator::isDefault($response->_unmerged)) {
+            foreach ($response->_unmerged as $content) {
+                if ($content instanceof JsonContent) {
+                    return true;
+                }
+                if ($content instanceof MediaType && $content->mediaType === 'application/json') {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private function schemaForResponse(Operation $operation, string $path, string $code): string
+    {
+        if ($code[0] === '4' || $code[0] === '5') {
+            if ($code === '400' || $code === '422') {
+                return '#/components/schemas/ValidationErrorResponse';
+            }
+
+            return '#/components/schemas/ErrorResponse';
+        }
+
+        if ($code[0] !== '2') {
+            return '#/components/schemas/MessageResponse';
+        }
+
+        $method = Generator::isDefault($operation->method) ? '' : strtoupper((string) $operation->method);
+        if ($method === 'DELETE') {
+            return '#/components/schemas/MessageResponse';
+        }
+
+        $hasPathParam = str_contains($path, '{');
+        if ($method === 'GET' && !$hasPathParam) {
+            return '#/components/schemas/ListResponse';
+        }
+
+        return '#/components/schemas/ItemResponse';
+    }
+
 
     private function guessTagName(string $path): string
     {

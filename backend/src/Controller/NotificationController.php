@@ -23,10 +23,6 @@ class NotificationController extends AbstractController
             ['id' => 2, 'type' => 'sms', 'target' => '+48123123123', 'message' => 'Nowa rezerwacja do odebrania'],
         ];
 
-        if (empty($notifications)) {
-            return new JsonResponse(null, 204);
-        }
-
         return $this->json($notifications, 200);
     }
 

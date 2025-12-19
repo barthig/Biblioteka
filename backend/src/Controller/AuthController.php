@@ -53,9 +53,7 @@ class AuthController extends AbstractController
             }
 
             // Successful login resets limiter attempts
-            if (method_exists($limiter, 'reset')) {
-                $limiter->reset();
-            }
+            $limiter->reset();
 
             $appEnv = getenv('APP_ENV') ?: ($_ENV['APP_ENV'] ?? null);
             if ($appEnv !== 'test' && !$user->isVerified()) {

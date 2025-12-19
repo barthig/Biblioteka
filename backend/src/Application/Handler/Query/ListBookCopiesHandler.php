@@ -33,8 +33,8 @@ class ListBookCopiesHandler
                 'accessType' => $copy->getAccessType(),
                 'location' => $copy->getLocation(),
                 'conditionState' => $copy->getConditionState(),
-                'createdAt' => $copy->getCreatedAt()?->format(DATE_ATOM),
-                'updatedAt' => $copy->getUpdatedAt()?->format(DATE_ATOM),
+                'createdAt' => $copy->getCreatedAt()->format(DATE_ATOM),
+                'updatedAt' => $copy->getUpdatedAt()->format(DATE_ATOM),
             ];
         }
 

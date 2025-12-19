@@ -104,7 +104,7 @@ class FavoriteController extends AbstractController
 
         $favorite = null;
         foreach ($favorites as $fav) {
-            if ($fav instanceof Favorite && $fav->getBook()?->getId() === (int) $bookId) {
+            if ($fav instanceof Favorite && $fav->getBook()->getId() === (int) $bookId) {
                 $favorite = $fav;
                 break;
             }

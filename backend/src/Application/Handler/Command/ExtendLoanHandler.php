@@ -46,7 +46,10 @@ class ExtendLoanHandler
         $loanDurationDays = $this->settingsService->getLoanDurationDays();
 
         $currentDue = $loan->getDueAt();
-        $newDue = $currentDue->modify("+{$loanDurationDays} days");
+        $dueBase = $currentDue instanceof \DateTimeImmutable
+            ? $currentDue
+            : \DateTimeImmutable::createFromMutable($currentDue);
+        $newDue = $dueBase->modify("+{$loanDurationDays} days");
         $loan->setDueAt($newDue);
         $loan->incrementExtensions();
         $loan->setLastExtendedAt(new \DateTimeImmutable());

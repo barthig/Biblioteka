@@ -246,6 +246,64 @@ nelmio_api_doc:
               type: string
               format: date-time
               nullable: true
+        PaginationMeta:
+          type: object
+          properties:
+            page:
+              type: integer
+              example: 1
+            limit:
+              type: integer
+              example: 20
+            total:
+              type: integer
+              example: 120
+            totalPages:
+              type: integer
+              example: 6
+        ListResponse:
+          type: object
+          properties:
+            data:
+              type: array
+              items:
+                type: object
+            meta:
+              $ref: '#/components/schemas/PaginationMeta'
+        ItemResponse:
+          type: object
+          properties:
+            data:
+              type: object
+        MessageResponse:
+          type: object
+          properties:
+            message:
+              type: string
+              example: OK
+        ErrorResponse:
+          type: object
+          properties:
+            message:
+              type: string
+              example: Something went wrong
+        ValidationErrorResponse:
+          type: object
+          properties:
+            message:
+              type: string
+              example: Validation failed
+            errors:
+              type: array
+              items:
+                type: object
+                properties:
+                  field:
+                    type: string
+                    example: title
+                  message:
+                    type: string
+                    example: This value should not be blank.
     security:
       - BearerAuth: []
       - ApiSecret: []

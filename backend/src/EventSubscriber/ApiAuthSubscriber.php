@@ -5,6 +5,7 @@ use App\Repository\UserRepository;
 use App\Service\JwtService;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 
@@ -76,7 +77,7 @@ class ApiAuthSubscriber implements EventSubscriberInterface
         $event->setResponse(new JsonResponse(['message' => 'Unauthorized'], 401));
     }
 
-    private function attachJwtPayload($request): ?bool
+    private function attachJwtPayload(Request $request): ?bool
     {
         $auth = $request->headers->get('authorization');
         if (!$auth || stripos($auth, 'bearer ') !== 0) {

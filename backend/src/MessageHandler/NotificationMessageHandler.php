@@ -105,6 +105,7 @@ class NotificationMessageHandler
                 'sms' => $this->sender->sendSms($user, $content),
                 default => ['status' => 'skipped', 'error' => 'unsupported_channel'],
             };
+            $status = $result['status'];
 
             $log = (new NotificationLog())
                 ->setUser($user)
@@ -112,7 +113,7 @@ class NotificationMessageHandler
                 ->setChannel($channel)
                 ->setFingerprint($message->getFingerprint())
                 ->setPayload($payload)
-                ->setStatus(strtoupper($result['status'] ?? 'sent'))
+                ->setStatus(strtoupper($status))
                 ->setErrorMessage($result['error'] ?? null);
 
             $this->em->persist($log);

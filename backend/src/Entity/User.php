@@ -251,6 +251,12 @@ class User
         return $this->blockedReason;
     }
 
+    public function setBlockedReason(?string $reason): self
+    {
+        $this->blockedReason = $reason !== null ? $this->truncateReason($reason) : null;
+        return $this;
+    }
+
     public function getCreatedAt(): \DateTimeImmutable
     {
         return $this->createdAt;

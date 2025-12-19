@@ -59,24 +59,16 @@ class CacheInvalidationSubscriber implements EventSubscriber
 
         // Invalidate cache when loans change
         if ($entity instanceof Loan) {
-            if ($entity->getBook()) {
-                $this->bookCacheService->invalidateBookAvailability($entity->getBook()->getId());
-            }
+            $this->bookCacheService->invalidateBookAvailability($entity->getBook()->getId());
             $this->statisticsCacheService->invalidateDashboard();
-            if ($entity->getUser()) {
-                $this->statisticsCacheService->invalidateUserStats($entity->getUser()->getId());
-            }
+            $this->statisticsCacheService->invalidateUserStats($entity->getUser()->getId());
         }
 
         // Invalidate cache when reservations change
         if ($entity instanceof Reservation) {
-            if ($entity->getBook()) {
-                $this->bookCacheService->invalidateBookAvailability($entity->getBook()->getId());
-            }
+            $this->bookCacheService->invalidateBookAvailability($entity->getBook()->getId());
             $this->statisticsCacheService->invalidateDashboard();
-            if ($entity->getUser()) {
-                $this->statisticsCacheService->invalidateUserStats($entity->getUser()->getId());
-            }
+            $this->statisticsCacheService->invalidateUserStats($entity->getUser()->getId());
         }
     }
 }

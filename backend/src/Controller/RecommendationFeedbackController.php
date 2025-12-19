@@ -4,7 +4,6 @@ namespace App\Controller;
 use App\Application\Command\Recommendation\RemoveRecommendationFeedbackCommand;
 use App\Application\Command\Recommendation\UpsertRecommendationFeedbackCommand;
 use App\Entity\RecommendationFeedback;
-use App\Repository\BookRepository;
 use App\Service\SecurityService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -15,7 +14,6 @@ class RecommendationFeedbackController extends AbstractController
 {
     public function __construct(
         private readonly SecurityService $security,
-        private readonly BookRepository $bookRepo,
         private readonly MessageBusInterface $commandBus
     ) {}
 

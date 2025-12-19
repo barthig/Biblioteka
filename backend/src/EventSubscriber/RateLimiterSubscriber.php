@@ -45,21 +45,24 @@ class RateLimiterSubscriber implements EventSubscriberInterface
 
         // Determine if user is authenticated
         $user = $request->attributes->get('_security_user');
-        $identifier = $user ? 'user_' . $user->getId() : $request->getClientIp();
-        
-        // Choose appropriate limiter
-        $limiter = $user 
-            ? $this->authenticatedApiLimiter->create($identifier)
-            : $this->anonymousApiLimiter->create($identifier);
+        $identifier = $request->getClientIp();
+        $limiter = $this->anonymousApiLimiter->create($identifier);
+        if ($user instanceof \App\Entity\User) {
+            $identifier = 'user_' . $user->getId();
+            $limiter = $this->authenticatedApiLimiter->create($identifier);
+        }
 
         // Consume a token
         $limit = $limiter->consume(1);
 
         // Add rate limit headers
+        $retryAfter = $limit->getRetryAfter();
+        $retryAfterTimestamp = $retryAfter->getTimestamp();
+
         $event->getRequest()->attributes->set('rate_limit', [
             'limit' => $limit->getLimit(),
             'remaining' => $limit->getRemainingTokens(),
-            'reset' => $limit->getRetryAfter()?->getTimestamp(),
+            'reset' => $retryAfterTimestamp,
         ]);
 
         // Check if limit is exceeded
@@ -67,13 +70,13 @@ class RateLimiterSubscriber implements EventSubscriberInterface
             $response = new JsonResponse([
                 'error' => 'Too Many Requests',
                 'message' => 'Rate limit exceeded. Please try again later.',
-                'retry_after' => $limit->getRetryAfter()?->getTimestamp(),
+                'retry_after' => $retryAfterTimestamp,
             ], Response::HTTP_TOO_MANY_REQUESTS);
 
             $response->headers->set('X-RateLimit-Limit', (string) $limit->getLimit());
             $response->headers->set('X-RateLimit-Remaining', '0');
-            $response->headers->set('X-RateLimit-Reset', (string) $limit->getRetryAfter()?->getTimestamp());
-            $response->headers->set('Retry-After', (string) $limit->getRetryAfter()?->format(\DateTimeInterface::RFC7231));
+            $response->headers->set('X-RateLimit-Reset', (string) $retryAfterTimestamp);
+            $response->headers->set('Retry-After', (string) $retryAfter->format(\DateTimeInterface::RFC7231));
 
             $event->setResponse($response);
         }

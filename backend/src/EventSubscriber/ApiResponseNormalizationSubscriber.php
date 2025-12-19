@@ -23,7 +23,7 @@ class ApiResponseNormalizationSubscriber implements EventSubscriberInterface
 
         $response = $event->getResponse();
         $content = $response->getContent();
-        if ($content === null || $content === '') {
+        if ($content === false || $content === '') {
             return;
         }
 

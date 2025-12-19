@@ -30,11 +30,7 @@ class VectorType extends Type
         }
 
         if (!is_array($value)) {
-            throw ConversionException::conversionFailedInvalidType(
-                $value,
-                self::NAME,
-                ['array', 'string', 'null']
-            );
+            throw new ConversionException(sprintf('Could not convert value to %s type.', self::NAME));
         }
 
         $floats = array_map(static fn ($v) => (float) $v, $value);

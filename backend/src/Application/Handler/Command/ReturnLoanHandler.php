@@ -102,7 +102,7 @@ class ReturnLoanHandler
             if ($reservationForNotification) {
                 try {
                     $expiresAt = $reservationForNotification->getExpiresAt();
-                    $expiresAtIso = ($expiresAt ?? new \DateTimeImmutable('+2 days'))->format(DATE_ATOM);
+                    $expiresAtIso = $expiresAt->format(DATE_ATOM);
                     $this->bus->dispatch(new ReservationReadyMessage(
                         $reservationForNotification->getId(),
                         $reservationForNotification->getUser()->getId(),

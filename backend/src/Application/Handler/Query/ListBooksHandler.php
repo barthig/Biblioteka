@@ -22,6 +22,11 @@ class ListBooksHandler
 
     public function __invoke(ListBooksQuery $query): array
     {
+        $available = $query->available;
+        if (is_string($available)) {
+            $available = filter_var($available, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+        }
+
         $filters = [
             'q' => $query->q,
             'authorId' => $query->authorId,
@@ -32,7 +37,7 @@ class ListBooksHandler
             'yearFrom' => $query->yearFrom,
             'yearTo' => $query->yearTo,
             'ageGroup' => $query->ageGroup,
-            'available' => $query->available,
+            'available' => $available,
             'page' => $query->page,
             'limit' => $query->limit,
         ];
@@ -44,7 +49,7 @@ class ListBooksHandler
         if (!empty($books)) {
             $bookIds = [];
             foreach ($books as $book) {
-                if ($book instanceof Book && $book->getId() !== null) {
+                if ($book->getId() !== null) {
                     $bookIds[] = $book->getId();
                 }
             }
@@ -53,8 +58,9 @@ class ListBooksHandler
                 $ratingStats = $this->ratingRepository->getRatingStatsForBooks($bookIds);
                 
                 foreach ($books as $book) {
-                    if ($book instanceof Book && $book->getId() !== null && isset($ratingStats[$book->getId()])) {
-                        $stats = $ratingStats[$book->getId()];
+                    $bookId = $book->getId();
+                    if ($bookId !== null && isset($ratingStats[$bookId])) {
+                        $stats = $ratingStats[$bookId];
                         if ($stats['avg'] !== null) {
                             $book->setAverageRating($stats['avg']);
                         }
@@ -74,7 +80,8 @@ class ListBooksHandler
                 if (!empty($favoriteBookIds)) {
                     $favoriteLookup = array_flip($favoriteBookIds);
                     foreach ($books as $book) {
-                        if ($book instanceof Book && $book->getId() !== null && isset($favoriteLookup[$book->getId()])) {
+                        $bookId = $book->getId();
+                        if ($bookId !== null && isset($favoriteLookup[$bookId])) {
                             $book->setIsFavorite(true);
                         }
                     }

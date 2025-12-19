@@ -26,9 +26,7 @@ class DeleteLoanHandler
 
         // Restore available copy when deleting loan
         $book = $loan->getBook();
-        if ($book) {
-            $book->setCopies($book->getCopies() + 1);
-        }
+        $book->setCopies($book->getCopies() + 1);
 
         $this->entityManager->remove($loan);
         $this->entityManager->flush();

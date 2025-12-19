@@ -225,59 +225,55 @@ class AppFixtures extends Fixture
         $manager->flush();
 
         // Seed acquisition order and expense
-        if (!empty($books)) {
-            $order = (new AcquisitionOrder())
-                ->setSupplier($supplierA)
-                ->setBudget($budget2025)
-                ->setTitle('Nowości wydawnicze - styczeń')
-                ->setDescription('Zakup nowości do działu literatury pięknej i naukowej')
-                ->setItems([
-                    ['title' => 'Nowa era AI', 'quantity' => 10, 'unitPrice' => 45.50],
-                    ['title' => 'Historia regionu', 'quantity' => 6, 'unitPrice' => 52.00],
-                ])
-                ->setCurrency('PLN')
-                ->setTotalAmount('986.00')
-                ->markOrdered()
-                ->setExpectedAt((new \DateTimeImmutable())->modify('+14 days'));
+        $order = (new AcquisitionOrder())
+            ->setSupplier($supplierA)
+            ->setBudget($budget2025)
+            ->setTitle('Nowo?>ci wydawnicze - stycze?"')
+            ->setDescription('Zakup nowo?>ci do dzia?u literatury pi?tknej i naukowej')
+            ->setItems([
+                ['title' => 'Nowa era AI', 'quantity' => 10, 'unitPrice' => 45.50],
+                ['title' => 'Historia regionu', 'quantity' => 6, 'unitPrice' => 52.00],
+            ])
+            ->setCurrency('PLN')
+            ->setTotalAmount('986.00')
+            ->markOrdered()
+            ->setExpectedAt((new \DateTimeImmutable())->modify('+14 days'));
 
-            $manager->persist($order);
-            $manager->flush();
+        $manager->persist($order);
+        $manager->flush();
 
-            $expense = (new AcquisitionExpense())
-                ->setBudget($budget2025)
-                ->setOrder($order)
-                ->setAmount('986.00')
-                ->setCurrency('PLN')
-                ->setDescription('Zakup nowości wydawniczych - faktura FV/01/2025')
-                ->setType(AcquisitionExpense::TYPE_ORDER);
+        $expense = (new AcquisitionExpense())
+            ->setBudget($budget2025)
+            ->setOrder($order)
+            ->setAmount('986.00')
+            ->setCurrency('PLN')
+            ->setDescription('Zakup nowo?>ci wydawniczych - faktura FV/01/2025')
+            ->setType(AcquisitionExpense::TYPE_ORDER);
 
-            $budget2025->registerExpense('986.00');
+        $budget2025->registerExpense('986.00');
 
-            $manager->persist($expense);
-            $manager->persist($budget2025);
-            $manager->flush();
-        }
+        $manager->persist($expense);
+        $manager->persist($budget2025);
+        $manager->flush();
 
         // Sample weeding record
-        if (!empty($books)) {
-            $firstBook = $books[0];
-            $firstCopy = $firstBook->getInventory()->first() ?: null;
-            if ($firstCopy instanceof BookCopy) {
-                $firstCopy->setStatus(BookCopy::STATUS_WITHDRAWN)->setConditionState('Zniszczony egzemplarz');
-                $firstBook->recalculateInventoryCounters();
+        $firstBook = $books[0];
+        $firstCopy = $firstBook->getInventory()->first() ?: null;
+        if ($firstCopy instanceof BookCopy) {
+            $firstCopy->setStatus(BookCopy::STATUS_WITHDRAWN)->setConditionState('Zniszczony egzemplarz');
+            $firstBook->recalculateInventoryCounters();
 
-                $weeding = (new WeedingRecord())
-                    ->setBook($firstBook)
-                    ->setBookCopy($firstCopy)
-                    ->setProcessedBy($users[0] ?? null)
-                    ->setReason('Uszkodzenia uniemożliwiające wypożyczenia')
-                    ->setAction(WeedingRecord::ACTION_DISCARD)
-                    ->setNotes('Wycofano podczas przeglądu rocznego');
+            $weeding = (new WeedingRecord())
+                ->setBook($firstBook)
+                ->setBookCopy($firstCopy)
+                ->setProcessedBy($users[0])
+                ->setReason('Uszkodzenia uniemo??liwiaj??ce wypo??yczenia')
+                ->setAction(WeedingRecord::ACTION_DISCARD)
+                ->setNotes('Wycofano podczas przegl??du rocznego');
 
-                $manager->persist($firstCopy);
-                $manager->persist($firstBook);
-                $manager->persist($weeding);
-            }
+            $manager->persist($firstCopy);
+            $manager->persist($firstBook);
+            $manager->persist($weeding);
         }
 
         $manager->flush();

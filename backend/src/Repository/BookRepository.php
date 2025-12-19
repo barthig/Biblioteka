@@ -94,12 +94,12 @@ class BookRepository extends ServiceEntityRepository
             $parameters['term'] = $normalized;
         }
 
-        if (isset($filters['authorId']) && $filters['authorId'] !== '' && $filters['authorId'] !== null) {
+        if (isset($filters['authorId'])) {
             $idsQb->andWhere('a.id = :authorId');
             $parameters['authorId'] = (int) $filters['authorId'];
         }
 
-        if (isset($filters['categoryId']) && $filters['categoryId'] !== '' && $filters['categoryId'] !== null) {
+        if (isset($filters['categoryId'])) {
             $idsQb->andWhere('c.id = :categoryId');
             $parameters['categoryId'] = (int) $filters['categoryId'];
         }
@@ -112,7 +112,7 @@ class BookRepository extends ServiceEntityRepository
             }
         }
 
-        if (isset($filters['resourceType']) && $filters['resourceType'] !== '' && $filters['resourceType'] !== null) {
+        if (isset($filters['resourceType'])) {
             $idsQb->andWhere('b.resourceType = :resourceType');
             $parameters['resourceType'] = (string) $filters['resourceType'];
         }
@@ -125,24 +125,24 @@ class BookRepository extends ServiceEntityRepository
             }
         }
 
-        if (isset($filters['yearFrom']) && $filters['yearFrom'] !== null && $filters['yearFrom'] !== '') {
+        if (isset($filters['yearFrom'])) {
             $idsQb->andWhere('b.publicationYear >= :yearFrom');
             $parameters['yearFrom'] = (int) $filters['yearFrom'];
         }
 
-        if (isset($filters['yearTo']) && $filters['yearTo'] !== null && $filters['yearTo'] !== '') {
+        if (isset($filters['yearTo'])) {
             $idsQb->andWhere('b.publicationYear <= :yearTo');
             $parameters['yearTo'] = (int) $filters['yearTo'];
         }
 
-        if (isset($filters['ageGroup']) && $filters['ageGroup'] !== '' && $filters['ageGroup'] !== null) {
+        if (isset($filters['ageGroup'])) {
             $idsQb->andWhere('b.targetAgeGroup = :ageGroup');
             $parameters['ageGroup'] = (string) $filters['ageGroup'];
         }
 
         if (array_key_exists('available', $filters)) {
             $value = $filters['available'];
-            if ($value === true || $value === 1 || $value === '1' || $value === 'true') {
+            if ($value === true) {
                 $idsQb->andWhere('b.copies > 0');
             }
         }

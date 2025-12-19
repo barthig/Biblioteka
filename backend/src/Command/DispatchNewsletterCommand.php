@@ -81,7 +81,7 @@ class DispatchNewsletterCommand extends Command
         ];
 
         foreach ($recipients as $user) {
-            $io->writeln(sprintf('Dispatching newsletter to %s (#%d)', $user->getEmail() ?? 'user without email', $user->getId()), OutputInterface::VERBOSITY_VERBOSE);
+            $io->writeln(sprintf('Dispatching newsletter to %s (#%d)', $user->getEmail(), $user->getId()), OutputInterface::VERBOSITY_VERBOSE);
             foreach ($channels as $channel) {
                 $result = $this->sendForChannel($channel, $user, $content);
                 $stats[$this->mapStatusKey($result['status'] ?? 'sent')]++;

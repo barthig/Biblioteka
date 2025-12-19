@@ -51,7 +51,7 @@ class RatingController extends AbstractController
 
         return $this->json([
             'average' => $avgRating ? round($avgRating, 2) : 0,
-            'count' => $ratingCount ?? 0,
+            'count' => $ratingCount,
             'userRating' => $userRating,
             'ratings' => array_map(fn(Rating $r) => [
                 'id' => $r->getId(),
@@ -138,7 +138,7 @@ class RatingController extends AbstractController
                 'book' => [
                     'id' => $r->getBook()->getId(),
                     'title' => $r->getBook()->getTitle(),
-                    'author' => $r->getBook()->getAuthor()?->getName(),
+                    'author' => $r->getBook()->getAuthor()->getName(),
                 ],
                 'createdAt' => $r->getCreatedAt()->format('Y-m-d H:i:s'),
                 'updatedAt' => $r->getUpdatedAt()?->format('Y-m-d H:i:s'),

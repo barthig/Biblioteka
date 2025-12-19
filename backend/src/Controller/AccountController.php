@@ -228,7 +228,7 @@ class AccountController extends AbstractController
                 newPin: (string) $data['newPin']
             ));
         } catch (\RuntimeException|HttpExceptionInterface $e) {
-            return $this->json(['message' => $e->getMessage()], $e->getStatusCode() ?? 400);
+            return $this->json(['message' => $e->getMessage()], $e->getStatusCode());
         }
 
         return $this->json(['message' => 'PIN updated']);

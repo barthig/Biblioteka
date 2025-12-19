@@ -117,7 +117,7 @@ class UserController extends AbstractController
             return $this->json(['message' => 'User not found'], 404);
         }
 
-        $data = json_decode($request->getContent(), true);
+        $data = json_decode($request->getContent(), true) ?? [];
         
         if (isset($data['name'])) {
             $user->setName($data['name']);
@@ -132,7 +132,11 @@ class UserController extends AbstractController
         }
         
         if (isset($data['active']) && is_bool($data['active'])) {
-            $user->setActive($data['active']);
+            if ($data['active']) {
+                $user->unblock();
+            } else {
+                $user->block('Deactivated by admin');
+            }
         }
 
         $repo->save($user, true);

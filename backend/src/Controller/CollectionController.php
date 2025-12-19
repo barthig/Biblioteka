@@ -5,7 +5,6 @@ use App\Application\Command\Collection\CreateCollectionCommand;
 use App\Application\Command\Collection\UpdateCollectionCommand;
 use App\Application\Command\Collection\DeleteCollectionCommand;
 use App\Entity\BookCollection;
-use App\Repository\BookRepository;
 use App\Repository\CollectionRepository;
 use App\Service\SecurityService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -19,7 +18,6 @@ class CollectionController extends AbstractController
     public function __construct(
         private readonly SecurityService $security,
         private readonly CollectionRepository $collectionRepo,
-        private readonly BookRepository $bookRepo,
         private readonly MessageBusInterface $commandBus
     ) {}
 

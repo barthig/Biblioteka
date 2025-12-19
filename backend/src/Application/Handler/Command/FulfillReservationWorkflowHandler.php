@@ -52,7 +52,7 @@ class FulfillReservationWorkflowHandler
             $loanEnvelope = $this->commandBus->dispatch(
                 new CreateLoanCommand(
                     userId: $reservation->getUser()->getId(),
-                    bookId: $copy->getBook()?->getId() ?? 0,
+                    bookId: $copy->getBook()->getId(),
                     reservationId: $reservation->getId(),
                     bookCopyId: $copy->getId()
                 )

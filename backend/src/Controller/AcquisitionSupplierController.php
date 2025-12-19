@@ -95,9 +95,9 @@ class AcquisitionSupplierController extends AbstractController
         $data = json_decode($request->getContent(), true) ?: [];
 
         $activeValue = null;
-        if (isset($data['active'])) {
+        if (array_key_exists('active', $data)) {
             $activeValue = filter_var($data['active'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
-            if ($activeValue === null && $data['active'] !== null) {
+            if ($activeValue === null) {
                 return $this->json(['message' => 'Invalid active flag'], 400);
             }
         }
