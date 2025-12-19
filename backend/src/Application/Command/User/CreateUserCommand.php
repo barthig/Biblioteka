@@ -7,6 +7,7 @@ class CreateUserCommand
         public readonly string $email,
         public readonly string $name,
         public readonly string $password,
+        /** @var string[] */
         public readonly array $roles = ['ROLE_USER'],
         public readonly ?string $membershipGroup = null,
         public readonly ?int $loanLimit = null,

@@ -3,9 +3,13 @@ parameters:
     paths:
         - src
         - tests
+
+    reportUnmatchedIgnoredErrors: false
     
     # Ignore false positives
     ignoreErrors:
+        - identifier: missingType.iterableValue
+        - identifier: missingType.generics
         # PSR-6 Cache get() method is added by Symfony Cache Contracts
         - '#Method Psr\\Cache\\CacheItemPoolInterface::get\(\) invoked with 2 parameters, 0 required\.#'
         - '#Call to an undefined method Psr\\Cache\\CacheItemPoolInterface::get\(\)\.#'

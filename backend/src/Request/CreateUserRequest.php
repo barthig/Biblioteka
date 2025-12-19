@@ -23,6 +23,7 @@ class CreateUserRequest
     public ?string $password = null;
 
     #[Assert\Type('array')]
+    /** @var string[] */
     public array $roles = [];
 
     #[Assert\Length(max: 30)]

@@ -5,6 +5,9 @@ use App\Entity\RegistrationToken;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
+/**
+ * @extends ServiceEntityRepository<RegistrationToken>
+ */
 class RegistrationTokenRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)

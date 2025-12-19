@@ -17,6 +17,9 @@ class DeleteRatingHandler
     ) {
     }
 
+    /**
+     * @return array{averageRating: float|null, ratingCount: int}
+     */
     public function __invoke(DeleteRatingCommand $command): array
     {
         $rating = $this->ratingRepository->find($command->ratingId);

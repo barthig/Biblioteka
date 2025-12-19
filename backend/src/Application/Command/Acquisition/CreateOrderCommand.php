@@ -11,6 +11,7 @@ class CreateOrderCommand
         public readonly string $currency,
         public readonly ?string $description,
         public readonly ?string $referenceNumber,
+        /** @var array<int, array<string, mixed>>|null */
         public readonly ?array $items,
         public readonly ?string $expectedAt,
         public readonly ?string $status

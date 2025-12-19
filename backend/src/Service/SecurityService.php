@@ -7,7 +7,7 @@ class SecurityService
 {
     /**
      * Return JWT payload attached by ApiAuthSubscriber, if any.
-     * @return array|null
+     * @return array<string, mixed>|null
      */
     public function getJwtPayload(Request $request): ?array
     {
@@ -17,6 +17,7 @@ class SecurityService
 
     /**
      * Check whether the request identity has any of the expected roles.
+     * @param string[] $roles
      */
     public function hasAnyRole(Request $request, array $roles): bool
     {

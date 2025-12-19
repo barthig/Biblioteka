@@ -2,6 +2,8 @@
 
 namespace App\Tests\Functional\Security;
 
+use App\Entity\RefreshToken;
+use App\Service\RefreshTokenService;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -41,7 +43,7 @@ class AuthSecurityTest extends WebTestCase
                     'Login should be rate limited after 5 attempts');
                 
                 $data = json_decode($this->client->getResponse()->getContent(), true);
-                $this->assertStringContainsString('Zbyt wiele', $data['error']);
+                $this->assertStringContainsString('Zbyt wiele', $data['message'] ?? '');
             }
         }
     }
@@ -51,11 +53,27 @@ class AuthSecurityTest extends WebTestCase
      */
     public function testLoginFailsWhenRefreshTokenCreationFails(): void
     {
-        // This test would require mocking the RefreshTokenService
-        // to simulate a failure scenario
-        $this->markTestIncomplete(
-            'Requires mocking RefreshTokenService to simulate failure'
-        );
+        static::ensureKernelShutdown();
+        $client = static::createClient();
+        $container = static::getContainer();
+        $mock = $this->createMock(RefreshTokenService::class);
+        $mock->method('createRefreshToken')
+            ->willThrowException(new \RuntimeException('Refresh token failure'));
+        $container->set(RefreshTokenService::class, $mock);
+
+        $client->request('POST', '/api/auth/login', [], [], [
+            'CONTENT_TYPE' => 'application/json',
+        ], json_encode([
+            'email' => 'verified@example.com',
+            'password' => 'password123'
+        ]));
+
+        $this->assertEquals(500, $client->getResponse()->getStatusCode(),
+            'Login should return 500 when refresh token creation fails');
+
+        $data = json_decode($client->getResponse()->getContent(), true);
+        $this->assertStringContainsString('Failed to create session', $data['message'] ?? '');
+        static::ensureKernelShutdown();
     }
 
     /**
@@ -165,11 +183,27 @@ class AuthSecurityTest extends WebTestCase
      */
     public function testLoginReturns500OnRefreshTokenFailure(): void
     {
-        // This would require database to be unavailable or
-        // mocking the EntityManager to throw an exception
-        $this->markTestIncomplete(
-            'Requires database failure simulation or mocking'
-        );
+        static::ensureKernelShutdown();
+        $client = static::createClient();
+        $container = static::getContainer();
+        $mock = $this->createMock(RefreshTokenService::class);
+        $mock->method('createRefreshToken')
+            ->willThrowException(new \RuntimeException('Refresh token failure'));
+        $container->set(RefreshTokenService::class, $mock);
+
+        $client->request('POST', '/api/auth/login', [], [], [
+            'CONTENT_TYPE' => 'application/json',
+        ], json_encode([
+            'email' => 'verified@example.com',
+            'password' => 'password123'
+        ]));
+
+        $this->assertEquals(500, $client->getResponse()->getStatusCode(),
+            'Login should return 500 when refresh token creation fails');
+
+        $data = json_decode($client->getResponse()->getContent(), true);
+        $this->assertStringContainsString('Failed to create session', $data['message'] ?? '');
+        static::ensureKernelShutdown();
     }
 
     /**
@@ -177,9 +211,25 @@ class AuthSecurityTest extends WebTestCase
      */
     public function testRefreshTokensAreHashedInDatabase(): void
     {
-        // This test would require direct database access
-        $this->markTestIncomplete(
-            'Requires database access to verify token_hash column'
-        );
+        $this->client->request('POST', '/api/auth/login', [], [], [
+            'CONTENT_TYPE' => 'application/json',
+        ], json_encode([
+            'email' => 'verified@example.com',
+            'password' => 'password123'
+        ]));
+
+        $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
+        $data = json_decode($this->client->getResponse()->getContent(), true);
+        $refreshTokenString = $data['refreshToken'] ?? null;
+        $this->assertNotEmpty($refreshTokenString, 'Refresh token should be returned');
+
+        $em = static::getContainer()->get('doctrine')->getManager();
+        $repo = $em->getRepository(RefreshToken::class);
+        $tokenHash = hash('sha256', $refreshTokenString);
+        $refreshToken = $repo->findOneBy(['tokenHash' => $tokenHash]);
+
+        $this->assertNotNull($refreshToken, 'Refresh token hash should be stored');
+        $this->assertSame($tokenHash, $refreshToken->getTokenHash());
+        $this->assertTrue($refreshToken->verifyToken($refreshTokenString));
     }
 }

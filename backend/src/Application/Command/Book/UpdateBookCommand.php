@@ -9,6 +9,7 @@ class UpdateBookCommand
         public readonly ?int $authorId = null,
         public readonly ?string $isbn = null,
         public readonly ?string $description = null,
+        /** @var int[]|null */
         public readonly ?array $categoryIds = null,
         public readonly ?string $publisher = null,
         public readonly ?int $publicationYear = null,

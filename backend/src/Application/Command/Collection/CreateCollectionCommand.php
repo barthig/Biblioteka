@@ -9,6 +9,7 @@ class CreateCollectionCommand
         public readonly ?string $description = null,
         public readonly bool $featured = false,
         public readonly int $displayOrder = 0,
+        /** @var int[] */
         public readonly array $bookIds = []
     ) {
     }

@@ -17,6 +17,7 @@ class CreateBookRequest
     public ?string $isbn = null;
 
     #[Assert\Type('array')]
+    /** @var int[] */
     public array $categoryIds = [];
 
     #[Assert\Length(max: 5000)]

@@ -60,6 +60,9 @@ class BookService
         return $copy;
     }
 
+    /**
+     * @param string[]|null $preferredAccessTypes
+     */
     public function reserveCopy(Book $book, ?array $preferredAccessTypes = null, bool $allowFallback = false): ?BookCopy
     {
         /** @var BookCopyRepository $repo */
@@ -116,7 +119,7 @@ class BookService
         }
     }
 
-  public function markCopyDamaged(BookCopy $copy, ?string $note = null): void
+    public function markCopyDamaged(BookCopy $copy, ?string $note = null): void
     {
         $copy->setStatus(BookCopy::STATUS_MAINTENANCE);
         if ($note !== null) {

@@ -22,6 +22,13 @@ class RateBookHandler
     ) {
     }
 
+    /**
+     * @return array{
+     *   rating: array{id: int|null, rating: int, review: string|null},
+     *   averageRating: float|null,
+     *   ratingCount: int
+     * }
+     */
     public function __invoke(RateBookCommand $command): array
     {
         $user = $this->userRepository->find($command->userId);

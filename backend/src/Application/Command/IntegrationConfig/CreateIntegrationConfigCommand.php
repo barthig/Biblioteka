@@ -7,6 +7,7 @@ class CreateIntegrationConfigCommand
         public readonly string $name,
         public readonly string $provider,
         public readonly bool $enabled = true,
+        /** @var array<string, mixed> */
         public readonly array $settings = []
     ) {
     }

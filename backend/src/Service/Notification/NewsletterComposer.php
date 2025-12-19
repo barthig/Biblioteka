@@ -29,9 +29,6 @@ class NewsletterComposer
 
         $htmlItems = [];
         foreach ($books as $book) {
-            if (!$book instanceof Book) {
-                continue;
-            }
             $description = $this->formatBookLine($book);
             $textLines[] = '- ' . $description;
             $htmlItems[] = sprintf('<li>%s</li>', htmlspecialchars($description, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'));
@@ -54,7 +51,7 @@ class NewsletterComposer
 
     private function formatBookLine(Book $book): string
     {
-        $author = $book->getAuthor()?->getName() ?? 'Autor nieznany';
+        $author = $book->getAuthor()->getName();
         $categories = [];
         foreach ($book->getCategories() as $category) {
             $categories[] = $category->getName();

@@ -69,20 +69,4 @@ class SentryBeforeSendCallback
         return $event;
     }
     
-    /**
-     * Maskuje email do postaci u***@d***.com
-     */
-    private static function maskEmail(?string $email): ?string
-    {
-        if (!$email || !str_contains($email, '@')) {
-            return null;
-        }
-        
-        [$local, $domain] = explode('@', $email, 2);
-        
-        $maskedLocal = substr($local, 0, 1) . '***';
-        $maskedDomain = substr($domain, 0, 1) . '***.' . substr($domain, strrpos($domain, '.') + 1);
-        
-        return $maskedLocal . '@' . $maskedDomain;
-    }
 }

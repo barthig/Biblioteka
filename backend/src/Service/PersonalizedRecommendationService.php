@@ -11,7 +11,6 @@ use App\Repository\LoanRepository;
 use App\Repository\RatingRepository;
 use App\Repository\RecommendationFeedbackRepository;
 use App\Repository\CollectionRepository;
-use Doctrine\Common\Collections\Collection;
 
 class PersonalizedRecommendationService
 {
@@ -38,16 +37,13 @@ class PersonalizedRecommendationService
      */
     public function getRecommendationsForUser(?User $user, int $limitPerGroup = 8): array
     {
-        error_log('PersonalizedRecommendationService - START');
         
         // Get dismissed book IDs to exclude
         $dismissedBookIds = $user ? $this->feedbackRepository->getDismissedBookIdsByUser($user) : [];
         
         $favoriteBooks = $user ? $this->extractBooksFromFavorites($this->favoriteRepository->findByUser($user)) : [];
-        error_log('PersonalizedRecommendationService - favoriteBooks: ' . count($favoriteBooks));
         
         $recentBooks = $user ? $this->extractBooksFromLoans($this->loanRepository->findRecentByUser($user, 12)) : [];
-        error_log('PersonalizedRecommendationService - recentBooks: ' . count($recentBooks));
         
         // Get highly rated books for better recommendations
         $highlyRatedBookIds = $user ? $this->ratingRepository->findHighlyRatedBooksByUser($user, 10) : [];
@@ -93,7 +89,7 @@ class PersonalizedRecommendationService
                     }
                     
                     $bookCategories = array_map(fn($cat) => $cat->getName(), $book->getCategories()->toArray());
-                    $preferredCategories = $user->getPreferredCategories() ?? [];
+                    $preferredCategories = $user->getPreferredCategories();
                     
                     return !empty(array_intersect($bookCategories, $preferredCategories));
                 }
@@ -111,10 +107,8 @@ class PersonalizedRecommendationService
         }
 
         $ageGroup = $this->resolveAgeGroupPreference(array_merge($favoriteBooks, $recentBooks), $user);
-        error_log('PersonalizedRecommendationService - ageGroup: ' . ($ageGroup ?? 'null'));
 
         if ($ageGroup !== null) {
-            error_log('PersonalizedRecommendationService - calling findRecommendedByAgeGroup');
             $ageDefinitions = Book::getAgeGroupDefinitions();
             $groups[] = [
                 'key' => 'age-group',
@@ -122,14 +116,12 @@ class PersonalizedRecommendationService
                 'description' => 'Pozycje dopasowane do wieku lub grupy docelowej najczęściej wybieranych tytułów.',
                 'books' => $this->bookRepository->findRecommendedByAgeGroup($ageGroup, $limitPerGroup, $seenBookIds),
             ];
-            error_log('PersonalizedRecommendationService - findRecommendedByAgeGroup completed');
 
             $seenBookIds = [...$seenBookIds, ...$this->collectBookIds($groups[array_key_last($groups)]['books'])];
         }
 
         $favoritePreferences = $this->summarizePreferences($favoriteBooks);
         if ($favoritePreferences['authors'] || $favoritePreferences['categories']) {
-            error_log('PersonalizedRecommendationService - calling findRecommendedByPreferences (favorites)');
             $groups[] = [
                 'key' => 'favorites-similar',
                 'label' => 'Podobne do ulubionych',
@@ -142,14 +134,12 @@ class PersonalizedRecommendationService
                     $limitPerGroup
                 ),
             ];
-            error_log('PersonalizedRecommendationService - findRecommendedByPreferences (favorites) completed');
 
             $seenBookIds = [...$seenBookIds, ...$this->collectBookIds($groups[array_key_last($groups)]['books'])];
         }
 
         $recentPreferences = $this->summarizePreferences($recentBooks);
         if ($recentPreferences['authors'] || $recentPreferences['categories']) {
-            error_log('PersonalizedRecommendationService - calling findRecommendedByPreferences (recent)');
             $groups[] = [
                 'key' => 'recently-read',
                 'label' => 'W duchu ostatnich lektur',
@@ -162,15 +152,12 @@ class PersonalizedRecommendationService
                     $limitPerGroup
                 ),
             ];
-            error_log('PersonalizedRecommendationService - findRecommendedByPreferences (recent) completed');
 
             $seenBookIds = [...$seenBookIds, ...$this->collectBookIds($groups[array_key_last($groups)]['books'])];
         }
 
         // Always add most borrowed books as a recommendation group
-        error_log('PersonalizedRecommendationService - calling findMostBorrowedBooks');
         $mostBorrowed = $this->bookRepository->findMostBorrowedBooks($limitPerGroup, $seenBookIds);
-        error_log('PersonalizedRecommendationService - findMostBorrowedBooks completed: ' . count($mostBorrowed) . ' books');
         if (!empty($mostBorrowed)) {
             $groups[] = [
                 'key' => 'most-borrowed',
@@ -186,7 +173,7 @@ class PersonalizedRecommendationService
                 $groups[] = [
                     'key' => 'age-' . $group,
                     'label' => $definition['label'],
-                    'description' => $definition['description'] ?? null,
+                    'description' => $definition['description'],
                     'books' => $this->bookRepository->findRecommendedByAgeGroup($group, $limitPerGroup),
                 ];
             }
@@ -204,7 +191,7 @@ class PersonalizedRecommendationService
         $books = [];
         foreach ($favorites as $favorite) {
             $book = $favorite->getBook();
-            if ($book instanceof Book && $book->getId() !== null) {
+            if ($book->getId() !== null) {
                 $books[$book->getId()] = $book;
             }
         }
@@ -221,7 +208,7 @@ class PersonalizedRecommendationService
         $books = [];
         foreach ($loans as $loan) {
             $book = $loan->getBook();
-            if ($book instanceof Book && $book->getId() !== null) {
+            if ($book->getId() !== null) {
                 $books[$book->getId()] = $book;
             }
         }
@@ -240,16 +227,14 @@ class PersonalizedRecommendationService
 
         foreach ($books as $book) {
             $author = $book->getAuthor();
-            if ($author && $author->getId() !== null) {
+            if ($author->getId() !== null) {
                 $authorScores[$author->getId()] = ($authorScores[$author->getId()] ?? 0) + 1;
             }
 
             $categories = $book->getCategories();
-            if ($categories instanceof Collection) {
-                foreach ($categories as $category) {
-                    if ($category->getId() !== null) {
-                        $categoryScores[$category->getId()] = ($categoryScores[$category->getId()] ?? 0) + 1;
-                    }
+            foreach ($categories as $category) {
+                if ($category->getId() !== null) {
+                    $categoryScores[$category->getId()] = ($categoryScores[$category->getId()] ?? 0) + 1;
                 }
             }
         }
@@ -271,7 +256,7 @@ class PersonalizedRecommendationService
     {
         $ids = [];
         foreach ($books as $book) {
-            if ($book instanceof Book && $book->getId() !== null) {
+            if ($book->getId() !== null) {
                 $ids[$book->getId()] = $book->getId();
             }
         }
@@ -294,10 +279,7 @@ class PersonalizedRecommendationService
 
         if (!empty($ageScores)) {
             arsort($ageScores);
-            $winner = array_key_first($ageScores);
-            if ($winner !== false) {
-                return $winner;
-            }
+            return array_key_first($ageScores);
         }
 
         if ($user) {

@@ -9,6 +9,7 @@ class UpdateCollectionCommand
         public readonly ?string $description = null,
         public readonly ?bool $featured = null,
         public readonly ?int $displayOrder = null,
+        /** @var int[]|null */
         public readonly ?array $bookIds = null
     ) {
     }

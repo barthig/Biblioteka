@@ -101,10 +101,12 @@ class ReturnLoanHandler
 
             if ($reservationForNotification) {
                 try {
+                    $expiresAt = $reservationForNotification->getExpiresAt();
+                    $expiresAtIso = ($expiresAt ?? new \DateTimeImmutable('+2 days'))->format(DATE_ATOM);
                     $this->bus->dispatch(new ReservationReadyMessage(
                         $reservationForNotification->getId(),
                         $reservationForNotification->getUser()->getId(),
-                        $reservationForNotification->getBook()->getId()
+                        $expiresAtIso
                     ));
                 } catch (\Exception $e) {
                     $this->logger->error('Failed to dispatch ReservationReadyMessage', [

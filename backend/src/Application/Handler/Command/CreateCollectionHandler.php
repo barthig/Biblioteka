@@ -4,7 +4,6 @@ namespace App\Application\Handler\Command;
 use App\Application\Command\Collection\CreateCollectionCommand;
 use App\Entity\BookCollection;
 use App\Repository\BookRepository;
-use App\Repository\CollectionRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -16,7 +15,6 @@ class CreateCollectionHandler
 {
     public function __construct(
         private EntityManagerInterface $entityManager,
-        private CollectionRepository $collectionRepository,
         private BookRepository $bookRepository,
         private UserRepository $userRepository
     ) {

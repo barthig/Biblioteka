@@ -8,6 +8,7 @@ class CreateBookCommand
         public readonly int $authorId,
         public readonly ?string $isbn,
         public readonly ?string $description,
+        /** @var int[] */
         public readonly array $categoryIds,
         public readonly ?string $publisher = null,
         public readonly ?int $publicationYear = null,

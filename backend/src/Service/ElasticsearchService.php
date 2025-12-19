@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use App\Entity\Book;
 use FOS\ElasticaBundle\Finder\FinderInterface;
 
 /**
@@ -22,7 +23,7 @@ class ElasticsearchService
      * 
      * @param string $query Search query
      * @param int $limit Maximum number of results
-     * @return array Array of book results
+     * @return array<int, array<string, mixed>>
      */
     public function searchBooks(string $query, int $limit = 20): array
     {
@@ -52,6 +53,10 @@ class ElasticsearchService
     /**
      * Transform book entity to array
      */
+    /**
+     * @param Book|array<string, mixed> $book
+     * @return array<string, mixed>
+     */
     private function transformBook($book): array
     {
         if (is_array($book)) {
@@ -61,7 +66,7 @@ class ElasticsearchService
         return [
             'id' => $book->getId(),
             'title' => $book->getTitle(),
-            'author' => $book->getAuthor()?->getName(),
+            'author' => $book->getAuthor()->getName(),
             'isbn' => $book->getIsbn(),
         ];
     }

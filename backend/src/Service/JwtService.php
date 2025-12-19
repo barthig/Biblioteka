@@ -15,6 +15,9 @@ class JwtService
         return base64_decode(strtr($data, '-_', '+/'));
     }
 
+    /**
+     * @param array<string, mixed> $claims
+     */
     public static function createToken(array $claims, int $ttl = 86400): string
     {
         $secrets = self::getSecrets();
@@ -43,6 +46,9 @@ class JwtService
         return sprintf('%s.%s.%s', $bHeader, $bPayload, $bSig);
     }
 
+    /**
+     * @return array<string, mixed>|null
+     */
     public static function validateToken(string $token): ?array
     {
         $secrets = self::getSecrets();
@@ -76,6 +82,9 @@ class JwtService
         return $payload;
     }
 
+    /**
+     * @return string[]
+     */
     private static function getSecrets(): array
     {
         $secretsStr = getenv('JWT_SECRETS') ?: ($_ENV['JWT_SECRETS'] ?? null);

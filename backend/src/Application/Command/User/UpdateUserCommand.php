@@ -7,6 +7,7 @@ class UpdateUserCommand
         public readonly int $userId,
         public readonly ?string $name = null,
         public readonly ?string $email = null,
+        /** @var string[]|null */
         public readonly ?array $roles = null,
         public readonly ?string $phoneNumber = null,
         public readonly ?string $addressLine = null,

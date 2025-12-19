@@ -17,6 +17,10 @@ class AuditService
     /**
      * Loguje operację w systemie audit log
      */
+    /**
+     * @param array<string, mixed>|null $oldValues
+     * @param array<string, mixed>|null $newValues
+     */
     public function log(
         string $entityType,
         ?int $entityId,
@@ -52,6 +56,9 @@ class AuditService
     /**
      * Loguje utworzenie encji
      */
+    /**
+     * @param array<string, mixed> $values
+     */
     public function logCreate(string $entityType, int $entityId, ?User $user, array $values): void
     {
         $this->log($entityType, $entityId, 'CREATE', $user, null, $values);
@@ -60,6 +67,10 @@ class AuditService
     /**
      * Loguje aktualizację encji
      */
+    /**
+     * @param array<string, mixed> $oldValues
+     * @param array<string, mixed> $newValues
+     */
     public function logUpdate(string $entityType, int $entityId, ?User $user, array $oldValues, array $newValues): void
     {
         $this->log($entityType, $entityId, 'UPDATE', $user, $oldValues, $newValues);
@@ -67,6 +78,9 @@ class AuditService
 
     /**
      * Loguje usunięcie encji
+     */
+    /**
+     * @param array<string, mixed> $oldValues
      */
     public function logDelete(string $entityType, int $entityId, ?User $user, array $oldValues): void
     {

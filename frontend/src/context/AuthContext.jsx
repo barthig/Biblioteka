@@ -75,7 +75,6 @@ export function AuthProvider({ children }) {
         
         if (expiresIn && expiresIn > 0) {
           const timeoutId = setTimeout(() => {
-            console.log('Token expired, logging out')
             setToken(null)
             setUser(null)
             localStorage.removeItem('token')

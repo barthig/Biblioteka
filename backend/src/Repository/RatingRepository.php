@@ -7,6 +7,9 @@ use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
+/**
+ * @extends ServiceEntityRepository<Rating>
+ */
 class RatingRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
@@ -14,6 +17,9 @@ class RatingRepository extends ServiceEntityRepository
         parent::__construct($registry, Rating::class);
     }
 
+    /**
+     * @return Rating[]
+     */
     public function findByBook(Book $book): array
     {
         return $this->createQueryBuilder('r')
@@ -24,6 +30,9 @@ class RatingRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    /**
+     * @return Rating[]
+     */
     public function findByUser(User $user): array
     {
         return $this->createQueryBuilder('r')
@@ -69,7 +78,7 @@ class RatingRepository extends ServiceEntityRepository
 
     /**
      * Get books rated highly by user (4-5 stars) for recommendations
-     * @return Book[]
+     * @return int[]
      */
     public function findHighlyRatedBooksByUser(User $user, int $limit = 10): array
     {

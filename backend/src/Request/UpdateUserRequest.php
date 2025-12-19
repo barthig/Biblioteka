@@ -9,6 +9,7 @@ class UpdateUserRequest
     public ?string $name = null;
 
     #[Assert\Type('array')]
+    /** @var string[]|null */
     public ?array $roles = null;
 
     #[Assert\Length(max: 30)]

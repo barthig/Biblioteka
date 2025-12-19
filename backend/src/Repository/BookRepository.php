@@ -295,7 +295,7 @@ class BookRepository extends ServiceEntityRepository
 
     /**
      * Convenience wrapper returning all books with default ordering.
-     * @return Book[]
+     * @return array{data: Book[], meta: array{page: int, limit: int, total: int, totalPages: int}}
      */
     public function findAllForPublic(): array
     {

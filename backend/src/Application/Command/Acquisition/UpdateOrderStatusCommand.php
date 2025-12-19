@@ -10,6 +10,7 @@ class UpdateOrderStatusCommand
         public readonly ?string $receivedAt,
         public readonly ?string $expectedAt,
         public readonly ?string $totalAmount,
+        /** @var array<int, array<string, mixed>>|null */
         public readonly ?array $items
     ) {
     }

@@ -19,15 +19,14 @@ class ImportCatalogHandler
     ) {
     }
 
+    /**
+     * @return array{importedCount: int, items: string[]}
+     */
     public function __invoke(ImportCatalogCommand $command): array
     {
         $imported = [];
         
         foreach ($command->items as $item) {
-            if (!is_array($item)) {
-                continue;
-            }
-            
             $title = isset($item['title']) && is_string($item['title']) ? trim($item['title']) : null;
             $authorName = isset($item['author']) ? $item['author'] : null;
             if (is_array($authorName) && isset($authorName['name'])) {

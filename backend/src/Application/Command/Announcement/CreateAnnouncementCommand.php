@@ -10,6 +10,7 @@ class CreateAnnouncementCommand
         public readonly ?string $type,
         public readonly ?bool $isPinned,
         public readonly ?bool $showOnHomepage,
+        /** @var string[]|null */
         public readonly ?array $targetAudience,
         public readonly ?string $expiresAt
     ) {

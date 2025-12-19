@@ -15,6 +15,7 @@ class UpdateBookRequest
     public ?string $isbn = null;
 
     #[Assert\Type('array')]
+    /** @var int[]|null */
     public ?array $categoryIds = null;
 
     #[Assert\Length(max: 5000)]

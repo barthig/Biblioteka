@@ -7,8 +7,10 @@ use Doctrine\ORM\EntityManagerInterface;
 
 class SystemSettingsService
 {
+    /** @var array<string, mixed> */
     private array $cache = [];
     
+    /** @var array<string, mixed> */
     private array $defaults = [
         'loanLimitPerUser' => 5,
         'loanDurationDays' => 14,
@@ -82,6 +84,7 @@ class SystemSettingsService
 
     /**
      * Get all settings as array
+     * @return array<string, mixed>
      */
     public function getAll(): array
     {
@@ -106,6 +109,7 @@ class SystemSettingsService
 
     /**
      * Update multiple settings at once
+     * @param array<string, mixed> $settings
      */
     public function updateMany(array $settings): void
     {

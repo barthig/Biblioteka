@@ -37,6 +37,7 @@ class BookCacheService
 
     /**
      * Get cached books list
+     * @param array<string, mixed> $filters
      */
     public function getBooksList(array $filters, callable $callback): mixed
     {

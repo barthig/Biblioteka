@@ -8,6 +8,7 @@ class UpdateIntegrationConfigCommand
         public readonly ?string $name = null,
         public readonly ?string $provider = null,
         public readonly ?bool $enabled = null,
+        /** @var array<string, mixed>|null */
         public readonly ?array $settings = null,
         public readonly ?string $lastStatus = null,
         public readonly ?\DateTimeImmutable $lastTestedAt = null

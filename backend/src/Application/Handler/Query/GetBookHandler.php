@@ -34,9 +34,7 @@ class GetBookHandler
         if ($averageRating !== null) {
             $book->setAverageRating($averageRating);
         }
-        if ($ratingCount !== null) {
-            $book->setRatingCount($ratingCount);
-        }
+        $book->setRatingCount($ratingCount);
 
         // Mark as favorite if userId provided
         if ($query->userId !== null) {
