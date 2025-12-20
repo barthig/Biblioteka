@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import Books from './Books'
 import { apiFetch } from '../api'
 import { ResourceCacheProvider } from '../context/ResourceCacheContext'
@@ -76,5 +77,40 @@ describe('Books page', () => {
     renderPage()
 
     expect(await screen.findByText(/Load failed/i)).toBeInTheDocument()
+  })
+
+  it('toggles advanced filters and clears search', async () => {
+    apiFetch.mockImplementation((endpoint) => {
+      if (endpoint === '/api/books') {
+        return Promise.resolve({ data: [{ id: 1, title: 'Alpha' }] })
+      }
+      if (endpoint.startsWith('/api/books?')) {
+        return Promise.resolve({ data: [] })
+      }
+      if (endpoint === '/api/books/filters') {
+        return Promise.resolve({
+          authors: [{ id: 1, name: 'Author A' }],
+          categories: [{ id: 2, name: 'Fiction' }],
+          publishers: [],
+          resourceTypes: ['BOOK'],
+          years: { min: 1900, max: 2024 },
+          ageGroups: [{ value: 'adult', label: 'Adult' }]
+        })
+      }
+      return Promise.resolve({})
+    })
+
+    renderPage()
+    await userEvent.click(screen.getByRole('button', { name: /Poka/i }))
+    expect(await screen.findByLabelText(/Autor/i)).toBeInTheDocument()
+
+    const searchInput = screen.getByRole('searchbox')
+    await userEvent.type(searchInput, 'query')
+    expect(screen.getByRole('button', { name: /Wyczy/i })).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: /Wyczy/i }))
+    await waitFor(() => {
+      expect(apiFetch).toHaveBeenCalledWith('/api/books')
+    })
   })
 })

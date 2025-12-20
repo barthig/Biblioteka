@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { digitalAssetService } from './digitalAssetService'
 import { apiFetch } from '../api'
 
@@ -7,6 +7,10 @@ vi.mock('../api', () => ({
 }))
 
 describe('digitalAssetService', () => {
+  beforeEach(() => {
+    apiFetch.mockClear()
+  })
+
   it('lists assets for a book', async () => {
     apiFetch.mockResolvedValue({})
     await digitalAssetService.list(12)
@@ -17,7 +21,7 @@ describe('digitalAssetService', () => {
     apiFetch.mockResolvedValue({})
     const file = new File(['hello'], 'file.txt', { type: 'text/plain' })
     await digitalAssetService.upload(5, file)
-    const [url, opts] = apiFetch.mock.calls[0]
+    const [url, opts] = apiFetch.mock.calls.at(-1)
     expect(url).toBe('/api/admin/books/5/assets')
     expect(opts.method).toBe('POST')
     expect(typeof opts.body.append).toBe('function')

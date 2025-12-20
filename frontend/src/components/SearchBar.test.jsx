@@ -7,6 +7,12 @@ import * as bookService from '../services/bookService'
 
 vi.mock('../services/bookService')
 
+const mockNavigate = vi.fn()
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom')
+  return { ...actual, useNavigate: () => mockNavigate }
+})
+
 const renderWithRouter = (component) => {
   return render(
     <BrowserRouter
@@ -25,6 +31,7 @@ describe('SearchBar', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    mockNavigate.mockClear()
   })
 
   it('should render search input', () => {
@@ -94,6 +101,47 @@ describe('SearchBar', () => {
 
     await waitFor(() => {
       expect(bookService.bookService.search).not.toHaveBeenCalled()
+    })
+  })
+
+  it('submits search with onSearch callback', async () => {
+    const onSearch = vi.fn()
+    renderWithRouter(<SearchBar onResults={mockOnResults} onSearch={onSearch} />)
+
+    const input = screen.getByPlaceholderText(/Szukaj/i)
+    await userEvent.type(input, 'alpha')
+    await userEvent.click(screen.getByRole('button', { name: /Szukaj/i }))
+
+    expect(onSearch).toHaveBeenCalledWith('alpha')
+  })
+
+  it('navigates on suggestion click', async () => {
+    vi.mocked(bookService.bookService.search).mockResolvedValue({
+      items: [{ id: 5, title: 'Alpha', author: 'Author' }],
+      total: 1
+    })
+
+    renderWithRouter(<SearchBar onResults={mockOnResults} />)
+    await userEvent.type(screen.getByPlaceholderText(/Szukaj/i), 'al')
+
+    expect(await screen.findByText('Alpha')).toBeInTheDocument()
+    await userEvent.click(screen.getByText('Alpha'))
+    expect(mockNavigate).toHaveBeenCalledWith('/books/5')
+  })
+
+  it('hides suggestions on outside click', async () => {
+    vi.mocked(bookService.bookService.search).mockResolvedValue({
+      items: [{ id: 8, title: 'Beta', author: 'Author' }],
+      total: 1
+    })
+
+    renderWithRouter(<SearchBar onResults={mockOnResults} />)
+    await userEvent.type(screen.getByPlaceholderText(/Szukaj/i), 'be')
+
+    expect(await screen.findByText('Beta')).toBeInTheDocument()
+    fireEvent.mouseDown(document.body)
+    await waitFor(() => {
+      expect(screen.queryByText('Beta')).not.toBeInTheDocument()
     })
   })
 

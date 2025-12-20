@@ -37,4 +37,30 @@ describe('Navbar', () => {
     fireEvent.mouseEnter(screen.getByRole('link', { name: /Wypo/i }))
     expect(prefetchResource).toHaveBeenCalled()
   })
+
+  it('shows admin and librarian links', () => {
+    mockAuth = { token: 'token', user: { name: 'Admin', roles: ['ROLE_ADMIN'] }, logout: vi.fn() }
+    render(
+      <MemoryRouter>
+        <Navbar />
+      </MemoryRouter>
+    )
+
+    expect(screen.getByRole('link', { name: /Panel bibliotekarza/i })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Panel administratora/i })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Katalog import/i })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Logi/i })).toBeInTheDocument()
+  })
+
+  it('calls logout', () => {
+    const logout = vi.fn()
+    mockAuth = { token: 'token', user: { name: 'Jan', roles: ['ROLE_USER'] }, logout }
+    render(
+      <MemoryRouter>
+        <Navbar />
+      </MemoryRouter>
+    )
+    fireEvent.click(screen.getByRole('button', { name: /Wyloguj/i }))
+    expect(logout).toHaveBeenCalled()
+  })
 })

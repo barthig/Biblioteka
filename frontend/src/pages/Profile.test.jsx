@@ -69,12 +69,14 @@ describe('Profile page', () => {
     )
 
     await screen.findByText(/Moje konto/i)
+    const currentPassword = container.querySelector('#password-current')
     const newPassword = container.querySelector('#password-new')
     const confirmPassword = container.querySelector('#password-confirm')
+    await userEvent.type(currentPassword, 'oldpassword')
     await userEvent.type(newPassword, 'password123')
     await userEvent.type(confirmPassword, 'password124')
     await userEvent.click(screen.getByRole('button', { name: /Zmie.*has/i }))
 
-    expect(await screen.findByText(/Nowe has/i)).toBeInTheDocument()
+    expect(await screen.findByText(/Nowe has/i, { selector: '.error' })).toBeInTheDocument()
   })
 })

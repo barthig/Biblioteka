@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import BookDetails from './BookDetails'
 import { apiFetch } from '../api'
@@ -9,8 +10,9 @@ vi.mock('../api', () => ({
   apiFetch: vi.fn()
 }))
 
+let mockAuth = { token: null, isAuthenticated: false }
 vi.mock('../context/AuthContext', () => ({
-  useAuth: () => ({ token: null, isAuthenticated: false })
+  useAuth: () => mockAuth
 }))
 
 vi.mock('../components/StarRating', () => ({
@@ -33,6 +35,7 @@ const renderPage = (path = '/books/1') => {
 describe('BookDetails page', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockAuth = { token: null, isAuthenticated: false }
   })
 
   it('renders book details', async () => {
@@ -63,5 +66,51 @@ describe('BookDetails page', () => {
     apiFetch.mockRejectedValue(new Error('Load failed'))
     renderPage('/books/2')
     expect(await screen.findByText(/Load failed/i)).toBeInTheDocument()
+  })
+
+  it('shows auth error when reserving without token', async () => {
+    apiFetch.mockImplementation((endpoint) => {
+      if (endpoint === '/api/books/1') {
+        return Promise.resolve({ id: 1, title: 'Alpha', copies: 0, totalCopies: 1 })
+      }
+      if (endpoint === '/api/books/1/reviews') {
+        return Promise.resolve({ summary: { average: null, total: 0 }, reviews: [], userReview: null })
+      }
+      return Promise.resolve({})
+    })
+
+    renderPage()
+    await screen.findByText('Alpha')
+    await userEvent.click(screen.getByRole('button', { name: /kolejki/i }))
+    expect(await screen.findByText(/Zaloguj/i)).toBeInTheDocument()
+  })
+
+  it('reserves and toggles favorite with token', async () => {
+    mockAuth = { token: 'token', isAuthenticated: false }
+    apiFetch.mockImplementation((endpoint) => {
+      if (endpoint === '/api/books/1') {
+        return Promise.resolve({ id: 1, title: 'Alpha', copies: 0, totalCopies: 1 })
+      }
+      if (endpoint === '/api/books/1/reviews') {
+        return Promise.resolve({ summary: { average: null, total: 0 }, reviews: [], userReview: null })
+      }
+      if (endpoint === '/api/reservations') {
+        return Promise.resolve({ data: { id: 5, reservedAt: '2025-01-01T10:00:00Z' } })
+      }
+      if (endpoint === '/api/favorites') {
+        return Promise.resolve({ data: { id: 9 } })
+      }
+      return Promise.resolve({})
+    })
+
+    renderPage()
+    await screen.findByText('Alpha')
+
+    await userEvent.click(screen.getByRole('button', { name: /kolejki/i }))
+    expect(apiFetch).toHaveBeenCalledWith('/api/reservations', expect.objectContaining({ method: 'POST' }))
+
+    await userEvent.click(screen.getByRole('button', { name: /Dodaj do ulub/i }))
+    expect(apiFetch).toHaveBeenCalledWith('/api/favorites', expect.objectContaining({ method: 'POST' }))
+    expect(await screen.findByText(/Usu/i)).toBeInTheDocument()
   })
 })
