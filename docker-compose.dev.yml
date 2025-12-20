@@ -125,6 +125,8 @@ services:
       JWT_SECRET: dev_jwt_secret
     volumes:
       - ./backend:/app:cached
+      - backend_vendor:/app/vendor
+      - backend_var:/app/var
     networks:
       - biblioteka-network
     command: >
