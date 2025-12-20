@@ -410,6 +410,8 @@ CREATE TABLE public.book (
     storage_copies integer NOT NULL,
     open_stack_copies integer NOT NULL,
     description text,
+    embedding vector(1536),
+    search_vector tsvector,
     publisher character varying(180) DEFAULT NULL::character varying,
     publication_year smallint,
     resource_type character varying(60) DEFAULT NULL::character varying,
@@ -1732,6 +1734,12 @@ CREATE INDEX idx_c5d30d03a76ed395 ON public.loan USING btree (user_id);
 --
 
 CREATE INDEX idx_cbe5a331f675f31b ON public.book USING btree (author_id);
+
+--
+-- Name: book_search_vector_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX book_search_vector_idx ON public.book USING gin (search_vector);
 
 
 --

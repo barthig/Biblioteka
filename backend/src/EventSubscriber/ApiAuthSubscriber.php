@@ -28,8 +28,8 @@ class ApiAuthSubscriber implements EventSubscriberInterface
         $path = $request->getPathInfo();
         $method = $request->getMethod();
 
-        // Only protect /api routes (allow health check)
-        if (strpos($path, '/api') !== 0) {
+        // Only protect /api and /admin routes (allow health check)
+        if (strpos($path, '/api') !== 0 && strpos($path, '/admin') !== 0) {
             return;
         }
 

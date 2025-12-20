@@ -139,6 +139,7 @@ CREATE TABLE book (
     open_stack_copies INT NOT NULL,
     description TEXT DEFAULT NULL,
     embedding vector(1536) DEFAULT NULL,
+    search_vector tsvector GENERATED ALWAYS AS (to_tsvector('simple', coalesce(title, '') || ' ' || coalesce(description, ''))) STORED,
     publisher VARCHAR(180) DEFAULT NULL,
     publication_year SMALLINT DEFAULT NULL,
     resource_type VARCHAR(60) DEFAULT NULL,
@@ -150,6 +151,7 @@ CREATE TABLE book (
 );
 
 CREATE INDEX IDX_CBE5A331F675F31B ON book (author_id);
+CREATE INDEX book_search_vector_idx ON book USING GIN (search_vector);
 
 -- Tabela: book_category - Relacja wiele do wielu między książkami a kategoriami
 CREATE TABLE book_category (

@@ -437,6 +437,17 @@ api_admin_system_logs_view:
   controller: App\Controller\Admin\SecurityAdminController::viewLogs
   methods: [GET]
 
+# Admin vector tools
+api_admin_vectors_reindex:
+  path: /admin/vectors/reindex-all
+  controller: App\Controller\Admin\AdminVectorController::reindexAll
+  methods: [POST]
+
+api_admin_vectors_stats:
+  path: /admin/vectors/stats
+  controller: App\Controller\Admin\AdminVectorController::stats
+  methods: [GET]
+
 # Acquisitions - suppliers
 api_acquisitions_suppliers_list:
   path: /api/admin/acquisitions/suppliers

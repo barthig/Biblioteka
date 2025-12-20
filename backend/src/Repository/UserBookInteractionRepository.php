@@ -50,4 +50,20 @@ class UserBookInteractionRepository extends ServiceEntityRepository
 
         return array_values(array_map(static fn (array $row) => (int) $row['bookId'], $results));
     }
+
+    /**
+     * @return UserBookInteraction[]
+     */
+    public function findLikedInteractions(User $user): array
+    {
+        return $this->createQueryBuilder('ubi')
+            ->addSelect('b')
+            ->join('ubi.book', 'b')
+            ->where('ubi.user = :user')
+            ->andWhere('ubi.type = :type')
+            ->setParameter('user', $user)
+            ->setParameter('type', UserBookInteraction::TYPE_LIKED)
+            ->getQuery()
+            ->getResult();
+    }
 }

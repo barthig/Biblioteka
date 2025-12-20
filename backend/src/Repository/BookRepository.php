@@ -86,6 +86,75 @@ class BookRepository extends ServiceEntityRepository
     }
 
     /**
+     * @return array<int, array{book: Book, distance: float}>
+     */
+    public function findRelatedBooksWithDistance(Book $book, int $limit = 5): array
+    {
+        $queryVector = $book->getEmbedding();
+        if ($queryVector === null || $queryVector === []) {
+            return [];
+        }
+
+        $bookId = $book->getId();
+        if ($bookId === null) {
+            return [];
+        }
+
+        $limit = max(1, $limit);
+
+        $sql = <<<'SQL'
+            SELECT b.id, (b.embedding <=> (:queryVector)::vector) AS distance
+            FROM book b
+            WHERE b.embedding IS NOT NULL
+              AND b.id <> :bookId
+            ORDER BY distance ASC
+            LIMIT :limit
+        SQL;
+
+        $conn = $this->getEntityManager()->getConnection();
+        $rows = $conn->executeQuery(
+            $sql,
+            [
+                'queryVector' => $queryVector,
+                'bookId' => $bookId,
+                'limit' => $limit,
+            ],
+            [
+                'queryVector' => 'vector',
+                'bookId' => \PDO::PARAM_INT,
+                'limit' => \PDO::PARAM_INT,
+            ]
+        )->fetchAllAssociative();
+
+        if ($rows === []) {
+            return [];
+        }
+
+        $ids = array_map(static fn (array $row) => (int) $row['id'], $rows);
+        $books = $this->findBy(['id' => $ids]);
+        $byId = [];
+        foreach ($books as $item) {
+            if ($item->getId() !== null) {
+                $byId[$item->getId()] = $item;
+            }
+        }
+
+        $results = [];
+        foreach ($rows as $row) {
+            $id = (int) $row['id'];
+            if (!isset($byId[$id])) {
+                continue;
+            }
+            $results[] = [
+                'book' => $byId[$id],
+                'distance' => (float) $row['distance'],
+            ];
+        }
+
+        return $results;
+    }
+
+    /**
      * @param float[] $queryVector
      * @param int[] $excludedIds
      * @return Book[]
@@ -141,6 +210,86 @@ class BookRepository extends ServiceEntityRepository
         $ordered = [];
         foreach ($ids as $id) {
             $id = (int) $id;
+            if (isset($byId[$id])) {
+                $ordered[] = $byId[$id];
+            }
+        }
+
+        return $ordered;
+    }
+
+    /**
+     * @param float[] $vector
+     * @return Book[]
+     */
+    public function searchHybrid(string $query, array $vector, int $limit = 10): array
+    {
+        $query = trim($query);
+        if ($query === '' && $vector === []) {
+            return [];
+        }
+
+        $limit = max(1, $limit);
+
+        $sql = <<<'SQL'
+            SELECT
+                b.id,
+                (
+                    0.3 * COALESCE(
+                        CASE
+                            WHEN b.embedding IS NULL THEN 0
+                            ELSE 1 - ((b.embedding <=> (:queryVector)::vector) / 2.0)
+                        END,
+                        0
+                    )
+                    +
+                    0.7 * COALESCE(
+                        ts_rank_cd(b.search_vector, plainto_tsquery('simple', :queryText)),
+                        0
+                    )
+                ) AS score
+            FROM book b
+            WHERE (:queryText = '' OR b.search_vector @@ plainto_tsquery('simple', :queryText))
+              AND (:vectorEmpty = 1 OR b.embedding IS NOT NULL)
+            ORDER BY score DESC
+            LIMIT :limit
+        SQL;
+
+        $vectorEmpty = $vector === [] ? 1 : 0;
+        $queryVector = $vectorEmpty ? array_fill(0, 1536, 0.0) : $vector;
+
+        $conn = $this->getEntityManager()->getConnection();
+        $rows = $conn->executeQuery(
+            $sql,
+            [
+                'queryVector' => $queryVector,
+                'queryText' => $query,
+                'vectorEmpty' => $vectorEmpty,
+                'limit' => $limit,
+            ],
+            [
+                'queryVector' => 'vector',
+                'queryText' => \PDO::PARAM_STR,
+                'vectorEmpty' => \PDO::PARAM_INT,
+                'limit' => \PDO::PARAM_INT,
+            ]
+        )->fetchAllAssociative();
+
+        if ($rows === []) {
+            return [];
+        }
+
+        $ids = array_map(static fn (array $row) => (int) $row['id'], $rows);
+        $books = $this->findBy(['id' => $ids]);
+        $byId = [];
+        foreach ($books as $item) {
+            if ($item->getId() !== null) {
+                $byId[$item->getId()] = $item;
+            }
+        }
+
+        $ordered = [];
+        foreach ($ids as $id) {
             if (isset($byId[$id])) {
                 $ordered[] = $byId[$id];
             }

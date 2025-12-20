@@ -22,8 +22,8 @@ class RecommendationService
         $limit = max(1, $limit);
 
         $excludedIds = $this->interactionRepository->findBookIdsByUser($user);
-        $positiveBooks = $this->interactionRepository->findPositiveBooks($user, 4);
-        $vector = $this->averageEmbedding($positiveBooks);
+        $likedInteractions = $this->interactionRepository->findLikedInteractions($user);
+        $vector = $this->weightedAverageEmbedding($likedInteractions);
 
         if ($vector === null) {
             $starterVector = $user->getTasteEmbedding();
@@ -46,16 +46,18 @@ class RecommendationService
     }
 
     /**
-     * @param Book[] $books
+     * @param \App\Entity\UserBookInteraction[] $interactions
      * @return float[]|null
      */
-    private function averageEmbedding(array $books): ?array
+    private function weightedAverageEmbedding(array $interactions): ?array
     {
         $sum = [];
-        $count = 0;
         $dimensions = null;
+        $weightSum = 0.0;
+        $now = new \DateTimeImmutable();
 
-        foreach ($books as $book) {
+        foreach ($interactions as $interaction) {
+            $book = $interaction->getBook();
             $embedding = $book->getEmbedding();
             if (!is_array($embedding) || $embedding === []) {
                 continue;
@@ -70,17 +72,39 @@ class RecommendationService
                 continue;
             }
 
-            foreach ($embedding as $index => $value) {
-                $sum[$index] += (float) $value;
+            $weight = $this->weightForInteraction($interaction->getCreatedAt(), $now);
+            if ($weight <= 0.0) {
+                continue;
             }
 
-            ++$count;
+            foreach ($embedding as $index => $value) {
+                $sum[$index] += (float) $value * $weight;
+            }
+
+            $weightSum += $weight;
         }
 
-        if ($count === 0 || $dimensions === null) {
+        if ($weightSum <= 0.0 || $dimensions === null) {
             return null;
         }
 
-        return array_map(static fn (float $value) => $value / $count, $sum);
+        return array_map(static fn (float $value) => $value / $weightSum, $sum);
+    }
+
+    private function weightForInteraction(\DateTimeImmutable $createdAt, \DateTimeImmutable $now): float
+    {
+        $days = (int) $createdAt->diff($now)->format('%a');
+
+        if ($days <= 7) {
+            return 1.0;
+        }
+        if ($days > 90) {
+            return 0.2;
+        }
+        if ($days > 30) {
+            return 0.5;
+        }
+
+        return 1.0;
     }
 }
