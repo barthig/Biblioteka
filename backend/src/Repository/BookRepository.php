@@ -451,7 +451,7 @@ class BookRepository extends ServiceEntityRepository
             ->leftJoin('b.categories', 'c')->addSelect('c')
             ->where('b.targetAgeGroup = :ageGroup')
             ->setParameter('ageGroup', $ageGroup)
-            ->groupBy('b.id, a.id')
+            ->groupBy('b.id, a.id, c.id')
             ->orderBy('b.copies', 'DESC')
             ->addOrderBy('b.createdAt', 'DESC')
             ->setMaxResults(max(1, $limit));

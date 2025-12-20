@@ -26,6 +26,7 @@ test('register flow stores token', async ({ page }) => {
   await page.fill('#register-confirm', 'password123')
   await page.click('button[type="submit"]')
 
+  await page.waitForFunction(() => localStorage.getItem('token'))
   const stored = await page.evaluate(() => localStorage.getItem('token'))
   expect(stored).toBeTruthy()
 })

@@ -22,7 +22,7 @@ use Symfony\Component\HttpKernel\HttpKernelBrowser;
 abstract class ApiTestCase extends WebTestCase
 {
     protected const API_SECRET = 'test-secret';
-    protected const JWT_SECRET = 'test-jwt-secret';
+    protected const JWT_SECRET = 'test_jwt_secret';
 
     private static bool $schemaInitialized = false;
 
