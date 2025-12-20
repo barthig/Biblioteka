@@ -165,8 +165,7 @@ api_recommend:
 api_recommendations_personal:
   path: /api/recommendations/personal
   controller: App\Controller\RecommendationController::personal
-  methods: [GET]
-  methods: [POST]
+  methods: [GET, POST]
 
 # Recommendation feedback
 api_recommendations_feedback_create:

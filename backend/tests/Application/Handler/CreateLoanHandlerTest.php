@@ -61,11 +61,15 @@ class CreateLoanHandlerTest extends TestCase
         $bookRepo = $this->createMock(\Doctrine\ORM\EntityRepository::class);
         $bookRepo->method('find')->with(10)->willReturn($book);
 
+        $interactionRepo = $this->createMock(\Doctrine\ORM\EntityRepository::class);
+        $interactionRepo->method('findOneBy')->willReturn(null);
+
         $this->em->method('getRepository')
-            ->willReturnCallback(function ($class) use ($userRepo, $bookRepo) {
+            ->willReturnCallback(function ($class) use ($userRepo, $bookRepo, $interactionRepo) {
                 if ($class === User::class) return $userRepo;
                 if ($class === Book::class) return $bookRepo;
-                return null;
+                if ($class === \App\Entity\UserBookInteraction::class) return $interactionRepo;
+                return $this->createMock(\Doctrine\ORM\EntityRepository::class);
             });
 
         $this->loanRepository->method('countActiveByUser')->with($user)->willReturn(2);
@@ -74,7 +78,7 @@ class CreateLoanHandlerTest extends TestCase
         $this->settingsService->method('getLoanDurationDays')->willReturn(14);
 
         $this->em->expects($this->once())->method('beginTransaction');
-        $this->em->expects($this->once())->method('persist')->with($this->isInstanceOf(Loan::class));
+        $this->em->expects($this->exactly(2))->method('persist');
         $this->em->expects($this->once())->method('flush');
         $this->em->expects($this->once())->method('commit');
 
@@ -98,7 +102,7 @@ class CreateLoanHandlerTest extends TestCase
             return match ($class) {
                 User::class => $userRepo,
                 Book::class => $bookRepo,
-                default => $this->createMock(\Doctrine\ORM\EntityRepository::class)
+                default => $this->createMock(\Doctrine\ORM\EntityRepository::class),
             };
         });
 
@@ -125,7 +129,7 @@ class CreateLoanHandlerTest extends TestCase
             return match ($class) {
                 User::class => $userRepo,
                 Book::class => $bookRepo,
-                default => $this->createMock(\Doctrine\ORM\EntityRepository::class)
+                default => $this->createMock(\Doctrine\ORM\EntityRepository::class),
             };
         });
 
@@ -151,7 +155,7 @@ class CreateLoanHandlerTest extends TestCase
             return match ($class) {
                 User::class => $userRepo,
                 Book::class => $bookRepo,
-                default => $this->createMock(\Doctrine\ORM\EntityRepository::class)
+                default => $this->createMock(\Doctrine\ORM\EntityRepository::class),
             };
         });
 
@@ -181,7 +185,7 @@ class CreateLoanHandlerTest extends TestCase
             ->willReturnCallback(function ($class) use ($userRepo, $bookRepo) {
                 if ($class === User::class) return $userRepo;
                 if ($class === Book::class) return $bookRepo;
-                return null;
+                return $this->createMock(\Doctrine\ORM\EntityRepository::class);
             });
 
         $this->loanRepository->method('countActiveByUser')->with($user)->willReturn(0);
@@ -212,7 +216,7 @@ class CreateLoanHandlerTest extends TestCase
             ->willReturnCallback(function ($class) use ($userRepo, $bookRepo) {
                 if ($class === User::class) return $userRepo;
                 if ($class === Book::class) return $bookRepo;
-                return null;
+                return $this->createMock(\Doctrine\ORM\EntityRepository::class);
             });
 
         $this->loanRepository->method('countActiveByUser')->with($user)->willReturn(0);

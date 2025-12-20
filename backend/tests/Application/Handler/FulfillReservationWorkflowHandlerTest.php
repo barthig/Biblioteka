@@ -90,6 +90,9 @@ class FulfillReservationWorkflowHandlerTest extends TestCase
         $copy = $this->createMock(BookCopy::class);
         $copy->method('getStatus')->willReturn(BookCopy::STATUS_RESERVED);
         $copy->method('getId')->willReturn(5);
+        $book = $this->createMock(\App\Entity\Book::class);
+        $book->method('getId')->willReturn(7);
+        $copy->method('getBook')->willReturn($book);
 
         $user = $this->createMock(User::class);
         $user->method('getId')->willReturn(10);

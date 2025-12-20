@@ -42,34 +42,101 @@ framework:
       App\Application\Command\User\UnblockUserCommand: sync
       App\Application\Command\Account\UpdateAccountCommand: sync
       App\Application\Command\Account\ChangePasswordCommand: sync
+      App\Application\Command\Account\CompleteOnboardingCommand: sync
+      App\Application\Command\Account\UpdateAccountContactCommand: sync
+      App\Application\Command\Account\UpdateAccountPinCommand: sync
+      App\Application\Command\Account\UpdateAccountPreferencesCommand: sync
+      App\Application\Command\Account\UpdateAccountUiPreferencesCommand: sync
       App\Application\Command\Book\CreateBookCommand: sync
       App\Application\Command\Book\UpdateBookCommand: sync
       App\Application\Command\Book\DeleteBookCommand: sync
       App\Application\Command\Author\CreateAuthorCommand: sync
       App\Application\Command\Author\UpdateAuthorCommand: sync
       App\Application\Command\Author\DeleteAuthorCommand: sync
+      App\Application\Command\Announcement\ArchiveAnnouncementCommand: sync
+      App\Application\Command\Announcement\CreateAnnouncementCommand: sync
+      App\Application\Command\Announcement\DeleteAnnouncementCommand: sync
+      App\Application\Command\Announcement\PublishAnnouncementCommand: sync
+      App\Application\Command\Announcement\UpdateAnnouncementCommand: sync
+      App\Application\Command\Acquisition\AddBudgetExpenseCommand: sync
+      App\Application\Command\Acquisition\CancelOrderCommand: sync
+      App\Application\Command\Acquisition\CreateBudgetCommand: sync
+      App\Application\Command\Acquisition\CreateOrderCommand: sync
+      App\Application\Command\Acquisition\CreateSupplierCommand: sync
+      App\Application\Command\Acquisition\DeactivateSupplierCommand: sync
+      App\Application\Command\Acquisition\ReceiveOrderCommand: sync
+      App\Application\Command\Acquisition\UpdateBudgetCommand: sync
+      App\Application\Command\Acquisition\UpdateOrderStatusCommand: sync
+      App\Application\Command\Acquisition\UpdateSupplierCommand: sync
       App\Application\Command\Category\CreateCategoryCommand: sync
       App\Application\Command\Category\UpdateCategoryCommand: sync
       App\Application\Command\Category\DeleteCategoryCommand: sync
+      App\Application\Command\BookAsset\DeleteBookAssetCommand: sync
+      App\Application\Command\BookAsset\UploadBookAssetCommand: sync
+      App\Application\Command\BookInventory\CreateBookCopyCommand: sync
+      App\Application\Command\BookInventory\DeleteBookCopyCommand: sync
+      App\Application\Command\BookInventory\UpdateBookCopyCommand: sync
+      App\Application\Command\Catalog\ImportCatalogCommand: sync
+      App\Application\Command\Collection\CreateCollectionCommand: sync
+      App\Application\Command\Collection\DeleteCollectionCommand: sync
+      App\Application\Command\Collection\UpdateCollectionCommand: sync
+      App\Application\Command\Rating\DeleteRatingCommand: sync
+      App\Application\Command\Rating\RateBookCommand: sync
+      App\Application\Command\Recommendation\RemoveRecommendationFeedbackCommand: sync
+      App\Application\Command\Recommendation\UpsertRecommendationFeedbackCommand: sync
+      App\Application\Command\Reservation\ExpireReservationCommand: sync
+      App\Application\Command\Reservation\FulfillReservationCommand: sync
+      App\Application\Command\Reservation\FulfillReservationWorkflowCommand: sync
+      App\Application\Command\User\UpdateContactCommand: sync
+      App\Application\Command\User\UpdatePinCommand: sync
+      App\Application\Command\User\UpdatePreferencesCommand: sync
+      App\Application\Command\User\UpdateUIPreferencesCommand: sync
+      App\Application\Command\Weeding\CreateWeedingRecordCommand: sync
       
       # Queries - synchronous
       App\Application\Query\Loan\GetLoanQuery: sync
       App\Application\Query\Loan\ListLoansQuery: sync
       App\Application\Query\Loan\ListUserLoansQuery: sync
       App\Application\Query\Reservation\ListReservationsQuery: sync
+      App\Application\Query\Reservation\GetReservationQuery: sync
       App\Application\Query\Book\ListBooksQuery: sync
       App\Application\Query\Book\GetBookQuery: sync
+      App\Application\Query\Book\GetBookAvailabilityQuery: sync
+      App\Application\Query\Book\ListNewestBooksQuery: sync
+      App\Application\Query\Book\ListPopularBooksQuery: sync
       App\Application\Query\Favorite\ListUserFavoritesQuery: sync
       App\Application\Query\Review\ListBookReviewsQuery: sync
       App\Application\Query\Fine\ListFinesQuery: sync
+      App\Application\Query\Account\GetAccountDetailsQuery: sync
       App\Application\Query\Author\GetAuthorQuery: sync
       App\Application\Query\Author\ListAuthorsQuery: sync
       App\Application\Query\Category\GetCategoryQuery: sync
       App\Application\Query\Category\ListCategoriesQuery: sync
+      App\Application\Query\Announcement\GetAnnouncementQuery: sync
+      App\Application\Query\Announcement\ListAnnouncementsQuery: sync
+      App\Application\Query\Acquisition\GetBudgetSummaryQuery: sync
+      App\Application\Query\Acquisition\ListBudgetsQuery: sync
+      App\Application\Query\Acquisition\ListOrdersQuery: sync
+      App\Application\Query\Acquisition\ListSuppliersQuery: sync
+      App\Application\Query\Alert\UserAlertsQuery: sync
+      App\Application\Query\AuditLog\GetEntityHistoryQuery: sync
+      App\Application\Query\AuditLog\ListAuditLogsQuery: sync
+      App\Application\Query\BookAsset\GetBookAssetQuery: sync
+      App\Application\Query\BookAsset\ListBookAssetsQuery: sync
+      App\Application\Query\BookInventory\ListBookCopiesQuery: sync
+      App\Application\Query\Catalog\ExportCatalogQuery: sync
+      App\Application\Query\Dashboard\DashboardOverviewQuery: sync
+      App\Application\Query\Dashboard\GetOverviewQuery: sync
+      App\Application\Query\Report\GetFinancialSummaryQuery: sync
+      App\Application\Query\Report\GetInventoryOverviewQuery: sync
+      App\Application\Query\Report\GetPatronSegmentsQuery: sync
+      App\Application\Query\Report\GetPopularTitlesQuery: sync
+      App\Application\Query\Report\GetUsageReportQuery: sync
       App\Application\Command\SystemSetting\CreateSystemSettingCommand: sync
       App\Application\Command\SystemSetting\UpdateSystemSettingCommand: sync
       App\Application\Command\SystemSetting\DeleteSystemSettingCommand: sync
       App\Application\Query\SystemSetting\GetSystemSettingQuery: sync
+      App\Application\Query\SystemSetting\GetSystemSettingByKeyQuery: sync
       App\Application\Query\SystemSetting\ListSystemSettingsQuery: sync
       App\Application\Command\IntegrationConfig\CreateIntegrationConfigCommand: sync
       App\Application\Command\IntegrationConfig\UpdateIntegrationConfigCommand: sync
@@ -81,6 +148,8 @@ framework:
       App\Application\Command\StaffRole\DeleteStaffRoleCommand: sync
       App\Application\Query\StaffRole\GetStaffRoleQuery: sync
       App\Application\Query\StaffRole\ListStaffRolesQuery: sync
+      App\Application\Query\User\GetUserDetailsQuery: sync
+      App\Application\Query\Weeding\ListWeedingRecordsQuery: sync
       
       # Messages - asynchronous
       App\Message\ReservationQueuedNotification: async

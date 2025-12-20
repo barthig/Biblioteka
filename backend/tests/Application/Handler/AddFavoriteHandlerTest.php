@@ -37,22 +37,25 @@ class AddFavoriteHandlerTest extends TestCase
         // Mock Entity Manager's getRepository to return our mocked repositories
         $userRepo = $this->createMock(\App\Repository\UserRepository::class);
         $bookRepo = $this->createMock(\App\Repository\BookRepository::class);
-        
+        $interactionRepo = $this->createMock(\Doctrine\ORM\EntityRepository::class);
+
         $user = $this->createMock(User::class);
         $book = $this->createMock(Book::class);
-        
+
         $userRepo->method('find')->with(1)->willReturn($user);
         $bookRepo->method('find')->with(1)->willReturn($book);
-        
+        $interactionRepo->method('findOneBy')->willReturn(null);
+
         $this->entityManager->method('getRepository')
-            ->willReturnCallback(function($class) use ($userRepo, $bookRepo) {
+            ->willReturnCallback(function($class) use ($userRepo, $bookRepo, $interactionRepo) {
                 if ($class === User::class) return $userRepo;
                 if ($class === Book::class) return $bookRepo;
-                return null;
+                if ($class === \App\Entity\UserBookInteraction::class) return $interactionRepo;
+                return $this->createMock(\Doctrine\ORM\EntityRepository::class);
             });
         
         $this->favoriteRepository->method('findOneBy')->willReturn(null);
-        $this->entityManager->expects($this->once())->method('persist');
+        $this->entityManager->expects($this->exactly(2))->method('persist');
         $this->entityManager->expects($this->once())->method('flush');
 
         $command = new AddFavoriteCommand(bookId: 1, userId: 1);

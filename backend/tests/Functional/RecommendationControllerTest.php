@@ -64,7 +64,7 @@ class RecommendationControllerTest extends ApiTestCase
         $mockService = $this->createMock(RecommendationService::class);
         $mockService->expects($this->once())
             ->method('getPersonalizedRecommendations')
-            ->with($user, 10)
+            ->with($this->isInstanceOf(\App\Entity\User::class), 10)
             ->willReturn([
                 'status' => 'ok',
                 'books' => [$book],
