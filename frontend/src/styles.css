@@ -545,6 +545,10 @@ a {
 	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
 
+.form-field--full {
+	grid-column: 1 / -1;
+}
+
 .form-actions {
 	display: flex;
 	align-items: center;

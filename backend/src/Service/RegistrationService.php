@@ -13,17 +13,12 @@ class RegistrationService
 {
     private const DEFAULT_TOKEN_TTL = 172800; // 48 hours
 
-    private EntityManagerInterface $entityManager;
-    private UserRepository $users;
-    private RegistrationTokenRepository $tokens;
-    private bool $requireApproval;
-    private int $tokenTtl;
-
-    public function __construct(EntityManagerInterface $entityManager, UserRepository $users, RegistrationTokenRepository $tokens)
-    {
-        $this->entityManager = $entityManager;
-        $this->users = $users;
-        $this->tokens = $tokens;
+    public function __construct(
+        private EntityManagerInterface $entityManager,
+        private UserRepository $users,
+        private RegistrationTokenRepository $tokens,
+        private OpenAIEmbeddingService $embeddingService
+    ) {
 
         $requireApproval = getenv('REGISTRATION_REQUIRE_APPROVAL') ?: ($_ENV['REGISTRATION_REQUIRE_APPROVAL'] ?? 'false');
         $this->requireApproval = $this->toBool($requireApproval);
@@ -33,7 +28,7 @@ class RegistrationService
     }
 
     /**
-     * @param array{email?: string, name?: string, password?: string, privacyConsent?: bool|string, phoneNumber?: string|null, addressLine?: string|null, city?: string|null, postalCode?: string|null, newsletterSubscribed?: bool|string|null} $data
+     * @param array{email?: string, name?: string, password?: string, privacyConsent?: bool|string, phoneNumber?: string|null, addressLine?: string|null, city?: string|null, postalCode?: string|null, newsletterSubscribed?: bool|string|null, tastePrompt?: string|null} $data
      */
     public function register(array $data): RegistrationToken
     {
@@ -95,6 +90,16 @@ class RegistrationService
         $user->recordPrivacyConsent();
 
         $this->entityManager->persist($user);
+
+        $tastePrompt = isset($data['tastePrompt']) ? trim((string) $data['tastePrompt']) : '';
+        if ($tastePrompt !== '') {
+            try {
+                $embedding = $this->embeddingService->getVector($tastePrompt);
+                $user->setTasteEmbedding($embedding);
+            } catch (\Throwable $error) {
+                error_log('RegistrationService: taste embedding failed: ' . $error->getMessage());
+            }
+        }
 
         $tokenValue = bin2hex(random_bytes(32));
         $expiresAt = (new DateTimeImmutable())->add(new DateInterval('PT' . $this->tokenTtl . 'S'));

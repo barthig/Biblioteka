@@ -55,6 +55,10 @@ class RegistrationController extends AbstractController
             $payload['newsletterSubscribed'] = $dto->newsletterSubscribed;
         }
 
+        if (array_key_exists('tastePrompt', $data)) {
+            $payload['tastePrompt'] = $dto->tastePrompt;
+        }
+
         try {
             $token = $registrationService->register($payload);
         } catch (RegistrationException $exception) {

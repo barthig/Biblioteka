@@ -12,7 +12,8 @@ const initialForm = {
   addressLine: '',
   city: '',
   postalCode: '',
-  privacyConsent: true
+  privacyConsent: true,
+  tastePrompt: ''
 }
 
 export default function Register() {
@@ -49,6 +50,11 @@ export default function Register() {
         city: form.city.trim() || undefined,
         postalCode: form.postalCode.trim() || undefined,
         privacyConsent: form.privacyConsent
+      }
+
+      const tastePrompt = form.tastePrompt.trim()
+      if (tastePrompt) {
+        payload.tastePrompt = tastePrompt
       }
 
       const response = await apiFetch('/api/auth/register', {
@@ -188,6 +194,18 @@ export default function Register() {
                   value={form.postalCode}
                   onChange={handleChange}
                 />
+              </div>
+              <div className="form-field form-field--full">
+                <label htmlFor="register-taste">Co lubisz czytac? (opcjonalnie)</label>
+                <textarea
+                  id="register-taste"
+                  name="tastePrompt"
+                  placeholder="Np. kryminaly w deszczowym Londynie albo fantasy z magia"
+                  value={form.tastePrompt}
+                  onChange={handleChange}
+                  rows={3}
+                />
+                <p className="field-hint">To pomoze uruchomic rekomendacje AI od pierwszego dnia.</p>
               </div>
             </div>
             <label className="checkbox-field">

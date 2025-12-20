@@ -162,6 +162,12 @@ api_recommend:
   controller: App\Controller\RecommendationController::recommend
   methods: [POST]
 
+api_recommendations_personal:
+  path: /api/recommendations/personal
+  controller: App\Controller\RecommendationController::personal
+  methods: [GET]
+  methods: [POST]
+
 # Recommendation feedback
 api_recommendations_feedback_create:
   path: /api/recommendations/feedback

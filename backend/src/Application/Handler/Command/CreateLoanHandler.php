@@ -7,6 +7,7 @@ use App\Entity\BookCopy;
 use App\Entity\Loan;
 use App\Entity\Reservation;
 use App\Entity\User;
+use App\Entity\UserBookInteraction;
 use App\Repository\BookCopyRepository;
 use App\Repository\LoanRepository;
 use App\Repository\ReservationRepository;
@@ -96,6 +97,16 @@ class CreateLoanHandler
                 ->setDueAt((new \DateTimeImmutable())->modify("+{$loanDurationDays} days"));
 
             $this->em->persist($loan);
+
+            $interactionRepo = $this->em->getRepository(UserBookInteraction::class);
+            $interaction = $interactionRepo->findOneBy(['user' => $user, 'book' => $book]);
+            if (!$interaction) {
+                $interaction = (new UserBookInteraction())
+                    ->setUser($user)
+                    ->setBook($book)
+                    ->setType(UserBookInteraction::TYPE_READ);
+                $this->em->persist($interaction);
+            }
             $this->em->flush();
             $this->em->commit();
         } catch (\Exception $e) {

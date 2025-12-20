@@ -5,6 +5,7 @@ use App\Application\Command\Favorite\AddFavoriteCommand;
 use App\Entity\Book;
 use App\Entity\Favorite;
 use App\Entity\User;
+use App\Entity\UserBookInteraction;
 use App\Repository\FavoriteRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
@@ -41,6 +42,17 @@ class AddFavoriteHandler
             ->setBook($book);
 
         $this->entityManager->persist($favorite);
+
+        $interactionRepo = $this->entityManager->getRepository(UserBookInteraction::class);
+        $interaction = $interactionRepo->findOneBy(['user' => $user, 'book' => $book]);
+        if (!$interaction) {
+            $interaction = (new UserBookInteraction())
+                ->setUser($user)
+                ->setBook($book);
+            $this->entityManager->persist($interaction);
+        }
+        $interaction->setType(UserBookInteraction::TYPE_LIKED);
+
         $this->entityManager->flush();
 
         return $favorite;

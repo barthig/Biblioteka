@@ -43,4 +43,7 @@ class RegistrationRequest
     public ?bool $privacyConsent = null;
 
     public ?bool $newsletterSubscribed = null;
+
+    #[Assert\Length(max: 500, maxMessage: 'Opis preferencji nie moze przekraczac 500 znakow')]
+    public ?string $tastePrompt = null;
 }

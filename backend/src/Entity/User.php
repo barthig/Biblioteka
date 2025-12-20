@@ -137,6 +137,9 @@ class User
     #[ORM\Column(type: 'json', nullable: true)]
     private ?array $preferredCategories = null;
 
+    #[ORM\Column(type: 'vector', nullable: true, options: ['dimensions' => 1536], columnDefinition: 'vector(1536)')]
+    private ?array $tasteEmbedding = null;
+
     #[ORM\Column(type: 'boolean', options: ['default' => false])]
     private bool $onboardingCompleted = false;
 
@@ -380,6 +383,9 @@ class User
 
     public function getPreferredCategories(): ?array { return $this->preferredCategories; }
     public function setPreferredCategories(?array $categories): self { $this->preferredCategories = $categories; return $this; }
+
+    public function getTasteEmbedding(): ?array { return $this->tasteEmbedding; }
+    public function setTasteEmbedding(?array $embedding): self { $this->tasteEmbedding = $embedding; return $this; }
 
     public function isOnboardingCompleted(): bool { return $this->onboardingCompleted; }
     public function setOnboardingCompleted(bool $completed): self { $this->onboardingCompleted = $completed; return $this; }

@@ -3,6 +3,7 @@ namespace App\Application\Handler\Command;
 
 use App\Application\Command\Rating\RateBookCommand;
 use App\Entity\Rating;
+use App\Entity\UserBookInteraction;
 use App\Repository\BookRepository;
 use App\Repository\RatingRepository;
 use App\Repository\UserRepository;
@@ -62,6 +63,20 @@ class RateBookHandler
             }
             $this->entityManager->persist($existingRating);
         }
+
+        $interactionRepo = $this->entityManager->getRepository(UserBookInteraction::class);
+        $interaction = $interactionRepo->findOneBy(['user' => $user, 'book' => $book]);
+        if (!$interaction) {
+            $interaction = (new UserBookInteraction())
+                ->setUser($user)
+                ->setBook($book);
+            $this->entityManager->persist($interaction);
+        }
+        $interaction->setRating($command->rating);
+        $interactionType = $command->rating >= 4
+            ? UserBookInteraction::TYPE_LIKED
+            : UserBookInteraction::TYPE_READ;
+        $interaction->setType($interactionType);
 
         $this->entityManager->flush();
 

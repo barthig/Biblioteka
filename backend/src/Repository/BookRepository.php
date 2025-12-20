@@ -5,6 +5,7 @@ use App\Entity\Book;
 use App\Entity\Loan;
 use App\Entity\Reservation;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\ORM\Query\ResultSetMappingBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -44,6 +45,108 @@ class BookRepository extends ServiceEntityRepository
         $query->setParameter('limit', $limit, \PDO::PARAM_INT);
 
         return $query->getResult();
+    }
+
+    /**
+     * @return Book[]
+     */
+    public function findRelatedBooks(Book $book, int $limit = 5): array
+    {
+        $queryVector = $book->getEmbedding();
+        if ($queryVector === null || $queryVector === []) {
+            return [];
+        }
+
+        $bookId = $book->getId();
+        if ($bookId === null) {
+            return [];
+        }
+
+        $limit = max(1, $limit);
+
+        $sql = <<<'SQL'
+            SELECT b.*
+            FROM book b
+            WHERE b.embedding IS NOT NULL
+              AND b.id <> :bookId
+            ORDER BY b.embedding <=> (:queryVector)::vector
+            LIMIT :limit
+        SQL;
+
+        $em = $this->getEntityManager();
+        $rsm = new ResultSetMappingBuilder($em);
+        $rsm->addRootEntityFromClassMetadata(Book::class, 'b');
+
+        $query = $em->createNativeQuery($sql, $rsm);
+        $query->setParameter('queryVector', $queryVector, 'vector');
+        $query->setParameter('bookId', $bookId, \PDO::PARAM_INT);
+        $query->setParameter('limit', $limit, \PDO::PARAM_INT);
+
+        return $query->getResult();
+    }
+
+    /**
+     * @param float[] $queryVector
+     * @param int[] $excludedIds
+     * @return Book[]
+     */
+    public function findSimilarBooksExcluding(array $queryVector, array $excludedIds, int $limit = 5): array
+    {
+        if ($queryVector === []) {
+            return [];
+        }
+
+        $limit = max(1, $limit);
+        $excludedIds = array_values(array_unique(array_map('intval', $excludedIds)));
+        if ($excludedIds === []) {
+            $excludedIds = [-1];
+        }
+
+        $sql = <<<'SQL'
+            SELECT b.id
+            FROM book b
+            WHERE b.embedding IS NOT NULL
+              AND b.id NOT IN (:excludedIds)
+            ORDER BY b.embedding <=> (:queryVector)::vector
+            LIMIT :limit
+        SQL;
+
+        $conn = $this->getEntityManager()->getConnection();
+        $ids = $conn->executeQuery(
+            $sql,
+            [
+                'queryVector' => $queryVector,
+                'excludedIds' => $excludedIds,
+                'limit' => $limit,
+            ],
+            [
+                'queryVector' => 'vector',
+                'excludedIds' => ArrayParameterType::INTEGER,
+                'limit' => \PDO::PARAM_INT,
+            ]
+        )->fetchFirstColumn();
+
+        if ($ids === []) {
+            return [];
+        }
+
+        $books = $this->findBy(['id' => $ids]);
+        $byId = [];
+        foreach ($books as $book) {
+            if ($book->getId() !== null) {
+                $byId[$book->getId()] = $book;
+            }
+        }
+
+        $ordered = [];
+        foreach ($ids as $id) {
+            $id = (int) $id;
+            if (isset($byId[$id])) {
+                $ordered[] = $byId[$id];
+            }
+        }
+
+        return $ordered;
     }
 
     /**

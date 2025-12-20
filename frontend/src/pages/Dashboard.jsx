@@ -4,6 +4,7 @@ import { apiFetch } from '../api'
 import { useAuth } from '../context/AuthContext'
 import { useResourceCache } from '../context/ResourceCacheContext'
 import OnboardingModal from '../components/OnboardingModal'
+import UserRecommendations from '../components/UserRecommendations'
 
 export default function Dashboard() {
   const [stats, setStats] = useState(null)
@@ -305,6 +306,11 @@ export default function Dashboard() {
             <strong style={{ color: '#ff6838' }}>{stats?.favoritesCount ?? 0}</strong>
             <span>Oznaczone serduszkiem</span>
           </Link>
+        </div>
+
+        <div className="surface-card" style={{ marginBottom: 'var(--space-4)' }}>
+          <h2 style={{ marginBottom: 'var(--space-3)' }}>AI rekomendacje</h2>
+          <UserRecommendations />
         </div>
 
         {/* Library Hours */}
