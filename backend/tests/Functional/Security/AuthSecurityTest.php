@@ -16,6 +16,8 @@ class AuthSecurityTest extends WebTestCase
 
     protected function setUp(): void
     {
+        putenv('API_SECRET=test-secret');
+        $_ENV['API_SECRET'] = 'test-secret';
         $this->client = static::createClient();
     }
 
@@ -77,17 +79,61 @@ class AuthSecurityTest extends WebTestCase
     }
 
     /**
-     * Test that API_SECRET header is rejected for protected routes
+     * Test that API_SECRET header grants access to staff-only routes
      */
-    public function testApiSecretHeaderIsRejected(): void
+    public function testApiSecretHeaderGrantsAccessToStaffRoute(): void
     {
-        // Try to access a protected endpoint with API_SECRET
-        $this->client->request('GET', '/api/profile', [], [], [
-            'HTTP_X_API_SECRET' => 'change_me_api',
+        $this->client->request('GET', '/api/users', [], [], [
+            'HTTP_X_API_SECRET' => 'test-secret',
+        ]);
+
+        $this->assertEquals(200, $this->client->getResponse()->getStatusCode(),
+            'API_SECRET should grant access to staff-only routes');
+    }
+
+    /**
+     * Test that invalid API_SECRET header is rejected
+     */
+    public function testInvalidApiSecretHeaderIsRejected(): void
+    {
+        $this->client->request('GET', '/api/users', [], [], [
+            'HTTP_X_API_SECRET' => 'invalid-secret',
         ]);
 
         $this->assertEquals(401, $this->client->getResponse()->getStatusCode(),
-            'API_SECRET should not grant access to protected routes');
+            'Invalid API_SECRET should be rejected');
+    }
+
+    /**
+     * Test that /api/test-login is disabled in production even with API_SECRET
+     */
+    public function testTestLoginEndpointIsDisabledInProduction(): void
+    {
+        $previousEnv = getenv('APP_ENV');
+        $previousEnvVar = $_ENV['APP_ENV'] ?? null;
+        putenv('APP_ENV=prod');
+        $_ENV['APP_ENV'] = 'prod';
+
+        try {
+            $this->client->request('POST', '/api/test-login', [], [], [
+                'CONTENT_TYPE' => 'application/json',
+                'HTTP_X_API_SECRET' => 'test-secret',
+            ], json_encode([
+                'email' => 'verified@example.com',
+                'password' => 'password123',
+            ]));
+
+            $this->assertEquals(404, $this->client->getResponse()->getStatusCode(),
+                'test-login should be disabled outside dev/test');
+        } finally {
+            if ($previousEnv === false) {
+                putenv('APP_ENV');
+                unset($_ENV['APP_ENV']);
+            } else {
+                putenv('APP_ENV=' . $previousEnv);
+                $_ENV['APP_ENV'] = $previousEnvVar ?? $previousEnv;
+            }
+        }
     }
 
     /**

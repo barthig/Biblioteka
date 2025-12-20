@@ -18,6 +18,11 @@ class TestAuthController extends AbstractController
 
     public function testLogin(Request $request, UserRepository $repo): JsonResponse
     {
+        $env = getenv('APP_ENV') ?: ($_ENV['APP_ENV'] ?? 'prod');
+        if (!in_array($env, ['dev', 'test'], true)) {
+            return $this->json(['message' => 'Not found'], 404);
+        }
+
         try {
             $data = json_decode($request->getContent(), true) ?: [];
             $email = strtolower(trim((string) ($data['email'] ?? '')));

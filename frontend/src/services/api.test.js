@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 import { apiFetch } from '../api'
 
 // Mock fetch globally
-global.fetch = vi.fn()
+globalThis.fetch = vi.fn()
 
 describe('api', () => {
   beforeEach(() => {
@@ -17,7 +17,7 @@ describe('api', () => {
   describe('apiFetch', () => {
     it('should make successful GET request', async () => {
       const mockData = { id: 1, name: 'Test' }
-      global.fetch.mockResolvedValue({
+      globalThis.fetch.mockResolvedValue({
         ok: true,
         status: 200,
         json: async () => mockData,
@@ -26,7 +26,7 @@ describe('api', () => {
 
       const result = await apiFetch('/api/test')
 
-      expect(global.fetch).toHaveBeenCalledWith(
+      expect(globalThis.fetch).toHaveBeenCalledWith(
         expect.stringContaining('/api/test'),
         expect.objectContaining({
           headers: expect.any(Object)
@@ -38,7 +38,7 @@ describe('api', () => {
     it('should include auth token from localStorage', async () => {
       localStorage.setItem('token', 'test-token-123')
       
-      global.fetch.mockResolvedValue({
+      globalThis.fetch.mockResolvedValue({
         ok: true,
         status: 200,
         json: async () => ({}),
@@ -47,7 +47,7 @@ describe('api', () => {
 
       await apiFetch('/api/test')
 
-      expect(global.fetch).toHaveBeenCalledWith(
+      expect(globalThis.fetch).toHaveBeenCalledWith(
         expect.any(String),
         expect.objectContaining({
           headers: expect.objectContaining({
@@ -58,7 +58,7 @@ describe('api', () => {
     })
 
     it('should handle POST request with body', async () => {
-      global.fetch.mockResolvedValue({
+      globalThis.fetch.mockResolvedValue({
         ok: true,
         status: 201,
         json: async () => ({ id: 1 }),
@@ -72,7 +72,7 @@ describe('api', () => {
         body: JSON.stringify(body)
       })
 
-      expect(global.fetch).toHaveBeenCalledWith(
+      expect(globalThis.fetch).toHaveBeenCalledWith(
         expect.any(String),
         expect.objectContaining({
           method: 'POST',
@@ -82,7 +82,7 @@ describe('api', () => {
     })
 
     it('should throw error on 404', async () => {
-      global.fetch.mockResolvedValue({
+      globalThis.fetch.mockResolvedValue({
         ok: false,
         status: 404,
         statusText: 'Not Found',
@@ -94,7 +94,7 @@ describe('api', () => {
     })
 
     it('should throw error on 500', async () => {
-      global.fetch.mockResolvedValue({
+      globalThis.fetch.mockResolvedValue({
         ok: false,
         status: 500,
         statusText: 'Internal Server Error',
@@ -106,7 +106,7 @@ describe('api', () => {
     })
 
     it('should handle 401 Unauthorized', async () => {
-      global.fetch.mockResolvedValue({
+      globalThis.fetch.mockResolvedValue({
         ok: false,
         status: 401,
         statusText: 'Unauthorized',
@@ -118,7 +118,7 @@ describe('api', () => {
     })
 
     it('should return null for empty response', async () => {
-      global.fetch.mockResolvedValue({
+      globalThis.fetch.mockResolvedValue({
         ok: true,
         status: 204,
         json: async () => null,

@@ -201,3 +201,7 @@ services:
   App\ApiDoc\DefaultOperationDescriber:
     tags:
       - { name: nelmio_api_doc.describer, priority: -2000 }
+
+  App\ApiDoc\RouteOperationDescriber:
+    tags:
+      - { name: nelmio_api_doc.describer, priority: -1500 }

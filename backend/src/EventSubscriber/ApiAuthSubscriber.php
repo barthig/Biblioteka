@@ -41,6 +41,7 @@ class ApiAuthSubscriber implements EventSubscriberInterface
             return;
         }
 
+        $apiSecretStatus = $this->attachApiSecretIdentity($request);
         $jwtStatus = $this->attachJwtPayload($request);
 
         if ($this->isPublicRoute($path, $method)) {
@@ -73,7 +74,11 @@ class ApiAuthSubscriber implements EventSubscriberInterface
             return;
         }
 
-        // JWT validation required - no fallback authentication allowed
+        if ($apiSecretStatus === true) {
+            return;
+        }
+
+        // JWT or API secret required
         $event->setResponse(new JsonResponse(['message' => 'Unauthorized'], 401));
     }
 
@@ -109,10 +114,13 @@ class ApiAuthSubscriber implements EventSubscriberInterface
             '/api/auth/login' => ['POST'],
             '/api/auth/register' => ['POST'],
             '/api/auth/refresh' => ['POST'],
-            '/api/test-login' => ['POST'], // temporary debug endpoint
         ];
 
         if (isset($publicRoutes[$path]) && in_array($method, $publicRoutes[$path], true)) {
+            return true;
+        }
+
+        if ($path === '/api/test-login' && $this->isDebugEnv()) {
             return true;
         }
 
@@ -140,5 +148,53 @@ class ApiAuthSubscriber implements EventSubscriberInterface
         }
 
         return false;
+    }
+
+    private function attachApiSecretIdentity(Request $request): ?bool
+    {
+        $provided = $request->headers->get('x-api-secret');
+        if (!$provided) {
+            return null;
+        }
+
+        $secrets = [];
+        $primary = getenv('API_SECRET') ?: ($_ENV['API_SECRET'] ?? null);
+        if (is_string($primary) && $primary !== '') {
+            $secrets[] = $primary;
+        }
+
+        $additional = getenv('API_SECRETS') ?: ($_ENV['API_SECRETS'] ?? null);
+        if (is_string($additional) && $additional !== '') {
+            foreach (explode(',', $additional) as $candidate) {
+                $candidate = trim($candidate);
+                if ($candidate !== '') {
+                    $secrets[] = $candidate;
+                }
+            }
+        }
+
+        if ($secrets === []) {
+            return false;
+        }
+
+        foreach ($secrets as $secret) {
+            if (hash_equals($secret, $provided)) {
+                $request->attributes->set('api_secret_auth', true);
+                $request->attributes->set('jwt_payload', [
+                    'sub' => null,
+                    'roles' => ['ROLE_ADMIN', 'ROLE_SYSTEM'],
+                    'auth' => 'api_secret',
+                ]);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function isDebugEnv(): bool
+    {
+        $env = getenv('APP_ENV') ?: ($_ENV['APP_ENV'] ?? 'prod');
+        return in_array($env, ['dev', 'test'], true);
     }
 }
