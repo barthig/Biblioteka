@@ -62,14 +62,15 @@ describe('Profile page', () => {
     apiFetch.mockResolvedValue({})
     ratingService.getMyRatings.mockResolvedValue({ data: [] })
 
-    render(
+    const { container } = render(
       <MemoryRouter>
         <Profile />
       </MemoryRouter>
     )
 
-    const newPassword = await screen.findByLabelText(/Nowe/i)
-    const confirmPassword = screen.getByLabelText(/Powt/i)
+    await screen.findByText(/Moje konto/i)
+    const newPassword = container.querySelector('#password-new')
+    const confirmPassword = container.querySelector('#password-confirm')
     await userEvent.type(newPassword, 'password123')
     await userEvent.type(confirmPassword, 'password124')
     await userEvent.click(screen.getByRole('button', { name: /Zmie/i }))

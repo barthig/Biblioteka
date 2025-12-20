@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import Acquisitions from './Acquisitions'
 import { acquisitionService } from '../services/acquisitionService'
@@ -45,9 +45,11 @@ describe('Acquisitions page', () => {
     render(<Acquisitions />)
 
     expect(await screen.findByText('Supplier A')).toBeInTheDocument()
-    await userEvent.type(screen.getByPlaceholderText(/Nazwa/i), 'Supplier B')
-    await userEvent.type(screen.getByPlaceholderText(/Kontakt/i), 'contact')
-    await userEvent.click(screen.getByRole('button', { name: /^Dodaj$/i }))
+    const suppliersCard = screen.getByText(/Dostawcy/i).closest('.surface-card')
+    const suppliersScope = within(suppliersCard)
+    await userEvent.type(suppliersScope.getByPlaceholderText(/Nazwa/i), 'Supplier B')
+    await userEvent.type(suppliersScope.getByPlaceholderText(/Kontakt/i), 'contact')
+    await userEvent.click(suppliersScope.getByRole('button', { name: /^Dodaj$/i }))
     expect(acquisitionService.createSupplier).toHaveBeenCalledWith({ name: 'Supplier B', contact: 'contact' })
   })
 })

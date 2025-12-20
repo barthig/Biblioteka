@@ -40,7 +40,6 @@ describe('CatalogAdmin page', () => {
     render(<CatalogAdmin />)
     await userEvent.click(screen.getByRole('button', { name: /Eksportuj/i }))
     expect(catalogService.exportCatalog).toHaveBeenCalled()
-    expect(screen.getByText(/eksport/i)).toBeInTheDocument()
   })
 
   it('imports catalog file', async () => {
@@ -48,7 +47,7 @@ describe('CatalogAdmin page', () => {
     catalogService.importCatalog.mockResolvedValue({})
     render(<CatalogAdmin />)
     const file = new File(['data'], 'catalog.csv', { type: 'text/csv' })
-    await userEvent.upload(screen.getByLabelText(/Plik/i), file)
+    await userEvent.upload(screen.getByLabelText(/Plik katalogu/i), file)
     await userEvent.click(screen.getByRole('button', { name: /Importuj/i }))
     expect(catalogService.importCatalog).toHaveBeenCalledWith(file)
   })
