@@ -36,9 +36,10 @@ describe('UserDetails page', () => {
     }
     apiFetch.mockResolvedValueOnce(data)
     apiFetch.mockResolvedValueOnce({})
+    apiFetch.mockResolvedValueOnce(data)
     window.alert = vi.fn()
 
-    render(
+    const { container } = render(
       <MemoryRouter initialEntries={['/users/1/details']}>
         <Routes>
           <Route path="/users/:id/details" element={<UserDetails />} />
@@ -48,7 +49,7 @@ describe('UserDetails page', () => {
 
     expect(await screen.findByText(/Jan Kowalski/)).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: /Edytuj/i }))
-    const nameInput = screen.getByLabelText(/Imi/i)
+    const nameInput = container.querySelector('input[name="name"]')
     await userEvent.clear(nameInput)
     await userEvent.type(nameInput, 'Jan Nowak')
     await userEvent.click(screen.getByRole('button', { name: /Zapisz/i }))

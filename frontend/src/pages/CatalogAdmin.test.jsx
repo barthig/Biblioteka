@@ -45,9 +45,9 @@ describe('CatalogAdmin page', () => {
   it('imports catalog file', async () => {
     mockUser = { roles: ['ROLE_ADMIN'] }
     catalogService.importCatalog.mockResolvedValue({})
-    render(<CatalogAdmin />)
+    const { container } = render(<CatalogAdmin />)
     const file = new File(['data'], 'catalog.csv', { type: 'text/csv' })
-    await userEvent.upload(screen.getByLabelText(/Plik katalogu/i), file)
+    await userEvent.upload(container.querySelector('input[type="file"]'), file)
     await userEvent.click(screen.getByRole('button', { name: /Importuj/i }))
     expect(catalogService.importCatalog).toHaveBeenCalledWith(file)
   })

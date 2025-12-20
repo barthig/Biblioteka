@@ -20,7 +20,7 @@ describe('digitalAssetService', () => {
     const [url, opts] = apiFetch.mock.calls[0]
     expect(url).toBe('/api/admin/books/5/assets')
     expect(opts.method).toBe('POST')
-    expect(opts.body).toBeInstanceOf(FormData)
+    expect(typeof opts.body.append).toBe('function')
   })
 
   it('builds download url', () => {

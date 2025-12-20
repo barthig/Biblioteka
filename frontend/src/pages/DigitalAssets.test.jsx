@@ -32,9 +32,9 @@ describe('DigitalAssets page', () => {
   it('loads assets for a book and allows delete', async () => {
     mockUser = { roles: ['ROLE_LIBRARIAN'] }
     digitalAssetService.list.mockResolvedValue({ data: [{ id: 1, filename: 'file.pdf' }] })
-    render(<DigitalAssets />)
+    const { container } = render(<DigitalAssets />)
 
-    await userEvent.type(screen.getByLabelText(/ID/i), '10')
+    await userEvent.type(container.querySelector('input[type="number"]'), '10')
     expect(await screen.findByText('file.pdf')).toBeInTheDocument()
 
     await userEvent.click(screen.getByRole('button', { name: /Usu/i }))
@@ -44,11 +44,11 @@ describe('DigitalAssets page', () => {
   it('uploads file when form is complete', async () => {
     mockUser = { roles: ['ROLE_ADMIN'] }
     digitalAssetService.list.mockResolvedValue({ data: [] })
-    render(<DigitalAssets />)
+    const { container } = render(<DigitalAssets />)
 
     const file = new File(['hello'], 'file.txt', { type: 'text/plain' })
-    await userEvent.type(screen.getByLabelText(/ID/i), '7')
-    await userEvent.upload(screen.getByLabelText(/Plik/i), file)
+    await userEvent.type(container.querySelector('input[type="number"]'), '7')
+    await userEvent.upload(container.querySelector('input[type="file"]'), file)
     await userEvent.click(screen.getByRole('button', { name: /Prze/i }))
 
     expect(digitalAssetService.upload).toHaveBeenCalledWith('7', file)

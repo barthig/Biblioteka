@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import OnboardingModal from './OnboardingModal'
 import { apiFetch } from '../api'
 
@@ -13,17 +14,19 @@ describe('OnboardingModal', () => {
     const onComplete = vi.fn()
     render(<OnboardingModal onComplete={onComplete} />)
 
-    fireEvent.click(screen.getByRole('button', { name: /Krymina/i }))
-    fireEvent.click(screen.getByRole('button', { name: /Kontynuuj/i }))
+    await userEvent.click(screen.getByRole('button', { name: /Krymina/i }))
+    await userEvent.click(screen.getByRole('button', { name: /Kontynuuj/i }))
 
-    expect(apiFetch).toHaveBeenCalledWith('/api/users/me/onboarding', expect.objectContaining({ method: 'POST' }))
-    expect(onComplete).toHaveBeenCalled()
+    await waitFor(() => {
+      expect(apiFetch).toHaveBeenCalledWith('/api/users/me/onboarding', expect.objectContaining({ method: 'POST' }))
+      expect(onComplete).toHaveBeenCalled()
+    })
   })
 
   it('allows skipping onboarding', () => {
     const onComplete = vi.fn()
     render(<OnboardingModal onComplete={onComplete} />)
-    fireEvent.click(screen.getByRole('button', { name: /Pomi/i }))
+    screen.getByRole('button', { name: /Pomi/i }).click()
     expect(onComplete).toHaveBeenCalled()
   })
 })

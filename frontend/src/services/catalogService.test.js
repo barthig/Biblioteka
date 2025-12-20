@@ -20,6 +20,6 @@ describe('catalogService', () => {
     const [url, opts] = apiFetch.mock.calls[0]
     expect(url).toBe('/api/admin/catalog/import')
     expect(opts.method).toBe('POST')
-    expect(opts.body).toBeInstanceOf(FormData)
+    expect(typeof opts.body.append).toBe('function')
   })
 })

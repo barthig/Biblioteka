@@ -73,7 +73,7 @@ describe('Profile page', () => {
     const confirmPassword = container.querySelector('#password-confirm')
     await userEvent.type(newPassword, 'password123')
     await userEvent.type(confirmPassword, 'password124')
-    await userEvent.click(screen.getByRole('button', { name: /Zmie/i }))
+    await userEvent.click(screen.getByRole('button', { name: /Zmie.*has/i }))
 
     expect(await screen.findByText(/Nowe has/i)).toBeInTheDocument()
   })

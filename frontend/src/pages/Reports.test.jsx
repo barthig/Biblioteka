@@ -23,10 +23,15 @@ describe('Reports page', () => {
     vi.clearAllMocks()
   })
 
-  it('denies access when not librarian', () => {
+  it('denies access when not librarian', async () => {
     mockUser = { roles: ['ROLE_USER'] }
+    reportService.getUsage.mockResolvedValue({})
+    reportService.getPopularTitles.mockResolvedValue({ data: [] })
+    reportService.getPatronSegments.mockResolvedValue({ data: [] })
+    reportService.getFinancialSummary.mockResolvedValue({})
+    reportService.getInventoryOverview.mockResolvedValue({})
     render(<Reports />)
-    expect(screen.getByText(/Brak upraw/i)).toBeInTheDocument()
+    expect(await screen.findByText(/Brak upraw/i)).toBeInTheDocument()
   })
 
   it('renders reports data', async () => {
