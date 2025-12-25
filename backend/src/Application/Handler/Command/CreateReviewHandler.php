@@ -3,6 +3,7 @@ namespace App\Application\Handler\Command;
 
 use App\Application\Command\Review\CreateReviewCommand;
 use App\Entity\Book;
+use App\Entity\Rating;
 use App\Entity\Review;
 use App\Entity\User;
 use App\Repository\ReviewRepository;
@@ -44,6 +45,17 @@ class CreateReviewHandler
                ->touch();
 
         $this->entityManager->persist($review);
+
+        $ratingRepo = $this->entityManager->getRepository(Rating::class);
+        $rating = $ratingRepo->findOneBy(['user' => $user, 'book' => $book]);
+        if (!$rating) {
+            $rating = (new Rating())
+                ->setBook($book)
+                ->setUser($user);
+        }
+        $rating->setRating($command->rating)
+               ->setReview($command->comment);
+        $this->entityManager->persist($rating);
         $this->entityManager->flush();
 
         return $review;

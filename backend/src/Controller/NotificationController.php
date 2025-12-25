@@ -10,17 +10,28 @@ class NotificationController extends AbstractController
 {
     public function list(Request $request, SecurityService $security): JsonResponse
     {
-        if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['message' => 'Forbidden'], 403);
-        }
-
         if ($request->query->getBoolean('serviceDown', false)) {
             return $this->json(['message' => 'Notification service unavailable'], 503);
         }
 
+        $now = new \DateTimeImmutable();
         $notifications = [
-            ['id' => 1, 'type' => 'email', 'target' => 'reader@example.com', 'message' => 'Przypomnienie o zwrocie książki'],
-            ['id' => 2, 'type' => 'sms', 'target' => '+48123123123', 'message' => 'Nowa rezerwacja do odebrania'],
+            [
+                'id' => 1,
+                'type' => 'email',
+                'target' => 'reader@example.com',
+                'title' => 'Przypomnienie o zwrocie',
+                'message' => 'Przypomnienie o zwrocie ksiazki',
+                'createdAt' => $now->modify('-90 minutes')->format(DATE_ATOM),
+            ],
+            [
+                'id' => 2,
+                'type' => 'sms',
+                'target' => '+48123123123',
+                'title' => 'Rezerwacja gotowa',
+                'message' => 'Nowa rezerwacja do odebrania',
+                'createdAt' => $now->modify('-25 minutes')->format(DATE_ATOM),
+            ],
         ];
 
         return $this->json($notifications, 200);

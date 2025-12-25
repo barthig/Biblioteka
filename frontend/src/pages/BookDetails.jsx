@@ -37,7 +37,8 @@ function getInitials(name) {
 export default function BookDetails() {
   const { id } = useParams()
   const bookId = Number(id)
-  const { token, isAuthenticated } = useAuth()
+  const { token, user } = useAuth()
+  const isAuthenticated = Boolean(token || user?.id)
 
   const [book, setBook] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -62,11 +63,16 @@ export default function BookDetails() {
   const [reviewActionError, setReviewActionError] = useState(null)
   const [reviewActionSuccess, setReviewActionSuccess] = useState(null)
   const [ratingData, setRatingData] = useState({ average: 0, count: 0, userRating: null })
-  const [userRating, setUserRating] = useState(0)
-  const [ratingSubmitting, setRatingSubmitting] = useState(false)
   const { getCachedResource, setCachedResource, invalidateResource } = useResourceCache()
   const REVIEWS_CACHE_TTL = 60000
   const RESERVATIONS_CACHE_TTL = 45000
+  const ratingSummaryAverage = (reviewsState.summary?.total ?? 0) > 0
+    ? reviewsState.summary.average
+    : (ratingData?.average ?? null)
+  const ratingSummaryCount = (reviewsState.summary?.total ?? 0) > 0
+    ? reviewsState.summary.total
+    : (ratingData?.count ?? 0)
+
 
   useEffect(() => {
     let active = true
@@ -82,6 +88,11 @@ export default function BookDetails() {
         const data = await apiFetch(`/api/books/${id}`)
         if (active) {
           setBook(data)
+          setRatingData(prev => ({
+            average: typeof data?.averageRating == 'number' ? data.averageRating : (prev.average || 0),
+            count: typeof data?.ratingCount == 'number' ? data.ratingCount : (prev.count || 0),
+            userRating: prev.userRating || null,
+          }))
         }
       } catch (err) {
         if (active) {
@@ -129,7 +140,7 @@ export default function BookDetails() {
   }, [loadReviews])
 
   useEffect(() => {
-    if (!id || !isAuthenticated) return
+    if (!id) return
     
     async function loadRatings() {
       try {
@@ -139,45 +150,13 @@ export default function BookDetails() {
           count: data.count || 0,
           userRating: data.userRating || null
         })
-        if (data.userRating) {
-          setUserRating(data.userRating.rating)
-        }
       } catch (err) {
         console.error('Failed to load ratings:', err)
       }
     }
     
     loadRatings()
-  }, [id, isAuthenticated])
-
-  const handleRatingSubmit = async (rating) => {
-    if (!isAuthenticated) return
-    
-    setRatingSubmitting(true)
-    try {
-      await apiFetch(`/api/books/${id}/rate`, {
-        method: 'POST',
-        body: JSON.stringify({ rating })
-      })
-      
-      setUserRating(rating)
-      
-      // Reload ratings
-      const data = await apiFetch(`/api/books/${id}/ratings`)
-      setRatingData({
-        average: data.average || 0,
-        count: data.count || 0,
-        userRating: data.userRating || null
-      })
-      
-      setActionSuccess('Ocena zapisana!')
-      setTimeout(() => setActionSuccess(null), 3000)
-    } catch (err) {
-      setActionError(err.message || 'Nie udało się zapisać oceny')
-    } finally {
-      setRatingSubmitting(false)
-    }
-  }
+  }, [id])
 
   useEffect(() => {
     aliveRef.current = true
@@ -347,6 +326,17 @@ export default function BookDetails() {
       setReviewActionSuccess('Opinia została zapisana.')
       invalidateResource(`reviews:${bookId}`)
       await loadReviews()
+      try {
+        const data = await apiFetch(`/api/books/${id}/ratings`)
+        setRatingData({
+          average: data.average || 0,
+          count: data.count || 0,
+          userRating: data.userRating || null
+        })
+      } catch {
+        // ignore ratings refresh errors
+      }
+
     } catch (err) {
       setReviewActionError(err.message || 'Nie udało się zapisać opinii')
     } finally {
@@ -404,7 +394,7 @@ export default function BookDetails() {
 
       <StatGrid>
         <StatCard title="Dostępność" value={anyAvailable ? 'Dostępne' : 'Brak'} subtitle={`${book.copies ?? 0} z ${book.totalCopies ?? book.copies ?? 0}`} />
-        <StatCard title="Oceny" value={ratingData.average ? ratingData.average.toFixed(1) : '—'} subtitle={`${ratingData.count ?? 0} opinii`} />
+        <StatCard title="Oceny" value={ratingSummaryAverage ? ratingSummaryAverage.toFixed(1) : 'Brak'} subtitle={`${ratingSummaryCount ?? 0} ocen`} />
         <StatCard title="Rezerwacje" value={activeReservation ? 'Aktywna' : (anyAvailable ? 'Niepotrzebna' : 'Dostępna')} subtitle={activeReservation ? 'Masz aktywną rezerwację' : 'Dołącz do kolejki'} />
       </StatGrid>
 
@@ -462,25 +452,6 @@ export default function BookDetails() {
           </div>
         </dl>
         
-        {isAuthenticated && ratingData && (
-          <div style={{ marginTop: '2rem', paddingTop: '2rem', borderTop: '1px solid var(--border-color)' }}>
-            <h3>Ocena czytelników</h3>
-            <RatingDisplay average={ratingData.average} count={ratingData.count} size="large" />
-            
-            {!ratingSubmitting && (
-              <div style={{ marginTop: '1.5rem' }}>
-                <h4 style={{ marginBottom: '0.75rem', fontSize: '1rem', fontWeight: 500 }}>
-                  {userRating > 0 ? 'Twoja ocena:' : 'Oceń tę książkę:'}
-                </h4>
-                <StarRating 
-                  rating={userRating} 
-                  onRate={handleRatingSubmit}
-                  size="large"
-                />
-              </div>
-            )}
-          </div>
-        )}
       </SectionCard>
 
       <SectionCard title="Działania" className="book-actions">
@@ -532,27 +503,23 @@ export default function BookDetails() {
         {reviewsError && <p className="error">{reviewsError}</p>}
         <div className="review-summary">
           <div>
-            <strong>Średnia ocena:</strong> {reviewsState.summary.average ?? 'Brak ocen'}
+            <strong>Średnia ocena:</strong> {ratingSummaryAverage ? ratingSummaryAverage.toFixed(1) : 'Brak ocen'}
           </div>
           <div>
-            <strong>Liczba opinii:</strong> {reviewsState.summary.total}
+            <strong>Liczba ocen:</strong> {ratingSummaryCount ?? 0}
           </div>
         </div>
 
         {isAuthenticated ? (
           <form onSubmit={submitReview} className="form-grid review-form">
             <div>
-              <label htmlFor="review-rating">Ocena (1-5)</label>
-              <select
-                id="review-rating"
-                value={reviewForm.rating}
-                onChange={event => setReviewForm({ ...reviewForm, rating: Number(event.target.value) })}
-                disabled={reviewPending}
-              >
-                {[5, 4, 3, 2, 1].map(value => (
-                  <option key={value} value={value}>{value}</option>
-                ))}
-              </select>
+              <label>Ocena</label>
+              <StarRating
+                rating={reviewForm.rating}
+                onRate={(value) => setReviewForm({ ...reviewForm, rating: value })}
+                size="large"
+                readonly={reviewPending}
+              />
             </div>
             <div>
               <label htmlFor="review-comment">Opinia</label>

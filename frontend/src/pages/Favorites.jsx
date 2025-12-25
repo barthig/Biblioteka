@@ -18,6 +18,7 @@ export default function Favorites() {
   const { getCachedResource, setCachedResource, invalidateResource } = useResourceCache()
   const CACHE_KEY = '/api/favorites'
   const CACHE_TTL = 60000
+  const cacheKey = user?.id ? `favorites:${user.id}:${CACHE_KEY}` : `favorites:anon:${CACHE_KEY}`
 
   const lastAdded = Array.isArray(favorites)
     ? favorites
@@ -31,13 +32,13 @@ export default function Favorites() {
     if (!user?.id) {
       setFavorites([])
       setLoading(false)
-      invalidateResource('favorites:/api/favorites')
+      invalidateResource('favorites:*')
       return
     }
 
     let active = true
     async function load() {
-      const cached = getCachedResource(`favorites:${CACHE_KEY}`, CACHE_TTL)
+      const cached = getCachedResource(cacheKey, CACHE_TTL)
       if (cached) {
         setFavorites(cached)
         setLoading(false)
@@ -52,7 +53,7 @@ export default function Favorites() {
         if (active) {
           const list = Array.isArray(data?.data) ? data.data : []
           setFavorites(list)
-          setCachedResource(`favorites:${CACHE_KEY}`, list)
+          setCachedResource(cacheKey, list)
         }
       } catch (err) {
         if (active) setError(err.message || 'Nie udało się pobrać półki ulubionych książek')
@@ -65,7 +66,7 @@ export default function Favorites() {
 
     // Poll for cache changes every 2 seconds
     const interval = setInterval(() => {
-      const cached = getCachedResource(`favorites:${CACHE_KEY}`, CACHE_TTL)
+      const cached = getCachedResource(cacheKey, CACHE_TTL)
       if (!cached) {
         load()
       }
@@ -75,7 +76,7 @@ export default function Favorites() {
       active = false
       clearInterval(interval)
     }
-  }, [getCachedResource, invalidateResource, setCachedResource, user?.id, CACHE_KEY, CACHE_TTL])
+  }, [getCachedResource, invalidateResource, setCachedResource, user?.id, cacheKey, CACHE_KEY, CACHE_TTL])
 
   async function removeFavorite(bookId) {
     setActionError(null)
@@ -83,7 +84,7 @@ export default function Favorites() {
       await apiFetch(`/api/favorites/${bookId}`, { method: 'DELETE' })
       setFavorites(prev => {
         const next = prev.filter(f => f.book?.id !== bookId)
-        setCachedResource(`favorites:${CACHE_KEY}`, next)
+        setCachedResource(cacheKey, next)
         return next
       })
       // Invalidate recommended as favorites affect recommendations

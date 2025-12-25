@@ -144,11 +144,9 @@ export default function BookItem({ book, onBorrowed }) {
         </span>
       </div>
 
-      {book.averageRating > 0 && (
-        <div style={{ marginTop: '0.75rem' }}>
-          <RatingDisplay average={book.averageRating} count={book.ratingCount || 0} size="small" />
-        </div>
-      )}
+      <div style={{ marginTop: '0.75rem' }}>
+        <RatingDisplay averageRating={book.averageRating || 0} ratingCount={book.ratingCount || 0} />
+      </div>
 
       {book.description && (
         <p className="support-copy">{book.description}</p>

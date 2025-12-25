@@ -2,6 +2,7 @@
 namespace App\Application\Handler\Command;
 
 use App\Application\Command\Review\DeleteReviewCommand;
+use App\Entity\Rating;
 use App\Repository\ReviewRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
@@ -28,7 +29,15 @@ class DeleteReviewHandler
             throw new \RuntimeException('Forbidden: You can only delete your own reviews');
         }
 
+        $rating = $this->em->getRepository(Rating::class)->findOneBy([
+            'user' => $review->getUser(),
+            'book' => $review->getBook(),
+        ]);
+
         $this->em->remove($review);
+        if ($rating) {
+            $this->em->remove($rating);
+        }
         $this->em->flush();
     }
 }
