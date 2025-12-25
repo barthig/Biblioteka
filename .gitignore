@@ -9,3 +9,4 @@ backend/supervisord.pid
 frontend/dist/
 frontend/test-results/
 archive/
+frontend/coverage/
