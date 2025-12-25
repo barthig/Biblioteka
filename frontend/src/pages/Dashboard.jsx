@@ -5,11 +5,13 @@ import { useAuth } from '../context/AuthContext'
 import { useResourceCache } from '../context/ResourceCacheContext'
 import OnboardingModal from '../components/OnboardingModal'
 import UserRecommendations from '../components/UserRecommendations'
+import SectionCard from '../components/ui/SectionCard'
 
 export default function Dashboard() {
   const [stats, setStats] = useState(null)
   const [alerts, setAlerts] = useState([])
   const [libraryHours, setLibraryHours] = useState(null)
+  const [dashboardAnnouncements, setDashboardAnnouncements] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
@@ -21,6 +23,8 @@ export default function Dashboard() {
   const isAdmin = user?.roles?.includes('ROLE_ADMIN')
   const { prefetchResource } = useResourceCache()
   const prefetchScheduledRef = useRef(false)
+  const [expandedAnnouncements, setExpandedAnnouncements] = useState(() => new Set())
+  const [publicAnnouncements, setPublicAnnouncements] = useState([])
 
   const publicNewArrivals = useMemo(() => ([
     { title: 'Cisza nad jeziorem', author: 'Maria Nowicka' },
@@ -29,7 +33,7 @@ export default function Dashboard() {
     { title: 'Atlas wspomnień', author: 'Tomasz Wieczorek' },
   ]), [])
 
-  const publicEvents = useMemo(() => ([
+  const fallbackPublicEvents = useMemo(() => ([
     {
       date: '12 MAJ',
       title: 'Spotkanie autorskie',
@@ -76,6 +80,99 @@ export default function Dashboard() {
     },
   }), [])
 
+  const upcomingEvents = useMemo(() => {
+    const now = Date.now()
+    return dashboardAnnouncements
+      .filter(item => item?.eventAt && new Date(item.eventAt).getTime() > now)
+      .sort((a, b) => new Date(a.eventAt) - new Date(b.eventAt))
+      .slice(0, 3)
+  }, [dashboardAnnouncements])
+
+  const publicUpcomingEvents = useMemo(() => {
+    const now = Date.now()
+    return publicAnnouncements
+      .filter(item => item?.eventAt && new Date(item.eventAt).getTime() > now)
+      .sort((a, b) => new Date(a.eventAt) - new Date(b.eventAt))
+      .slice(0, 2)
+  }, [publicAnnouncements])
+
+  const latestAnnouncements = useMemo(() => {
+    return dashboardAnnouncements
+      .filter(item => !item?.eventAt)
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .slice(0, 3)
+  }, [dashboardAnnouncements])
+
+  const formatDateTime = (value) => new Date(value).toLocaleString('pl-PL', { dateStyle: 'medium', timeStyle: 'short' })
+  const formatDate = (value) => new Date(value).toLocaleDateString('pl-PL')
+  const formatPublicEventDate = (value) => new Date(value).toLocaleDateString('pl-PL', { day: '2-digit', month: 'short' }).toUpperCase()
+  const formatPublicEventTime = (value) => new Date(value).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })
+  const CONTENT_LIMIT = 140
+
+  const toggleExpanded = (key) => {
+    setExpandedAnnouncements(prev => {
+      const next = new Set(prev)
+      if (next.has(key)) {
+        next.delete(key)
+      } else {
+        next.add(key)
+      }
+      return next
+    })
+  }
+
+  const getAnnouncementText = (item) => item?.content || item?.description || ''
+  const truncateText = (text) => {
+    if (!text || text.length <= CONTENT_LIMIT) return text
+    return `${text.slice(0, CONTENT_LIMIT).trimEnd()}...`
+  }
+
+  const renderAnnouncementsList = (items, emptyText, dateFormatter, dateValue) => {
+    if (items.length === 0) {
+      return <p className="support-copy">{emptyText}</p>
+    }
+
+    return (
+      <ul className="list list--bordered">
+        {items.map((item, index) => {
+          const itemKey = item?.id ?? `${item?.title || 'item'}-${index}`
+          const content = getAnnouncementText(item)
+          const isExpanded = expandedAnnouncements.has(itemKey)
+          const shouldToggle = content.length > CONTENT_LIMIT
+          const descriptionId = `announcement-desc-${String(itemKey).replace(/\\s+/g, '-')}`
+
+          return (
+            <li key={itemKey}>
+              <div className="list__title">{item.title}</div>
+              <div className="list__meta">{dateFormatter(dateValue(item))}</div>
+              {item.location && (
+                <div className="list__meta">Lokalizacja: {item.location}</div>
+              )}
+              {content && (
+                <div className="list__content">
+                  <p id={descriptionId} className="support-copy">
+                    {isExpanded ? content : truncateText(content)}
+                  </p>
+                  {shouldToggle && (
+                    <button
+                      type="button"
+                      className="btn btn-ghost"
+                      onClick={() => toggleExpanded(itemKey)}
+                      aria-expanded={isExpanded}
+                      aria-controls={descriptionId}
+                    >
+                      {isExpanded ? 'Zwin' : 'Rozwin'}
+                    </button>
+                  )}
+                </div>
+              )}
+            </li>
+          )
+        })}
+      </ul>
+    )
+  }
+
   const handlePublicSearch = (event) => {
     event.preventDefault()
     if (searchQuery.trim()) {
@@ -93,6 +190,32 @@ export default function Dashboard() {
   }, [isAuthenticated])
 
   useEffect(() => {
+    if (isAuthenticated) {
+      setPublicAnnouncements([])
+      return
+    }
+
+    let mounted = true
+    async function loadPublicAnnouncements() {
+      try {
+        const result = await apiFetch('/api/announcements?homepage=true&limit=6')
+        if (mounted) {
+          setPublicAnnouncements(Array.isArray(result?.data) ? result.data : [])
+        }
+      } catch {
+        if (mounted) {
+          setPublicAnnouncements([])
+        }
+      }
+    }
+
+    loadPublicAnnouncements()
+    return () => {
+      mounted = false
+    }
+  }, [isAuthenticated])
+
+  useEffect(() => {
     if (!isAuthenticated) {
       setStats(null)
       setAlerts([])
@@ -107,16 +230,18 @@ export default function Dashboard() {
     async function load() {
       setLoading(true)
       try {
-        const [dashboardData, alertsData, hoursData] = await Promise.all([
+        const [dashboardData, alertsData, hoursData, announcementsData] = await Promise.all([
           apiFetch('/api/dashboard'),
           apiFetch('/api/alerts').catch(() => []),
-          apiFetch('/api/library/hours').catch(() => null)
+          apiFetch('/api/library/hours').catch(() => null),
+          apiFetch('/api/announcements?limit=10').catch(() => ({ data: [] }))
         ])
 
         if (mounted) {
           setStats(dashboardData)
           setAlerts(Array.isArray(alertsData) ? alertsData : [])
           setLibraryHours(hoursData)
+          setDashboardAnnouncements(Array.isArray(announcementsData?.data) ? announcementsData.data : [])
           setError(null)
 
           if (user && !user.onboardingCompleted) {
@@ -139,6 +264,16 @@ export default function Dashboard() {
   }, [isAuthenticated, user])
 
   if (!isAuthenticated) {
+    const publicEventCards = publicUpcomingEvents.length > 0
+      ? publicUpcomingEvents.map(event => ({
+        id: event.id,
+        date: formatPublicEventDate(event.eventAt),
+        time: formatPublicEventTime(event.eventAt),
+        title: event.title || 'Wydarzenie',
+        description: event.content || event.description || ''
+      }))
+      : fallbackPublicEvents.map(event => ({ ...event, time: event.time || '' }))
+
     return (
       <div className="landing-page public-home">
         <main>
@@ -225,13 +360,14 @@ export default function Dashboard() {
               <Link to="/announcements" className="section-link">Pełny kalendarz</Link>
             </div>
             <div className="events-list">
-              {publicEvents.map(event => (
-                <article key={event.title} className="event-card">
+              {publicEventCards.map(event => (
+                <article key={event.id || event.title} className="event-card">
                   <div className="event-card__date">
                     <span>{event.date}</span>
                   </div>
                   <div className="event-card__content">
                     <h3>{event.title}</h3>
+                    {event.time && <p className="support-copy">{event.time}</p>}
                     <p>{event.description}</p>
                   </div>
                 </article>
@@ -251,6 +387,12 @@ export default function Dashboard() {
               <strong>Kontakt</strong>
               <p>tel. (61) 123 45 67</p>
               <p>kontakt@biblioteka.pl</p>
+            </div>
+            <div>
+              <strong>Godziny otwarcia</strong>
+              <p>Pon-Pt: 8:00-18:00</p>
+              <p>Sob: 9:00-14:00</p>
+              <p>Nd: nieczynne</p>
             </div>
             <div className="public-footer__social" aria-label="Media społecznościowe">
               <a href="https://facebook.com" aria-label="Facebook">Fb</a>
@@ -290,13 +432,6 @@ export default function Dashboard() {
   const loans = stats?.loansCount ?? '—'
   const reservations = stats?.reservationsQueue ?? '—'
 
-  const handleQuickSearch = (e) => {
-    e.preventDefault()
-    if (searchQuery.trim()) {
-      navigate(`/books?search=${encodeURIComponent(searchQuery.trim())}`)
-    }
-  }
-
   const getAlertIcon = (type) => {
     switch (type) {
       case 'due_soon': return '!'
@@ -326,22 +461,6 @@ export default function Dashboard() {
             <p className="support-copy">Twoje centrum dowodzenia - szybki podgląd wypożyczeń, rezerwacji i nowości.</p>
           </div>
         </header>
-
-        <div className="surface-card" style={{ marginBottom: 'var(--space-4)' }}>
-          <h2 style={{ marginBottom: 'var(--space-3)' }}>Szybka wyszukiwarka</h2>
-          <form onSubmit={handleQuickSearch} className="form-row">
-            <input
-              type="text"
-              placeholder="Wpisz tytuł, autora lub ISBN..."
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              style={{ flex: 1 }}
-            />
-            <button type="submit" className="btn btn-primary">
-              Szukaj
-            </button>
-          </form>
-        </div>
 
         {alerts.length > 0 && (
           <div className="surface-card" style={{ marginBottom: 'var(--space-4)' }}>
@@ -390,19 +509,24 @@ export default function Dashboard() {
           <UserRecommendations />
         </div>
 
-        {libraryHours && (
-          <div className="surface-card">
-            <h2 style={{ marginBottom: 'var(--space-3)' }}>Godziny otwarcia</h2>
-            <div style={{ display: 'grid', gap: 'var(--space-2)' }}>
-              {Object.entries(libraryHours).map(([day, hours]) => (
-                <div key={day} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid var(--color-border)' }}>
-                  <strong>{day}</strong>
-                  <span>{hours}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        <div className="grid grid-2" style={{ marginBottom: 'var(--space-4)' }}>
+          <SectionCard title="Wydarzenia">
+            {renderAnnouncementsList(
+              upcomingEvents,
+              'Brak nadchodzących wydarzeń.',
+              formatDateTime,
+              (item) => item.eventAt
+            )}
+          </SectionCard>
+          <SectionCard title="Ogłoszenia">
+            {renderAnnouncementsList(
+              latestAnnouncements,
+              'Brak nowych ogłoszeń.',
+              formatDate,
+              (item) => item.createdAt
+            )}
+          </SectionCard>
+        </div>
       </div>
     )
   }
@@ -445,6 +569,25 @@ export default function Dashboard() {
             <Link to="/books" className="btn btn-ghost">Katalog książek</Link>
             <Link to="/announcements" className="btn btn-ghost">Ogłoszenia</Link>
           </div>
+        </div>
+
+        <div className="grid grid-2" style={{ marginTop: 'var(--space-4)' }}>
+          <SectionCard title="Wydarzenia">
+            {renderAnnouncementsList(
+              upcomingEvents,
+              'Brak nadchodzących wydarzeń.',
+              formatDateTime,
+              (item) => item.eventAt
+            )}
+          </SectionCard>
+          <SectionCard title="Ogłoszenia">
+            {renderAnnouncementsList(
+              latestAnnouncements,
+              'Brak nowych ogłoszeń.',
+              formatDate,
+              (item) => item.createdAt
+            )}
+          </SectionCard>
         </div>
       </div>
     )
@@ -505,6 +648,25 @@ export default function Dashboard() {
             <Link to="/admin/backup" className="btn btn-ghost">Kopia zapasowa</Link>
           </div>
         </div>
+
+        <div className="grid grid-2" style={{ marginTop: 'var(--space-4)' }}>
+          <SectionCard title="Wydarzenia">
+            {renderAnnouncementsList(
+              upcomingEvents,
+              'Brak nadchodzących wydarzeń.',
+              formatDateTime,
+              (item) => item.eventAt
+            )}
+          </SectionCard>
+          <SectionCard title="Ogłoszenia">
+            {renderAnnouncementsList(
+              latestAnnouncements,
+              'Brak nowych ogłoszeń.',
+              formatDate,
+              (item) => item.createdAt
+            )}
+          </SectionCard>
+        </div>
       </div>
     )
   }
@@ -541,6 +703,25 @@ export default function Dashboard() {
         <strong>{reservations}</strong>
         <span>Liczba oczekujących na zwrot egzemplarza</span>
       </section>
+
+      <div className="grid grid-2" style={{ marginTop: 'var(--space-4)' }}>
+          <SectionCard title="Wydarzenia">
+            {renderAnnouncementsList(
+              upcomingEvents,
+              'Brak nadchodzących wydarzeń.',
+              formatDateTime,
+              (item) => item.eventAt
+            )}
+          </SectionCard>
+          <SectionCard title="Ogłoszenia">
+            {renderAnnouncementsList(
+              latestAnnouncements,
+              'Brak nowych ogłoszeń.',
+              formatDate,
+              (item) => item.createdAt
+            )}
+          </SectionCard>
+      </div>
       
       {showOnboarding && (
         <OnboardingModal onComplete={() => setShowOnboarding(false)} />

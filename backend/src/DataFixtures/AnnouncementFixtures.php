@@ -91,11 +91,12 @@ class AnnouncementFixtures extends Fixture
         $staffMeeting = new Announcement();
         $staffMeeting->setTitle('Spotkanie zespołu bibliotekarzy');
         $staffMeeting->setContent('Przypominamy o spotkaniu zespołu w czwartek o godz. 14:00 w sali konferencyjnej. Tematyka: omówienie nowych procedur katalogowania.');
-        $staffMeeting->setType('info');
+        $staffMeeting->setType('event');
         $staffMeeting->setCreatedBy($adminUser);
         $staffMeeting->setIsPinned(false);
         $staffMeeting->setShowOnHomepage(false);
         $staffMeeting->setTargetAudience(['librarians']);
+        $staffMeeting->setEventAt((new \DateTimeImmutable())->modify('+10 days')->setTime(14, 0));
         $staffMeeting->publish();
         $manager->persist($staffMeeting);
 

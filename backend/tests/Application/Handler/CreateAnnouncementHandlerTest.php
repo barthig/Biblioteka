@@ -32,11 +32,13 @@ class CreateAnnouncementHandlerTest extends TestCase
             userId: 1,
             title: 'Test Announcement',
             content: 'Test content',
+            location: null,
             type: 'info',
             isPinned: false,
             showOnHomepage: false,
             targetAudience: null,
-            expiresAt: null
+            expiresAt: null,
+            eventAt: null
         );
 
         $result = ($this->handler)($command);

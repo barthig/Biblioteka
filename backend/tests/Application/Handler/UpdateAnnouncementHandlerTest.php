@@ -33,11 +33,13 @@ class UpdateAnnouncementHandlerTest extends TestCase
             id: 1,
             title: 'New Title',
             content: null,
+            location: null,
             type: null,
             isPinned: null,
             showOnHomepage: null,
             targetAudience: null,
-            expiresAt: null
+            expiresAt: null,
+            eventAt: null
         );
         $result = ($this->handler)($command);
 

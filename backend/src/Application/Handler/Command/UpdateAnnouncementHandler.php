@@ -32,6 +32,10 @@ class UpdateAnnouncementHandler
             $announcement->setContent($command->content);
         }
 
+        if ($command->location !== null) {
+            $announcement->setLocation($command->location);
+        }
+
         if ($command->type !== null) {
             $announcement->setType($command->type);
         }
@@ -50,6 +54,19 @@ class UpdateAnnouncementHandler
 
         if ($command->expiresAt !== 'NOT_SET') {
             $announcement->setExpiresAt($command->expiresAt ? new \DateTimeImmutable($command->expiresAt) : null);
+        }
+
+        if ($command->eventAt !== 'NOT_SET') {
+            if ($command->eventAt) {
+                $eventAt = new \DateTimeImmutable($command->eventAt);
+                $now = new \DateTimeImmutable();
+                if ($eventAt <= $now) {
+                    throw new \RuntimeException('Event date must be in the future');
+                }
+                $announcement->setEventAt($eventAt);
+            } else {
+                $announcement->setEventAt(null);
+            }
         }
 
         $this->entityManager->flush();

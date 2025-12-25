@@ -65,6 +65,7 @@ export default function AdminPanel() {
     }
   }
 
+
   async function searchUsers(query) {
     if (!query || query.length < 2) {
       loadUsers()
@@ -433,7 +434,105 @@ export default function AdminPanel() {
         <button className={`tab ${activeTab === 'roles' ? 'tab--active' : ''}`} onClick={() => setActiveTab('roles')}>
           📋 Audyt
         </button>
-        <button className={`tab ${activeTab === 'staff' ? 'tab--active' : ''}`} onClick={() => setActiveTab('staff')}>
+        <button className={`tab $
+
+          {editingAnnouncement && announcementForm && (
+            <div className="modal-overlay" onClick={() => { setEditingAnnouncement(null); setAnnouncementForm(null) }}>
+              <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '720px' }}>
+                <h3>Edycja ogloszenia</h3>
+                <form onSubmit={(e) => {
+                  e.preventDefault()
+                  updateAnnouncement(editingAnnouncement.id, {
+                    title: announcementForm.title,
+                    content: announcementForm.content,
+                    type: announcementForm.type,
+                    status: announcementForm.status,
+                    isPinned: announcementForm.isPinned,
+                    showOnHomepage: announcementForm.showOnHomepage,
+                    eventAt: announcementForm.eventAt ? new Date(announcementForm.eventAt).toISOString() : null
+                  })
+                }}>
+                  <div className="form-field">
+                    <label>Tytul</label>
+                    <input
+                      value={announcementForm.title}
+                      onChange={(e) => setAnnouncementForm(prev => ({ ...prev, title: e.target.value }))}
+                      required
+                    />
+                  </div>
+                  <div className="form-field">
+                    <label>Tresc</label>
+                    <textarea
+                      value={announcementForm.content}
+                      onChange={(e) => setAnnouncementForm(prev => ({ ...prev, content: e.target.value }))}
+                      rows={5}
+                      required
+                    />
+                  </div>
+                  <div className="form-row form-row--two">
+                    <div className="form-field">
+                      <label>Typ</label>
+                      <select value={announcementForm.type} onChange={(e) => setAnnouncementForm(prev => ({ ...prev, type: e.target.value }))}>
+                        <option value="info">info</option>
+                        <option value="warning">warning</option>
+                        <option value="urgent">urgent</option>
+                        <option value="maintenance">maintenance</option>
+                        <option value="policy">policy</option>
+                        <option value="event">event</option>
+                      </select>
+                    </div>
+                    <div className="form-field">
+                      <label>Status</label>
+                      <select value={announcementForm.status} onChange={(e) => setAnnouncementForm(prev => ({ ...prev, status: e.target.value }))}>
+                        <option value="draft">draft</option>
+                        <option value="published">published</option>
+                        <option value="archived">archived</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="form-row form-row--two">
+                    <div className="form-field">
+                      <label>Data i godzina wydarzenia</label>
+                      <input
+                        type="datetime-local"
+                        value={announcementForm.eventAt}
+                        onChange={(e) => setAnnouncementForm(prev => ({ ...prev, eventAt: e.target.value }))}
+                      />
+                    </div>
+                    <div className="form-field checkbox">
+                      <label>
+                        <input
+                          type="checkbox"
+                          checked={announcementForm.showOnHomepage}
+                          onChange={(e) => setAnnouncementForm(prev => ({ ...prev, showOnHomepage: e.target.checked }))}
+                        />
+                        Widoczne na stronie glownej
+                      </label>
+                      <label>
+                        <input
+                          type="checkbox"
+                          checked={announcementForm.isPinned}
+                          onChange={(e) => setAnnouncementForm(prev => ({ ...prev, isPinned: e.target.checked }))}
+                        />
+                        Przypnij ogloszenie
+                      </label>
+                    </div>
+                  </div>
+                  <div className="modal-actions">
+                    <button type="button" className="btn btn-secondary" onClick={() => { setEditingAnnouncement(null); setAnnouncementForm(null) }}>
+                      Anuluj
+                    </button>
+                    <button type="submit" className="btn btn-primary">
+                      Zapisz zmiany
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+{activeTab === 'staff' ? 'tab--active' : ''}`} onClick={() => setActiveTab('staff')}>
           Konta pracowników
         </button>
       </div>

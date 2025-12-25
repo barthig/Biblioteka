@@ -57,16 +57,21 @@ class AnnouncementController extends AbstractController
             $payload = $security->getJwtPayload($request);
             $user = null;
             $isLibrarian = false;
+            $isAdmin = false;
             
             if ($payload && isset($payload['sub'])) {
                 $user = $this->userRepository->find((int) $payload['sub']);
                 if ($user) {
-                    $isLibrarian = in_array('ROLE_LIBRARIAN', $user->getRoles());
+                    $roles = $user->getRoles();
+                    $isLibrarian = in_array('ROLE_LIBRARIAN', $roles);
+                    $isAdmin = in_array('ROLE_ADMIN', $roles);
                 }
             }
+            $isStaff = $isLibrarian || $isAdmin;
             error_log('AnnouncementController::list - isLibrarian: ' . ($isLibrarian ? 'yes' : 'no'));
+            error_log('AnnouncementController::list - isAdmin: ' . ($isAdmin ? 'yes' : 'no'));
 
-            $query = new ListAnnouncementsQuery($user, $isLibrarian, $status, $homepageOnly, $page, $limit);
+            $query = new ListAnnouncementsQuery($user, $isStaff, $status, $homepageOnly, $page, $limit);
             error_log('AnnouncementController::list - dispatching query');
             $envelope = $this->queryBus->dispatch($query);
             $result = $envelope->last(HandledStamp::class)?->getResult();
@@ -78,7 +83,7 @@ class AnnouncementController extends AbstractController
                 }
             }
 
-            $groups = $isLibrarian ? ['announcement:list', 'announcement:read'] : ['announcement:list'];
+            $groups = $isStaff ? ['announcement:list', 'announcement:read'] : ['announcement:list'];
             $durationMs = (int) round((microtime(true) - $start) * 1000);
             error_log('AnnouncementController::list - DONE in ' . $durationMs . 'ms');
             return $this->json($result, 200, [], ['groups' => $groups]);
@@ -111,16 +116,19 @@ class AnnouncementController extends AbstractController
         $payload = $security->getJwtPayload($request);
         $user = null;
         $isLibrarian = false;
+        $isAdmin = false;
         
         if ($payload && isset($payload['sub'])) {
             $user = $this->userRepository->find((int) $payload['sub']);
             if ($user) {
-                $isLibrarian = in_array('ROLE_LIBRARIAN', $user->getRoles());
+                $roles = $user->getRoles();
+                $isLibrarian = in_array('ROLE_LIBRARIAN', $roles);
+                $isAdmin = in_array('ROLE_ADMIN', $roles);
             }
         }
 
         try {
-            $query = new GetAnnouncementQuery($id, $user, $isLibrarian);
+            $query = new GetAnnouncementQuery($id, $user, $isLibrarian || $isAdmin);
             $envelope = $this->queryBus->dispatch($query);
             $announcement = $envelope->last(HandledStamp::class)?->getResult();
             
@@ -144,11 +152,13 @@ class AnnouncementController extends AbstractController
                 properties: [
                     new OA\Property(property: 'title', type: 'string', example: 'Nowe ogłoszenie'),
                     new OA\Property(property: 'content', type: 'string', example: 'Treść ogłoszenia'),
+                    new OA\Property(property: 'location', type: 'string', example: 'Sala spotkan, pietro 1', nullable: true),
                     new OA\Property(property: 'type', type: 'string', enum: ['info', 'warning', 'urgent', 'maintenance'], example: 'info'),
                     new OA\Property(property: 'isPinned', type: 'boolean', example: false),
                     new OA\Property(property: 'showOnHomepage', type: 'boolean', example: true),
                     new OA\Property(property: 'targetAudience', type: 'array', items: new OA\Items(type: 'string'), example: ['all']),
-                    new OA\Property(property: 'expiresAt', type: 'string', format: 'date-time', nullable: true)
+                    new OA\Property(property: 'expiresAt', type: 'string', format: 'date-time', nullable: true),
+                    new OA\Property(property: 'eventAt', type: 'string', format: 'date-time', nullable: true)
                 ]
             )
         ),
@@ -169,7 +179,7 @@ class AnnouncementController extends AbstractController
             return $this->json(['message' => 'User not found'], 404);
         }
 
-        if (!in_array('ROLE_LIBRARIAN', $user->getRoles())) {
+        if (!in_array('ROLE_LIBRARIAN', $user->getRoles()) && !in_array('ROLE_ADMIN', $user->getRoles())) {
             return $this->json(['message' => 'Access denied'], 403);
         }
 
@@ -184,11 +194,13 @@ class AnnouncementController extends AbstractController
                 $user->getId(),
                 $data['title'],
                 $data['content'],
+                $data['location'] ?? null,
                 $data['type'] ?? null,
                 $data['isPinned'] ?? null,
                 $data['showOnHomepage'] ?? null,
                 $data['targetAudience'] ?? null,
-                $data['expiresAt'] ?? null
+                $data['expiresAt'] ?? null,
+                $data['eventAt'] ?? null
             );
             
             $envelope = $this->commandBus->dispatch($command);
@@ -223,7 +235,7 @@ class AnnouncementController extends AbstractController
         }
 
         $user = $this->userRepository->find((int) $payload['sub']);
-        if (!$user || !in_array('ROLE_LIBRARIAN', $user->getRoles())) {
+        if (!$user || (!in_array('ROLE_LIBRARIAN', $user->getRoles()) && !in_array('ROLE_ADMIN', $user->getRoles()))) {
             return $this->json(['message' => 'Access denied'], 403);
         }
 
@@ -234,11 +246,13 @@ class AnnouncementController extends AbstractController
                 $id,
                 $data['title'] ?? null,
                 $data['content'] ?? null,
+                $data['location'] ?? null,
                 $data['type'] ?? null,
                 $data['isPinned'] ?? null,
                 $data['showOnHomepage'] ?? null,
                 $data['targetAudience'] ?? null,
-                array_key_exists('expiresAt', $data) ? $data['expiresAt'] : 'NOT_SET'
+                array_key_exists('expiresAt', $data) ? $data['expiresAt'] : 'NOT_SET',
+                array_key_exists('eventAt', $data) ? $data['eventAt'] : 'NOT_SET'
             );
             
             $envelope = $this->commandBus->dispatch($command);
@@ -272,7 +286,7 @@ class AnnouncementController extends AbstractController
         }
 
         $user = $this->userRepository->find((int) $payload['sub']);
-        if (!$user || !in_array('ROLE_LIBRARIAN', $user->getRoles())) {
+        if (!$user || (!in_array('ROLE_LIBRARIAN', $user->getRoles()) && !in_array('ROLE_ADMIN', $user->getRoles()))) {
             return $this->json(['message' => 'Access denied'], 403);
         }
 
@@ -308,7 +322,7 @@ class AnnouncementController extends AbstractController
         }
 
         $user = $this->userRepository->find((int) $payload['sub']);
-        if (!$user || !in_array('ROLE_LIBRARIAN', $user->getRoles())) {
+        if (!$user || (!in_array('ROLE_LIBRARIAN', $user->getRoles()) && !in_array('ROLE_ADMIN', $user->getRoles()))) {
             return $this->json(['message' => 'Access denied'], 403);
         }
 
@@ -344,7 +358,7 @@ class AnnouncementController extends AbstractController
         }
 
         $user = $this->userRepository->find((int) $payload['sub']);
-        if (!$user || !in_array('ROLE_LIBRARIAN', $user->getRoles())) {
+        if (!$user || (!in_array('ROLE_LIBRARIAN', $user->getRoles()) && !in_array('ROLE_ADMIN', $user->getRoles()))) {
             return $this->json(['message' => 'Access denied'], 403);
         }
 

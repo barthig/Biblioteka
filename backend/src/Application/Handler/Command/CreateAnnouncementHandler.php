@@ -27,6 +27,7 @@ class CreateAnnouncementHandler
         $announcement->setTitle($command->title);
         $announcement->setContent($command->content);
         $announcement->setCreatedBy($user);
+        $announcement->setLocation($command->location);
 
         if ($command->type) {
             $announcement->setType($command->type);
@@ -46,6 +47,15 @@ class CreateAnnouncementHandler
 
         if ($command->expiresAt) {
             $announcement->setExpiresAt(new \DateTimeImmutable($command->expiresAt));
+        }
+
+        if ($command->eventAt) {
+            $eventAt = new \DateTimeImmutable($command->eventAt);
+            $now = new \DateTimeImmutable();
+            if ($eventAt <= $now) {
+                throw new \RuntimeException('Event date must be in the future');
+            }
+            $announcement->setEventAt($eventAt);
         }
 
         $this->entityManager->persist($announcement);

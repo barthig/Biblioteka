@@ -18,6 +18,24 @@ class BookCopy
     public const ACCESS_STORAGE = 'STORAGE';
     public const ACCESS_REFERENCE = 'REFERENCE';
 
+    private const STATUS_ALIASES = [
+        'available' => self::STATUS_AVAILABLE,
+        'reserved' => self::STATUS_RESERVED,
+        'loaned' => self::STATUS_BORROWED,
+        'borrowed' => self::STATUS_BORROWED,
+        'maintenance' => self::STATUS_MAINTENANCE,
+        'withdrawn' => self::STATUS_WITHDRAWN,
+    ];
+
+    private const ACCESS_TYPE_ALIASES = [
+        'open_stack' => self::ACCESS_OPEN_STACK,
+        'open stack' => self::ACCESS_OPEN_STACK,
+        'storage' => self::ACCESS_STORAGE,
+        'closed_stack' => self::ACCESS_STORAGE,
+        'reference' => self::ACCESS_REFERENCE,
+        'digital' => self::ACCESS_REFERENCE,
+    ];
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
@@ -91,15 +109,16 @@ class BookCopy
 
     public function getStatus(): string
     {
-        return $this->status;
+        return self::normalizeStatus($this->status) ?? $this->status;
     }
 
     public function setStatus(string $status): self
     {
-        if (!in_array($status, [self::STATUS_AVAILABLE, self::STATUS_RESERVED, self::STATUS_BORROWED, self::STATUS_MAINTENANCE, self::STATUS_WITHDRAWN], true)) {
+        $normalized = self::normalizeStatus($status);
+        if (!in_array($normalized, [self::STATUS_AVAILABLE, self::STATUS_RESERVED, self::STATUS_BORROWED, self::STATUS_MAINTENANCE, self::STATUS_WITHDRAWN], true)) {
             throw new \InvalidArgumentException('Invalid book copy status: ' . $status);
         }
-        $this->status = $status;
+        $this->status = $normalized;
         $this->touch();
         return $this;
     }
@@ -130,12 +149,12 @@ class BookCopy
 
     public function getAccessType(): string
     {
-        return $this->accessType;
+        return self::normalizeAccessType($this->accessType) ?? $this->accessType;
     }
 
     public function setAccessType(string $accessType): self
     {
-        $accessType = strtoupper(trim($accessType));
+        $accessType = self::normalizeAccessType($accessType) ?? strtoupper(trim($accessType));
         if (!in_array($accessType, [self::ACCESS_OPEN_STACK, self::ACCESS_STORAGE, self::ACCESS_REFERENCE], true)) {
             throw new \InvalidArgumentException('Invalid access type: ' . $accessType);
         }
@@ -159,5 +178,39 @@ class BookCopy
     private function touch(): void
     {
         $this->updatedAt = new \DateTimeImmutable();
+    }
+
+    private static function normalizeStatus(string $status): ?string
+    {
+        $status = trim($status);
+        if ($status === '') {
+            return null;
+        }
+        $lower = strtolower($status);
+        if (isset(self::STATUS_ALIASES[$lower])) {
+            return self::STATUS_ALIASES[$lower];
+        }
+        $upper = strtoupper($status);
+        if (in_array($upper, [self::STATUS_AVAILABLE, self::STATUS_RESERVED, self::STATUS_BORROWED, self::STATUS_MAINTENANCE, self::STATUS_WITHDRAWN], true)) {
+            return $upper;
+        }
+        return null;
+    }
+
+    private static function normalizeAccessType(string $accessType): ?string
+    {
+        $accessType = trim($accessType);
+        if ($accessType === '') {
+            return null;
+        }
+        $lower = strtolower($accessType);
+        if (isset(self::ACCESS_TYPE_ALIASES[$lower])) {
+            return self::ACCESS_TYPE_ALIASES[$lower];
+        }
+        $upper = strtoupper($accessType);
+        if (in_array($upper, [self::ACCESS_OPEN_STACK, self::ACCESS_STORAGE, self::ACCESS_REFERENCE], true)) {
+            return $upper;
+        }
+        return null;
     }
 }

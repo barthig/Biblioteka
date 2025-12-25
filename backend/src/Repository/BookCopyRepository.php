@@ -30,7 +30,7 @@ class BookCopyRepository extends ServiceEntityRepository
     {
         $qb = $this->createQueryBuilder('c')
             ->andWhere('c.book = :book')
-            ->andWhere('c.status = :status')
+            ->andWhere('UPPER(c.status) = :status')
             ->setParameter('book', $book)
             ->setParameter('status', BookCopy::STATUS_AVAILABLE)
             ->setMaxResults($limit)
@@ -38,8 +38,38 @@ class BookCopyRepository extends ServiceEntityRepository
             ->addOrderBy('c.id', 'ASC');
 
         if ($accessTypes !== null && $accessTypes !== []) {
-            $qb->andWhere('c.accessType IN (:accessTypes)')
-                ->setParameter('accessTypes', array_values($accessTypes));
+            $normalized = [];
+            foreach ($accessTypes as $type) {
+                $type = strtolower(trim((string) $type));
+                if ($type === '') {
+                    continue;
+                }
+                switch ($type) {
+                    case 'open_stack':
+                    case 'open stack':
+                        $normalized[] = 'open_stack';
+                        $normalized[] = 'open stack';
+                        break;
+                    case 'storage':
+                    case 'closed_stack':
+                        $normalized[] = 'storage';
+                        $normalized[] = 'closed_stack';
+                        break;
+                    case 'reference':
+                    case 'digital':
+                        $normalized[] = 'reference';
+                        $normalized[] = 'digital';
+                        break;
+                    default:
+                        $normalized[] = $type;
+                        break;
+                }
+            }
+            $normalized = array_values(array_unique($normalized));
+            if ($normalized !== []) {
+                $qb->andWhere('LOWER(c.accessType) IN (:accessTypes)')
+                    ->setParameter('accessTypes', $normalized);
+            }
         }
 
         return $qb->getQuery()->getResult();

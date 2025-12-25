@@ -19,8 +19,12 @@ class Announcement
     private string $title;
 
     #[ORM\Column(type: 'text')]
-    #[Groups(['announcement:read', 'announcement:write'])]
+    #[Groups(['announcement:read', 'announcement:list', 'announcement:write'])]
     private string $content;
+
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    #[Groups(['announcement:read', 'announcement:list', 'announcement:write'])]
+    private ?string $location = null;
 
     #[ORM\Column(type: 'string', length: 20)]
     #[Groups(['announcement:read', 'announcement:list', 'announcement:write'])]
@@ -59,6 +63,10 @@ class Announcement
     #[Groups(['announcement:read', 'announcement:write'])]
     private ?\DateTimeImmutable $expiresAt = null;
 
+    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
+    #[Groups(['announcement:read', 'announcement:list', 'announcement:write'])]
+    private ?\DateTimeImmutable $eventAt = null;
+
     #[ORM\Column(type: 'json', nullable: true)]
     #[Groups(['announcement:read', 'announcement:write'])]
     private ?array $targetAudience = null; // ['all'], ['students'], ['librarians'], etc.
@@ -93,6 +101,17 @@ class Announcement
     public function setContent(string $content): self
     {
         $this->content = $content;
+        return $this;
+    }
+
+    public function getLocation(): ?string
+    {
+        return $this->location;
+    }
+
+    public function setLocation(?string $location): self
+    {
+        $this->location = $location;
         return $this;
     }
 
@@ -181,6 +200,17 @@ class Announcement
     public function setExpiresAt(?\DateTimeImmutable $expiresAt): self
     {
         $this->expiresAt = $expiresAt;
+        return $this;
+    }
+
+    public function getEventAt(): ?\DateTimeImmutable
+    {
+        return $this->eventAt;
+    }
+
+    public function setEventAt(?\DateTimeImmutable $eventAt): self
+    {
+        $this->eventAt = $eventAt;
         return $this;
     }
 
