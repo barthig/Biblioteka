@@ -3,9 +3,14 @@ import { Link } from 'react-router-dom'
 import { apiFetch } from '../api'
 import { useAuth } from '../context/AuthContext'
 import { useResourceCache } from '../context/ResourceCacheContext'
+import PageHeader from '../components/ui/PageHeader'
+import StatGrid from '../components/ui/StatGrid'
+import StatCard from '../components/ui/StatCard'
+import SectionCard from '../components/ui/SectionCard'
+import FeedbackCard from '../components/ui/FeedbackCard'
 
 function formatDate(value) {
-  return value ? new Date(value).toLocaleDateString() : '—'
+  return value ? new Date(value).toLocaleDateString('pl-PL') : '-'
 }
 
 export default function MyLoans() {
@@ -91,6 +96,15 @@ export default function MyLoans() {
     return loansArray.filter(loan => loan.returnedAt).sort((a, b) => new Date(b.returnedAt).getTime() - new Date(a.returnedAt).getTime())
   }, [loans])
 
+  const nextDue = useMemo(() => {
+    const dates = activeLoans
+      .map(loan => loan.dueAt)
+      .filter(Boolean)
+      .map(value => new Date(value))
+      .sort((a, b) => a.getTime() - b.getTime())
+    return dates.length > 0 ? dates[0] : null
+  }, [activeLoans])
+
   async function extendLoan(id, days = 14) {
     setActionError(null)
     setActionSuccess(null)
@@ -138,32 +152,23 @@ export default function MyLoans() {
 
   return (
     <div className="page">
-      <header className="page-header">
-        <div>
-          <h1>Moje wypożyczenia</h1>
-          <p className="support-copy">Sprawdź bieżące wypożyczenia oraz historię zwrotów.</p>
-        </div>
-      </header>
+      <PageHeader
+        title="Moje wypożyczenia"
+        subtitle="Sprawdź bieżące wypożyczenia oraz historię zwrotów."
+      />
 
-      {error && (
-        <div className="surface-card">
-          <p className="error">{error}</p>
-        </div>
-      )}
-      {actionError && (
-        <div className="surface-card">
-          <p className="error">{actionError}</p>
-        </div>
-      )}
-      {actionSuccess && (
-        <div className="surface-card">
-          <p className="success">{actionSuccess}</p>
-        </div>
-      )}
+      <StatGrid>
+        <StatCard title="Aktywne wypożyczenia" value={activeLoans.length} subtitle="Do zwrotu" />
+        <StatCard title="Zwrócone książki" value={historyLoans.length} subtitle="Historia" />
+        <StatCard title="Najbliższy termin" value={nextDue ? formatDate(nextDue) : '-'} subtitle="Najbliższy zwrot" />
+      </StatGrid>
+
+      {error && <FeedbackCard variant="error">{error}</FeedbackCard>}
+      {actionError && <FeedbackCard variant="error">{actionError}</FeedbackCard>}
+      {actionSuccess && <FeedbackCard variant="success">{actionSuccess}</FeedbackCard>}
 
       <div className="page-grid">
-        <section className="surface-card">
-          <h2>Aktywne wypożyczenia</h2>
+        <SectionCard title="Aktywne wypożyczenia">
           {activeLoans.length === 0 ? (
             <div className="empty-state">Brak aktywnych wypożyczeń.</div>
           ) : (
@@ -212,10 +217,9 @@ export default function MyLoans() {
               ))}
             </ul>
           )}
-        </section>
+        </SectionCard>
 
-        <section className="surface-card">
-          <h2>Historia zwrotów</h2>
+        <SectionCard title="Historia zwrotów">
           {historyLoans.length === 0 ? (
             <div className="empty-state">Brak zwróconych wypożyczeń.</div>
           ) : (
@@ -234,7 +238,7 @@ export default function MyLoans() {
               ))}
             </ul>
           )}
-        </section>
+        </SectionCard>
       </div>
     </div>
   )

@@ -4,11 +4,16 @@ import { apiFetch } from '../api'
 import { useAuth } from '../context/AuthContext'
 import { useResourceCache } from '../context/ResourceCacheContext'
 import { StarRating, RatingDisplay } from '../components/StarRating'
+import PageHeader from '../components/ui/PageHeader'
+import StatGrid from '../components/ui/StatGrid'
+import StatCard from '../components/ui/StatCard'
+import SectionCard from '../components/ui/SectionCard'
+import FeedbackCard from '../components/ui/FeedbackCard'
 
 function formatDate(value, withTime = false) {
   if (!value) return '—'
   const date = new Date(value)
-  return withTime ? date.toLocaleString() : date.toLocaleDateString()
+  return withTime ? date.toLocaleString('pl-PL') : date.toLocaleDateString('pl-PL')
 }
 
 function resolveAvatarUrl(user) {
@@ -369,7 +374,7 @@ export default function BookDetails() {
   if (loading) {
     return (
       <div className="page">
-        <div className="surface-card empty-state">Ładuję szczegóły książki...</div>
+        <SectionCard className="empty-state">Ładuję szczegóły książki...</SectionCard>
       </div>
     )
   }
@@ -377,9 +382,7 @@ export default function BookDetails() {
   if (error) {
     return (
       <div className="page">
-        <div className="surface-card">
-          <p className="error">{error}</p>
-        </div>
+        <FeedbackCard variant="error">{error}</FeedbackCard>
       </div>
     )
   }
@@ -387,21 +390,25 @@ export default function BookDetails() {
   if (!book) {
     return (
       <div className="page">
-        <div className="surface-card empty-state">Nie znaleziono książki.</div>
+        <SectionCard className="empty-state">Nie znaleziono książki.</SectionCard>
       </div>
     )
   }
 
   return (
     <div className="page">
-      <header className="page-header">
-        <div>
-          <h1>{book.title}</h1>
-          <p className="support-copy">Sprawdź dostępność, dołącz do kolejki rezerwacji i przeczytaj opinie czytelników.</p>
-        </div>
-      </header>
+      <PageHeader
+        title={book.title}
+        subtitle="Sprawdź dostępność, dołącz do kolejki rezerwacji i przeczytaj opinie czytelników."
+      />
 
-      <article className="surface-card">
+      <StatGrid>
+        <StatCard title="Dostępność" value={anyAvailable ? 'Dostępne' : 'Brak'} subtitle={`${book.copies ?? 0} z ${book.totalCopies ?? book.copies ?? 0}`} />
+        <StatCard title="Oceny" value={ratingData.average ? ratingData.average.toFixed(1) : '—'} subtitle={`${ratingData.count ?? 0} opinii`} />
+        <StatCard title="Rezerwacje" value={activeReservation ? 'Aktywna' : (anyAvailable ? 'Niepotrzebna' : 'Dostępna')} subtitle={activeReservation ? 'Masz aktywną rezerwację' : 'Dołącz do kolejki'} />
+      </StatGrid>
+
+      <SectionCard>
         <dl>
           <div className="resource-item__meta">
             <dt>Autor</dt>
@@ -474,10 +481,9 @@ export default function BookDetails() {
             )}
           </div>
         )}
-      </article>
+      </SectionCard>
 
-      <section className="surface-card book-actions">
-        <h2>Działania</h2>
+      <SectionCard title="Działania" className="book-actions">
         {actionError && <p className="error">{actionError}</p>}
         {actionSuccess && <p className="success">{actionSuccess}</p>}
         <div
@@ -520,10 +526,9 @@ export default function BookDetails() {
             {activeReservation.expiresAt && ` Wygasa: ${formatDate(activeReservation.expiresAt, true)}.`}
           </p>
         )}
-      </section>
+      </SectionCard>
 
-      <section className="surface-card">
-        <h2>Oceny i opinie</h2>
+      <SectionCard title="Oceny i opinie">
         {reviewsError && <p className="error">{reviewsError}</p>}
         <div className="review-summary">
           <div>
@@ -534,44 +539,48 @@ export default function BookDetails() {
           </div>
         </div>
 
-        <form onSubmit={submitReview} className="form-grid review-form">
-          <div>
-            <label htmlFor="review-rating">Ocena (1-5)</label>
-            <select
-              id="review-rating"
-              value={reviewForm.rating}
-              onChange={event => setReviewForm({ ...reviewForm, rating: Number(event.target.value) })}
-              disabled={reviewPending}
-            >
-              {[5, 4, 3, 2, 1].map(value => (
-                <option key={value} value={value}>{value}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label htmlFor="review-comment">Opinia</label>
-            <textarea
-              id="review-comment"
-              rows={4}
-              value={reviewForm.comment}
-              onChange={event => setReviewForm({ ...reviewForm, comment: event.target.value })}
-              placeholder="Podziel się wrażeniami (opcjonalne)"
-              disabled={reviewPending}
-            />
-          </div>
-          {reviewActionError && <p className="error">{reviewActionError}</p>}
-          {reviewActionSuccess && <p className="success">{reviewActionSuccess}</p>}
-          <div className="form-actions">
-            <button type="submit" className="btn btn-primary" disabled={reviewPending}>
-              {reviewsState.userReview ? 'Aktualizuj opinię' : 'Dodaj opinię'}
-            </button>
-            {reviewsState.userReview && (
-              <button type="button" className="btn btn-outline" onClick={deleteReview} disabled={reviewPending}>
-                Usuń opinię
+        {isAuthenticated ? (
+          <form onSubmit={submitReview} className="form-grid review-form">
+            <div>
+              <label htmlFor="review-rating">Ocena (1-5)</label>
+              <select
+                id="review-rating"
+                value={reviewForm.rating}
+                onChange={event => setReviewForm({ ...reviewForm, rating: Number(event.target.value) })}
+                disabled={reviewPending}
+              >
+                {[5, 4, 3, 2, 1].map(value => (
+                  <option key={value} value={value}>{value}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="review-comment">Opinia</label>
+              <textarea
+                id="review-comment"
+                rows={4}
+                value={reviewForm.comment}
+                onChange={event => setReviewForm({ ...reviewForm, comment: event.target.value })}
+                placeholder="Podziel się wrażeniami (opcjonalne)"
+                disabled={reviewPending}
+              />
+            </div>
+            {reviewActionError && <p className="error">{reviewActionError}</p>}
+            {reviewActionSuccess && <p className="success">{reviewActionSuccess}</p>}
+            <div className="form-actions">
+              <button type="submit" className="btn btn-primary" disabled={reviewPending}>
+                {reviewsState.userReview ? 'Aktualizuj opinię' : 'Dodaj opinię'}
               </button>
-            )}
-          </div>
-        </form>
+              {reviewsState.userReview && (
+                <button type="button" className="btn btn-outline" onClick={deleteReview} disabled={reviewPending}>
+                  Usuń opinię
+                </button>
+              )}
+            </div>
+          </form>
+        ) : (
+          <p className="support-copy">Zaloguj się, aby dodać ocenę i opinię.</p>
+        )}
 
         {reviewsState.reviews.length === 0 ? (
           <div className="empty-state">Brak opinii dla tej książki. Bądź pierwszą osobą, która ją oceni.</div>
@@ -606,7 +615,7 @@ export default function BookDetails() {
             })}
           </ul>
         )}
-      </section>
+      </SectionCard>
     </div>
   )
 }

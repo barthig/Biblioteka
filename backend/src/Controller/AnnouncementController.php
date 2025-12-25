@@ -45,6 +45,7 @@ class AnnouncementController extends AbstractController
     )]
     public function list(Request $request, SecurityService $security): JsonResponse
     {
+        $start = microtime(true);
         try {
             error_log('AnnouncementController::list - START');
             $page = max(1, $request->query->getInt('page', 1));
@@ -78,6 +79,8 @@ class AnnouncementController extends AbstractController
             }
 
             $groups = $isLibrarian ? ['announcement:list', 'announcement:read'] : ['announcement:list'];
+            $durationMs = (int) round((microtime(true) - $start) * 1000);
+            error_log('AnnouncementController::list - DONE in ' . $durationMs . 'ms');
             return $this->json($result, 200, [], ['groups' => $groups]);
         } catch (\Throwable $e) {
             $e = $this->unwrapThrowable($e);
@@ -86,6 +89,8 @@ class AnnouncementController extends AbstractController
             }
             error_log('AnnouncementController::list - EXCEPTION: ' . $e->getMessage());
             error_log('AnnouncementController::list - Stack: ' . $e->getTraceAsString());
+            $durationMs = (int) round((microtime(true) - $start) * 1000);
+            error_log('AnnouncementController::list - FAILED in ' . $durationMs . 'ms');
             return $this->json(['message' => 'Internal error: ' . $e->getMessage()], 500);
         }
     }

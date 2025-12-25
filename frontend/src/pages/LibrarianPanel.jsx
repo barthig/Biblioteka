@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from 'react'
 import { apiFetch } from '../api'
 import { useAuth } from '../context/AuthContext'
+import PageHeader from '../components/ui/PageHeader'
+import StatGrid from '../components/ui/StatGrid'
+import StatCard from '../components/ui/StatCard'
+import FeedbackCard from '../components/ui/FeedbackCard'
 
 export default function LibrarianPanel() {
   const { user } = useAuth()
@@ -25,6 +29,10 @@ export default function LibrarianPanel() {
   
   // Active loans
   const [loans, setLoans] = useState([])
+  const [loanLookupId, setLoanLookupId] = useState('')
+  const [loanLookupUserId, setLoanLookupUserId] = useState('')
+  const [loanLookupResult, setLoanLookupResult] = useState(null)
+  const [loanLookupError, setLoanLookupError] = useState(null)
   
   // Collections
   const [collections, setCollections] = useState([])
@@ -46,6 +54,12 @@ export default function LibrarianPanel() {
     totalUsers: 0,
     availableCopies: 0
   })
+  const [librarySettings, setLibrarySettings] = useState({
+    loanLimitPerUser: '',
+    loanDurationDays: '',
+    notificationsEnabled: false
+  })
+  const [librarySettingsLoading, setLibrarySettingsLoading] = useState(false)
 
   // Reservations & fines
   const [reservations, setReservations] = useState([])
@@ -63,6 +77,7 @@ export default function LibrarianPanel() {
       loadLoans()
     } else if (activeTab === 'stats') {
       loadStats()
+      loadLibrarySettings()
     } else if (activeTab === 'reservations') {
       loadReservations()
     } else if (activeTab === 'fines') {
@@ -117,6 +132,30 @@ export default function LibrarianPanel() {
     }
   }
 
+  async function loadLoanById() {
+    if (!loanLookupId) return
+    setLoanLookupError(null)
+    setLoanLookupResult(null)
+    try {
+      const data = await apiFetch(`/api/loans/${loanLookupId}`)
+      setLoanLookupResult(Array.isArray(data) ? data : [data])
+    } catch (err) {
+      setLoanLookupError(err.message || 'Nie udalo sie pobrac wypozyczenia')
+    }
+  }
+
+  async function loadLoansByUser() {
+    if (!loanLookupUserId) return
+    setLoanLookupError(null)
+    setLoanLookupResult(null)
+    try {
+      const data = await apiFetch(`/api/loans/user/${loanLookupUserId}`)
+      setLoanLookupResult(Array.isArray(data) ? data : data.data || [])
+    } catch (err) {
+      setLoanLookupError(err.message || 'Nie udalo sie pobrac wypozyczen uzytkownika')
+    }
+  }
+
   async function loadStats() {
     setLoading(true)
     setError(null)
@@ -132,6 +171,49 @@ export default function LibrarianPanel() {
       setError(err.message || 'Nie udało się pobrać statystyk')
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function loadLibrarySettings() {
+    setLibrarySettingsLoading(true)
+    setError(null)
+    try {
+      const data = await apiFetch('/api/settings')
+      setLibrarySettings({
+        loanLimitPerUser: data?.loanLimitPerUser ?? '',
+        loanDurationDays: data?.loanDurationDays ?? '',
+        notificationsEnabled: !!data?.notificationsEnabled
+      })
+    } catch (err) {
+      setError(err.message || 'Nie udalo sie pobrac ustawien')
+    } finally {
+      setLibrarySettingsLoading(false)
+    }
+  }
+
+  async function updateLibrarySettings(e) {
+    e.preventDefault()
+    setError(null)
+    setSuccess(null)
+    try {
+      const payload = {
+        loanLimitPerUser: Number(librarySettings.loanLimitPerUser),
+        loanDurationDays: Number(librarySettings.loanDurationDays),
+        notificationsEnabled: !!librarySettings.notificationsEnabled
+      }
+      const data = await apiFetch('/api/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      setLibrarySettings({
+        loanLimitPerUser: data?.settings?.loanLimitPerUser ?? payload.loanLimitPerUser,
+        loanDurationDays: data?.settings?.loanDurationDays ?? payload.loanDurationDays,
+        notificationsEnabled: data?.settings?.notificationsEnabled ?? payload.notificationsEnabled
+      })
+      setSuccess('Zapisano ustawienia')
+    } catch (err) {
+      setError(err.message || 'Nie udalo sie zapisac ustawien')
     }
   }
 
@@ -267,6 +349,42 @@ export default function LibrarianPanel() {
       setError(err.message || 'Nie udało się dodać egzemplarza')
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function updateCopy(copy) {
+    const status = prompt('Status', copy.status || copy.state || 'AVAILABLE')
+    if (status === null) return
+    const accessType = prompt('Access type', copy.accessType || 'STORAGE')
+    if (accessType === null) return
+    const location = prompt('Location', copy.location || '')
+    if (location === null) return
+    const condition = prompt('Condition', copy.conditionState || copy.condition || '')
+    if (condition === null) return
+
+    try {
+      const bookId = inventoryBookId || copy.bookId || copy.book?.id
+      await apiFetch(`/api/admin/books/${bookId}/copies/${copy.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status, accessType, location, conditionState: condition })
+      })
+      setSuccess('Zaktualizowano egzemplarz')
+      loadCopies(bookId)
+    } catch (err) {
+      setError(err.message || 'Nie udalo sie zaktualizowac egzemplarza')
+    }
+  }
+
+  async function deleteCopy(copy) {
+    if (!confirm('Usunac egzemplarz?')) return
+    try {
+      const bookId = inventoryBookId || copy.bookId || copy.book?.id
+      await apiFetch(`/api/admin/books/${bookId}/copies/${copy.id}`, { method: 'DELETE' })
+      setSuccess('Usunieto egzemplarz')
+      loadCopies(bookId)
+    } catch (err) {
+      setError(err.message || 'Nie udalo sie usunac egzemplarza')
     }
   }
 
@@ -429,15 +547,19 @@ export default function LibrarianPanel() {
 
   return (
     <div className="page">
-      <header className="page-header">
-        <div>
-          <h1>Panel bibliotekarza</h1>
-          <p className="support-copy">Obsługa wypożyczeń i zarządzanie biblioteką</p>
-        </div>
-      </header>
+      <PageHeader
+        title="Panel bibliotekarza"
+        subtitle="Obsługa wypożyczeń i zarządzanie biblioteką"
+      />
 
-      {error && <div className="error-message">{error}</div>}
-      {success && <div className="success-message">{success}</div>}
+      <StatGrid>
+        <StatCard title="Aktywne wypożyczenia" value={stats.activeLoans ?? 0} subtitle="Do obsługi" />
+        <StatCard title="Przeterminowane" value={stats.overdueLoans ?? 0} subtitle="Wymagają kontaktu" />
+        <StatCard title="Rezerwacje" value={reservations.length} subtitle="Oczekujące" />
+      </StatGrid>
+
+      {error && <FeedbackCard variant="error">{error}</FeedbackCard>}
+      {success && <FeedbackCard variant="success">{success}</FeedbackCard>}
 
       {/* Return Confirmation Modal */}
       {returnModal.show && (
@@ -475,6 +597,44 @@ export default function LibrarianPanel() {
                 {returnModal.fine ? 'Potwierdź zwrot i nałóż karę' : 'Potwierdź zwrot'}
               </button>
             </div>
+          </div>
+
+          <div className="surface-card">
+            <h2>Ustawienia biblioteki</h2>
+            {librarySettingsLoading && <p>Ladowanie...</p>}
+            {!librarySettingsLoading && (
+              <form className="form" onSubmit={updateLibrarySettings}>
+                <div className="form-row form-row--two">
+                  <div className="form-field">
+                    <label>Limit wypozyczen na uzytkownika</label>
+                    <input
+                      type="number"
+                      value={librarySettings.loanLimitPerUser}
+                      onChange={e => setLibrarySettings(prev => ({ ...prev, loanLimitPerUser: e.target.value }))}
+                    />
+                  </div>
+                  <div className="form-field">
+                    <label>Okres wypozyczenia (dni)</label>
+                    <input
+                      type="number"
+                      value={librarySettings.loanDurationDays}
+                      onChange={e => setLibrarySettings(prev => ({ ...prev, loanDurationDays: e.target.value }))}
+                    />
+                  </div>
+                </div>
+                <div className="form-field checkbox">
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={!!librarySettings.notificationsEnabled}
+                      onChange={e => setLibrarySettings(prev => ({ ...prev, notificationsEnabled: e.target.checked }))}
+                    />
+                    Powiadomienia wlaczone
+                  </label>
+                </div>
+                <button className="btn btn-primary" type="submit">Zapisz ustawienia</button>
+              </form>
+            )}
           </div>
         </div>
       )}
@@ -632,6 +792,34 @@ export default function LibrarianPanel() {
 
       {activeTab === 'loans' && (
         <div className="surface-card">
+          <div className="form-section" style={{ marginBottom: '1.5rem' }}>
+            <h3>Wyszukiwanie wypozyczen</h3>
+            <div className="form-row form-row--two">
+              <div className="form-field">
+                <label>ID wypozyczenia</label>
+                <input value={loanLookupId} onChange={e => setLoanLookupId(e.target.value)} placeholder="np. 12" />
+              </div>
+              <div className="form-field">
+                <label>ID uzytkownika</label>
+                <input value={loanLookupUserId} onChange={e => setLoanLookupUserId(e.target.value)} placeholder="np. 5" />
+              </div>
+            </div>
+            <div className="form-actions">
+              <button className="btn btn-secondary" type="button" onClick={loadLoanById} disabled={loading || !loanLookupId}>Pobierz wypozyczenie</button>
+              <button className="btn btn-secondary" type="button" onClick={loadLoansByUser} disabled={loading || !loanLookupUserId}>Wypozyczenia uzytkownika</button>
+            </div>
+            {loanLookupError && <p className="error">{loanLookupError}</p>}
+            {Array.isArray(loanLookupResult) && loanLookupResult.length > 0 && (
+              <ul className="list" style={{ marginTop: '1rem' }}>
+                {loanLookupResult.map(loan => (
+                  <li key={loan.id || `${loan.user?.id}-${loan.book?.id}`}>
+                    <div className="list__title">{loan.book?.title || loan.bookTitle || 'Loan'}</div>
+                    <div className="list__meta">Uzytkownik: {loan.user?.email || loan.userId || 'n/a'} | Termin: {loan.dueAt || loan.due_at || 'n/a'}</div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
           <h2>Aktywne wypożyczenia</h2>
           {loading && <p>Ładowanie...</p>}
           {!loading && loans.length === 0 && <p>Brak aktywnych wypożyczeń</p>}
@@ -955,6 +1143,10 @@ export default function LibrarianPanel() {
                     <strong>{copy.inventoryCode || `Egzemplarz #${copy.id}`}</strong>
                     <div className="support-copy">{copy.status || copy.state} • {copy.accessType}</div>
                     {copy.location && <div className="support-copy">Lokalizacja: {copy.location}</div>}
+                    <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                      <button className="btn btn-outline btn-sm" type="button" onClick={() => updateCopy(copy)}>Edytuj</button>
+                      <button className="btn btn-danger btn-sm" type="button" onClick={() => deleteCopy(copy)}>Usun</button>
+                    </div>
                   </li>
                 ))}
               </ul>

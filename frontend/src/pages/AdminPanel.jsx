@@ -1,5 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { apiFetch } from '../api'
+import PageHeader from '../components/ui/PageHeader'
+import StatGrid from '../components/ui/StatGrid'
+import StatCard from '../components/ui/StatCard'
+import FeedbackCard from '../components/ui/FeedbackCard'
 
 const defaultIntegration = { name: '', type: 'HTTP', endpoint: '', enabled: true }
 const defaultRole = { name: '', roleKey: '', modules: '', description: '' }
@@ -22,11 +26,16 @@ export default function AdminPanel() {
   const [backups, setBackups] = useState([])
   const [roles, setRoles] = useState([])
   const [auditLogs, setAuditLogs] = useState([])
+  const [entityAuditForm, setEntityAuditForm] = useState({ entityType: '', entityId: '' })
+  const [entityAuditLogs, setEntityAuditLogs] = useState([])
+  const [entityAuditLoading, setEntityAuditLoading] = useState(false)
 
   const [integrationForm, setIntegrationForm] = useState(defaultIntegration)
   const [roleForm, setRoleForm] = useState(defaultRole)
   const [assignForm, setAssignForm] = useState({ roleKey: '', userId: '' })
   const [staffForm, setStaffForm] = useState(defaultStaff)
+  const [testLoginForm, setTestLoginForm] = useState({ email: '', password: '' })
+  const [testLoginResult, setTestLoginResult] = useState(null)
 
   const systemLoaded = useMemo(() => settings.length > 0 || integrations.length > 0 || backups.length > 0, [settings, integrations, backups])
   const rolesLoaded = useMemo(() => roles.length > 0, [roles])
@@ -86,20 +95,49 @@ export default function AdminPanel() {
     }
   }
 
-  async function toggleUserBlock(userId, currentBlocked) {
-    if (!confirm(currentBlocked ? 'Odblokować tego użytkownika?' : 'Zablokować tego użytkownika?')) return
+  async function updateUserPermissions(userId, currentRoles) {
+    const input = prompt('Roles (comma separated)', Array.isArray(currentRoles) ? currentRoles.join(', ') : '')
+    if (input === null) return
+
+    const roles = input.split(',').map(role => role.trim()).filter(Boolean)
+    if (roles.length === 0) {
+      setError('Role list is required')
+      return
+    }
+
     setError(null)
     setSuccess(null)
     try {
-      await apiFetch(`/api/admin/users/${userId}`, {
+      await apiFetch(`/api/users/${userId}/permissions`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ blocked: !currentBlocked })
+        body: JSON.stringify({ roles })
       })
-      setSuccess(currentBlocked ? 'Użytkownik został odblokowany' : 'Użytkownik został zablokowany')
+      setSuccess('Permissions updated')
       loadUsers()
     } catch (err) {
-      setError(err.message || 'Nie udało się zmienić statusu użytkownika')
+      setError(err.message || 'Nie udalo sie zaktualizowac uprawnien')
+    }
+  }
+
+  async function toggleUserBlock(userId, currentBlocked) {
+    if (!confirm(currentBlocked ? 'Odblokowac tego uzytkownika?' : 'Zablokowac tego uzytkownika?')) return
+    setError(null)
+    setSuccess(null)
+    try {
+      if (currentBlocked) {
+        await apiFetch(`/api/users/${userId}/block`, { method: 'DELETE' })
+      } else {
+        await apiFetch(`/api/users/${userId}/block`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reason: 'manual' })
+        })
+      }
+      setSuccess(currentBlocked ? 'Uzytkownik zostal odblokowany' : 'Uzytkownik zostal zablokowany')
+      loadUsers()
+    } catch (err) {
+      setError(err.message || 'Nie udalo sie zmienic statusu uzytkownika')
     }
   }
 
@@ -199,7 +237,7 @@ export default function AdminPanel() {
       setIntegrationForm(defaultIntegration)
       loadSystem()
     } catch (err) {
-      setError(err.message || 'Nie udało się dodać integracji')
+      setError(err.message || 'Nie udalo sie przetestowac integracji')
     }
   }
 
@@ -214,7 +252,19 @@ export default function AdminPanel() {
       })
       loadSystem()
     } catch (err) {
-      setError(err.message || 'Nie udało się zmienić statusu integracji')
+      setError(err.message || 'Nie udalo sie przetestowac integracji')
+    }
+  }
+
+  async function testIntegration(id) {
+    setError(null)
+    setSuccess(null)
+    try {
+      const result = await apiFetch(`/api/admin/system/integrations/${id}/test`, { method: 'POST' })
+      setSuccess(result?.status ? `Test: ${result.status}` : 'Test wykonany')
+      loadSystem()
+    } catch (err) {
+      setError(err.message || 'Nie udalo sie przetestowac integracji')
     }
   }
 
@@ -234,10 +284,52 @@ export default function AdminPanel() {
         })
       })
       setRoleForm(defaultRole)
-      setSuccess('Nowa rola została dodana')
+      setSuccess('Nowa rola zostala dodana')
       loadRolesAndAudit()
     } catch (err) {
-      setError(err.message || 'Nie udało się utworzyć roli')
+      setError(err.message || 'Nie udalo sie utworzyc roli')
+    }
+  }
+
+  async function updateRole(role) {
+    const modulesValue = prompt('Modules (comma separated)', Array.isArray(role.modules) ? role.modules.join(', ') : '')
+    if (modulesValue === null) return
+    const descriptionValue = prompt('Description', role.description || '')
+    if (descriptionValue === null) return
+
+    setError(null)
+    setSuccess(null)
+    try {
+      await apiFetch(`/api/admin/system/roles/${role.roleKey}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          modules: modulesValue.split(',').map(item => item.trim()).filter(Boolean),
+          description: descriptionValue
+        })
+      })
+      setSuccess('Rola zostala zaktualizowana')
+      loadRolesAndAudit()
+    } catch (err) {
+      setError(err.message || 'Nie udalo sie zaktualizowac roli')
+    }
+  }
+
+  async function loadEntityAudit() {
+    if (!entityAuditForm.entityType || !entityAuditForm.entityId) {
+      setError('Podaj typ encji i ID')
+      return
+    }
+    setEntityAuditLoading(true)
+    setError(null)
+    try {
+      const data = await apiFetch(`/api/audit-logs/entity/${encodeURIComponent(entityAuditForm.entityType)}/${encodeURIComponent(entityAuditForm.entityId)}`)
+      const entries = data?.data || data?.items || data || []
+      setEntityAuditLogs(Array.isArray(entries) ? entries : [])
+    } catch (err) {
+      setError(err.message || 'Nie udalo sie pobrac historii encji')
+    } finally {
+      setEntityAuditLoading(false)
     }
   }
 
@@ -297,17 +389,39 @@ export default function AdminPanel() {
     }
   }
 
+  async function runTestLogin(e) {
+    e.preventDefault()
+    setError(null)
+    setSuccess(null)
+    setTestLoginResult(null)
+    try {
+      const result = await apiFetch('/api/test-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: testLoginForm.email, password: testLoginForm.password })
+      })
+      setTestLoginResult(result)
+      setSuccess('Test login wykonany')
+    } catch (err) {
+      setError(err.message || 'Nie udalo sie wykonac testu logowania')
+    }
+  }
+
   return (
     <div className="page">
-      <header className="page-header">
-        <div>
-          <h1>Panel administratora</h1>
-          <p className="support-copy">Zarządzaj konfiguracją systemu, uprawnieniami i personelem.</p>
-        </div>
-      </header>
+      <PageHeader
+        title="Panel administratora"
+        subtitle="Zarządzaj konfiguracją systemu, uprawnieniami i personelem."
+      />
 
-      {error && <div className="error">{error}</div>}
-      {success && <div className="success-message">{success}</div>}
+      <StatGrid>
+        <StatCard title="Użytkownicy" value={users.length} subtitle="W systemie" />
+        <StatCard title="Role" value={roles.length} subtitle="Uprawnienia" />
+        <StatCard title="Audyt" value={auditLogs.length} subtitle="Ostatnie wpisy" />
+      </StatGrid>
+
+      {error && <FeedbackCard variant="error">{error}</FeedbackCard>}
+      {success && <FeedbackCard variant="success">{success}</FeedbackCard>}
 
       <div className="tabs">
         <button className={`tab ${activeTab === 'users' ? 'tab--active' : ''}`} onClick={() => setActiveTab('users')}>
@@ -385,6 +499,12 @@ export default function AdminPanel() {
                             onClick={() => window.location.href = `/users/${user.id}/details`}
                           >
                             Szczegóły
+                          </button>
+                          <button
+                            className="btn btn-sm btn-secondary"
+                            onClick={() => updateUserPermissions(user.id, user.roles)}
+                          >
+                            Uprawnienia
                           </button>
                           <button
                             className={`btn btn-sm ${user.blocked ? 'btn-primary' : 'btn-danger'}`}
@@ -533,16 +653,21 @@ export default function AdminPanel() {
                     <div className="list-row">
                       <div>
                         <strong>{item.name || 'Integracja'}</strong>
-                        <div className="support-copy">{item.type || 'typ nieznany'} • {item.endpoint || 'brak adresu'}</div>
+                        <div className="support-copy">{item.type || 'typ nieznany'} - {item.endpoint || 'brak adresu'}</div>
                       </div>
-                      <label className="switch">
-                        <input
+                      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                        <button className="btn btn-sm btn-secondary" type="button" onClick={() => testIntegration(item.id)}>
+                          Testuj
+                        </button>
+                        <label className="switch">
+                          <input
                           type="checkbox"
                           checked={!!item.enabled}
                           onChange={e => toggleIntegration(item.id, e.target.checked)}
                         />
-                        <span className="switch-slider" />
-                      </label>
+                          <span className="switch-slider" />
+                        </label>
+                      </div>
                     </div>
                   </li>
                 ))}
@@ -575,6 +700,26 @@ export default function AdminPanel() {
               </div>
               <button type="submit" className="btn btn-primary">Zapisz integrację</button>
             </form>
+          </section>
+
+          <section className="surface-card">
+            <div className="section-header">
+              <h2>Test logowania (dev)</h2>
+            </div>
+            <form className="form" onSubmit={runTestLogin}>
+              <div className="form-field">
+                <label>Email</label>
+                <input value={testLoginForm.email} onChange={e => setTestLoginForm(prev => ({ ...prev, email: e.target.value }))} />
+              </div>
+              <div className="form-field">
+                <label>Haslo</label>
+                <input type="password" value={testLoginForm.password} onChange={e => setTestLoginForm(prev => ({ ...prev, password: e.target.value }))} />
+              </div>
+              <button type="submit" className="btn btn-primary">Testuj</button>
+            </form>
+            {testLoginResult && (
+              <pre style={{ whiteSpace: 'pre-wrap' }}>{JSON.stringify(testLoginResult, null, 2)}</pre>
+            )}
           </section>
 
           <section className="surface-card">
@@ -614,6 +759,9 @@ export default function AdminPanel() {
                     <strong>{role.name}</strong>
                     <div className="support-copy">{role.roleKey}</div>
                     {role.modules?.length > 0 && <div className="tag-list">{role.modules.map(module => <span key={module} className="badge">{module}</span>)}</div>}
+                    <button className="btn btn-sm" type="button" onClick={() => updateRole(role)} style={{ marginTop: '0.5rem' }}>
+                      Edytuj role
+                    </button>
                   </li>
                 ))}
               </ul>
@@ -663,6 +811,48 @@ export default function AdminPanel() {
             <h2>Ostatnie zdarzenia audytu</h2>
             {loading && <p>Ładowanie...</p>}
             {!loading && (
+              <>
+              <div className="form" style={{ marginBottom: '1.5rem' }}>
+                <h3>Historia encji</h3>
+                <div className="form-row form-row--two">
+                  <div className="form-field">
+                    <label>Typ encji</label>
+                    <input
+                      value={entityAuditForm.entityType}
+                      onChange={e => setEntityAuditForm(prev => ({ ...prev, entityType: e.target.value }))}
+                      placeholder="np. announcement, loan"
+                    />
+                  </div>
+                  <div className="form-field">
+                    <label>ID encji</label>
+                    <input
+                      value={entityAuditForm.entityId}
+                      onChange={e => setEntityAuditForm(prev => ({ ...prev, entityId: e.target.value }))}
+                      placeholder="np. 12"
+                    />
+                  </div>
+                </div>
+                <div className="form-actions">
+                  <button className="btn btn-secondary" type="button" onClick={loadEntityAudit} disabled={entityAuditLoading}>
+                    {entityAuditLoading ? 'Ladowanie...' : 'Pobierz historie'}
+                  </button>
+                </div>
+                {entityAuditLogs.length > 0 && (
+                  <ul className="list" style={{ marginTop: '1rem' }}>
+                    {entityAuditLogs.map(entry => (
+                      <li key={entry.id || `${entry.entityType}-${entry.entityId}-${entry.createdAt || entry.timestamp}`}>
+                        <div className="list-row">
+                          <div>
+                            <strong>{entry.action || entry.event || 'Zdarzenie'}</strong>
+                            <div className="support-copy">{entry.entityType || entry.entity} #{entry.entityId || entry.entity_id}</div>
+                          </div>
+                          <span className="support-copy">{entry.createdAt || entry.timestamp || ''}</span>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
               <ul className="timeline">
                 {auditLogs.length === 0 && <li>Brak wpisów audytowych.</li>}
                 {auditLogs.map(entry => (
@@ -679,6 +869,7 @@ export default function AdminPanel() {
                   </li>
                 ))}
               </ul>
+              </>
             )}
           </section>
         </div>

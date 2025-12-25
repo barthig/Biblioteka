@@ -14,7 +14,6 @@ import Profile from './pages/Profile'
 import Reservations from './pages/Reservations'
 import Favorites from './pages/Favorites'
 import Recommended from './pages/Recommended'
-import SemanticSearchPage from './pages/SemanticSearchPage'
 import AdminPanel from './pages/AdminPanel'
 import LibrarianPanel from './pages/LibrarianPanel'
 import Announcements from './pages/Announcements'
@@ -39,7 +38,6 @@ export default function App() {
                 <Route path="/books" element={<Books />} />
                 <Route path="/books/:id" element={<BookDetails />} />
                 <Route path="/recommended" element={<Recommended />} />
-                <Route path="/semantic-search" element={<SemanticSearchPage />} />
                 <Route path="/announcements" element={<Announcements />} />
                 <Route path="/announcements/:id" element={<Announcements />} />
                 <Route path="/my-loans" element={<MyLoans />} />
@@ -51,67 +49,67 @@ export default function App() {
                 <Route path="/profile" element={<Profile />} />
                 <Route
                   path="/admin/*"
-                  element={
+                  element={(
                     <RequireRole allowed={['ROLE_ADMIN']}>
                       <AdminPanel />
                     </RequireRole>
-                  }
+                  )}
                 />
                 <Route
                   path="/users/:id/details"
-                  element={
+                  element={(
                     <RequireRole allowed={['ROLE_LIBRARIAN', 'ROLE_ADMIN']}>
                       <UserDetails />
                     </RequireRole>
-                  }
+                  )}
                 />
                 <Route
                   path="/librarian"
-                  element={
+                  element={(
                     <RequireRole allowed={['ROLE_LIBRARIAN', 'ROLE_ADMIN']}>
                       <LibrarianPanel />
                     </RequireRole>
-                  }
+                  )}
                 />
                 <Route
                   path="/reports"
-                  element={
+                  element={(
                     <RequireRole allowed={['ROLE_LIBRARIAN', 'ROLE_ADMIN']}>
                       <Reports />
                     </RequireRole>
-                  }
+                  )}
                 />
                 <Route
                   path="/admin/assets"
-                  element={
+                  element={(
                     <RequireRole allowed={['ROLE_LIBRARIAN', 'ROLE_ADMIN']}>
                       <DigitalAssets />
                     </RequireRole>
-                  }
+                  )}
                 />
                 <Route
                   path="/admin/catalog"
-                  element={
+                  element={(
                     <RequireRole allowed={['ROLE_ADMIN']}>
                       <CatalogAdmin />
                     </RequireRole>
-                  }
+                  )}
                 />
                 <Route
                   path="/admin/acquisitions"
-                  element={
+                  element={(
                     <RequireRole allowed={['ROLE_ADMIN']}>
                       <Acquisitions />
                     </RequireRole>
-                  }
+                  )}
                 />
                 <Route
                   path="/admin/logs"
-                  element={
+                  element={(
                     <RequireRole allowed={['ROLE_ADMIN']}>
                       <SystemLogs />
                     </RequireRole>
-                  }
+                  )}
                 />
               </Routes>
               <footer className="footer">

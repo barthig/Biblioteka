@@ -3,9 +3,14 @@ import { Link } from 'react-router-dom'
 import { apiFetch } from '../api'
 import { useAuth } from '../context/AuthContext'
 import { useResourceCache } from '../context/ResourceCacheContext'
+import PageHeader from '../components/ui/PageHeader'
+import StatGrid from '../components/ui/StatGrid'
+import StatCard from '../components/ui/StatCard'
+import SectionCard from '../components/ui/SectionCard'
+import FeedbackCard from '../components/ui/FeedbackCard'
 
 function formatDate(value) {
-  return value ? new Date(value).toLocaleString() : '—'
+  return value ? new Date(value).toLocaleDateString('pl-PL') : '-'
 }
 
 export default function Reservations() {
@@ -85,6 +90,15 @@ export default function Reservations() {
     return reservationsArray.filter(reservation => reservation.status !== 'ACTIVE')
   }, [reservations])
 
+  const nextExpiry = useMemo(() => {
+    const dates = activeReservations
+      .map(reservation => reservation.expiresAt)
+      .filter(Boolean)
+      .map(value => new Date(value))
+      .sort((a, b) => a.getTime() - b.getTime())
+    return dates.length > 0 ? dates[0] : null
+  }, [activeReservations])
+
   async function cancelReservation(id) {
     setActionError(null)
     try {
@@ -126,27 +140,22 @@ export default function Reservations() {
 
   return (
     <div className="page">
-      <header className="page-header">
-        <div>
-          <h1>Moje rezerwacje</h1>
-          <p className="support-copy">Śledź kolejkę zamówień i odbieraj egzemplarze na czas.</p>
-        </div>
-      </header>
+      <PageHeader
+        title="Moje rezerwacje"
+        subtitle="Śledź kolejkę zamówień i odbieraj egzemplarze na czas."
+      />
 
-      {error && (
-        <div className="surface-card">
-          <p className="error">{error}</p>
-        </div>
-      )}
-      {actionError && (
-        <div className="surface-card">
-          <p className="error">{actionError}</p>
-        </div>
-      )}
+      <StatGrid>
+        <StatCard title="Aktywne rezerwacje" value={activeReservations.length} subtitle="Do odbioru" />
+        <StatCard title="Zrealizowane" value={historicalReservations.length} subtitle="Historia" />
+        <StatCard title="Najbliższy termin" value={nextExpiry ? formatDate(nextExpiry) : '-'} subtitle="Wygaśnięcie" />
+      </StatGrid>
+
+      {error && <FeedbackCard variant="error">{error}</FeedbackCard>}
+      {actionError && <FeedbackCard variant="error">{actionError}</FeedbackCard>}
 
       <div className="page-grid">
-        <section className="surface-card">
-          <h2>Aktywne</h2>
+        <SectionCard title="Aktywne">
           {activeReservations.length === 0 ? (
             <div className="empty-state">Brak aktywnych rezerwacji.</div>
           ) : (
@@ -179,10 +188,9 @@ export default function Reservations() {
               ))}
             </ul>
           )}
-        </section>
+        </SectionCard>
 
-        <section className="surface-card">
-          <h2>Historia</h2>
+        <SectionCard title="Historia">
           {historicalReservations.length === 0 ? (
             <div className="empty-state">Brak zrealizowanych lub anulowanych rezerwacji.</div>
           ) : (
@@ -204,7 +212,7 @@ export default function Reservations() {
               ))}
             </ul>
           )}
-        </section>
+        </SectionCard>
       </div>
     </div>
   )

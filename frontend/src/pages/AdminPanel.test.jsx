@@ -34,7 +34,7 @@ describe('AdminPanel page', () => {
       if (endpoint.startsWith('/api/users/search')) {
         return Promise.resolve([{ id: 2, name: 'User Two', email: 'two@example.com', roles: ['ROLE_USER'], blocked: false }])
       }
-      if (endpoint === '/api/admin/users/2') {
+      if (endpoint === '/api/users/2/block') {
         return Promise.resolve({})
       }
       return Promise.resolve([])
@@ -49,7 +49,7 @@ describe('AdminPanel page', () => {
     const row = screen.getByText('User Two').closest('tr')
     await userEvent.click(within(row).getByRole('button', { name: /Zablokuj/i }))
 
-    expect(apiFetch).toHaveBeenCalledWith('/api/admin/users/2', expect.objectContaining({ method: 'PUT' }))
+    expect(apiFetch).toHaveBeenCalledWith('/api/users/2/block', expect.objectContaining({ method: 'POST' }))
   })
 
   it('updates setting and toggles integration', async () => {

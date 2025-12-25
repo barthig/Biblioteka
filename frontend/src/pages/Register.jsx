@@ -2,6 +2,9 @@ import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { apiFetch } from '../api'
+import PageHeader from '../components/ui/PageHeader'
+import SectionCard from '../components/ui/SectionCard'
+import FeedbackCard from '../components/ui/FeedbackCard'
 
 const initialForm = {
   name: '',
@@ -35,7 +38,7 @@ export default function Register() {
     setSuccess(null)
 
     if (form.password !== form.confirmPassword) {
-      setError('Hasla musza byc identyczne')
+      setError('Hasła muszą być identyczne')
       return
     }
 
@@ -70,7 +73,7 @@ export default function Register() {
 
       const verifyResult = await apiFetch(`/api/auth/verify/${verificationToken}`)
       if (verifyResult?.pendingApproval) {
-        setSuccess('Konto zostalo utworzone i zweryfikowane. Oczekuje na akceptacje bibliotekarza.')
+        setSuccess('Konto zostało utworzone i zweryfikowane. Oczekuje na akceptację bibliotekarza.')
         return
       }
 
@@ -81,155 +84,156 @@ export default function Register() {
       })
 
       if (loginResult?.token) {
-        auth.login(loginResult.token)
+        auth.login(loginResult.token, loginResult.refreshToken)
       } else {
-        setSuccess('Konto zostalo zweryfikowane, ale logowanie nie powiodlo sie. Sprobuj ponownie.')
+        setSuccess('Konto zostało zweryfikowane, ale logowanie nie powiodło się. Spróbuj ponownie.')
       }
     } catch (err) {
-      setError(err.message || 'Rejestracja nie powiodla sie')
+      setError(err.message || 'Rejestracja nie powiodła się')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="auth-page">
-      <div className="auth-container auth-container--wide">
-        <div className="auth-card">
-          <div className="auth-header">
-            <h1>Utwórz konto</h1>
-            <p>Dołącz do naszej społeczności czytelników</p>
+    <div className="page">
+      <PageHeader
+        title="Utwórz konto"
+        subtitle="Dołącz do naszej społeczności czytelników."
+      />
+
+      {error && <FeedbackCard variant="error">{error}</FeedbackCard>}
+      {success && <FeedbackCard variant="success">{success}</FeedbackCard>}
+
+      <SectionCard>
+        <form onSubmit={handleSubmit} className="form-grid form-grid--two">
+          <div className="form-field">
+            <label htmlFor="register-name">Imię i nazwisko</label>
+            <input
+              id="register-name"
+              name="name"
+              placeholder="Jan Kowalski"
+              value={form.name}
+              onChange={handleChange}
+              required
+            />
           </div>
-          <form onSubmit={handleSubmit} className="auth-form">
-            <div className="form-grid form-grid--two">
-              <div className="form-field">
-                <label htmlFor="register-name">Imię i nazwisko</label>
-                <input
-                  id="register-name"
-                  name="name"
-                  placeholder="Jan Kowalski"
-                  value={form.name}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-              <div className="form-field">
-                <label htmlFor="register-email">Email</label>
-                <input
-                  id="register-email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  placeholder="twoj@email.com"
-                  value={form.email}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-              <div className="form-field">
-                <label htmlFor="register-password">Hasło</label>
-                <input
-                  id="register-password"
-                  name="password"
-                  type="password"
-                  autoComplete="new-password"
-                  placeholder="••••••••"
-                  value={form.password}
-                  onChange={handleChange}
-                  minLength={8}
-                  required
-                />
-                <p className="field-hint">Minimum 8 znaków</p>
-              </div>
-              <div className="form-field">
-                <label htmlFor="register-confirm">Powtórz hasło</label>
-                <input
-                  id="register-confirm"
-                  name="confirmPassword"
-                  type="password"
-                  autoComplete="new-password"
-                  placeholder="••••••••"
-                  value={form.confirmPassword}
-                  onChange={handleChange}
-                  minLength={8}
-                  required
-                />
-              </div>
-              <div className="form-field">
-                <label htmlFor="register-phone">Telefon (opcjonalnie)</label>
-                <input
-                  id="register-phone"
-                  name="phoneNumber"
-                  placeholder="+48 123 456 789"
-                  value={form.phoneNumber}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="form-field">
-                <label htmlFor="register-address">Adres (opcjonalnie)</label>
-                <input
-                  id="register-address"
-                  name="addressLine"
-                  placeholder="ul. Przykładowa 123"
-                  value={form.addressLine}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="form-field">
-                <label htmlFor="register-city">Miasto (opcjonalnie)</label>
-                <input
-                  id="register-city"
-                  name="city"
-                  placeholder="Warszawa"
-                  value={form.city}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="form-field">
-                <label htmlFor="register-postal">Kod pocztowy (opcjonalnie)</label>
-                <input
-                  id="register-postal"
-                  name="postalCode"
-                  placeholder="00-000"
-                  value={form.postalCode}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="form-field form-field--full">
-                <label htmlFor="register-taste">Co lubisz czytac? (opcjonalnie)</label>
-                <textarea
-                  id="register-taste"
-                  name="tastePrompt"
-                  placeholder="Np. kryminaly w deszczowym Londynie albo fantasy z magia"
-                  value={form.tastePrompt}
-                  onChange={handleChange}
-                  rows={3}
-                />
-                <p className="field-hint">To pomoze uruchomic rekomendacje AI od pierwszego dnia.</p>
-              </div>
-            </div>
-            <label className="checkbox-field">
-              <input
-                type="checkbox"
-                name="privacyConsent"
-                checked={form.privacyConsent}
-                onChange={handleChange}
-                required
-              />
-              <span>Wyrażam zgodę na przetwarzanie danych osobowych</span>
-            </label>
-            {error && <div className="error-message">{error}</div>}
-            {success && <div className="success-message">{success}</div>}
-            <button type="submit" className="btn btn-primary btn-block" disabled={loading}>
+          <div className="form-field">
+            <label htmlFor="register-email">E-mail</label>
+            <input
+              id="register-email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              placeholder="twoj@email.com"
+              value={form.email}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <div className="form-field">
+            <label htmlFor="register-password">Hasło</label>
+            <input
+              id="register-password"
+              name="password"
+              type="password"
+              autoComplete="new-password"
+              placeholder="••••••••"
+              value={form.password}
+              onChange={handleChange}
+              minLength={8}
+              required
+            />
+            <p className="field-hint">Minimum 8 znaków</p>
+          </div>
+          <div className="form-field">
+            <label htmlFor="register-confirm">Powtórz hasło</label>
+            <input
+              id="register-confirm"
+              name="confirmPassword"
+              type="password"
+              autoComplete="new-password"
+              placeholder="••••••••"
+              value={form.confirmPassword}
+              onChange={handleChange}
+              minLength={8}
+              required
+            />
+          </div>
+          <div className="form-field">
+            <label htmlFor="register-phone">Telefon (opcjonalnie)</label>
+            <input
+              id="register-phone"
+              name="phoneNumber"
+              placeholder="+48 123 456 789"
+              value={form.phoneNumber}
+              onChange={handleChange}
+            />
+          </div>
+          <div className="form-field">
+            <label htmlFor="register-address">Adres (opcjonalnie)</label>
+            <input
+              id="register-address"
+              name="addressLine"
+              placeholder="ul. Przykładowa 123"
+              value={form.addressLine}
+              onChange={handleChange}
+            />
+          </div>
+          <div className="form-field">
+            <label htmlFor="register-city">Miasto (opcjonalnie)</label>
+            <input
+              id="register-city"
+              name="city"
+              placeholder="Warszawa"
+              value={form.city}
+              onChange={handleChange}
+            />
+          </div>
+          <div className="form-field">
+            <label htmlFor="register-postal">Kod pocztowy (opcjonalnie)</label>
+            <input
+              id="register-postal"
+              name="postalCode"
+              placeholder="00-000"
+              value={form.postalCode}
+              onChange={handleChange}
+            />
+          </div>
+          <div className="form-field form-field--full">
+            <label htmlFor="register-taste">Co lubisz czytać? (opcjonalnie)</label>
+            <textarea
+              id="register-taste"
+              name="tastePrompt"
+              placeholder="Np. kryminały w deszczowym Londynie albo fantasy z magią"
+              value={form.tastePrompt}
+              onChange={handleChange}
+              rows={3}
+            />
+            <p className="field-hint">To pomoże uruchomić rekomendacje AI od pierwszego dnia.</p>
+          </div>
+
+          <label className="checkbox-field form-field--full">
+            <input
+              type="checkbox"
+              name="privacyConsent"
+              checked={form.privacyConsent}
+              onChange={handleChange}
+              required
+            />
+            <span>Wyrażam zgodę na przetwarzanie danych osobowych</span>
+          </label>
+
+          <div className="form-actions form-field--full">
+            <button type="submit" className="btn btn-primary" disabled={loading}>
               {loading ? 'Rejestrowanie...' : 'Utwórz konto'}
             </button>
-          </form>
-
-          <div className="auth-footer">
-            <p>Masz już konto? <Link to="/login" className="auth-link">Zaloguj się</Link></p>
+            <Link to="/login" className="btn btn-outline">
+              Mam konto
+            </Link>
           </div>
-        </div>
-      </div>
+        </form>
+      </SectionCard>
     </div>
   )
 }

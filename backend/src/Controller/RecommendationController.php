@@ -22,6 +22,7 @@ class RecommendationController extends AbstractController
 
     public function recommend(Request $request): JsonResponse
     {
+        $start = microtime(true);
         $payload = json_decode($request->getContent(), true);
         $query = is_array($payload) ? trim((string) ($payload['query'] ?? '')) : '';
 
@@ -29,14 +30,22 @@ class RecommendationController extends AbstractController
             return $this->json(['message' => 'Query is required.'], 400);
         }
 
+        $embeddingStart = microtime(true);
         $vector = $this->embeddingService->getVector($query);
+        $embeddingMs = (int) round((microtime(true) - $embeddingStart) * 1000);
+        error_log('RecommendationController::recommend - embedding in ' . $embeddingMs . 'ms');
+        $queryStart = microtime(true);
         $books = $this->bookRepository->findSimilarBooks($vector, 5);
+        $queryMs = (int) round((microtime(true) - $queryStart) * 1000);
+        $totalMs = (int) round((microtime(true) - $start) * 1000);
+        error_log('RecommendationController::recommend - query in ' . $queryMs . 'ms, total ' . $totalMs . 'ms');
 
         return $this->json(['data' => $books], 200, [], ['groups' => ['book:read']]);
     }
 
     public function personal(Request $request): JsonResponse
     {
+        $start = microtime(true);
         $userId = $this->security->getCurrentUserId($request);
         if ($userId === null) {
             return $this->json(['message' => 'Unauthorized'], 401);
@@ -47,7 +56,11 @@ class RecommendationController extends AbstractController
             return $this->json(['message' => 'User not found'], 404);
         }
 
+        $recoStart = microtime(true);
         $result = $this->recommendationService->getPersonalizedRecommendations($user, 10);
+        $recoMs = (int) round((microtime(true) - $recoStart) * 1000);
+        $totalMs = (int) round((microtime(true) - $start) * 1000);
+        error_log('RecommendationController::personal - reco in ' . $recoMs . 'ms, total ' . $totalMs . 'ms');
 
         return $this->json(
             [

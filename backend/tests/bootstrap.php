@@ -9,6 +9,11 @@ $_ENV['APP_ENV'] = $_SERVER['APP_ENV'] = $testEnv;
 putenv('APP_DEBUG=1');
 $_ENV['APP_DEBUG'] = $_SERVER['APP_DEBUG'] = '1';
 
+$sqlitePath = dirname(__DIR__) . '/var/test.db';
+$databaseUrl = 'sqlite:///' . $sqlitePath;
+putenv('DATABASE_URL=' . $databaseUrl);
+$_ENV['DATABASE_URL'] = $_SERVER['DATABASE_URL'] = $databaseUrl;
+
 $cacheDir = dirname(__DIR__) . '/var/cache/test';
 if (is_dir($cacheDir)) {
     $files = new \RecursiveIteratorIterator(
@@ -33,10 +38,14 @@ $kernel = new \App\Kernel('test', true);
 $kernel->boot();
 
 $em = $kernel->getContainer()->get('doctrine')->getManager();
-$em->getConnection()->executeStatement('CREATE EXTENSION IF NOT EXISTS vector');
+$connection = $em->getConnection();
+if ($connection->getDatabasePlatform()->getName() !== 'sqlite') {
+    $connection->executeStatement('CREATE EXTENSION IF NOT EXISTS vector');
+}
 $metadata = $em->getMetadataFactory()->getAllMetadata();
 if (!empty($metadata)) {
     $tool = new \Doctrine\ORM\Tools\SchemaTool($em);
+    $tool->dropSchema($metadata);
     $tool->updateSchema($metadata, true);
 }
 

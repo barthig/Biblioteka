@@ -1,6 +1,11 @@
 import React, { useEffect, useState } from 'react'
 import { reportService } from '../services/reportService'
 import { useAuth } from '../context/AuthContext'
+import PageHeader from '../components/ui/PageHeader'
+import StatGrid from '../components/ui/StatGrid'
+import StatCard from '../components/ui/StatCard'
+import SectionCard from '../components/ui/SectionCard'
+import FeedbackCard from '../components/ui/FeedbackCard'
 
 export default function Reports() {
   const { user } = useAuth()
@@ -45,26 +50,30 @@ export default function Reports() {
   if (!isLibrarian) {
     return (
       <div className="page">
-        <div className="surface-card">Brak uprawnień do raportów.</div>
+        <SectionCard>Brak uprawnień do raportów.</SectionCard>
       </div>
     )
   }
 
+  const usageLoans = usage?.loans ?? usage?.activeLoans ?? null
+  const usageUsers = usage?.activeUsers ?? usage?.users ?? null
+
   return (
     <div className="page">
-      <header className="page-header">
-        <div>
-          <h1>Raporty</h1>
-          <p>Przegląd metryk biblioteki</p>
-        </div>
-      </header>
+      <PageHeader title="Raporty" subtitle="Przegląd metryk biblioteki" />
 
-      {loading && <div className="surface-card">Ładowanie…</div>}
-      {error && <div className="surface-card error">{error}</div>}
+      <StatGrid>
+        <StatCard title="Aktywne wypożyczenia" value={usageLoans ?? '-'} subtitle="Według raportu" />
+        <StatCard title="Aktywni użytkownicy" value={usageUsers ?? '-'} subtitle="Ostatni okres" />
+        <StatCard title="Raporty" value={[usage, financial, inventory].filter(Boolean).length} subtitle="Załadowane sekcje" />
+      </StatGrid>
+
+      {loading && <SectionCard>Ładowanie...</SectionCard>}
+      {error && <FeedbackCard variant="error">{error}</FeedbackCard>}
 
       {!loading && !error && (
         <div className="grid grid-2">
-          <div className="surface-card">
+          <SectionCard>
             <h3>Użycie systemu</h3>
             <ul className="list">
               <li>Aktywne wypożyczenia: {usage?.loans ?? usage?.activeLoans ?? '-'}</li>
@@ -72,67 +81,69 @@ export default function Reports() {
               <li>Aktywni użytkownicy: {usage?.activeUsers ?? usage?.users ?? '-'}</li>
               <li>Dostępne egzemplarze: {usage?.availableCopies ?? '-'}</li>
             </ul>
-          </div>
+          </SectionCard>
 
-          <div className="surface-card">
+          <SectionCard>
             <h3>Finanse</h3>
             {financial ? (
               <ul className="list">
-                <li>Budżet: {financial.budgetTotal ?? '-'}</li>
-                <li>Wydatki: {financial.expensesTotal ?? '-'}</li>
-                <li>Przychody: {financial.revenueTotal ?? '-'}</li>
+                <li>Przychody: {financial.totalRevenue ?? '-'}</li>
+                <li>Koszty: {financial.totalExpenses ?? '-'}</li>
+                <li>Saldo: {financial.balance ?? '-'}</li>
               </ul>
             ) : (
-              <p>Brak danych</p>
+              <p>Brak danych finansowych.</p>
             )}
-          </div>
+          </SectionCard>
 
-          <div className="surface-card">
-            <h3>Segmenty czytelników</h3>
-            {segments.length === 0 ? (
-              <p>Brak danych</p>
-            ) : (
-              <ul className="list">
-                {segments.map((s) => (
-                  <li key={s.segment || s.name}>
-                    {s.segment || s.name}: {s.count ?? s.total ?? 0}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-
-          <div className="surface-card">
-            <h3>Magazyn</h3>
-            {inventory ? (
-              <ul className="list">
-                <li>Egzemplarze łącznie: {inventory.totalCopies ?? '-'}</li>
-                <li>Dostępne: {inventory.availableCopies ?? '-'}</li>
-                <li>Zarezerwowane: {inventory.reservedCopies ?? inventory.reservations ?? '-'}</li>
-              </ul>
-            ) : (
-              <p>Brak danych</p>
-            )}
-          </div>
-
-          <div className="surface-card surface-card--wide">
+          <SectionCard>
             <h3>Najpopularniejsze tytuły</h3>
             {popular.length === 0 ? (
-              <p>Brak danych</p>
+              <p>Brak danych.</p>
             ) : (
               <ul className="list list--bordered">
-                {popular.slice(0, 10).map((book) => (
-                  <li key={book.id || book.bookId}>
-                    <div className="list__title">{book.title}</div>
+                {popular.map(item => (
+                  <li key={item.id || item.title}>
+                    <div className="list__title">{item.title || item.book?.title}</div>
                     <div className="list__meta">
-                      <span>{book.author?.name || book.authorName || 'Autor nieznany'}</span>
-                      {book.loanCount && <span>Wypożyczenia: {book.loanCount}</span>}
+                      <span>Wypożyczeń: {item.borrowCount ?? item.count ?? '-'}</span>
                     </div>
                   </li>
                 ))}
               </ul>
             )}
-          </div>
+          </SectionCard>
+
+          <SectionCard>
+            <h3>Segmenty czytelników</h3>
+            {segments.length === 0 ? (
+              <p>Brak danych.</p>
+            ) : (
+              <ul className="list list--bordered">
+                {segments.map(segment => (
+                  <li key={segment.segment || segment.name}>
+                    <div className="list__title">{segment.segment || segment.name}</div>
+                    <div className="list__meta">
+                      <span>Użytkowników: {segment.count ?? segment.total ?? '-'}</span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </SectionCard>
+
+          <SectionCard>
+            <h3>Stan magazynu</h3>
+            {inventory ? (
+              <ul className="list">
+                <li>W magazynie: {inventory.storageCopies ?? '-'}</li>
+                <li>W wolnym dostępie: {inventory.openStackCopies ?? '-'}</li>
+                <li>Ubytki: {inventory.removedCopies ?? '-'}</li>
+              </ul>
+            ) : (
+              <p>Brak danych o magazynie.</p>
+            )}
+          </SectionCard>
         </div>
       )}
     </div>

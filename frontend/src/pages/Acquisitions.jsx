@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from 'react'
 import { acquisitionService } from '../services/acquisitionService'
 import { useAuth } from '../context/AuthContext'
+import PageHeader from '../components/ui/PageHeader'
+import StatGrid from '../components/ui/StatGrid'
+import StatCard from '../components/ui/StatCard'
+import FeedbackCard from '../components/ui/FeedbackCard'
 
 export default function Acquisitions() {
   const { user } = useAuth()
@@ -12,6 +16,7 @@ export default function Acquisitions() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [message, setMessage] = useState(null)
+  const [budgetSummary, setBudgetSummary] = useState(null)
 
   const [supplierForm, setSupplierForm] = useState({ name: '', contact: '' })
   const [budgetForm, setBudgetForm] = useState({ name: '', amount: '' })
@@ -48,6 +53,17 @@ export default function Acquisitions() {
   function clearMessages() {
     setError(null)
     setMessage(null)
+  }
+
+  async function handleBudgetSummary(id) {
+    clearMessages()
+    try {
+      const data = await acquisitionService.getBudgetSummary(id)
+      setBudgetSummary(data)
+      setMessage('Pobrano podsumowanie budzetu')
+    } catch (err) {
+      setError(err.message || 'Nie udalo sie pobrac podsumowania budzetu')
+    }
   }
 
   async function handleCreateSupplier(e) {
@@ -141,13 +157,39 @@ export default function Acquisitions() {
       <header className="page-header">
         <div>
           <h1>Akcesje</h1>
-          <p>Dostawcy, budżety, zamówienia, ubytki</p>
+          <p className="support-copy">Dostawcy, budżety, zamówienia, ubytki</p>
         </div>
       </header>
 
+      <div className="card-grid card-grid--columns-3">
+        <div className="surface-card stat-card">
+          <h3>Dostawcy</h3>
+          <strong>{suppliers.length}</strong>
+          <span>Aktywni partnerzy</span>
+        </div>
+        <div className="surface-card stat-card">
+          <h3>Budżety</h3>
+          <strong>{budgets.length}</strong>
+          <span>Aktywne pule</span>
+        </div>
+        <div className="surface-card stat-card">
+          <h3>Zamówienia</h3>
+          <strong>{orders.length}</strong>
+          <span>Rejestr</span>
+        </div>
+      </div>
+
       {loading && <div className="surface-card">Ładowanie...</div>}
-      {error && <div className="surface-card error">{error}</div>}
-      {message && <div className="surface-card success">{message}</div>}
+      {error && (
+        <div className="surface-card">
+          <p className="error">{error}</p>
+        </div>
+      )}
+      {message && (
+        <div className="surface-card">
+          <p className="success">{message}</p>
+        </div>
+      )}
 
       <div className="grid grid-2">
         <div className="surface-card">
@@ -182,9 +224,18 @@ export default function Acquisitions() {
                   <span>Kwota: {b.amount ?? b.total ?? '-'}</span>
                   {b.spent && <span>Wydano: {b.spent}</span>}
                 </div>
+                <div className="list__actions">
+                  <button className="btn btn-outline btn-sm" type="button" onClick={() => handleBudgetSummary(b.id)}>Podsumowanie</button>
+                </div>
               </li>
             ))}
           </ul>
+          {budgetSummary && (
+            <div className="surface-card" style={{ marginTop: '1rem' }}>
+              <strong>Podsumowanie budzetu</strong>
+              <pre style={{ whiteSpace: 'pre-wrap' }}>{JSON.stringify(budgetSummary, null, 2)}</pre>
+            </div>
+          )}
         </div>
 
         <div className="surface-card surface-card--wide">

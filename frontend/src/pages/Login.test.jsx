@@ -27,7 +27,7 @@ describe('Login page', () => {
   })
 
   it('submits credentials and navigates on success', async () => {
-    apiFetch.mockResolvedValue({ token: 'token-123' })
+    apiFetch.mockResolvedValue({ token: 'token-123', refreshToken: 'refresh-123' })
 
     render(
       <MemoryRouter initialEntries={[{ pathname: '/login', state: { from: { pathname: '/books' } } }]}>
@@ -45,7 +45,7 @@ describe('Login page', () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: 'admin@biblioteka.pl', password: 'password123' })
       })
-      expect(mockLogin).toHaveBeenCalledWith('token-123')
+      expect(mockLogin).toHaveBeenCalledWith('token-123', 'refresh-123')
       expect(mockNavigate).toHaveBeenCalledWith('/books', { replace: true })
     })
   })

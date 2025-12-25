@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { apiFetch } from '../api'
+import { authService } from '../services/authService'
 
 const AuthContext = createContext(null)
 
@@ -44,6 +44,7 @@ function decodeJwt(token) {
 
 export function AuthProvider({ children }) {
   const [token, setToken] = useState(() => localStorage.getItem('token'))
+  const [refreshToken, setRefreshToken] = useState(() => localStorage.getItem('refreshToken'))
   const [user, setUser] = useState(() => {
     // Initialize user immediately from token if available
     const initialToken = localStorage.getItem('token')
@@ -97,8 +98,19 @@ export function AuthProvider({ children }) {
     }
   }, [token, navigate, isInitialized])
 
-  function login(tokenValue) {
+  useEffect(() => {
+    if (refreshToken) {
+      localStorage.setItem('refreshToken', refreshToken)
+    } else {
+      localStorage.removeItem('refreshToken')
+    }
+  }, [refreshToken])
+
+  function login(tokenValue, refreshTokenValue) {
     setToken(tokenValue)
+    if (refreshTokenValue) {
+      setRefreshToken(refreshTokenValue)
+    }
     
     // Immediately decode JWT and set user (no waiting)
     const decoded = decodeJwt(tokenValue)
@@ -108,14 +120,49 @@ export function AuthProvider({ children }) {
     // Note: navigation is handled by the Login component
   }
 
-  function logout() {
+  async function logout() {
+    try {
+      await authService.logout(refreshToken || undefined)
+    } catch (err) {
+      // Ignore logout errors, still clear local session
+    }
     setToken(null)
+    setRefreshToken(null)
     setUser(null)
     navigate('/login')
   }
 
+  async function logoutAll() {
+    await authService.logoutAll()
+    setToken(null)
+    setRefreshToken(null)
+    setUser(null)
+    navigate('/login')
+  }
+
+  async function refreshSession() {
+    const data = await authService.refresh(refreshToken)
+    if (data?.token) {
+      setToken(data.token)
+    }
+    if (data?.refreshToken) {
+      setRefreshToken(data.refreshToken)
+    }
+    return data
+  }
+
+  async function fetchAuthProfile() {
+    const data = await authService.profile()
+    try {
+      await authService.legacyProfile()
+    } catch (err) {
+      // ignore legacy profile failures
+    }
+    return data
+  }
+
   return (
-    <AuthContext.Provider value={{ token, user, login, logout }}>
+    <AuthContext.Provider value={{ token, refreshToken, user, login, logout, logoutAll, refreshSession, fetchAuthProfile }}>
       {children}
     </AuthContext.Provider>
   )

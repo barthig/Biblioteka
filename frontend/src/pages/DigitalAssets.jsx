@@ -1,6 +1,11 @@
 import React, { useEffect, useState } from 'react'
 import { digitalAssetService } from '../services/digitalAssetService'
 import { useAuth } from '../context/AuthContext'
+import PageHeader from '../components/ui/PageHeader'
+import StatGrid from '../components/ui/StatGrid'
+import StatCard from '../components/ui/StatCard'
+import SectionCard from '../components/ui/SectionCard'
+import FeedbackCard from '../components/ui/FeedbackCard'
 
 export default function DigitalAssets() {
   const { user } = useAuth()
@@ -71,21 +76,22 @@ export default function DigitalAssets() {
   if (!isLibrarian) {
     return (
       <div className="page">
-        <div className="surface-card">Brak uprawnień do zarządzania zasobami cyfrowymi.</div>
+        <SectionCard>Brak uprawnień do zarządzania zasobami cyfrowymi.</SectionCard>
       </div>
     )
   }
 
   return (
     <div className="page">
-      <header className="page-header">
-        <div>
-          <h1>Zasoby cyfrowe</h1>
-          <p>Dodaj i zarządzaj plikami powiązanymi z książkami</p>
-        </div>
-      </header>
+      <PageHeader title="Zasoby cyfrowe" subtitle="Dodaj i zarządzaj plikami powiązanymi z książkami" />
 
-      <div className="surface-card">
+      <StatGrid>
+        <StatCard title="Pliki" value={assets.length} subtitle="Powiązane z książką" />
+        <StatCard title="ID książki" value={bookId || '-'} subtitle="Aktualny kontekst" />
+        <StatCard title="Status" value={loading ? 'Ładuję' : 'Gotowe'} subtitle="Operacje plików" />
+      </StatGrid>
+
+      <SectionCard>
         <form className="form-row" onSubmit={handleUpload}>
           <div className="form-field">
             <label>ID książki</label>
@@ -99,12 +105,12 @@ export default function DigitalAssets() {
             <button type="submit" className="btn btn-primary" disabled={loading}>Prześlij</button>
           </div>
         </form>
-        {error && <p className="error">{error}</p>}
-        {message && <p className="success">{message}</p>}
-      </div>
+      </SectionCard>
 
-      <div className="surface-card" style={{ marginTop: '1rem' }}>
-        <h3>Pliki</h3>
+      {error && <FeedbackCard variant="error">{error}</FeedbackCard>}
+      {message && <FeedbackCard variant="success">{message}</FeedbackCard>}
+
+      <SectionCard title="Pliki">
         {loading && <p>Ładowanie...</p>}
         {!loading && assets.length === 0 && <p>Brak plików.</p>}
         {!loading && assets.length > 0 && (
@@ -120,7 +126,7 @@ export default function DigitalAssets() {
                   <a className="btn btn-outline btn-sm" href={digitalAssetService.downloadUrl(bookId, asset.id || asset.assetId)} target="_blank" rel="noopener">
                     Pobierz
                   </a>
-                  <button className="btn btn-outline btn-sm" onClick={() => handleDelete(asset.id || asset.assetId)}>
+                  <button className="btn btn-ghost btn-sm" type="button" onClick={() => handleDelete(asset.id || asset.assetId)}>
                     Usuń
                   </button>
                 </div>
@@ -128,7 +134,7 @@ export default function DigitalAssets() {
             ))}
           </ul>
         )}
-      </div>
+      </SectionCard>
     </div>
   )
 }

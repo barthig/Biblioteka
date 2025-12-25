@@ -4,6 +4,11 @@ import { apiFetch } from '../api'
 import { FaBullhorn, FaPlus } from 'react-icons/fa'
 import { useAuth } from '../context/AuthContext'
 import { announcementService } from '../services/announcementService'
+import PageHeader from '../components/ui/PageHeader'
+import StatGrid from '../components/ui/StatGrid'
+import StatCard from '../components/ui/StatCard'
+import SectionCard from '../components/ui/SectionCard'
+import FeedbackCard from '../components/ui/FeedbackCard'
 
 export default function Announcements() {
   const { id } = useParams()
@@ -68,9 +73,7 @@ export default function Announcements() {
   if (loading) {
     return (
       <div className="page">
-        <div className="surface-card">
-          <p>Ładowanie ogłoszeń...</p>
-        </div>
+        <SectionCard>Ładowanie ogłoszeń...</SectionCard>
       </div>
     )
   }
@@ -78,12 +81,12 @@ export default function Announcements() {
   if (error) {
     return (
       <div className="page">
-        <div className="surface-card">
+        <SectionCard>
           <p className="error">{error}</p>
           <button className="btn btn-primary" onClick={() => window.location.reload()}>
             Spróbuj ponownie
           </button>
-        </div>
+        </SectionCard>
       </div>
     )
   }
@@ -91,20 +94,21 @@ export default function Announcements() {
   if (selectedAnnouncement) {
     return (
       <div className="page">
-        <button onClick={() => navigate('/announcements')} className="btn btn-outline">
-          ⇠ Powrót do listy
-        </button>
+        <PageHeader
+          title={selectedAnnouncement.title}
+          subtitle={new Date(selectedAnnouncement.createdAt).toLocaleDateString('pl-PL')}
+          actions={(
+            <button onClick={() => navigate('/announcements')} className="btn btn-outline">
+              &lt;- Powrót do listy
+            </button>
+          )}
+        />
 
-        <div className="surface-card" style={{ marginTop: '1rem' }}>
-          <h1>{selectedAnnouncement.title}</h1>
-          <p style={{ color: 'var(--color-muted)', marginTop: '0.5rem' }}>
-            {new Date(selectedAnnouncement.createdAt).toLocaleDateString('pl-PL')}
-          </p>
-          {actionMessage && <p className="success" style={{ marginTop: '0.5rem' }}>{actionMessage}</p>}
-          {actionError && <p className="error" style={{ marginTop: '0.5rem' }}>{actionError}</p>}
-          <div style={{ marginTop: '2rem' }}>
-            {selectedAnnouncement.content}
-          </div>
+        {actionMessage && <FeedbackCard variant="success">{actionMessage}</FeedbackCard>}
+        {actionError && <FeedbackCard variant="error">{actionError}</FeedbackCard>}
+
+        <SectionCard>
+          <div>{selectedAnnouncement.content}</div>
           <div style={{ marginTop: '1.5rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
             {user && (
               <button
@@ -143,39 +147,42 @@ export default function Announcements() {
               </button>
             )}
           </div>
-        </div>
+        </SectionCard>
       </div>
     )
   }
 
   return (
     <div className="page">
-      <header className="page-header">
-        <div>
-          <h1>Ogłoszenia</h1>
-          <p>Aktualne informacje i komunikaty</p>
-        </div>
-        {canManage && (
+      <PageHeader
+        title="Ogłoszenia"
+        subtitle="Aktualne informacje i komunikaty"
+        actions={canManage ? (
           <button className="btn btn-primary" onClick={() => navigate('/admin/announcements/new')}>
             <FaPlus /> Nowe ogłoszenie
           </button>
-        )}
-      </header>
+        ) : null}
+      />
+
+      <StatGrid>
+        <StatCard title="Ogłoszenia" value={announcements.length} subtitle="Na tej stronie" />
+        <StatCard title="Strona" value={currentPage} subtitle={`z ${totalPages}`} />
+        <StatCard title="Status" value={loading ? 'Ładuję' : 'Gotowe'} subtitle="Aktualizacja listy" />
+      </StatGrid>
 
       {announcements.length === 0 ? (
-        <div className="surface-card">
+        <SectionCard>
           <div className="empty-state">
             <FaBullhorn style={{ fontSize: '3rem', color: 'var(--color-muted)' }} />
             <h3>Brak ogłoszeń</h3>
             <p>Nie ma obecnie żadnych ogłoszeń do wyświetlenia.</p>
           </div>
-        </div>
+        </SectionCard>
       ) : (
         <div style={{ display: 'grid', gap: '1rem' }}>
           {announcements.map(announcement => (
-            <div
+            <SectionCard
               key={announcement.id}
-              className="surface-card"
               onClick={() => navigate(`/announcements/${announcement.id}`)}
               style={{ cursor: 'pointer', transition: 'all 0.2s' }}
             >
@@ -190,7 +197,7 @@ export default function Announcements() {
                     : announcement.content}
                 </p>
               )}
-            </div>
+            </SectionCard>
           ))}
         </div>
       )}

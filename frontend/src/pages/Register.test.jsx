@@ -41,7 +41,7 @@ describe('Register page', () => {
     apiFetch
       .mockResolvedValueOnce({ verificationToken: 'token-1' })
       .mockResolvedValueOnce({ pendingApproval: false })
-      .mockResolvedValueOnce({ token: 'token-123' })
+      .mockResolvedValueOnce({ token: 'token-123', refreshToken: 'refresh-123' })
 
     render(
       <MemoryRouter>
@@ -76,7 +76,7 @@ describe('Register page', () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: 'jan@example.com', password: 'password123' })
       })
-      expect(mockLogin).toHaveBeenCalledWith('token-123')
+      expect(mockLogin).toHaveBeenCalledWith('token-123', 'refresh-123')
     })
   })
 

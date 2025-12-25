@@ -3,6 +3,11 @@ import { Link } from 'react-router-dom'
 import { apiFetch } from '../api'
 import { useAuth } from '../context/AuthContext'
 import { useResourceCache } from '../context/ResourceCacheContext'
+import PageHeader from '../components/ui/PageHeader'
+import StatGrid from '../components/ui/StatGrid'
+import StatCard from '../components/ui/StatCard'
+import SectionCard from '../components/ui/SectionCard'
+import FeedbackCard from '../components/ui/FeedbackCard'
 
 export default function Favorites() {
   const { user } = useAuth()
@@ -13,6 +18,14 @@ export default function Favorites() {
   const { getCachedResource, setCachedResource, invalidateResource } = useResourceCache()
   const CACHE_KEY = '/api/favorites'
   const CACHE_TTL = 60000
+
+  const lastAdded = Array.isArray(favorites)
+    ? favorites
+      .map(item => item.createdAt)
+      .filter(Boolean)
+      .map(value => new Date(value))
+      .sort((a, b) => b.getTime() - a.getTime())[0] ?? null
+    : null
 
   useEffect(() => {
     if (!user?.id) {
@@ -100,38 +113,36 @@ export default function Favorites() {
 
   return (
     <div className="page">
-      <header className="page-header">
-        <div>
-          <h1>Moja półka</h1>
-          <p className="support-copy">Zebrane tytuły, do których chcesz szybko wrócić lub zamówić później.</p>
-        </div>
-      </header>
+      <PageHeader
+        title="Moja półka"
+        subtitle="Zebrane tytuły, do których chcesz szybko wrócić lub zamówić później."
+      />
 
-      {error && (
-        <div className="surface-card">
-          <p className="error">{error}</p>
-        </div>
-      )}
-      {actionError && (
-        <div className="surface-card">
-          <p className="error">{actionError}</p>
-        </div>
-      )}
+      <StatGrid>
+        <StatCard title="Ulubione tytuły" value={Array.isArray(favorites) ? favorites.length : 0} subtitle="Na półce" />
+        <StatCard title="Ostatnio dodane" value={lastAdded ? new Date(lastAdded).toLocaleDateString('pl-PL') : '-'} subtitle="Najświeższy wpis" />
+        <StatCard title="Szybka akcja" value="Katalog" subtitle="Dodaj nowe tytuły">
+          <Link className="btn btn-ghost" to="/books">Przejdź do katalogu</Link>
+        </StatCard>
+      </StatGrid>
+
+      {error && <FeedbackCard variant="error">{error}</FeedbackCard>}
+      {actionError && <FeedbackCard variant="error">{actionError}</FeedbackCard>}
 
       {!Array.isArray(favorites) || favorites.length === 0 ? (
-        <section className="surface-card empty-state">
+        <SectionCard className="empty-state">
           Brak zapisanych tytułów. Otwórz katalog i dodaj książki do ulubionych.
-        </section>
+        </SectionCard>
       ) : (
-        <section className="surface-card">
+        <SectionCard>
           <ul className="resource-list">
             {favorites.map(fav => (
               <li key={fav.id} className="resource-item">
                 <div>
                   <strong>{fav.book?.title ?? 'Nieznana książka'}</strong>
                   <div className="resource-item__meta">
-                    <span>Autor: {fav.book?.author?.name ?? '—'}</span>
-                    <span>Dodano: {fav.createdAt ? new Date(fav.createdAt).toLocaleDateString() : '—'}</span>
+                    <span>Autor: {fav.book?.author?.name ?? '-'}</span>
+                    <span>Dodano: {fav.createdAt ? new Date(fav.createdAt).toLocaleDateString('pl-PL') : '-'}</span>
                   </div>
                 </div>
                 <div className="resource-item__actions">
@@ -145,7 +156,7 @@ export default function Favorites() {
               </li>
             ))}
           </ul>
-        </section>
+        </SectionCard>
       )}
     </div>
   )

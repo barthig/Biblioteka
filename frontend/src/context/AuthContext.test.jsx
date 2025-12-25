@@ -4,8 +4,20 @@ import userEvent from '@testing-library/user-event'
 import { AuthProvider, useAuth } from './AuthContext'
 
 const mockNavigate = vi.fn()
+const mockLogout = vi.fn().mockResolvedValue(null)
+const mockLogoutAll = vi.fn().mockResolvedValue(null)
 vi.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate
+}))
+
+vi.mock('../services/authService', () => ({
+  authService: {
+    logout: (...args) => mockLogout(...args),
+    logoutAll: (...args) => mockLogoutAll(...args),
+    refresh: vi.fn(),
+    profile: vi.fn(),
+    legacyProfile: vi.fn()
+  }
 }))
 
 function base64UrlEncode(obj) {
@@ -27,7 +39,7 @@ function AuthConsumer() {
   return (
     <div>
       <div data-testid="name">{user?.name || 'none'}</div>
-      <button onClick={() => login(buildToken({ sub: 1, name: 'Jan', roles: [], exp: Math.floor(Date.now() / 1000) + 60 }))}>
+      <button onClick={() => login(buildToken({ sub: 1, name: 'Jan', roles: [], exp: Math.floor(Date.now() / 1000) + 60 }), 'refresh-1')}>
         Login
       </button>
       <button onClick={logout}>Logout</button>

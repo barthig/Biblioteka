@@ -50,6 +50,9 @@ export const acquisitionService = {
       body: JSON.stringify(payload)
     })
   },
+  async getBudgetSummary(budgetId) {
+    return await apiFetch(`/api/admin/acquisitions/budgets/${budgetId}/summary`)
+  },
 
   // Orders
   async listOrders() {

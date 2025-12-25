@@ -1,6 +1,11 @@
 import React, { useEffect, useState } from 'react'
 import { systemLogService } from '../services/systemLogService'
 import { useAuth } from '../context/AuthContext'
+import PageHeader from '../components/ui/PageHeader'
+import StatGrid from '../components/ui/StatGrid'
+import StatCard from '../components/ui/StatCard'
+import SectionCard from '../components/ui/SectionCard'
+import FeedbackCard from '../components/ui/FeedbackCard'
 
 export default function SystemLogs() {
   const { user } = useAuth()
@@ -8,6 +13,7 @@ export default function SystemLogs() {
   const [logs, setLogs] = useState('')
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(true)
+  const logLines = logs ? logs.split('\n').length : 0
 
   useEffect(() => {
     let active = true
@@ -39,25 +45,27 @@ export default function SystemLogs() {
   if (!isAdmin) {
     return (
       <div className="page">
-        <div className="surface-card">Brak uprawnień do logów systemowych.</div>
+        <SectionCard>Brak uprawnień do logów systemowych.</SectionCard>
       </div>
     )
   }
 
   return (
     <div className="page">
-      <header className="page-header">
-        <div>
-          <h1>Logi systemowe</h1>
-          <p>Podgląd serwerowych logów aplikacji</p>
-        </div>
-      </header>
-      {loading && <div className="surface-card">Ładowanie...</div>}
-      {error && <div className="surface-card error">{error}</div>}
+      <PageHeader title="Logi systemowe" subtitle="Podgląd serwerowych logów aplikacji" />
+
+      <StatGrid>
+        <StatCard title="Wpisy" value={logLines || '-'} subtitle="Liczba linii" />
+        <StatCard title="Status" value={loading ? 'Ładuję' : (error ? 'Błąd' : 'Gotowe')} subtitle="Odczyt logów" />
+        <StatCard title="Zakres" value="Serwer" subtitle="Logi aplikacji" />
+      </StatGrid>
+
+      {loading && <SectionCard>Ładowanie...</SectionCard>}
+      {error && <FeedbackCard variant="error">{error}</FeedbackCard>}
       {!loading && !error && (
-        <div className="surface-card">
+        <SectionCard>
           <pre style={{ whiteSpace: 'pre-wrap', maxHeight: '600px', overflow: 'auto' }}>{logs || 'Brak logów'}</pre>
-        </div>
+        </SectionCard>
       )}
     </div>
   )

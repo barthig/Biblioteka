@@ -8,6 +8,7 @@ use App\Application\Command\User\UnblockUserCommand;
 use App\Application\Command\User\UpdateUserCommand;
 use App\Controller\Traits\ExceptionHandlingTrait;
 use App\Controller\Traits\ValidationTrait;
+use App\Repository\StaffRoleRepository;
 use App\Request\CreateUserRequest;
 use App\Request\UpdateUserRequest;
 use App\Service\SecurityService;
@@ -25,7 +26,8 @@ class UserManagementController extends AbstractController
 
     public function __construct(
         private readonly MessageBusInterface $commandBus,
-        private readonly SecurityService $security
+        private readonly SecurityService $security,
+        private readonly StaffRoleRepository $staffRoles
     ) {}
 public function create(Request $request, ValidatorInterface $validator): JsonResponse
     {
@@ -162,6 +164,74 @@ public function create(Request $request, ValidatorInterface $validator): JsonRes
                 return $response;
             }
             return $this->json(['message' => $e->getMessage()], 404);
+        }
+    }
+
+    public function updatePermissions(string $id, Request $request): JsonResponse
+    {
+        if (!$this->security->hasRole($request, 'ROLE_ADMIN')) {
+            return $this->json(['message' => 'Forbidden'], 403);
+        }
+        if (!ctype_digit($id) || (int) $id <= 0) {
+            return $this->json(['message' => 'Invalid id parameter'], 400);
+        }
+
+        $data = json_decode($request->getContent(), true);
+        if (!is_array($data)) {
+            return $this->json(['message' => 'Invalid JSON payload'], 400);
+        }
+
+        $roles = $data['roles'] ?? $data['permissions'] ?? null;
+        if (!is_array($roles) || count($roles) === 0) {
+            return $this->json(['message' => 'roles are required'], 400);
+        }
+
+        $roles = array_values(array_unique(array_filter(array_map(static function ($role) {
+            $role = strtoupper(trim((string) $role));
+            if ($role === '') {
+                return null;
+            }
+            return str_starts_with($role, 'ROLE_') ? $role : 'ROLE_' . $role;
+        }, $roles))));
+
+        if (count($roles) === 0) {
+            return $this->json(['message' => 'roles are required'], 400);
+        }
+
+        $allowedBaseRoles = ['ROLE_USER', 'ROLE_LIBRARIAN', 'ROLE_ADMIN', 'ROLE_SYSTEM'];
+        $invalidRoles = [];
+        foreach ($roles as $role) {
+            if (in_array($role, $allowedBaseRoles, true)) {
+                continue;
+            }
+            if ($this->staffRoles->findOneByRoleKey($role)) {
+                continue;
+            }
+            $invalidRoles[] = $role;
+        }
+
+        if (count($invalidRoles) > 0) {
+            return $this->json([
+                'message' => 'Invalid roles',
+                'invalidRoles' => $invalidRoles,
+            ], 400);
+        }
+
+        $command = new UpdateUserCommand(
+            userId: (int) $id,
+            roles: $roles
+        );
+
+        try {
+            $envelope = $this->commandBus->dispatch($command);
+            $user = $envelope->last(HandledStamp::class)?->getResult();
+            return $this->json($user, 200);
+        } catch (\Throwable $e) {
+            $e = $this->unwrapThrowable($e);
+            if ($response = $this->jsonFromHttpException($e)) {
+                return $response;
+            }
+            return $this->json(['message' => $e->getMessage()], 500);
         }
     }
 

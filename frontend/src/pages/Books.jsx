@@ -2,6 +2,12 @@ import React, { useEffect, useRef, useState } from 'react'
 import { apiFetch } from '../api'
 import BookItem from '../components/BookItem'
 import { useResourceCache } from '../context/ResourceCacheContext'
+import PageHeader from '../components/ui/PageHeader'
+import StatGrid from '../components/ui/StatGrid'
+import StatCard from '../components/ui/StatCard'
+import SectionCard from '../components/ui/SectionCard'
+import FeedbackCard from '../components/ui/FeedbackCard'
+import Pagination from '../components/Pagination'
 
 const initialFilters = {
   authorId: '',
@@ -14,6 +20,8 @@ const initialFilters = {
   availableOnly: false,
   ageGroup: '',
 }
+
+const DEFAULT_LIMIT = 20
 
 export default function Books() {
   const [books, setBooks] = useState([])
@@ -32,6 +40,10 @@ export default function Books() {
     ageGroups: [],
   })
   const [showAdvanced, setShowAdvanced] = useState(false)
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [totalItems, setTotalItems] = useState(0)
+  const [limit, setLimit] = useState(DEFAULT_LIMIT)
   const filtersRef = useRef(filters)
   const lastCacheKeyRef = useRef(null)
   const { getCachedResource, setCachedResource, invalidateResource } = useResourceCache()
@@ -46,7 +58,12 @@ export default function Books() {
     const rawTerm = typeof searchTerm === 'string' ? searchTerm : query
     const finalTerm = rawTerm.trim()
     const activeFilters = providedFilters ?? filters
+    const targetPage = options.page ?? page
+    const targetLimit = options.limit ?? limit
     const params = new URLSearchParams()
+
+    params.set('page', String(targetPage))
+    params.set('limit', String(targetLimit))
 
     if (finalTerm) {
       params.set('q', finalTerm)
@@ -88,7 +105,7 @@ export default function Books() {
       params.set('available', 'true')
     }
 
-    const endpoint = params.toString() ? `/api/books?${params.toString()}` : '/api/books'
+    const endpoint = `/api/books?${params.toString()}`
     const cacheKey = `books:${endpoint}`
     lastCacheKeyRef.current = cacheKey
     const hasNonQueryFilters = Boolean(
@@ -107,11 +124,27 @@ export default function Books() {
     if (!forceReload) {
       const cached = getCachedResource(cacheKey, LIST_CACHE_TTL)
       if (cached) {
-        setBooks(cached)
+        const cachedItems = Array.isArray(cached)
+          ? cached
+          : Array.isArray(cached.items)
+            ? cached.items
+            : []
+        const cachedMeta = Array.isArray(cached) ? null : cached.meta
+        setBooks(cachedItems)
         setLoading(false)
         setError(null)
         setLastQuery(finalTerm)
         setHadNonQueryFilters(hasNonQueryFilters)
+        if (cachedMeta) {
+          setPage(cachedMeta.page ?? targetPage)
+          setTotalPages(cachedMeta.totalPages ?? 1)
+          setTotalItems(cachedMeta.total ?? cachedItems.length)
+          setLimit(cachedMeta.limit ?? targetLimit)
+        } else {
+          setPage(targetPage)
+          setTotalPages(1)
+          setTotalItems(cachedItems.length)
+        }
         return
       }
     }
@@ -122,9 +155,18 @@ export default function Books() {
     setLastQuery(finalTerm)
     try {
       const data = await apiFetch(endpoint)
-      const list = Array.isArray(data?.data) ? data.data : []
+      const list = Array.isArray(data?.data)
+        ? data.data
+        : Array.isArray(data)
+          ? data
+          : []
+      const meta = data?.meta || {}
       setBooks(list)
-      setCachedResource(cacheKey, list)
+      setPage(meta.page ?? targetPage)
+      setTotalPages(meta.totalPages ?? 1)
+      setTotalItems(meta.total ?? list.length)
+      setLimit(meta.limit ?? targetLimit)
+      setCachedResource(cacheKey, { items: list, meta })
     } catch (err) {
       setError(err.message || 'Nie udało się pobrać listy książek.')
     } finally {
@@ -158,7 +200,7 @@ export default function Books() {
   }
 
   useEffect(() => {
-    load('', { ...initialFilters })
+    load('', { ...initialFilters }, { page: 1 })
     loadFacets()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -175,7 +217,7 @@ export default function Books() {
         return b
       })
       if (lastCacheKeyRef.current) {
-        setCachedResource(lastCacheKeyRef.current, next)
+        setCachedResource(lastCacheKeyRef.current, { items: next, meta: { page, totalPages, total: totalItems, limit } })
       }
       return next
     })
@@ -183,7 +225,8 @@ export default function Books() {
 
   function handleSearch(event) {
     event.preventDefault()
-    load(query, filtersRef.current)
+    setPage(1)
+    load(query, filtersRef.current, { page: 1 })
   }
 
   function handleClear() {
@@ -192,7 +235,8 @@ export default function Books() {
     setFilters(resetFilters)
     filtersRef.current = resetFilters
     invalidateResource('books:/api/books*')
-    load('', resetFilters, { force: true })
+    setPage(1)
+    load('', resetFilters, { force: true, page: 1 })
   }
 
   function handleFilterChange(event) {
@@ -203,6 +247,12 @@ export default function Books() {
       filtersRef.current = next
       return next
     })
+  }
+
+  function handlePageChange(nextPage) {
+    if (nextPage === page || nextPage < 1 || nextPage > totalPages) return
+    setPage(nextPage)
+    load(query, filtersRef.current, { page: nextPage })
   }
 
   const filtersDirty = Boolean(
@@ -218,18 +268,37 @@ export default function Books() {
   )
 
   const canClear = query.trim() !== '' || filtersDirty
+  const activeFilterCount = [
+    filters.authorId,
+    filters.categoryId,
+    filters.publisher?.trim(),
+    filters.resourceType,
+    filters.signature?.trim(),
+    filters.ageGroup,
+    filters.yearFrom,
+    filters.yearTo,
+    filters.availableOnly ? 'available' : ''
+  ].filter(Boolean).length
+  const resultCount = totalItems || books.length
 
   return (
     <div className="page">
-      <header className="page-header">
-        <div>
-          <h1>Książki</h1>
-          <p className="support-copy">Przeglądaj katalog i błyskawicznie wypożycz dostępne egzemplarze.</p>
-        </div>
-        <button className="btn btn-outline" onClick={() => load(undefined, undefined, { force: true })} disabled={loading}>
-          {loading ? 'Odświeżanie...' : 'Odśwież listę'}
-        </button>
-      </header>
+      <PageHeader
+        title="Książki"
+        subtitle="Przeglądaj katalog i błyskawicznie wypożycz dostępne egzemplarze."
+        actions={(
+          <button className="btn btn-outline" onClick={() => load(undefined, undefined, { force: true, page: 1 })} disabled={loading}>
+            {loading ? 'Odświeżanie...' : 'Odśwież listę'}
+          </button>
+        )}
+      />
+
+      <StatGrid>
+        <StatCard title="Wyniki" value={loading ? '-' : resultCount} subtitle="Łącznie pozycji" />
+        <StatCard title="Filtry" value={activeFilterCount} subtitle="Aktywne kryteria" />
+        <StatCard title="Strona" value={`${page} / ${totalPages}`} subtitle={`Limit ${limit}`} />
+        <StatCard title="Fraza" value={lastQuery ? `"${lastQuery}"` : '-'} subtitle="Ostatnie wyszukiwanie" />
+      </StatGrid>
 
       <form className="book-search" onSubmit={handleSearch}>
         <div className="book-search__row">
@@ -389,31 +458,30 @@ export default function Books() {
       </form>
 
       {loading && (
-        <div className="surface-card empty-state">Trwa ładowanie książek...</div>
+        <SectionCard className="empty-state">Trwa ładowanie książek...</SectionCard>
       )}
 
-      {!loading && error && (
-        <div className="surface-card">
-          <p className="error">{error}</p>
-        </div>
-      )}
+      {!loading && error && <FeedbackCard variant="error">{error}</FeedbackCard>}
 
       {!loading && !error && books.length === 0 && (
-        <div className="surface-card empty-state">
+        <SectionCard className="empty-state">
           {lastQuery
             ? `Brak wyników dla frazy „${lastQuery}”.`
             : hadNonQueryFilters
               ? 'Brak książek spełniających wybrane filtry.'
               : 'Brak książek w katalogu.'}
-        </div>
+        </SectionCard>
       )}
 
       {!loading && !error && books.length > 0 && (
-        <div className="books-grid">
-          {books.map(book => (
-            <BookItem key={book.id} book={book} onBorrowed={onBorrowed} />
-          ))}
-        </div>
+        <>
+          <div className="books-grid">
+            {books.map(book => (
+              <BookItem key={book.id} book={book} onBorrowed={onBorrowed} />
+            ))}
+          </div>
+          <Pagination currentPage={page} totalPages={totalPages} onPageChange={handlePageChange} />
+        </>
       )}
     </div>
   )

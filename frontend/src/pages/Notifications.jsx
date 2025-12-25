@@ -1,6 +1,11 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { notificationService } from '../services/notificationService'
 import { useAuth } from '../context/AuthContext'
+import PageHeader from '../components/ui/PageHeader'
+import StatGrid from '../components/ui/StatGrid'
+import StatCard from '../components/ui/StatCard'
+import SectionCard from '../components/ui/SectionCard'
+import FeedbackCard from '../components/ui/FeedbackCard'
 
 export default function Notifications() {
   const { user } = useAuth()
@@ -9,6 +14,14 @@ export default function Notifications() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [info, setInfo] = useState(null)
+  const latestDate = useMemo(() => {
+    const dates = items
+      .map(item => item.createdAt)
+      .filter(Boolean)
+      .map(value => new Date(value))
+      .sort((a, b) => b.getTime() - a.getTime())
+    return dates[0] ?? null
+  }, [items])
 
   useEffect(() => {
     let active = true
@@ -43,32 +56,27 @@ export default function Notifications() {
 
   return (
     <div className="page">
-      <header className="page-header">
-        <div>
-          <h1>Powiadomienia</h1>
-          <p>Lista ostatnich powiadomień systemowych</p>
-        </div>
-        {isAdmin && (
-          <button className="btn btn-primary" onClick={sendTest}>
-            Wyślij test
-          </button>
-        )}
-      </header>
+      <PageHeader
+        title="Powiadomienia"
+        subtitle="Lista ostatnich powiadomień systemowych"
+        actions={isAdmin ? <button className="btn btn-primary" onClick={sendTest}>Wyślij test</button> : null}
+      />
+
+      <StatGrid>
+        <StatCard title="Wszystkie powiadomienia" value={items.length} subtitle="Łącznie" />
+        <StatCard title="Ostatnia aktualizacja" value={latestDate ? latestDate.toLocaleDateString('pl-PL') : '-'} subtitle="Najnowsza wiadomość" />
+        <StatCard title="Status" value={error ? 'Błąd' : 'OK'} subtitle="Połączenie z usługą" />
+      </StatGrid>
 
       {loading && (
-        <div className="surface-card">Ładowanie…</div>
+        <SectionCard>Ładowanie...</SectionCard>
       )}
 
-      {error && (
-        <div className="surface-card error">{error}</div>
-      )}
-
-      {info && (
-        <div className="surface-card success">{info}</div>
-      )}
+      {error && <FeedbackCard variant="error">{error}</FeedbackCard>}
+      {info && <FeedbackCard variant="success">{info}</FeedbackCard>}
 
       {!loading && !error && (
-        <div className="surface-card">
+        <SectionCard>
           {items.length === 0 ? (
             <p>Brak powiadomień.</p>
           ) : (
@@ -85,7 +93,7 @@ export default function Notifications() {
               ))}
             </ul>
           )}
-        </div>
+        </SectionCard>
       )}
     </div>
   )

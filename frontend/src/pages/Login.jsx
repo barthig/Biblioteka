@@ -2,6 +2,9 @@ import React, { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { apiFetch } from '../api'
+import PageHeader from '../components/ui/PageHeader'
+import SectionCard from '../components/ui/SectionCard'
+import FeedbackCard from '../components/ui/FeedbackCard'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -11,8 +14,7 @@ export default function Login() {
   const auth = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
-  
-  // Get the page they tried to visit before being redirected to login
+
   const from = location.state?.from?.pathname || '/'
   const message = location.state?.message
 
@@ -27,9 +29,7 @@ export default function Login() {
         body: JSON.stringify({ email, password })
       })
       if (data && data.token) {
-        // Set token in auth context
-        auth.login(data.token)
-        // Navigate to the page they tried to visit or home
+        auth.login(data.token, data.refreshToken)
         navigate(from, { replace: true })
       } else {
         throw new Error('Brak tokenu w odpowiedzi')
@@ -42,54 +42,53 @@ export default function Login() {
   }
 
   return (
-    <div className="auth-page">
-      <div className="auth-container">
-        <div className="auth-card">
-          <div className="auth-header">
-            <h1>Witaj ponownie</h1>
-            <p>Zaloguj się do swojego konta bibliotecznego</p>
+    <div className="page">
+      <PageHeader
+        title="Zaloguj się"
+        subtitle="Uzyskaj dostęp do swojego konta i historii wypożyczeń."
+      />
+
+      {message && <FeedbackCard>{message}</FeedbackCard>}
+      {error && <FeedbackCard variant="error">{error}</FeedbackCard>}
+
+      <SectionCard>
+        <form onSubmit={handleSubmit} className="form-grid">
+          <div className="form-field">
+            <label htmlFor="login-email">Adres e-mail</label>
+            <input
+              id="login-email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              placeholder="twoj@email.com"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              required
+            />
           </div>
-
-          {message && <div className="info-message">{message}</div>}
-
-          <form onSubmit={handleSubmit} className="auth-form">
-            <div className="form-field">
-              <label htmlFor="login-email">Adres email</label>
-              <input
-                id="login-email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                placeholder="twoj@email.com"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            <div className="form-field">
-              <label htmlFor="login-password">Hasło</label>
-              <input
-                id="login-password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                placeholder="••••••••"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                required
-              />
-            </div>
-            {error && <div className="error-message">{error}</div>}
-            <button className="btn btn-primary btn-block" type="submit" disabled={loading}>
+          <div className="form-field">
+            <label htmlFor="login-password">Hasło</label>
+            <input
+              id="login-password"
+              name="password"
+              type="password"
+              autoComplete="current-password"
+              placeholder="••••••••"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              required
+            />
+          </div>
+          <div className="form-actions">
+            <button className="btn btn-primary" type="submit" disabled={loading}>
               {loading ? 'Logowanie...' : 'Zaloguj się'}
             </button>
-          </form>
-
-          <div className="auth-footer">
-            <p>Nie masz jeszcze konta? <Link to="/register" className="auth-link">Zarejestruj się</Link></p>
+            <Link to="/register" className="btn btn-outline">
+              Zarejestruj
+            </Link>
           </div>
-        </div>
-      </div>
+        </form>
+      </SectionCard>
     </div>
   )
 }

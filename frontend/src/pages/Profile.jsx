@@ -3,6 +3,11 @@ import { Link } from 'react-router-dom'
 import { apiFetch } from '../api'
 import { useAuth } from '../context/AuthContext'
 import { ratingService } from '../services/ratingService'
+import PageHeader from '../components/ui/PageHeader'
+import StatGrid from '../components/ui/StatGrid'
+import StatCard from '../components/ui/StatCard'
+import FeedbackCard from '../components/ui/FeedbackCard'
+import SectionCard from '../components/ui/SectionCard'
 
 const blankProfile = {
   name: '',
@@ -31,7 +36,7 @@ const initialPinForm = {
 }
 
 export default function Profile() {
-  const { user } = useAuth()
+  const { user, refreshSession, logoutAll, fetchAuthProfile } = useAuth()
   const [profile, setProfile] = useState(blankProfile)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -61,6 +66,8 @@ export default function Profile() {
   const [imagePreview, setImagePreview] = useState(null)
   const [ratings, setRatings] = useState([])
   const [ratingsError, setRatingsError] = useState(null)
+  const [sessionStatus, setSessionStatus] = useState(null)
+  const [sessionLoading, setSessionLoading] = useState(false)
 
   useEffect(() => {
     let active = true
@@ -238,6 +245,48 @@ export default function Profile() {
     }
   }
 
+  async function handleRefreshSession() {
+    setSessionLoading(true)
+    setSessionStatus(null)
+    setError(null)
+    try {
+      await refreshSession()
+      setSessionStatus('Sesja została odświeżona')
+    } catch (err) {
+      setError(err.message || 'Nie udało się odświeżyć sesji')
+    } finally {
+      setSessionLoading(false)
+    }
+  }
+
+  async function handleVerifySession() {
+    setSessionLoading(true)
+    setSessionStatus(null)
+    setError(null)
+    try {
+      const data = await fetchAuthProfile()
+      const label = data?.email ? `Sesja aktywna: ${data.email}` : 'Sesja aktywna'
+      setSessionStatus(label)
+    } catch (err) {
+      setError(err.message || 'Nie udało się zweryfikować sesji')
+    } finally {
+      setSessionLoading(false)
+    }
+  }
+
+  async function handleLogoutAllSessions() {
+    setSessionLoading(true)
+    setSessionStatus(null)
+    setError(null)
+    try {
+      await logoutAll()
+    } catch (err) {
+      setError(err.message || 'Nie udało się wylogować wszystkich sesji')
+    } finally {
+      setSessionLoading(false)
+    }
+  }
+
   async function handleDeleteRating(bookId, ratingId) {
     setRatingsError(null)
     try {
@@ -327,23 +376,19 @@ export default function Profile() {
 
   return (
     <div className="page">
-      <header className="page-header">
-        <div>
-          <h1>Moje konto</h1>
-          <p className="support-copy">Zarządzaj swoim profilem, bezpieczeństwem i ustawieniami.</p>
-        </div>
-      </header>
+      <PageHeader
+        title="Moje konto"
+        subtitle="Zarządzaj swoim profilem, bezpieczeństwem i ustawieniami."
+      />
 
-      {error && (
-        <div className="surface-card">
-          <p className="error">{error}</p>
-        </div>
-      )}
-      {success && (
-        <div className="surface-card">
-          <p className="success">{success}</p>
-        </div>
-      )}
+      <StatGrid>
+        <StatCard title="Status konta" value={profile.accountStatus || 'Aktywne'} subtitle="Twoje konto" />
+        <StatCard title="Ważność karty" value={profile.cardExpiry || '-'} subtitle="Data ważności" />
+        <StatCard title="Domyślna filia" value={profile.defaultBranch || '-'} subtitle="Odbiór rezerwacji" />
+      </StatGrid>
+
+      {error && <FeedbackCard variant="error">{error}</FeedbackCard>}
+      {success && <FeedbackCard variant="success">{success}</FeedbackCard>}
 
       {/* Tabs */}
       <div className="tabs">
@@ -506,10 +551,17 @@ export default function Profile() {
             <h3>Aktywne sesje</h3>
             <p className="support-copy">Zarządzaj urządzeniami zalogowanymi do Twojego konta</p>
             <div className="form-actions">
-              <button type="button" className="btn btn-ghost">
-                Wyloguj ze wszystkich urządzeń
+              <button type="button" className="btn btn-secondary" onClick={handleVerifySession} disabled={sessionLoading}>
+                Sprawdź sesję
+              </button>
+              <button type="button" className="btn btn-secondary" onClick={handleRefreshSession} disabled={sessionLoading}>
+                Odśwież sesję
+              </button>
+              <button type="button" className="btn btn-ghost" onClick={handleLogoutAllSessions} disabled={sessionLoading}>
+                Wyloguj wszystkie sesje
               </button>
             </div>
+            {sessionStatus && <p className="success-message">{sessionStatus}</p>}
           </div>
         </div>
       )}
@@ -907,8 +959,7 @@ export default function Profile() {
         </div>
       )}
 
-      <div className="surface-card" style={{ marginTop: '1.5rem' }}>
-        <h3>Twoje oceny</h3>
+      <SectionCard title="Twoje oceny" className="" >
         {ratingsError && <p className="error">{ratingsError}</p>}
         {ratings.length === 0 ? (
           <p>Nie masz jeszcze ocen.</p>
@@ -930,7 +981,7 @@ export default function Profile() {
             ))}
           </ul>
         )}
-      </div>
+      </SectionCard>
     </div>
   )
 }

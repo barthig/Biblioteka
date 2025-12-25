@@ -276,6 +276,7 @@ class BookController extends AbstractController
     public function recommended(Request $request): JsonResponse
     {
         try {
+            $start = microtime(true);
             error_log('BookController::recommended - START');
             $userId = $this->security->getCurrentUserId($request);
             error_log('BookController::recommended - userId: ' . ($userId ?? 'null'));
@@ -284,8 +285,12 @@ class BookController extends AbstractController
             error_log('BookController::recommended - user loaded: ' . ($user ? 'yes' : 'no'));
 
             error_log('BookController::recommended - calling getRecommendationsForUser');
+            $recoStart = microtime(true);
             $groups = $this->recommendations->getRecommendationsForUser($user);
+            $recoMs = (int) round((microtime(true) - $recoStart) * 1000);
             error_log('BookController::recommended - got ' . count($groups) . ' groups');
+            $totalMs = (int) round((microtime(true) - $start) * 1000);
+            error_log('BookController::recommended - reco in ' . $recoMs . 'ms, total ' . $totalMs . 'ms');
 
             return $this->json(['groups' => $groups], 200, [], ['groups' => ['book:read']]);
         } catch (\Exception $e) {
