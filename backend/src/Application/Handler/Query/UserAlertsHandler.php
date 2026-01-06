@@ -70,7 +70,7 @@ class UserAlertsHandler
             ->getResult();
 
         foreach ($reservations as $reservation) {
-            if ($reservation->getAssignedCopy() !== null) {
+            if ($reservation->getBookCopy() !== null) {
                 $expiresAt = $reservation->getExpiresAt();
                 $alerts[] = [
                     'type' => 'ready',

@@ -160,7 +160,7 @@ export default function MyLoans() {
       <StatGrid>
         <StatCard title="Aktywne wypożyczenia" value={activeLoans.length} subtitle="Do zwrotu" />
         <StatCard title="Zwrócone książki" value={historyLoans.length} subtitle="Historia" />
-        <StatCard title="Najbliższy termin" value={nextDue ? formatDate(nextDue) : '-'} subtitle="Najbliższy zwrot" />
+        <StatCard title="Najbliższy termin" value={nextDue ? formatDate(nextDue) : '-'} valueClassName="stat-card__value--sm" />
       </StatGrid>
 
       {error && <FeedbackCard variant="error">{error}</FeedbackCard>}

@@ -27,7 +27,7 @@ $loginStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 curl_close($ch);
 
 if ($loginStatus !== 200) {
-    echo "❌ Login failed: $loginResponse\n";
+    echo "[ERR] Login failed: $loginResponse\n";
     exit(1);
 }
 
@@ -35,11 +35,11 @@ $loginJson = json_decode($loginResponse, true);
 $token = $loginJson['token'] ?? null;
 
 if (!$token) {
-    echo "❌ No token in login response\n";
+    echo "[ERR] No token in login response\n";
     exit(1);
 }
 
-echo "✅ Login successful\n\n";
+echo "[OK] Login successful\n\n";
 
 // Test profile endpoint
 echo "Testing /api/auth/profile...\n";
@@ -62,14 +62,14 @@ echo json_encode(json_decode($profileResponse, true), JSON_PRETTY_PRINT | JSON_U
 if ($profileStatus === 200) {
     $profile = json_decode($profileResponse, true);
     if (isset($profile['id']) && isset($profile['name']) && isset($profile['roles'])) {
-        echo "✅ Profile endpoint works correctly!\n";
+        echo "[OK] Profile endpoint works correctly!\n";
         echo "   User: {$profile['name']}\n";
         echo "   Roles: " . implode(', ', $profile['roles']) . "\n";
     } else {
-        echo "❌ Profile is missing required fields\n";
+        echo "[ERR] Profile is missing required fields\n";
     }
 } else {
-    echo "❌ Profile endpoint failed\n";
+    echo "[ERR] Profile endpoint failed\n";
 }
 
 echo "\n";

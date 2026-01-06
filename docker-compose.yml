@@ -68,8 +68,8 @@ services:
       redis:
         condition: service_healthy
     environment:
-      APP_ENV: dev
-      APP_DEBUG: 1
+      APP_ENV: prod
+      APP_DEBUG: 0
       DATABASE_URL: postgresql://biblioteka:biblioteka@db:5432/biblioteka_dev?serverVersion=16&charset=utf8
       MESSENGER_TRANSPORT_DSN: amqp://app:app@rabbitmq:5672/%2f/messages
       REDIS_URL: redis://redis:6379
@@ -78,7 +78,7 @@ services:
       OPENAI_API_KEY: ${OPENAI_API_KEY:-change_me_openai_key}
       CORS_ALLOW_ORIGIN: http://localhost:5173
     volumes:
-      - ./backend:/app:delegated
+      - ./backend:/app:cached
       - backend_vendor:/app/vendor
       - backend_var:/app/var
     networks:
@@ -86,9 +86,10 @@ services:
     command: >
       sh -c "
         mkdir -p /app/var/cache /app/var/log &&
+        mkdir -p /app/var/cache/prod/doctrine/orm/Proxies &&
         chown -R www-data:www-data /app/var &&
         chmod -R 775 /app/var &&
-        composer install --no-interaction &&
+        php bin/console cache:warmup --env=prod &&
         php-fpm -F
       "
 
@@ -119,15 +120,14 @@ services:
       redis:
         condition: service_healthy
     environment:
-      APP_ENV: dev
-      APP_DEBUG: 1
+      APP_ENV: prod
+      APP_DEBUG: 0
       DATABASE_URL: postgresql://biblioteka:biblioteka@db:5432/biblioteka_dev?serverVersion=16&charset=utf8
       MESSENGER_TRANSPORT_DSN: amqp://app:app@rabbitmq:5672/%2f/messages
       REDIS_URL: redis://redis:6379
       API_SECRET: dev_api_secret
       JWT_SECRET: dev_jwt_secret
     volumes:
-      - ./backend:/app:cached
       - backend_vendor:/app/vendor
       - backend_var:/app/var
     networks:
@@ -135,6 +135,7 @@ services:
     command: >
       sh -c "
         mkdir -p /app/var/cache /app/var/log &&
+        mkdir -p /app/var/cache/prod/doctrine/orm/Proxies &&
         chown -R www-data:www-data /app/var &&
         chmod -R 775 /app/var &&
         composer install --no-interaction &&

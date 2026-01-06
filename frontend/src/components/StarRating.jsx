@@ -18,7 +18,7 @@ export function StarRating({ rating, onRate, readonly = false, size = 'medium' }
           disabled={readonly}
           aria-label={`${star} gwiazdek`}
         >
-          ★
+          *
         </button>
       ))}
     </div>
@@ -33,7 +33,7 @@ export function RatingDisplay({ averageRating, ratingCount }) {
   return (
     <div className="rating-display">
       <StarRating rating={averageRating || 0} readonly size="small" />
-      <span className="rating-display__score">{averageRating?.toFixed(1) || '—'}</span>
+      <span className="rating-display__score">{averageRating?.toFixed(1) || '-'}</span>
       <span className="rating-display__count">({ratingCount || 0})</span>
     </div>
   )

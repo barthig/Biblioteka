@@ -61,7 +61,7 @@ export default function ReservationCard({ reservation, onCancel, onFulfill }) {
 
         {status === 'ready' && (
           <div className="reservation-ready">
-            ✅ Książka gotowa do odbioru!
+            Książka gotowa do odbioru!
           </div>
         )}
       </div>

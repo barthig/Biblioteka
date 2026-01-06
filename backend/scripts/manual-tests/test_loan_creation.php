@@ -18,12 +18,12 @@ $testUser = $em->getRepository(\App\Entity\User::class)->findOneBy(['email' => '
 $testBook = $em->getRepository(\App\Entity\Book::class)->findOneBy([]);
 
 if (!$testUser) {
-    echo "❌ Test user not found\n";
+    echo "[ERR] Test user not found\n";
     exit(1);
 }
 
 if (!$testBook) {
-    echo "❌ Test book not found\n";
+    echo "[ERR] Test book not found\n";
     exit(1);
 }
 
@@ -64,7 +64,7 @@ $loginStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 curl_close($ch);
 
 if ($loginStatus !== 200) {
-    echo "❌ Login failed: $loginResponse\n";
+    echo "[ERR] Login failed: $loginResponse\n";
     exit(1);
 }
 
@@ -72,11 +72,11 @@ $loginJson = json_decode($loginResponse, true);
 $token = $loginJson['token'] ?? null;
 
 if (!$token) {
-    echo "❌ No token in login response\n";
+    echo "[ERR] No token in login response\n";
     exit(1);
 }
 
-echo "✅ Login successful, token obtained\n\n";
+echo "[OK] Login successful, token obtained\n\n";
 
 // Now try to create loan
 echo "Attempting to create loan...\n";
@@ -96,9 +96,9 @@ echo "HTTP Status: $httpCode\n";
 echo "Response: $response\n\n";
 
 if ($httpCode === 201) {
-    echo "✅ Loan created successfully!\n";
+    echo "[OK] Loan created successfully!\n";
 } else {
-    echo "❌ Loan creation failed\n";
+    echo "[ERR] Loan creation failed\n";
     $errorJson = json_decode($response, true);
     if (isset($errorJson['error'])) {
         echo "Error: {$errorJson['error']}\n";

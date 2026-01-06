@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { apiFetch } from '../api'
 import { useAuth } from '../context/AuthContext'
+import { useResourceCache } from '../context/ResourceCacheContext'
 import { RatingDisplay } from './StarRating'
 
 export default function BookItem({ book, onBorrowed }) {
@@ -13,6 +14,7 @@ export default function BookItem({ book, onBorrowed }) {
   const [favorite, setFavorite] = useState(Boolean(book?.isFavorite))
   const [favoriteLoading, setFavoriteLoading] = useState(false)
   const { user } = useAuth()
+  const { invalidateResource } = useResourceCache()
   const isLoggedIn = Boolean(user?.id)
 
   const available = book?.copies ?? 0
@@ -78,6 +80,7 @@ export default function BookItem({ book, onBorrowed }) {
       })
       setSuccess('Dodano do kolejki rezerwacji. Powiadomimy Cię, gdy egzemplarz będzie dostępny.')
       setReserved(true)
+      invalidateResource('reservations:/api/reservations*')
     } catch (err) {
       setError(err.message || 'Nie udało się dodać rezerwacji.')
     } finally {
@@ -97,6 +100,8 @@ export default function BookItem({ book, onBorrowed }) {
       if (favorite) {
         await apiFetch(`/api/favorites/${book.id}`, { method: 'DELETE' })
         setFavorite(false)
+        invalidateResource('favorites:/api/favorites')
+        invalidateResource('recommended:*')
         setSuccess('Usunięto książkę z ulubionych.')
       } else {
         await apiFetch('/api/favorites', {
@@ -105,6 +110,8 @@ export default function BookItem({ book, onBorrowed }) {
           body: JSON.stringify({ bookId: book.id })
         })
         setFavorite(true)
+        invalidateResource('favorites:/api/favorites')
+        invalidateResource('recommended:*')
         setSuccess('Dodano książkę do ulubionych.')
       }
     } catch (err) {

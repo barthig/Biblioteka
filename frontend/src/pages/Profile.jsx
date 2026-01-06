@@ -29,12 +29,6 @@ const initialPasswordForm = {
   confirmPassword: ''
 }
 
-const initialPinForm = {
-  currentPin: '',
-  newPin: '',
-  confirmPin: ''
-}
-
 export default function Profile() {
   const { user, refreshSession, logoutAll, fetchAuthProfile } = useAuth()
   const [profile, setProfile] = useState(blankProfile)
@@ -42,7 +36,6 @@ export default function Profile() {
   const [error, setError] = useState(null)
   const [success, setSuccess] = useState(null)
   const [passwordForm, setPasswordForm] = useState(initialPasswordForm)
-  const [pinForm, setPinForm] = useState(initialPinForm)
   const [saving, setSaving] = useState(false)
   const [activeTab, setActiveTab] = useState('security')
   
@@ -66,8 +59,24 @@ export default function Profile() {
   const [imagePreview, setImagePreview] = useState(null)
   const [ratings, setRatings] = useState([])
   const [ratingsError, setRatingsError] = useState(null)
+  const [ratingsLoading, setRatingsLoading] = useState(false)
   const [sessionStatus, setSessionStatus] = useState(null)
   const [sessionLoading, setSessionLoading] = useState(false)
+
+  async function refreshRatings() {
+    if (!user?.id) return
+    setRatingsLoading(true)
+    try {
+      const data = await ratingService.getMyRatings()
+      const list = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : []
+      setRatings(list)
+      setRatingsError(null)
+    } catch (err) {
+      setRatingsError(err.message || 'Nie udalo sie pobrac ocen')
+    } finally {
+      setRatingsLoading(false)
+    }
+  }
 
   useEffect(() => {
     let active = true
@@ -123,23 +132,17 @@ export default function Profile() {
     }
 
     loadProfile()
-    async function loadRatings() {
-      if (!user?.id) return
-      try {
-        const data = await ratingService.getMyRatings()
-        const list = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : []
-        if (active) {
-          setRatings(list)
-        }
-      } catch (err) {
-        if (active) setRatingsError(err.message || 'Nie udało się pobrać ocen')
-      }
-    }
-    loadRatings()
     return () => {
       active = false
     }
   }, [user?.id])
+  useEffect(() => {
+    if (activeTab !== 'ratings' || !user?.id) return
+    refreshRatings()
+  }, [activeTab, user?.id])
+
+
+  
 
   function handleProfileChange(event) {
     const { name, value } = event.target
@@ -210,41 +213,6 @@ export default function Profile() {
     }
   }
 
-  function handlePinChange(event) {
-    const { name, value } = event.target
-    setPinForm(prev => ({ ...prev, [name]: value }))
-  }
-
-  async function handlePinSubmit(event) {
-    event.preventDefault()
-    setError(null)
-    setSuccess(null)
-
-    if (pinForm.newPin !== pinForm.confirmPin) {
-      setError('Nowy PIN i powtórzony PIN muszą być takie same')
-      return
-    }
-
-    setSaving(true)
-
-    try {
-      await apiFetch('/api/me/pin', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          currentPin: pinForm.currentPin,
-          newPin: pinForm.newPin
-        })
-      })
-      setSuccess('PIN został zmieniony')
-      setPinForm(initialPinForm)
-    } catch (err) {
-      setError(err.message || 'Nie udało się zmienić PIN')
-    } finally {
-      setSaving(false)
-    }
-  }
-
   async function handleRefreshSession() {
     setSessionLoading(true)
     setSessionStatus(null)
@@ -292,6 +260,7 @@ export default function Profile() {
     try {
       await ratingService.deleteRating(bookId, ratingId)
       setRatings(prev => prev.filter(r => r.id !== ratingId))
+      refreshRatings()
     } catch (err) {
       setRatingsError(err.message || 'Nie udało się usunąć oceny')
     }
@@ -396,31 +365,37 @@ export default function Profile() {
           onClick={() => setActiveTab('security')}
           className={`tab ${activeTab === 'security' ? 'tab--active' : ''}`}
         >
-          🔒 Logowanie i bezpieczeństwo
+          Logowanie i bezpieczeństwo
         </button>
         <button
           onClick={() => setActiveTab('contact')}
           className={`tab ${activeTab === 'contact' ? 'tab--active' : ''}`}
         >
-          📞 Dane kontaktowe
+          Dane kontaktowe
         </button>
         <button
           onClick={() => setActiveTab('preferences')}
           className={`tab ${activeTab === 'preferences' ? 'tab--active' : ''}`}
         >
-          ⭐ Preferencje biblioteczne
+          Preferencje biblioteczne
         </button>
         <button
           onClick={() => setActiveTab('ui')}
           className={`tab ${activeTab === 'ui' ? 'tab--active' : ''}`}
         >
-          🎨 Dostępność i interfejs
+          Dostępność i interfejs
         </button>
         <button
           onClick={() => setActiveTab('account')}
           className={`tab ${activeTab === 'account' ? 'tab--active' : ''}`}
         >
-          👤 Informacje o koncie
+          Informacje o koncie
+        </button>
+        <button
+          onClick={() => setActiveTab('ratings')}
+          className={`tab ${activeTab === 'ratings' ? 'tab--active' : ''}`}
+        >
+          Twoje oceny
         </button>
       </div>
 
@@ -428,10 +403,10 @@ export default function Profile() {
       {activeTab === 'security' && (
         <div className="form-section">
           <div className="form-section__header">
-            <div className="form-section__icon">🔐</div>
+            <div className="form-section__icon">SEC</div>
             <div>
               <h2 className="form-section__title">Bezpieczeństwo konta</h2>
-              <p className="form-section__description">Zarządzaj hasłem, PIN i aktywymi sesjami</p>
+              <p className="form-section__description">Zarzadzaj haslem i aktywnymi sesjami</p>
             </div>
           </div>
 
@@ -490,62 +465,6 @@ export default function Profile() {
 
           <hr style={{ margin: '2rem 0', border: 'none', borderTop: '1px solid var(--color-border)' }} />
 
-          {/* Change PIN */}
-          <form onSubmit={handlePinSubmit}>
-            <h3>PIN do samodzielnego wypożyczania</h3>
-            <p className="support-copy">4-cyfrowy kod do kiosków samoobsługowych</p>
-            <div className="form-row form-row--two">
-              <div className="form-field">
-                <label htmlFor="pin-current">Obecny PIN</label>
-                <input
-                  id="pin-current"
-                  name="currentPin"
-                  type="password"
-                  pattern="[0-9]{4}"
-                  maxLength={4}
-                  value={pinForm.currentPin}
-                  onChange={handlePinChange}
-                  required
-                />
-              </div>
-            </div>
-            <div className="form-row form-row--two">
-              <div className="form-field">
-                <label htmlFor="pin-new">Nowy PIN</label>
-                <input
-                  id="pin-new"
-                  name="newPin"
-                  type="password"
-                  pattern="[0-9]{4}"
-                  maxLength={4}
-                  value={pinForm.newPin}
-                  onChange={handlePinChange}
-                  required
-                />
-              </div>
-              <div className="form-field">
-                <label htmlFor="pin-confirm">Powtórz nowy PIN</label>
-                <input
-                  id="pin-confirm"
-                  name="confirmPin"
-                  type="password"
-                  pattern="[0-9]{4}"
-                  maxLength={4}
-                  value={pinForm.confirmPin}
-                  onChange={handlePinChange}
-                  required
-                />
-              </div>
-            </div>
-            <div className="form-actions">
-              <button type="submit" className="btn btn-primary" disabled={saving}>
-                {saving ? 'Zapisywanie...' : 'Zmień PIN'}
-              </button>
-            </div>
-          </form>
-
-          <hr style={{ margin: '2rem 0', border: 'none', borderTop: '1px solid var(--color-border)' }} />
-
           {/* Active Sessions */}
           <div>
             <h3>Aktywne sesje</h3>
@@ -570,7 +489,7 @@ export default function Profile() {
       {activeTab === 'contact' && (
         <div className="form-section">
           <div className="form-section__header">
-            <div className="form-section__icon">📧</div>
+            <div className="form-section__icon">KON</div>
             <div>
               <h2 className="form-section__title">Dane kontaktowe</h2>
               <p className="form-section__description">Utrzymuj aktualny adres i telefon dla powiadomień</p>
@@ -659,7 +578,7 @@ export default function Profile() {
       {activeTab === 'preferences' && (
         <div className="form-section">
           <div className="form-section__header">
-            <div className="form-section__icon">📚</div>
+            <div className="form-section__icon">PREF</div>
             <div>
               <h2 className="form-section__title">Preferencje biblioteczne</h2>
               <p className="form-section__description">Dostosuj sposób działania biblioteki do swoich potrzeb</p>
@@ -780,7 +699,7 @@ export default function Profile() {
       {activeTab === 'ui' && (
         <div className="form-section">
           <div className="form-section__header">
-            <div className="form-section__icon">🎨</div>
+            <div className="form-section__icon">UI</div>
             <div>
               <h2 className="form-section__title">Dostępność i interfejs</h2>
               <p className="form-section__description">Dostosuj wygląd i język systemu</p>
@@ -844,7 +763,7 @@ export default function Profile() {
       {activeTab === 'account' && (
         <div className="form-section">
           <div className="form-section__header">
-            <div className="form-section__icon">ℹ️</div>
+            <div className="form-section__icon">INFO</div>
             <div>
               <h2 className="form-section__title">Informacje o koncie</h2>
               <p className="form-section__description">Dane tylko do odczytu - zmiana wymaga wizyty z dowodem</p>
@@ -879,7 +798,7 @@ export default function Profile() {
                   border: '3px solid var(--color-border)'
                 }}
               >
-                👤
+                U
               </div>
             )}
             <div style={{ marginTop: '1rem' }}>
@@ -946,10 +865,10 @@ export default function Profile() {
             <h3>Zgody i regulamin</h3>
             <div className="form-actions">
               <a href="/regulamin" className="btn btn-ghost" target="_blank" rel="noopener">
-                📄 Regulamin biblioteki
+                Regulamin biblioteki
               </a>
               <button type="button" className="btn btn-ghost" style={{ color: 'var(--color-danger)' }}>
-                🗑️ Usuń konto
+                Usuń konto
               </button>
             </div>
             <p className="support-copy" style={{ marginTop: '1rem' }}>
@@ -959,7 +878,13 @@ export default function Profile() {
         </div>
       )}
 
-      <SectionCard title="Twoje oceny" className="" >
+      {activeTab === 'ratings' && (
+        <SectionCard title="Twoje oceny">
+          <div className="form-actions">
+            <button type="button" className="btn btn-secondary" onClick={refreshRatings} disabled={ratingsLoading}>
+              {ratingsLoading ? 'Odswiezanie...' : 'Odswiez oceny'}
+            </button>
+          </div>
         {ratingsError && <p className="error">{ratingsError}</p>}
         {ratings.length === 0 ? (
           <p>Nie masz jeszcze ocen.</p>
@@ -981,7 +906,8 @@ export default function Profile() {
             ))}
           </ul>
         )}
-      </SectionCard>
+        </SectionCard>
+      )}
     </div>
   )
 }

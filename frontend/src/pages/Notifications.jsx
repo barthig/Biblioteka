@@ -128,10 +128,13 @@ export default function Notifications() {
       />
 
       <StatGrid>
-        <StatCard title="Wszystkie powiadomienia" value={items.length} subtitle="Łącznie" />
-        <StatCard title="Nieprzeczytane" value={unreadCount} subtitle="Wymaga uwagi" />
-        <StatCard title="Ostatnia aktualizacja" value={latestDate ? latestDate.toLocaleDateString('pl-PL') : '-'} subtitle="Najnowsza wiadomość" />
-        <StatCard title="Status" value={error ? 'Błąd' : 'OK'} subtitle="Połączenie z usługą" />
+        <StatCard title="Wszystkie" value={items.length} />
+        <StatCard title="Nieprzeczytane" value={unreadCount} />
+        <StatCard
+          title="Ostatnio"
+          value={latestDate ? latestDate.toLocaleDateString('pl-PL') : '-'}
+          valueClassName="stat-card__value--sm"
+        />
       </StatGrid>
 
       {loading && (

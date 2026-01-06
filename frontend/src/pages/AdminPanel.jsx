@@ -426,13 +426,13 @@ export default function AdminPanel() {
 
       <div className="tabs">
         <button className={`tab ${activeTab === 'users' ? 'tab--active' : ''}`} onClick={() => setActiveTab('users')}>
-          👥 Zarządzanie użytkownikami
+          Zarządzanie użytkownikami
         </button>
         <button className={`tab ${activeTab === 'system' ? 'tab--active' : ''}`} onClick={() => setActiveTab('system')}>
           System i integracje
         </button>
         <button className={`tab ${activeTab === 'roles' ? 'tab--active' : ''}`} onClick={() => setActiveTab('roles')}>
-          📋 Audyt
+          Audyt
         </button>
         <button className={`tab $
 

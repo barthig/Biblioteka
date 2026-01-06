@@ -107,8 +107,14 @@ export function AuthProvider({ children }) {
   }, [refreshToken])
 
   function login(tokenValue, refreshTokenValue) {
+    if (tokenValue) {
+      localStorage.setItem('token', tokenValue)
+    } else {
+      localStorage.removeItem('token')
+    }
     setToken(tokenValue)
     if (refreshTokenValue) {
+      localStorage.setItem('refreshToken', refreshTokenValue)
       setRefreshToken(refreshTokenValue)
     }
     

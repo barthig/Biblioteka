@@ -113,7 +113,7 @@ export default function App() {
                 />
               </Routes>
               <footer className="footer">
-                <p>© 2025 Biblioteka. System zarządzania biblioteką i wypożyczeniami.</p>
+                <p>(c) 2025 Biblioteka. System zarządzania biblioteką i wypożyczeniami.</p>
                 <div className="footer__links">
                   <a href="#regulamin">Regulamin</a>
                   <a href="#prywatnosc">Polityka prywatności</a>

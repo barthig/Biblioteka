@@ -22,11 +22,11 @@ $sql = "SELECT id, email, password, roles, verified, blocked, pending_approval F
 $user = $conn->fetchAssociative($sql, [$email]);
 
 if (!$user) {
-    echo "❌ Użytkownik nie znaleziony\n";
+    echo "[ERR] Użytkownik nie znaleziony\n";
     exit(1);
 }
 
-echo "✅ Użytkownik znaleziony: {$user['email']}\n";
+echo "[OK] Użytkownik znaleziony: {$user['email']}\n";
 echo "   ID: {$user['id']}\n";
 echo "   Verified: " . ($user['verified'] ? 'TAK' : 'NIE') . "\n";
 echo "   Blocked: " . ($user['blocked'] ? 'TAK' : 'NIE') . "\n";
@@ -34,10 +34,10 @@ echo "   Pending: " . ($user['pending_approval'] ? 'TAK' : 'NIE') . "\n";
 
 // Weryfikuj hasło
 if (password_verify($password, $user['password'])) {
-    echo "✅ Hasło poprawne!\n";
+    echo "[OK] Hasło poprawne!\n";
 } else {
-    echo "❌ Hasło niepoprawne\n";
+    echo "[ERR] Hasło niepoprawne\n";
     exit(1);
 }
 
-echo "\n🎯 Logowanie powinno działać!\n";
+echo "\nNOTE Logowanie powinno działać!\n";

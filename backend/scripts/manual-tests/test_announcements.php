@@ -45,10 +45,10 @@ echo "Response: " . substr($response, 0, 500) . "\n\n";
 
 if ($httpCode === 200) {
     $json = json_decode($response, true);
-    echo "✅ Endpoint works!\n";
+    echo "[OK] Endpoint works!\n";
     echo "Response has " . (isset($json['items']) ? count($json['items']) : 'unknown') . " items\n";
 } else {
-    echo "❌ Endpoint failed\n";
+    echo "[ERR] Endpoint failed\n";
 }
 
 echo "\n";

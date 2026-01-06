@@ -22,7 +22,7 @@ $user = $em->getRepository(\App\Entity\User::class)->findOneBy(['email' => 'user
 $book = $em->getRepository(\App\Entity\Book::class)->find(35);
 
 if (!$user || !$book) {
-    echo "❌ Test data not found\n";
+    echo "[ERR] Test data not found\n";
     exit(1);
 }
 
@@ -43,7 +43,7 @@ try {
     $envelope = $commandBus->dispatch($createCommand);
     $loan = $envelope->last(HandledStamp::class)->getResult();
     
-    echo "✅ Loan created successfully!\n";
+    echo "[OK] Loan created successfully!\n";
     echo "   Loan ID: {$loan->getId()}\n";
     echo "   Due date: {$loan->getDueAt()->format('Y-m-d H:i:s')}\n";
     echo "   Book copy: {$loan->getBookCopy()->getId()}\n";
@@ -62,17 +62,17 @@ try {
     $envelope = $commandBus->dispatch($returnCommand);
     $returnedLoan = $envelope->last(HandledStamp::class)->getResult();
     
-    echo "✅ Loan returned successfully!\n";
+    echo "[OK] Loan returned successfully!\n";
     echo "   Returned at: {$returnedLoan->getReturnedAt()->format('Y-m-d H:i:s')}\n";
     
     // Refresh book to get updated counters
     $em->refresh($book);
     echo "   Available copies AFTER RETURN: {$book->getCopies()}/{$book->getTotalCopies()}\n\n";
     
-    echo "✅ All tests passed!\n\n";
+    echo "[OK] All tests passed!\n\n";
     
 } catch (\Exception $e) {
-    echo "❌ Error: {$e->getMessage()}\n";
+    echo "[ERR] Error: {$e->getMessage()}\n";
     echo "   Trace: {$e->getTraceAsString()}\n";
     exit(1);
 }

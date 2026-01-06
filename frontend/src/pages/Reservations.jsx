@@ -148,7 +148,7 @@ export default function Reservations() {
       <StatGrid>
         <StatCard title="Aktywne rezerwacje" value={activeReservations.length} subtitle="Do odbioru" />
         <StatCard title="Zrealizowane" value={historicalReservations.length} subtitle="Historia" />
-        <StatCard title="Najbliższy termin" value={nextExpiry ? formatDate(nextExpiry) : '-'} subtitle="Wygaśnięcie" />
+        <StatCard title="Najbliższy termin" value={nextExpiry ? formatDate(nextExpiry) : '-'} valueClassName="stat-card__value--sm" />
       </StatGrid>
 
       {error && <FeedbackCard variant="error">{error}</FeedbackCard>}

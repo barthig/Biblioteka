@@ -574,13 +574,13 @@ export default function LibrarianPanel() {
               
               {returnModal.fine ? (
                 <div className="fine-warning">
-                  <h4 style={{ color: '#d32f2f', marginTop: '1rem' }}>⚠️ Zwrot po terminie</h4>
+                  <h4 style={{ color: '#d32f2f', marginTop: '1rem' }}>Zwrot po terminie</h4>
                   <p><strong>Dni opóźnienia:</strong> {returnModal.fine.days}</p>
                   <p><strong>Kara do zapłaty:</strong> {returnModal.fine.amount.toFixed(2)} PLN</p>
                   <p style={{ fontSize: '0.9rem', color: '#666' }}>(0.50 PLN za każdy dzień opóźnienia)</p>
                 </div>
               ) : (
-                <p style={{ color: '#2e7d32', marginTop: '1rem' }}>✓ Zwrot w terminie - brak kary</p>
+                <p style={{ color: '#2e7d32', marginTop: '1rem' }}>Zwrot w terminie - brak kary</p>
               )}
             </div>
             <div className="modal-actions">
@@ -645,7 +645,7 @@ export default function LibrarianPanel() {
           className={`tab ${activeTab === 'quickactions' ? 'tab--active' : ''}`}
           onClick={() => setActiveTab('quickactions')}
         >
-          🔍 Szybkie akcje
+          Szybkie akcje
         </button>
         <button
           className={`tab ${activeTab === 'loans' ? 'tab--active' : ''}`}
@@ -681,7 +681,7 @@ export default function LibrarianPanel() {
           className={`tab ${activeTab === 'collections' ? 'tab--active' : ''}`}
           onClick={() => setActiveTab('collections')}
         >
-          📚 Kolekcje
+          Kolekcje
         </button>
         <button
           className={`tab ${activeTab === 'stats' ? 'tab--active' : ''}`}
@@ -699,7 +699,7 @@ export default function LibrarianPanel() {
           
           <div className="form-section" style={{ marginTop: '2rem' }}>
             <div className="form-section__header">
-              <span className="form-section__icon">👤</span>
+              <span className="form-section__icon">USER</span>
               <h3 className="form-section__title">Wyszukiwanie użytkownika</h3>
             </div>
             <div className="form-field">
@@ -765,7 +765,7 @@ export default function LibrarianPanel() {
 
           <div className="form-section" style={{ marginTop: '2rem' }}>
             <div className="form-section__header">
-              <span className="form-section__icon">📷</span>
+              <span className="form-section__icon">SCAN</span>
               <h3 className="form-section__title">Skanowanie kodu kreskowego</h3>
             </div>
             <div className="form-field">
@@ -783,7 +783,7 @@ export default function LibrarianPanel() {
                 autoFocus
               />
               <small className="support-copy">
-                💡 Ustaw kursor w tym polu i użyj skanera kodów kreskowych lub wpisz kod ręcznie i naciśnij Enter
+                Ustaw kursor w tym polu i użyj skanera kodów kreskowych lub wpisz kod ręcznie i naciśnij Enter
               </small>
             </div>
           </div>
@@ -1315,9 +1315,9 @@ export default function LibrarianPanel() {
                   <div>
                     <div className="collection-title">{collection.name}</div>
                     <div className="collection-meta">
-                      <span>📚 {collection.bookCount} książek</span>
-                      <span>👤 {collection.curatedBy}</span>
-                      {collection.featured && <span>⭐ Wyróżniona</span>}
+                      <span>Książek: {collection.bookCount}</span>
+                      <span>Kurator: {collection.curatedBy}</span>
+                      {collection.featured && <span>Wyróżniona</span>}
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -1334,13 +1334,13 @@ export default function LibrarianPanel() {
                         })
                       }}
                     >
-                      ✏️
+                      Edytuj
                     </button>
                     <button
                       className="btn btn-sm btn-danger"
                       onClick={() => deleteCollection(collection.id)}
                     >
-                      🗑️
+                      Usuń
                     </button>
                   </div>
                 </div>
@@ -1352,7 +1352,7 @@ export default function LibrarianPanel() {
                 <div className="collection-books-preview">
                   {collection.books?.slice(0, 5).map(book => (
                     <div key={book.id} className="collection-book-mini" title={book.title}>
-                      📖
+                      K
                     </div>
                   ))}
                   {collection.books?.length > 5 && (

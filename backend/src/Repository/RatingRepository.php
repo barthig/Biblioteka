@@ -20,11 +20,11 @@ class RatingRepository extends ServiceEntityRepository
     /**
      * @return Rating[]
      */
-    public function findByBook(Book $book): array
+    public function findByUser(User $user): array
     {
         return $this->createQueryBuilder('r')
-            ->where('r.book = :book')
-            ->setParameter('book', $book)
+            ->where('r.user = :user')
+            ->setParameter('user', $user)
             ->orderBy('r.createdAt', 'DESC')
             ->getQuery()
             ->getResult();
@@ -33,12 +33,14 @@ class RatingRepository extends ServiceEntityRepository
     /**
      * @return Rating[]
      */
-    public function findByUser(User $user): array
+    public function findByBook(Book $book): array
     {
         return $this->createQueryBuilder('r')
-            ->where('r.user = :user')
-            ->setParameter('user', $user)
-            ->orderBy('r.createdAt', 'DESC')
+            ->andWhere('r.book = :book')
+            ->setParameter('book', $book)
+            ->leftJoin('r.user', 'u')->addSelect('u')
+            ->orderBy('r.updatedAt', 'DESC')
+            ->addOrderBy('r.createdAt', 'DESC')
             ->getQuery()
             ->getResult();
     }

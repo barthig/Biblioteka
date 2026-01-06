@@ -18,7 +18,7 @@ export default function Favorites() {
   const { getCachedResource, setCachedResource, invalidateResource } = useResourceCache()
   const CACHE_KEY = '/api/favorites'
   const CACHE_TTL = 60000
-  const cacheKey = user?.id ? `favorites:${user.id}:${CACHE_KEY}` : `favorites:anon:${CACHE_KEY}`
+  const cacheKey = `favorites:${CACHE_KEY}`
 
   const lastAdded = Array.isArray(favorites)
     ? favorites
@@ -120,10 +120,10 @@ export default function Favorites() {
       />
 
       <StatGrid>
-        <StatCard title="Ulubione tytuły" value={Array.isArray(favorites) ? favorites.length : 0} subtitle="Na półce" />
-        <StatCard title="Ostatnio dodane" value={lastAdded ? new Date(lastAdded).toLocaleDateString('pl-PL') : '-'} subtitle="Najświeższy wpis" />
-        <StatCard title="Szybka akcja" value="Katalog" subtitle="Dodaj nowe tytuły">
-          <Link className="btn btn-ghost" to="/books">Przejdź do katalogu</Link>
+        <StatCard title="Ulubione" value={Array.isArray(favorites) ? favorites.length : 0} />
+        <StatCard title="Ostatnio" value={lastAdded ? new Date(lastAdded).toLocaleDateString('pl-PL') : '-'} valueClassName="stat-card__value--sm" />
+        <StatCard title="Katalog">
+          <Link className="btn btn-ghost" to="/books">Przejdź</Link>
         </StatCard>
       </StatGrid>
 

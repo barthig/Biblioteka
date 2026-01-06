@@ -46,7 +46,7 @@ export default function LoanCard({ loan, onReturn, onExtend }) {
 
         {returnedDate && (
           <div className="loan-returned">
-            ✅ Zwrócono: {format(returnedDate, 'dd.MM.yyyy', { locale: pl })}
+            Zwrócono: {format(returnedDate, 'dd.MM.yyyy', { locale: pl })}
           </div>
         )}
 

@@ -45,7 +45,7 @@ export default function OnboardingModal({ onComplete }) {
   return (
     <div className="onboarding-overlay">
       <div className="onboarding-modal">
-        <h2>📚 Witaj w bibliotece!</h2>
+        <h2>Witaj w bibliotece!</h2>
         <p className="onboarding-modal__intro">
           Wybierz kategorie książek, które Cię interesują. Pomoże nam to polecać Ci najlepsze pozycje.
           Możesz wybrać dowolną liczbę kategorii lub pominąć ten krok.

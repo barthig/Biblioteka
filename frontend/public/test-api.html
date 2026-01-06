@@ -54,7 +54,7 @@
     </style>
 </head>
 <body>
-    <h1>🔧 Diagnostyka API - System Biblioteczny</h1>
+    <h1>Diagnostyka API - System Biblioteczny</h1>
     
     <div class="test-box">
         <h2>Test 1: Prosty endpoint (/health)</h2>
@@ -96,7 +96,7 @@
 
         async function testEndpoint(url, options = {}, resultId) {
             const resultDiv = document.getElementById(resultId);
-            resultDiv.innerHTML = '<p class="loading">⏳ Ładowanie... (może zająć 5-10 sekund)</p>';
+            resultDiv.innerHTML = '<p class="loading">Ładowanie... (może zająć 5-10 sekund)</p>';
             
             const startTime = performance.now();
             
@@ -108,8 +108,8 @@
                 const data = await response.json();
                 
                 resultDiv.innerHTML = `
-                    <p class="success">✅ Sukces!</p>
-                    <p class="timing">⏱️ Czas odpowiedzi: ${duration}s</p>
+                    <p class="success">Sukces!</p>
+                    <p class="timing">Czas odpowiedzi: ${duration}s</p>
                     <p><strong>Status:</strong> ${response.status}</p>
                     <pre>${JSON.stringify(data, null, 2).substring(0, 500)}${JSON.stringify(data).length > 500 ? '...' : ''}</pre>
                 `;
@@ -118,8 +118,8 @@
                 const duration = ((endTime - startTime) / 1000).toFixed(2);
                 
                 resultDiv.innerHTML = `
-                    <p class="error">❌ Błąd!</p>
-                    <p class="timing">⏱️ Czas: ${duration}s</p>
+                    <p class="error">Błąd!</p>
+                    <p class="timing">Czas: ${duration}s</p>
                     <p><strong>Błąd:</strong> ${error.message}</p>
                 `;
             }
@@ -139,7 +139,7 @@
 
         async function testLogin() {
             const resultDiv = document.getElementById('loginResult');
-            resultDiv.innerHTML = '<p class="loading">⏳ Logowanie...</p>';
+            resultDiv.innerHTML = '<p class="loading">Logowanie...</p>';
             
             const startTime = performance.now();
             
@@ -163,15 +163,15 @@
                     token = data.token;
                     localStorage.setItem('token', token);
                     resultDiv.innerHTML = `
-                        <p class="success">✅ Zalogowano!</p>
-                        <p class="timing">⏱️ Czas: ${duration}s</p>
+                        <p class="success">Zalogowano!</p>
+                        <p class="timing">Czas: ${duration}s</p>
                         <p><strong>Token zapisany do localStorage</strong></p>
                         <pre>${JSON.stringify(data, null, 2)}</pre>
                     `;
                 } else {
                     resultDiv.innerHTML = `
-                        <p class="error">❌ Błąd logowania</p>
-                        <p class="timing">⏱️ Czas: ${duration}s</p>
+                        <p class="error">Błąd logowania</p>
+                        <p class="timing">Czas: ${duration}s</p>
                         <pre>${JSON.stringify(data, null, 2)}</pre>
                     `;
                 }
@@ -179,8 +179,8 @@
                 const endTime = performance.now();
                 const duration = ((endTime - startTime) / 1000).toFixed(2);
                 resultDiv.innerHTML = `
-                    <p class="error">❌ Błąd: ${error.message}</p>
-                    <p class="timing">⏱️ Czas: ${duration}s</p>
+                    <p class="error">Błąd: ${error.message}</p>
+                    <p class="timing">Czas: ${duration}s</p>
                 `;
             }
         }
@@ -188,7 +188,7 @@
         function testDashboard() {
             if (!token) {
                 document.getElementById('dashboardResult').innerHTML = 
-                    '<p class="error">❌ Najpierw zaloguj się!</p>';
+                    '<p class="error">Najpierw zaloguj się!</p>';
                 return;
             }
             

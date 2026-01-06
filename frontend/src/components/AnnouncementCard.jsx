@@ -2,13 +2,6 @@ import React from 'react'
 import { FaClock, FaCalendar, FaUser } from 'react-icons/fa'
 
 export default function AnnouncementCard({ announcement, onClick }) {
-  const typeIcons = {
-    info: '📢',
-    warning: '⚠️',
-    success: '✅',
-    error: '❌'
-  }
-
   const typeLabels = {
     info: 'Informacja',
     warning: 'Ostrzeżenie',
@@ -32,12 +25,12 @@ export default function AnnouncementCard({ announcement, onClick }) {
       onClick={onClick}
     >
       {announcement.isPinned && (
-        <div className="announcement-pin">📌 Przypięte</div>
+        <div className="announcement-pin">Przypięte</div>
       )}
       
       <div className="announcement-header">
         <span className="announcement-type">
-          {typeIcons[announcement.type] || '📢'} {typeLabels[announcement.type] || 'Informacja'}
+          {typeLabels[announcement.type] || 'Informacja'}
         </span>
         {formattedDate && (
           <span className="announcement-date">

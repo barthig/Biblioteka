@@ -19,7 +19,8 @@ export default function Recommended() {
   const [dismissedBooks, setDismissedBooks] = useState(new Set())
   const [lastDismissedId, setLastDismissedId] = useState(null)
   const { getCachedResource, setCachedResource, invalidateResource } = useResourceCache()
-  const { token } = useAuth()
+  const { token, user } = useAuth()
+  const cacheKey = `recommended:${user?.id ?? 'anon'}:/api/books/recommended`
   const totalBooks = useMemo(() => groups.reduce((sum, group) => sum + (group.books?.length ?? 0), 0), [groups])
 
   async function dismissBook(bookId) {
@@ -34,7 +35,7 @@ export default function Recommended() {
 
       setDismissedBooks(prev => new Set([...prev, bookId]))
       setLastDismissedId(bookId)
-      invalidateResource(CACHE_KEY)
+      invalidateResource(cacheKey)
     } catch (err) {
       console.error('Failed to dismiss book:', err)
     }
@@ -50,7 +51,7 @@ export default function Recommended() {
         return next
       })
       setLastDismissedId(null)
-      invalidateResource(CACHE_KEY)
+      invalidateResource(cacheKey)
     } catch (err) {
       console.error('Failed to undo dismiss:', err)
     }
@@ -60,7 +61,16 @@ export default function Recommended() {
     let active = true
 
     async function load() {
-      const cached = getCachedResource(CACHE_KEY, CACHE_TTL)
+      if (!token) {
+        if (active) {
+          setGroups([])
+          setLoading(false)
+          setError(null)
+        }
+        return
+      }
+
+      const cached = getCachedResource(cacheKey, CACHE_TTL)
       if (cached) {
         if (active) {
           setGroups(cached)
@@ -80,7 +90,7 @@ export default function Recommended() {
 
         if (active) {
           setGroups(normalized)
-          setCachedResource(CACHE_KEY, normalized)
+          setCachedResource(cacheKey, normalized)
         }
       } catch (err) {
         if (active) {
@@ -96,7 +106,7 @@ export default function Recommended() {
     load()
 
     const interval = setInterval(() => {
-      const cached = getCachedResource(CACHE_KEY, CACHE_TTL)
+      const cached = getCachedResource(cacheKey, CACHE_TTL)
       if (!cached) {
         load()
       }
@@ -106,7 +116,7 @@ export default function Recommended() {
       active = false
       clearInterval(interval)
     }
-  }, [getCachedResource, setCachedResource])
+  }, [getCachedResource, setCachedResource, cacheKey, token])
 
   return (
     <div className="page">

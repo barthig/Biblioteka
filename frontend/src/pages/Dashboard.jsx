@@ -21,10 +21,12 @@ export default function Dashboard() {
   const isAuthenticated = Boolean(token)
   const isLibrarian = user?.roles?.includes('ROLE_LIBRARIAN')
   const isAdmin = user?.roles?.includes('ROLE_ADMIN')
-  const { prefetchResource } = useResourceCache()
+  const { getCachedResource, setCachedResource, prefetchResource } = useResourceCache()
   const prefetchScheduledRef = useRef(false)
   const [expandedAnnouncements, setExpandedAnnouncements] = useState(() => new Set())
   const [publicAnnouncements, setPublicAnnouncements] = useState([])
+  const DASHBOARD_CACHE_TTL = 30000
+  const PUBLIC_ANNOUNCEMENTS_TTL = 30000
 
   const publicNewArrivals = useMemo(() => ([
     { title: 'Cisza nad jeziorem', author: 'Maria Nowicka' },
@@ -197,10 +199,20 @@ export default function Dashboard() {
 
     let mounted = true
     async function loadPublicAnnouncements() {
+      const cacheKey = 'dashboard:/api/announcements?homepage=true&limit=6'
+      const cached = getCachedResource(cacheKey, PUBLIC_ANNOUNCEMENTS_TTL)
+      if (cached) {
+        if (mounted) {
+          setPublicAnnouncements(cached)
+        }
+        return
+      }
       try {
         const result = await apiFetch('/api/announcements?homepage=true&limit=6')
         if (mounted) {
-          setPublicAnnouncements(Array.isArray(result?.data) ? result.data : [])
+          const list = Array.isArray(result?.data) ? result.data : []
+          setPublicAnnouncements(list)
+          setCachedResource(cacheKey, list)
         }
       } catch {
         if (mounted) {
@@ -230,11 +242,21 @@ export default function Dashboard() {
     async function load() {
       setLoading(true)
       try {
+        const dashboardKey = 'dashboard:/api/dashboard'
+        const alertsKey = 'dashboard:/api/alerts'
+        const hoursKey = 'dashboard:/api/library/hours'
+        const announcementsKey = 'dashboard:/api/announcements?limit=10'
+
+        const cachedDashboard = getCachedResource(dashboardKey, DASHBOARD_CACHE_TTL)
+        const cachedAlerts = getCachedResource(alertsKey, DASHBOARD_CACHE_TTL)
+        const cachedHours = getCachedResource(hoursKey, DASHBOARD_CACHE_TTL)
+        const cachedAnnouncements = getCachedResource(announcementsKey, DASHBOARD_CACHE_TTL)
+
         const [dashboardData, alertsData, hoursData, announcementsData] = await Promise.all([
-          apiFetch('/api/dashboard'),
-          apiFetch('/api/alerts').catch(() => []),
-          apiFetch('/api/library/hours').catch(() => null),
-          apiFetch('/api/announcements?limit=10').catch(() => ({ data: [] }))
+          cachedDashboard ?? apiFetch('/api/dashboard'),
+          cachedAlerts ?? apiFetch('/api/alerts').catch(() => []),
+          cachedHours ?? apiFetch('/api/library/hours').catch(() => null),
+          cachedAnnouncements ?? apiFetch('/api/announcements?limit=10').catch(() => ({ data: [] }))
         ])
 
         if (mounted) {
@@ -243,6 +265,11 @@ export default function Dashboard() {
           setLibraryHours(hoursData)
           setDashboardAnnouncements(Array.isArray(announcementsData?.data) ? announcementsData.data : [])
           setError(null)
+
+          setCachedResource(dashboardKey, dashboardData)
+          setCachedResource(alertsKey, Array.isArray(alertsData) ? alertsData : [])
+          setCachedResource(hoursKey, hoursData)
+          setCachedResource(announcementsKey, announcementsData)
 
           if (user && !user.onboardingCompleted) {
             setShowOnboarding(true)
@@ -401,7 +428,7 @@ export default function Dashboard() {
             </div>
           </div>
           <p className="public-footer__copyright">
-            © 2025 Biblioteka Publiczna. Wszelkie prawa zastrzeżone.
+            (c) 2025 Biblioteka Publiczna. Wszelkie prawa zastrzeżone.
           </p>
         </footer>
       </div>
