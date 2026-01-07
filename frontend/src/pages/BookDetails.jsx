@@ -50,6 +50,7 @@ export default function BookDetails() {
   const [actionError, setActionError] = useState(null)
   const [actionSuccess, setActionSuccess] = useState(null)
   const [reserving, setReserving] = useState(false)
+  const [borrowing, setBorrowing] = useState(false)
   const [favoriteLoading, setFavoriteLoading] = useState(false)
   const [engagementLoading, setEngagementLoading] = useState(false)
   const [engagementFetched, setEngagementFetched] = useState(false)
@@ -247,6 +248,7 @@ export default function BookDetails() {
   const anyAvailable = book ? (book.copies ?? 0) > 0 : false
 
   const canReserve = Boolean(token && book && !anyAvailable && !activeReservation)
+  const canBorrow = Boolean(token && user?.id && book && anyAvailable)
 
   async function handleReservation() {
     if (!token) {
@@ -271,6 +273,32 @@ export default function BookDetails() {
       setActionError(err.message || 'Nie udało się zarezerwować książki')
     } finally {
       setReserving(false)
+    }
+  }
+  async function handleBorrow() {
+    if (!token || !user?.id) {
+      setActionError('Zaloguj się, aby wypożyczyć książkę.')
+      return
+    }
+    if (!book) return
+    setBorrowing(true)
+    setActionError(null)
+    setActionSuccess(null)
+    try {
+      await apiFetch('/api/loans', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bookId, userId: user.id })
+      })
+      setActionSuccess('Wypożyczenie utworzone. Sprawdź w "Moje wypożyczenia".')
+      setBook(prev => (prev ? { ...prev, copies: Math.max(0, (prev.copies ?? 0) - 1) } : prev))
+      invalidateResource('loans:/api/loans*')
+      invalidateResource('books:/api/books*')
+      invalidateResource('reservations:/api/reservations*')
+    } catch (err) {
+      setActionError(err.message || 'Nie udało się wypożyczyć książki')
+    } finally {
+      setBorrowing(false)
     }
   }
 
@@ -393,9 +421,9 @@ export default function BookDetails() {
       />
 
       <StatGrid>
-        <StatCard title="Dostępność" value={anyAvailable ? 'Dostępne' : 'Brak'} subtitle={`${book.copies ?? 0} z ${book.totalCopies ?? book.copies ?? 0}`} />
-        <StatCard title="Oceny" value={ratingSummaryAverage ? ratingSummaryAverage.toFixed(1) : 'Brak'} subtitle={`${ratingSummaryCount ?? 0} ocen`} />
-        <StatCard title="Rezerwacje" value={activeReservation ? 'Aktywna' : (anyAvailable ? 'Niepotrzebna' : 'Dostępna')} subtitle={activeReservation ? 'Masz aktywną rezerwację' : 'Dołącz do kolejki'} />
+        <StatCard valueClassName="stat-card__value--sm" title="Dostępność" value={anyAvailable ? 'Dostępne' : 'Brak'} subtitle={`${book.copies ?? 0} z ${book.totalCopies ?? book.copies ?? 0}`} />
+        <StatCard valueClassName="stat-card__value--sm" title="Oceny" value={ratingSummaryAverage ? ratingSummaryAverage.toFixed(1) : 'Brak'} />
+        <StatCard valueClassName="stat-card__value--sm" title="Rezerwacje" value={activeReservation ? 'Aktywna' : (anyAvailable ? 'Niepotrzebna' : 'Dostępna')} />
       </StatGrid>
 
       <SectionCard>
@@ -461,7 +489,17 @@ export default function BookDetails() {
           className="form-actions"
           onMouseEnter={ensureEngagementLoaded}
           onFocusCapture={ensureEngagementLoaded}
-        >
+        >{anyAvailable ? (
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={handleBorrow}
+              disabled={!canBorrow || borrowing}
+            >
+              {borrowing ? 'Przetwarzanie...' : 'Wypożycz'}
+            </button>
+          ) : (
+
           <button
             type="button"
             className="btn btn-primary"
@@ -470,6 +508,7 @@ export default function BookDetails() {
           >
             {reserving ? 'Przetwarzanie...' : 'Dołącz do kolejki rezerwacji'}
           </button>
+          )}
           <button
             type="button"
             className="btn btn-ghost"
@@ -586,3 +625,8 @@ export default function BookDetails() {
     </div>
   )
 }
+
+
+
+
+

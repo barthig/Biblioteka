@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { authService } from '../services/authService'
+import { apiFetch } from '../api'
+import { applyUiPreferences, clearUiPreferences, loadStoredUiPreferences, storeUiPreferences } from '../utils/uiPreferences'
 
 const AuthContext = createContext(null)
 
@@ -62,6 +64,13 @@ export function AuthProvider({ children }) {
   }, [])
 
   useEffect(() => {
+    const stored = loadStoredUiPreferences()
+    if (stored) {
+      applyUiPreferences(stored)
+    }
+  }, [])
+
+  useEffect(() => {
     if (token) {
       localStorage.setItem('token', token)
       
@@ -95,6 +104,8 @@ export function AuthProvider({ children }) {
     } else {
       localStorage.removeItem('token')
       setUser(null)
+      clearUiPreferences()
+      applyUiPreferences({ theme: 'auto', fontSize: 'standard', language: 'pl' })
     }
   }, [token, navigate, isInitialized])
 
@@ -105,6 +116,30 @@ export function AuthProvider({ children }) {
       localStorage.removeItem('refreshToken')
     }
   }, [refreshToken])
+
+  useEffect(() => {
+    if (!token) return
+    let active = true
+
+    async function loadPreferences() {
+      try {
+        const data = await apiFetch('/api/me')
+        if (!active || !data) return
+        const prefs = {
+          theme: data.theme ?? 'auto',
+          fontSize: data.fontSize ?? 'standard',
+          language: data.language ?? 'pl',
+        }
+        applyUiPreferences(prefs)
+        storeUiPreferences(prefs)
+      } catch {
+        // ignore preference load errors
+      }
+    }
+
+    loadPreferences()
+    return () => { active = false }
+  }, [token])
 
   function login(tokenValue, refreshTokenValue) {
     if (tokenValue) {

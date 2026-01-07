@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { apiFetch } from '../api'
 import { useAuth } from '../context/AuthContext'
 import { ratingService } from '../services/ratingService'
+import { applyUiPreferences, storeUiPreferences } from '../utils/uiPreferences'
 import PageHeader from '../components/ui/PageHeader'
 import StatGrid from '../components/ui/StatGrid'
 import StatCard from '../components/ui/StatCard'
@@ -68,11 +69,18 @@ export default function Profile() {
     setRatingsLoading(true)
     try {
       const data = await ratingService.getMyRatings()
-      const list = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : []
+      const list = Array.isArray(data?.ratings)
+        ? data.ratings
+        : Array.isArray(data?.data)
+          ? data.data
+          : Array.isArray(data)
+            ? data
+            : []
       setRatings(list)
       setRatingsError(null)
     } catch (err) {
-      setRatingsError(err.message || 'Nie udalo sie pobrac ocen')
+      const statusInfo = err?.status ? ` (HTTP ${err.status})` : ''
+      setRatingsError(`${err?.message || 'Nie udalo sie pobrac ocen'}${statusInfo}`)
     } finally {
       setRatingsLoading(false)
     }
@@ -317,6 +325,8 @@ export default function Profile() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ theme, fontSize, language })
       })
+      applyUiPreferences({ theme, fontSize, language })
+      storeUiPreferences({ theme, fontSize, language })
       setSuccess('Ustawienia interfejsu zostały zapisane')
     } catch (err) {
       setError(err.message || 'Nie udało się zapisać ustawień')
@@ -351,9 +361,9 @@ export default function Profile() {
       />
 
       <StatGrid>
-        <StatCard title="Status konta" value={profile.accountStatus || 'Aktywne'} subtitle="Twoje konto" />
-        <StatCard title="Ważność karty" value={profile.cardExpiry || '-'} subtitle="Data ważności" />
-        <StatCard title="Domyślna filia" value={profile.defaultBranch || '-'} subtitle="Odbiór rezerwacji" />
+        <StatCard title="Status konta" value={profile.accountStatus || 'Aktywne'} />
+        <StatCard title="Ważność karty" value={profile.cardExpiry || '-'} />
+        <StatCard title="Domyślna filia" value={profile.defaultBranch || '-'} />
       </StatGrid>
 
       {error && <FeedbackCard variant="error">{error}</FeedbackCard>}
@@ -462,26 +472,6 @@ export default function Profile() {
               </button>
             </div>
           </form>
-
-          <hr style={{ margin: '2rem 0', border: 'none', borderTop: '1px solid var(--color-border)' }} />
-
-          {/* Active Sessions */}
-          <div>
-            <h3>Aktywne sesje</h3>
-            <p className="support-copy">Zarządzaj urządzeniami zalogowanymi do Twojego konta</p>
-            <div className="form-actions">
-              <button type="button" className="btn btn-secondary" onClick={handleVerifySession} disabled={sessionLoading}>
-                Sprawdź sesję
-              </button>
-              <button type="button" className="btn btn-secondary" onClick={handleRefreshSession} disabled={sessionLoading}>
-                Odśwież sesję
-              </button>
-              <button type="button" className="btn btn-ghost" onClick={handleLogoutAllSessions} disabled={sessionLoading}>
-                Wyloguj wszystkie sesje
-              </button>
-            </div>
-            {sessionStatus && <p className="success-message">{sessionStatus}</p>}
-          </div>
         </div>
       )}
 
@@ -745,9 +735,10 @@ export default function Profile() {
               >
                 <option value="pl">Polski</option>
                 <option value="en">English</option>
-                <option value="ua">Українська</option>
-                <option value="de">Deutsch</option>
               </select>
+              <small className="support-copy">
+                Tłumaczenia interfejsu są w przygotowaniu — na razie zapisujemy tylko preferencję języka.
+              </small>
             </div>
 
             <div className="form-actions">
@@ -911,3 +902,6 @@ export default function Profile() {
     </div>
   )
 }
+
+
+

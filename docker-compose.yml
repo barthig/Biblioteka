@@ -89,6 +89,7 @@ services:
         mkdir -p /app/var/cache/prod/doctrine/orm/Proxies &&
         chown -R www-data:www-data /app/var &&
         chmod -R 775 /app/var &&
+        php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration &&
         php bin/console cache:warmup --env=prod &&
         php-fpm -F
       "
@@ -151,7 +152,7 @@ services:
       - "5173:5173"
     working_dir: /app
     environment:
-      VITE_API_URL: http://localhost:8000
+      VITE_API_URL: ""
       VITE_API_SECRET: dev_api_secret
     volumes:
       - ./frontend:/app:cached
@@ -181,3 +182,4 @@ volumes:
     driver: local
   backend_var:
     driver: local
+
