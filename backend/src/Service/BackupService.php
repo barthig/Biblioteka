@@ -20,21 +20,27 @@ class BackupService
             mkdir($this->backupDir, 0777, true);
         }
 
-        $fileName = sprintf('backup_%s.json', (new \DateTimeImmutable())->format('Ymd_His'));
+        $timestamp = (new \DateTimeImmutable())->format('Ymd_His');
+        $baseName = sprintf('backup_%s', $timestamp);
+        $fileName = $baseName . '.sql.gz';
         $filePath = $this->backupDir . DIRECTORY_SEPARATOR . $fileName;
 
-        $payload = [
-            'generatedAt' => (new \DateTimeImmutable())->format(DATE_ATOM),
-            'initiator' => $initiator,
-            'note' => $note ?? 'Snapshot placeholder created by BackupService',
-        ];
-        file_put_contents($filePath, json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+        $errorMessage = $this->createDatabaseDump($filePath);
+        $status = $errorMessage === null ? 'completed' : 'failed';
+
+        if ($errorMessage !== null) {
+            $errorFileName = $baseName . '.error.txt';
+            $errorFilePath = $this->backupDir . DIRECTORY_SEPARATOR . $errorFileName;
+            file_put_contents($errorFilePath, $errorMessage);
+            $fileName = $errorFileName;
+            $filePath = $errorFilePath;
+        }
 
         $record = (new BackupRecord())
             ->setFileName($fileName)
             ->setFilePath($filePath)
-            ->setFileSize((int) filesize($filePath))
-            ->setStatus('completed')
+            ->setFileSize((int) (is_file($filePath) ? filesize($filePath) : 0))
+            ->setStatus($status)
             ->setInitiatedBy($initiator);
 
         $this->entityManager->persist($record);
@@ -46,5 +52,72 @@ class BackupService
     public function getBackupDirectory(): string
     {
         return $this->backupDir;
+    }
+
+    private function createDatabaseDump(string $filePath): ?string
+    {
+        $databaseUrl = $_SERVER['DATABASE_URL'] ?? getenv('DATABASE_URL') ?: '';
+        if ($databaseUrl === '') {
+            return 'Missing DATABASE_URL environment variable.';
+        }
+
+        $config = $this->parseDatabaseUrl($databaseUrl);
+        if ($config === null) {
+            return 'Unable to parse DATABASE_URL.';
+        }
+
+        $command = sprintf(
+            'PGPASSWORD=%s pg_dump -h %s -p %s -U %s -d %s --format=plain --no-owner --no-acl | gzip -9 > %s',
+            escapeshellarg($config['password']),
+            escapeshellarg($config['host']),
+            escapeshellarg((string) $config['port']),
+            escapeshellarg($config['user']),
+            escapeshellarg($config['dbname']),
+            escapeshellarg($filePath)
+        );
+
+        $output = [];
+        $exitCode = 0;
+        exec($command . ' 2>&1', $output, $exitCode);
+
+        if ($exitCode !== 0 || !is_file($filePath) || filesize($filePath) === 0) {
+            $details = $output ? implode("\n", $output) : 'Unknown error';
+            if (is_file($filePath)) {
+                @unlink($filePath);
+            }
+            return 'Backup failed: ' . $details;
+        }
+
+        return null;
+    }
+
+    /**
+     * @return array{host:string,port:int,user:string,password:string,dbname:string}|null
+     */
+    private function parseDatabaseUrl(string $databaseUrl): ?array
+    {
+        $parts = parse_url($databaseUrl);
+        if ($parts === false) {
+            return null;
+        }
+
+        $host = $parts['host'] ?? null;
+        $user = $parts['user'] ?? null;
+        $pass = $parts['pass'] ?? '';
+        $port = isset($parts['port']) ? (int) $parts['port'] : 5432;
+        $path = $parts['path'] ?? '';
+        $dbname = ltrim($path, '/');
+
+        if (!$host || !$user || $dbname === '') {
+            return null;
+        }
+
+        return [
+            'host' => $host,
+            'port' => $port,
+            'user' => $user,
+            'password' => $pass,
+            'dbname' => $dbname,
+        ];
     }
 }

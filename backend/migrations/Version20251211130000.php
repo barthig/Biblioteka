@@ -20,6 +20,9 @@ final class Version20251211130000 extends AbstractMigration
 
     public function up(Schema $schema): void
     {
+        $schemaManager = $this->connection->createSchemaManager();
+        $this->skipIf($schemaManager->tablesExist(['app_user']), 'Schema already exists');
+
         // Tworzenie sekwencji
         $this->addSql('CREATE SEQUENCE acquisition_budget_id_seq INCREMENT BY 1 MINVALUE 1 START 1');
         $this->addSql('CREATE SEQUENCE acquisition_expense_id_seq INCREMENT BY 1 MINVALUE 1 START 1');

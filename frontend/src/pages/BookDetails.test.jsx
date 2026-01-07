@@ -81,8 +81,9 @@ describe('BookDetails page', () => {
 
     renderPage()
     await screen.findByText('Alpha')
-    await userEvent.click(screen.getByRole('button', { name: /kolejki/i }))
-    expect(await screen.findByText(/Zaloguj/i)).toBeInTheDocument()
+    const reserveButton = screen.getByRole('button', { name: /kolejki/i })
+    expect(reserveButton).toBeDisabled()
+    expect(screen.getAllByText(/Zaloguj/i).length).toBeGreaterThan(0)
   })
 
   it('reserves and toggles favorite with token', async () => {

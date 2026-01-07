@@ -1392,6 +1392,17 @@ INSERT INTO backup_record (id, file_name, file_path, file_size, status, created_
 (29, 'backup_029.sql.gz', '/var/backups/biblioteka/backup_029.sql.gz', 43314515, 'running', NOW() - INTERVAL '168 days', 'admin'),
 (30, 'backup_030.sql.gz', '/var/backups/biblioteka/backup_030.sql.gz', 29994868, 'success', NOW() - INTERVAL '60 days', 'cron');
 
+-- Ustawienia systemowe (3)
+INSERT INTO system_setting (id, setting_key, setting_value, value_type, description, created_at, updated_at) VALUES
+(1, 'loanlimitperuser', '5', 'int', 'Maksymalna liczba wypozyczen na uzytkownika', NOW() - INTERVAL '30 days', NOW() - INTERVAL '1 day'),
+(2, 'loandurationdays', '14', 'int', 'Domyslny czas wypozyczenia (dni)', NOW() - INTERVAL '30 days', NOW() - INTERVAL '1 day'),
+(3, 'notificationsenabled', '1', 'bool', 'Wlaczenie powiadomien systemowych', NOW() - INTERVAL '30 days', NOW() - INTERVAL '1 day');
+
+-- Role systemowe (2)
+INSERT INTO staff_role (id, name, role_key, modules, description, created_at, updated_at) VALUES
+(1, 'Administrator', 'ROLE_ADMIN', '["system","users","audit","catalog","acquisitions","assets","logs"]', 'Pelny dostep administracyjny', NOW() - INTERVAL '90 days', NOW() - INTERVAL '1 day'),
+(2, 'Bibliotekarz', 'ROLE_LIBRARIAN', '["loans","reservations","catalog","collections","fines","reports"]', 'Obsluga wypozyczen i rezerwacji', NOW() - INTERVAL '90 days', NOW() - INTERVAL '1 day');
+
 -- Konfiguracje integracji (3)
 INSERT INTO integration_config (id, name, provider, enabled, settings, last_status, last_tested_at, created_at, updated_at) VALUES
 (1, 'Integration #01', 'smtp', true, '{"endpoint":"https://example.com","timeout":5}', 'ok', NOW() - INTERVAL '1 day', NOW() - INTERVAL '10 days', NOW() - INTERVAL '1 day'),
@@ -1453,6 +1464,7 @@ SELECT setval('audit_logs_id_seq', (SELECT MAX(id) FROM audit_logs));
 SELECT setval('backup_record_id_seq', (SELECT MAX(id) FROM backup_record));
 SELECT setval('integration_config_id_seq', (SELECT MAX(id) FROM integration_config));
 SELECT setval('notification_log_id_seq', (SELECT MAX(id) FROM notification_log));
+SELECT setval('system_setting_id_seq', (SELECT MAX(id) FROM system_setting));
 SELECT setval('supplier_id_seq', (SELECT MAX(id) FROM supplier));
 SELECT setval('acquisition_budget_id_seq', (SELECT MAX(id) FROM acquisition_budget));
 SELECT setval('acquisition_order_id_seq', (SELECT MAX(id) FROM acquisition_order));

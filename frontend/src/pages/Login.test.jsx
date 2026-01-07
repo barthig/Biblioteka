@@ -35,7 +35,7 @@ describe('Login page', () => {
       </MemoryRouter>
     )
 
-    await userEvent.type(screen.getByLabelText(/Adres email/i), 'admin@biblioteka.pl')
+    await userEvent.type(screen.getByLabelText(/e-?mail/i), 'admin@biblioteka.pl')
     await userEvent.type(screen.getByLabelText(/Has/i), 'password123')
     await userEvent.click(screen.getByRole('button', { name: /Zaloguj/i }))
 
@@ -59,7 +59,7 @@ describe('Login page', () => {
       </MemoryRouter>
     )
 
-    await userEvent.type(screen.getByLabelText(/Adres email/i), 'admin@biblioteka.pl')
+    await userEvent.type(screen.getByLabelText(/e-?mail/i), 'admin@biblioteka.pl')
     await userEvent.type(screen.getByLabelText(/Has/i), 'wrong')
     await userEvent.click(screen.getByRole('button', { name: /Zaloguj/i }))
 

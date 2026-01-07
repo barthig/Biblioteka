@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -y \
     libpq-dev \
     librabbitmq-dev \
     libssl-dev \
+    postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
 RUN docker-php-ext-install \
@@ -43,6 +44,7 @@ RUN apt-get update && apt-get install -y \
     libpq-dev \
     librabbitmq-dev \
     libssl-dev \
+    postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
 RUN docker-php-ext-install \

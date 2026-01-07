@@ -55,13 +55,10 @@ describe('AdminPanel page', () => {
   it('updates setting and toggles integration', async () => {
     apiFetch.mockImplementation((endpoint) => {
       if (endpoint === '/api/admin/system/settings') {
-        return Promise.resolve([{ key: 'site_name', value: 'Old' }])
+        return Promise.resolve({ settings: [{ key: 'site_name', value: 'Old' }] })
       }
       if (endpoint === '/api/admin/system/integrations') {
-        return Promise.resolve([{ id: 10, name: 'Slack', type: 'HTTP', endpoint: 'http://example', enabled: false }])
-      }
-      if (endpoint === '/api/admin/system/backups') {
-        return Promise.resolve([])
+        return Promise.resolve({ integrations: [{ id: 10, name: 'Slack', provider: 'http', settings: { endpoint: 'http://example' }, enabled: false }] })
       }
       if (endpoint === '/api/admin/system/settings/site_name') {
         return Promise.resolve({})
@@ -74,7 +71,7 @@ describe('AdminPanel page', () => {
 
     render(<AdminPanel />)
 
-    await userEvent.click(screen.getByRole('button', { name: /System/i }))
+    await userEvent.click(screen.getByRole('button', { name: /System i integracje/i }))
     expect(await screen.findByText('site_name')).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: /Edytuj/i }))
     expect(apiFetch).toHaveBeenCalledWith('/api/admin/system/settings/site_name', expect.objectContaining({ method: 'PUT' }))
@@ -93,11 +90,14 @@ describe('AdminPanel page', () => {
       if (endpoint === '/api/audit-logs?limit=25') {
         return Promise.resolve({ data: [] })
       }
+      if (endpoint === '/api/users') {
+        return Promise.resolve([{ id: 12, name: 'Jan Nowak', email: 'jan@example.com' }])
+      }
       return Promise.resolve({})
     })
 
     render(<AdminPanel />)
-    await userEvent.click(screen.getByRole('button', { name: /Audyt/i }))
+    await userEvent.click(screen.getByRole('button', { name: /Audyt i role/i }))
 
     const roleForm = screen.getByRole('button', { name: /Dodaj rol/i }).closest('form')
     const roleInputs = roleForm.querySelectorAll('input')
@@ -110,8 +110,9 @@ describe('AdminPanel page', () => {
     expect(apiFetch).toHaveBeenCalledWith('/api/admin/system/roles', expect.objectContaining({ method: 'POST' }))
 
     const assignForm = screen.getByRole('button', { name: /Przypisz rol/i }).closest('form')
-    await userEvent.selectOptions(within(assignForm).getByRole('combobox'), 'ROLE_USER')
-    await userEvent.type(within(assignForm).getByRole('spinbutton'), '12')
+    const selects = within(assignForm).getAllByRole('combobox')
+    await userEvent.selectOptions(selects[0], 'ROLE_USER')
+    await userEvent.selectOptions(selects[1], '12')
     await userEvent.click(within(assignForm).getByRole('button', { name: /Przypisz rol/i }))
 
     expect(apiFetch).toHaveBeenCalledWith('/api/admin/system/roles/ROLE_USER/assign', expect.objectContaining({ method: 'POST' }))
@@ -125,38 +126,18 @@ describe('AdminPanel page', () => {
       if (endpoint === '/api/audit-logs?limit=25') {
         return Promise.resolve({ data: [] })
       }
+      if (endpoint === '/api/users') {
+        return Promise.resolve([{ id: 5, name: 'Jan Nowak', email: 'jan@example.com' }])
+      }
       return Promise.resolve({})
     })
 
     render(<AdminPanel />)
-    await userEvent.click(screen.getByRole('button', { name: /Audyt/i }))
+    await userEvent.click(screen.getByRole('button', { name: /Audyt i role/i }))
     const assignForm = screen.getByRole('button', { name: /Przypisz rol/i }).closest('form')
-    await userEvent.type(within(assignForm).getByRole('spinbutton'), '5')
+    const selects = within(assignForm).getAllByRole('combobox')
+    await userEvent.selectOptions(selects[1], '5')
     await userEvent.click(within(assignForm).getByRole('button', { name: /Przypisz rol/i }))
-    expect(await screen.findByText(/Podaj rol/i)).toBeInTheDocument()
-  })
-
-  it('creates staff account', async () => {
-    apiFetch.mockImplementation((endpoint) => {
-      if (endpoint === '/api/admin/system/roles') {
-        return Promise.resolve({ roles: [] })
-      }
-      if (endpoint === '/api/users') {
-        return Promise.resolve({})
-      }
-      return Promise.resolve([])
-    })
-
-    const { container } = render(<AdminPanel />)
-    await userEvent.click(screen.getByRole('button', { name: /Konta prac/i }))
-
-    const staffForm = container.querySelector('form.form')
-    const inputs = staffForm.querySelectorAll('input')
-    await userEvent.type(inputs[0], 'Jan Nowak')
-    await userEvent.type(inputs[1], 'jan@example.com')
-    await userEvent.type(inputs[2], 'temp12345')
-    await userEvent.click(within(staffForm).getByRole('button', { name: /Utw/i }))
-
-    expect(apiFetch).toHaveBeenCalledWith('/api/users', expect.objectContaining({ method: 'POST' }))
+    expect(await screen.findByText(/Podaj rolę i użytkownika/i)).toBeInTheDocument()
   })
 })

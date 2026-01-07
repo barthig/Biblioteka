@@ -28,12 +28,12 @@ describe('Register page', () => {
     )
 
     await userEvent.type(screen.getByLabelText(/Imi/i), 'Jan Kowalski')
-    await userEvent.type(screen.getByLabelText(/Email/i), 'jan@example.com')
+    await userEvent.type(screen.getByLabelText(/e-?mail/i), 'jan@example.com')
     await userEvent.type(screen.getByLabelText(/^Has/i), 'password123')
     await userEvent.type(screen.getByLabelText(/Powt/i), 'password124')
     await userEvent.click(screen.getByRole('button', { name: /Utw/i }))
 
-    expect(await screen.findByText(/Hasla musza byc identyczne/i)).toBeInTheDocument()
+    expect(await screen.findByText(/Has.*identyczne/i)).toBeInTheDocument()
     expect(apiFetch).not.toHaveBeenCalled()
   })
 
@@ -50,7 +50,7 @@ describe('Register page', () => {
     )
 
     await userEvent.type(screen.getByLabelText(/Imi/i), 'Jan Kowalski')
-    await userEvent.type(screen.getByLabelText(/Email/i), 'jan@example.com')
+    await userEvent.type(screen.getByLabelText(/e-?mail/i), 'jan@example.com')
     await userEvent.type(screen.getByLabelText(/^Has/i), 'password123')
     await userEvent.type(screen.getByLabelText(/Powt/i), 'password123')
     await userEvent.click(screen.getByRole('button', { name: /Utw/i }))
@@ -92,12 +92,12 @@ describe('Register page', () => {
     )
 
     await userEvent.type(screen.getByLabelText(/Imi/i), 'Jan Kowalski')
-    await userEvent.type(screen.getByLabelText(/Email/i), 'jan@example.com')
+    await userEvent.type(screen.getByLabelText(/e-?mail/i), 'jan@example.com')
     await userEvent.type(screen.getByLabelText(/^Has/i), 'password123')
     await userEvent.type(screen.getByLabelText(/Powt/i), 'password123')
     await userEvent.click(screen.getByRole('button', { name: /Utw/i }))
 
-    expect(await screen.findByText(/Oczekuje na akceptacje/i)).toBeInTheDocument()
+    expect(await screen.findByText(/Oczekuje na akceptacj/i)).toBeInTheDocument()
     expect(mockLogin).not.toHaveBeenCalled()
   })
 })

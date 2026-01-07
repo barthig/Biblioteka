@@ -54,6 +54,7 @@ describe('Profile page', () => {
     )
 
     expect(await screen.findByText(/Moje konto/i)).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: /Twoje oceny/i }))
     expect(screen.getByText('Alpha')).toBeInTheDocument()
   })
 

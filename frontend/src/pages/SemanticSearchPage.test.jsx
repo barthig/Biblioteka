@@ -9,7 +9,7 @@ vi.mock('../components/SemanticSearch', () => ({
 describe('SemanticSearchPage', () => {
   it('renders header and search component', () => {
     render(<SemanticSearchPage />)
-    expect(screen.getByText(/Wyszukiwanie/i)).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /Wyszukiwanie semantyczne/i })).toBeInTheDocument()
     expect(screen.getByTestId('semantic-search')).toBeInTheDocument()
   })
 })

@@ -110,7 +110,7 @@ describe('Books page', () => {
 
     await userEvent.click(screen.getByRole('button', { name: /Wyczy/i }))
     await waitFor(() => {
-      expect(apiFetch).toHaveBeenCalledWith('/api/books')
+      expect(apiFetch).toHaveBeenCalledWith(expect.stringContaining('/api/books?'))
     })
   })
 })

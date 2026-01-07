@@ -9,8 +9,9 @@ vi.mock('../api', () => ({
   apiFetch: vi.fn()
 }))
 
+let mockAuth = { token: null, user: null }
 vi.mock('../context/AuthContext', () => ({
-  useAuth: () => ({ token: null })
+  useAuth: () => mockAuth
 }))
 
 vi.mock('../components/BookItem', () => ({
@@ -30,6 +31,7 @@ const renderPage = () => {
 describe('Recommended page', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockAuth = { token: 'token', user: { id: 1 } }
   })
 
   it('renders recommended groups', async () => {

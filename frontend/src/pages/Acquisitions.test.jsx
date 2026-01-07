@@ -45,7 +45,11 @@ describe('Acquisitions page', () => {
     render(<Acquisitions />)
 
     expect(await screen.findByText('Supplier A')).toBeInTheDocument()
-    const suppliersCard = screen.getByRole('heading', { name: /Dostawcy/i }).closest('.surface-card')
+    const supplierSections = screen.getAllByRole('heading', { name: /Dostawcy/i })
+    const suppliersCard = supplierSections
+      .map(heading => heading.closest('.surface-card'))
+      .find(card => card && within(card).queryByPlaceholderText(/Nazwa/i))
+
     const suppliersScope = within(suppliersCard)
     await userEvent.type(suppliersScope.getByPlaceholderText(/Nazwa/i), 'Supplier B')
     await userEvent.type(suppliersScope.getByPlaceholderText(/Kontakt/i), 'contact')

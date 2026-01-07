@@ -38,7 +38,7 @@ describe('Navbar', () => {
     expect(prefetchResource).toHaveBeenCalled()
   })
 
-  it('shows admin and librarian links', () => {
+  it('shows admin links only for admin', () => {
     mockAuth = { token: 'token', user: { name: 'Admin', roles: ['ROLE_ADMIN'] }, logout: vi.fn() }
     render(
       <MemoryRouter>
@@ -46,10 +46,25 @@ describe('Navbar', () => {
       </MemoryRouter>
     )
 
-    expect(screen.getByRole('link', { name: /Panel bibliotekarza/i })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /Panel administratora/i })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /Katalog import/i })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /Logi/i })).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /Katalog import/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /Akcesje/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /Pliki ksiazek/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /Logi/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /Panel bibliotekarza/i })).not.toBeInTheDocument()
+  })
+
+  it('shows librarian links only for librarian', () => {
+    mockAuth = { token: 'token', user: { name: 'Librarian', roles: ['ROLE_LIBRARIAN'] }, logout: vi.fn() }
+    render(
+      <MemoryRouter>
+        <Navbar />
+      </MemoryRouter>
+    )
+
+    expect(screen.getByRole('link', { name: /Panel bibliotekarza/i })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Raporty/i })).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /Panel administratora/i })).not.toBeInTheDocument()
   })
 
   it('calls logout', () => {

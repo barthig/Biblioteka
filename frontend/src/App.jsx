@@ -1,4 +1,4 @@
-import React from 'react'
+﻿import React from 'react'
 import { Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { ResourceCacheProvider } from './context/ResourceCacheContext'
@@ -20,10 +20,6 @@ import Announcements from './pages/Announcements'
 import UserDetails from './pages/UserDetails'
 import Notifications from './pages/Notifications'
 import Reports from './pages/Reports'
-import DigitalAssets from './pages/DigitalAssets'
-import CatalogAdmin from './pages/CatalogAdmin'
-import Acquisitions from './pages/Acquisitions'
-import SystemLogs from './pages/SystemLogs'
 
 export default function App() {
   return (
@@ -79,44 +75,12 @@ export default function App() {
                     </RequireRole>
                   )}
                 />
-                <Route
-                  path="/admin/assets"
-                  element={(
-                    <RequireRole allowed={['ROLE_LIBRARIAN', 'ROLE_ADMIN']}>
-                      <DigitalAssets />
-                    </RequireRole>
-                  )}
-                />
-                <Route
-                  path="/admin/catalog"
-                  element={(
-                    <RequireRole allowed={['ROLE_ADMIN']}>
-                      <CatalogAdmin />
-                    </RequireRole>
-                  )}
-                />
-                <Route
-                  path="/admin/acquisitions"
-                  element={(
-                    <RequireRole allowed={['ROLE_ADMIN']}>
-                      <Acquisitions />
-                    </RequireRole>
-                  )}
-                />
-                <Route
-                  path="/admin/logs"
-                  element={(
-                    <RequireRole allowed={['ROLE_ADMIN']}>
-                      <SystemLogs />
-                    </RequireRole>
-                  )}
-                />
               </Routes>
               <footer className="footer">
-                <p>(c) 2025 Biblioteka. System zarządzania biblioteką i wypożyczeniami.</p>
+                <p>(c) 2025 Biblioteka. System zarz?dzania bibliotek? i wypo?yczeniami.</p>
                 <div className="footer__links">
                   <a href="#regulamin">Regulamin</a>
-                  <a href="#prywatnosc">Polityka prywatności</a>
+                  <a href="#prywatnosc">Polityka prywatno?ci</a>
                   <a href="#kontakt">Kontakt</a>
                 </div>
               </footer>
@@ -127,3 +91,4 @@ export default function App() {
     </AuthProvider>
   )
 }
+

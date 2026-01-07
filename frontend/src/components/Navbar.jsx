@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react'
+﻿import React, { useCallback, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { apiFetch } from '../api'
@@ -12,7 +12,7 @@ export default function Navbar() {
   const { prefetchResource } = useResourceCache()
   const roles = user?.roles || []
   const isAdmin = roles.includes('ROLE_ADMIN')
-  const isLibrarian = roles.includes('ROLE_LIBRARIAN') || isAdmin
+  const isLibrarian = roles.includes('ROLE_LIBRARIAN')
 
   const toggleMenu = () => setMenuOpen(prev => !prev)
   const closeMenu = useCallback(() => setMenuOpen(false), [])
@@ -78,28 +78,34 @@ export default function Navbar() {
               Polecane
             </NavLink>
             <NavLink to="/announcements" className={navLinkClass} onClick={closeMenu}>
-              Ogłoszenia
+              Og?oszenia
             </NavLink>
           </div>
 
           {token && (
             <div className="top-nav__secondary">
-              <NavLink to="/my-loans" className={navLinkClass} onMouseEnter={prefetchLoans} onFocus={prefetchLoans} onClick={closeMenu}>
-                Wypożyczenia
-              </NavLink>
-              <NavLink to="/reservations" className={navLinkClass} onMouseEnter={prefetchReservations} onFocus={prefetchReservations} onClick={closeMenu}>
-                Rezerwacje
-              </NavLink>
-              <NavLink to="/favorites" className={navLinkClass} onMouseEnter={prefetchFavorites} onFocus={prefetchFavorites} onClick={closeMenu}>
-                Ulubione
-              </NavLink>
-              <NavLink to="/notifications" className={navLinkClass} onClick={closeMenu}>
-                Powiadomienia
-              </NavLink>
-              <NavLink to="/profile" className={navLinkClass} onClick={closeMenu}>
-                Profil
-              </NavLink>
-              {isLibrarian && (
+              {isAdmin ? (
+                <>
+                  <NavLink to="/admin" className={navLinkClass} onClick={closeMenu}>
+                    Panel administratora
+                  </NavLink>
+                  <NavLink to="/my-loans" className={navLinkClass} onMouseEnter={prefetchLoans} onFocus={prefetchLoans} onClick={closeMenu}>
+                    Wypo?yczenia
+                  </NavLink>
+                  <NavLink to="/reservations" className={navLinkClass} onMouseEnter={prefetchReservations} onFocus={prefetchReservations} onClick={closeMenu}>
+                    Rezerwacje
+                  </NavLink>
+                  <NavLink to="/favorites" className={navLinkClass} onMouseEnter={prefetchFavorites} onFocus={prefetchFavorites} onClick={closeMenu}>
+                    Ulubione
+                  </NavLink>
+                  <NavLink to="/notifications" className={navLinkClass} onClick={closeMenu}>
+                    Powiadomienia
+                  </NavLink>
+                  <NavLink to="/profile" className={navLinkClass} onClick={closeMenu}>
+                    Profil
+                  </NavLink>
+                </>
+              ) : isLibrarian ? (
                 <>
                   <NavLink to="/librarian" className={navLinkClass} onClick={closeMenu}>
                     Panel bibliotekarza
@@ -107,24 +113,23 @@ export default function Navbar() {
                   <NavLink to="/reports" className={navLinkClass} onClick={closeMenu}>
                     Raporty
                   </NavLink>
-                  <NavLink to="/admin/assets" className={navLinkClass} onClick={closeMenu}>
-                    Pliki książek
-                  </NavLink>
                 </>
-              )}
-              {isAdmin && (
+              ) : (
                 <>
-                  <NavLink to="/admin/catalog" className={navLinkClass} onClick={closeMenu}>
-                    Katalog import/eksport
+                  <NavLink to="/my-loans" className={navLinkClass} onMouseEnter={prefetchLoans} onFocus={prefetchLoans} onClick={closeMenu}>
+                    Wypo?yczenia
                   </NavLink>
-                  <NavLink to="/admin/acquisitions" className={navLinkClass} onClick={closeMenu}>
-                    Akcesje
+                  <NavLink to="/reservations" className={navLinkClass} onMouseEnter={prefetchReservations} onFocus={prefetchReservations} onClick={closeMenu}>
+                    Rezerwacje
                   </NavLink>
-                  <NavLink to="/admin/logs" className={navLinkClass} onClick={closeMenu}>
-                    Logi
+                  <NavLink to="/favorites" className={navLinkClass} onMouseEnter={prefetchFavorites} onFocus={prefetchFavorites} onClick={closeMenu}>
+                    Ulubione
                   </NavLink>
-                  <NavLink to="/admin" className={navLinkClass} onClick={closeMenu}>
-                    Panel administratora
+                  <NavLink to="/notifications" className={navLinkClass} onClick={closeMenu}>
+                    Powiadomienia
+                  </NavLink>
+                  <NavLink to="/profile" className={navLinkClass} onClick={closeMenu}>
+                    Profil
                   </NavLink>
                 </>
               )}
@@ -139,7 +144,7 @@ export default function Navbar() {
                 <div className="avatar avatar--sm">
                   {user?.name?.charAt(0).toUpperCase() || 'U'}
                 </div>
-                <span>{user?.name || 'Użytkownik'}</span>
+                <span>{user?.name || 'U?ytkownik'}</span>
               </div>
               <button className="btn btn-ghost" onClick={() => { logout(); closeMenu() }}>
                 Wyloguj
@@ -147,7 +152,7 @@ export default function Navbar() {
             </>
           ) : (
             <>
-              <NavLink to="/login" className="btn btn-primary" onClick={closeMenu}>Zaloguj się</NavLink>
+              <NavLink to="/login" className="btn btn-primary" onClick={closeMenu}>Zaloguj si?</NavLink>
               <NavLink to="/register" className="btn btn-outline" onClick={closeMenu}>Zarejestruj</NavLink>
             </>
           )}
@@ -156,3 +161,9 @@ export default function Navbar() {
     </header>
   )
 }
+
+
+
+
+
+

@@ -5,6 +5,8 @@ import Dashboard from './Dashboard'
 import { apiFetch } from '../api'
 
 const mockNavigate = vi.fn()
+const getCachedResource = vi.fn().mockReturnValue(null)
+const setCachedResource = vi.fn()
 const prefetchResource = vi.fn().mockResolvedValue({})
 let mockAuth = { token: null, user: null }
 
@@ -22,7 +24,7 @@ vi.mock('../context/AuthContext', () => ({
 }))
 
 vi.mock('../context/ResourceCacheContext', () => ({
-  useResourceCache: () => ({ prefetchResource })
+  useResourceCache: () => ({ getCachedResource, setCachedResource, prefetchResource })
 }))
 
 vi.mock('../components/OnboardingModal', () => ({
@@ -45,8 +47,8 @@ describe('Dashboard page', () => {
         <Dashboard />
       </MemoryRouter>
     )
-    expect(screen.getByText(/Odkryj/i)).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /Przegl/i })).toBeInTheDocument()
+    expect(screen.getByText(/Znajd/i)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Zobacz/i })).toBeInTheDocument()
   })
 
   it('renders user dashboard when authenticated', async () => {

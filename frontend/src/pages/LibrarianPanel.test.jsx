@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, within } from '@testing-library/react'
+import { render, screen, within, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import LibrarianPanel from './LibrarianPanel'
 import { apiFetch } from '../api'
@@ -25,14 +25,20 @@ describe('LibrarianPanel page', () => {
       if (endpoint === '/api/reports/usage') {
         return Promise.resolve({ loans: 2, overdueLoans: 1, activeUsers: 4, availableCopies: 8 })
       }
+      if (endpoint === '/api/settings') {
+        return Promise.resolve({ loanLimitPerUser: 5, loanDurationDays: 21, notificationsEnabled: true })
+      }
       return Promise.resolve({ data: [] })
     })
 
     const { container } = render(<LibrarianPanel />)
     await userEvent.click(screen.getByRole('button', { name: /Statystyki/i }))
 
-    expect(await screen.findByText(/Aktywne/i)).toBeInTheDocument()
-    expect(apiFetch).toHaveBeenCalledWith('/api/reports/usage')
+    expect(await screen.findByRole('heading', { name: /Statystyki wypozyczen/i })).toBeInTheDocument()
+    await waitFor(() => {
+      expect(apiFetch).toHaveBeenCalledWith('/api/reports/usage')
+      expect(apiFetch).toHaveBeenCalledWith('/api/settings')
+    })
   })
 
   it('handles reservations actions', async () => {
@@ -88,7 +94,7 @@ describe('LibrarianPanel page', () => {
     await userEvent.click(screen.getByRole('button', { name: /Op/ }))
     expect(await screen.findByText(/Late/)).toBeInTheDocument()
 
-    await userEvent.click(screen.getByRole('button', { name: /op.acone/i }))
+    await userEvent.click(screen.getByRole('button', { name: /Oznacz/i }))
     expect(apiFetch).toHaveBeenCalledWith('/api/fines/7/pay', { method: 'POST' })
 
     await userEvent.click(screen.getByRole('button', { name: /Anuluj/i }))
