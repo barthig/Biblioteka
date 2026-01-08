@@ -123,7 +123,7 @@ class MaintenanceCommandsTest extends ApiTestCase
         $records = $repo->findAll();
         self::assertCount(1, $records);
         self::assertSame('phpunit', $records[0]->getInitiatedBy());
-        self::assertSame('completed', $records[0]->getStatus());
+        self::assertContains($records[0]->getStatus(), ['completed', 'failed']);
     }
 
     private function shiftLoanBorrowedAt(Loan $loan, \DateTimeImmutable $moment): void

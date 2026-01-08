@@ -31,6 +31,7 @@ class CreateReviewHandlerTest extends TestCase
         // Mock Entity Manager's getRepository to return our mocked repositories
         $userRepo = $this->createMock(\App\Repository\UserRepository::class);
         $bookRepo = $this->createMock(\App\Repository\BookRepository::class);
+        $ratingRepo = $this->createMock(\App\Repository\RatingRepository::class);
         
         $user = $this->createMock(User::class);
         $book = $this->createMock(Book::class);
@@ -38,14 +39,17 @@ class CreateReviewHandlerTest extends TestCase
         $userRepo->method('find')->with(1)->willReturn($user);
         $bookRepo->method('find')->with(1)->willReturn($book);
         
+        $ratingRepo->method('findOneBy')->with(['user' => $user, 'book' => $book])->willReturn(null);
+
         $this->entityManager->method('getRepository')
-            ->willReturnCallback(function($class) use ($userRepo, $bookRepo) {
+            ->willReturnCallback(function($class) use ($userRepo, $bookRepo, $ratingRepo) {
                 if ($class === User::class) return $userRepo;
                 if ($class === Book::class) return $bookRepo;
-                return null;
+                if ($class === \App\Entity\Rating::class) return $ratingRepo;
+                return $this->createMock(\Doctrine\ORM\EntityRepository::class);
             });
         
-        $this->entityManager->expects($this->once())->method('persist');
+        $this->entityManager->expects($this->exactly(2))->method('persist');
         $this->entityManager->expects($this->once())->method('flush');
 
         $command = new CreateReviewCommand(

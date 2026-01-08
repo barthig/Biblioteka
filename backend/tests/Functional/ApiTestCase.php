@@ -135,11 +135,16 @@ abstract class ApiTestCase extends WebTestCase
     {
         $content = $payload !== null ? json_encode($payload, JSON_THROW_ON_ERROR) : null;
         $headers = array_merge(['CONTENT_TYPE' => 'application/json'], $server);
+        if ($content !== null) {
+            $headers['CONTENT_LENGTH'] = (string) strlen($content);
+        }
+
+        $parameters = $payload ?? [];
 
         call_user_func([
             $client,
             'request',
-        ], $method, $uri, [], [], $headers, $content);
+        ], $method, $uri, $parameters, [], $headers, $content);
     }
 
     protected function sendRequest(HttpKernelBrowser $client, string $method, string $uri, array $server = []): void

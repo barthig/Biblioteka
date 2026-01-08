@@ -68,7 +68,14 @@ class AcquisitionOrderController extends AbstractController
             return $this->json(['message' => 'Forbidden'], 403);
         }
 
-        $data = json_decode($request->getContent(), true) ?: [];
+        try {
+            $data = $request->toArray();
+        } catch (\Throwable) {
+            $data = json_decode($request->getContent(), true);
+            if (!is_array($data)) {
+                $data = [];
+            }
+        }
         
         $dto = $this->mapArrayToDto($data, new CreateAcquisitionOrderRequest());
         $errors = $validator->validate($dto);
@@ -126,7 +133,14 @@ class AcquisitionOrderController extends AbstractController
             return $this->json(['message' => 'Invalid order id'], 400);
         }
 
-        $data = json_decode($request->getContent(), true) ?: [];
+        try {
+            $data = $request->toArray();
+        } catch (\Throwable) {
+            $data = json_decode($request->getContent(), true);
+            if (!is_array($data)) {
+                $data = [];
+            }
+        }
         if (empty($data['status'])) {
             return $this->json(['message' => 'Status is required'], 400);
         }
@@ -165,7 +179,17 @@ class AcquisitionOrderController extends AbstractController
             return $this->json(['message' => 'Invalid order id'], 400);
         }
 
-        $data = json_decode($request->getContent(), true) ?: [];
+        $data = $request->request->all();
+        if ($data === []) {
+            try {
+                $data = $request->toArray();
+            } catch (\Throwable) {
+                $data = json_decode($request->getContent(), true);
+                if (!is_array($data)) {
+                    $data = [];
+                }
+            }
+        }
 
         try {
             $command = new ReceiveOrderCommand(

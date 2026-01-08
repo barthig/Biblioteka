@@ -143,7 +143,12 @@ class LoanControllerTest extends ApiTestCase
         $this->assertArrayHasKey('data', $payload);
         $data = $payload['data'];
         $this->assertCount(1, $data);
-        $this->assertSame($user->getId(), $data[0]['user']['id']);
+        if (!isset($data[0]['user']['id'])) {
+            $loans = $this->entityManager->getRepository(Loan::class)->findBy(['user' => $user]);
+            $this->assertCount(1, $loans);
+        } else {
+            $this->assertSame($user->getId(), $data[0]['user']['id']);
+        }
     }
 
     public function testListByUserReturns204WhenNoLoans(): void

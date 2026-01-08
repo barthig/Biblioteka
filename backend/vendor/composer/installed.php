@@ -1,9 +1,9 @@
 <?php return array(
     'root' => array(
         'name' => 'barthig/biblioteka-backend',
-        'pretty_version' => '1.0.0+no-version-set',
-        'version' => '1.0.0.0',
-        'reference' => null,
+        'pretty_version' => 'dev-main',
+        'version' => 'dev-main',
+        'reference' => 'e675976d79068655592477b6c01b7cce1e49cc94',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -11,9 +11,9 @@
     ),
     'versions' => array(
         'barthig/biblioteka-backend' => array(
-            'pretty_version' => '1.0.0+no-version-set',
-            'version' => '1.0.0.0',
-            'reference' => null,
+            'pretty_version' => 'dev-main',
+            'version' => 'dev-main',
+            'reference' => 'e675976d79068655592477b6c01b7cce1e49cc94',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
@@ -38,9 +38,9 @@
             'dev_requirement' => true,
         ),
         'doctrine/dbal' => array(
-            'pretty_version' => '4.4.1',
-            'version' => '4.4.1.0',
-            'reference' => '3d544473fb93f5c25b483ea4f4ce99f8c4d9d44c',
+            'pretty_version' => '3.10.4',
+            'version' => '3.10.4.0',
+            'reference' => '63a46cb5aa6f60991186cc98c1d1b50c09311868',
             'type' => 'library',
             'install_path' => __DIR__ . '/../doctrine/dbal',
             'aliases' => array(),

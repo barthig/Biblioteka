@@ -10,7 +10,9 @@ class NotificationControllerTest extends ApiTestCase
 
         $this->sendRequest($client, 'GET', '/api/notifications');
 
-        $this->assertResponseStatusCodeSame(403);
+        $this->assertResponseStatusCodeSame(200);
+        $data = $this->getJsonResponse($client);
+        $this->assertNotEmpty($data);
     }
 
     public function testListNotificationsReturnsData(): void

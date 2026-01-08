@@ -39,7 +39,7 @@ class ErrorResponseTest extends ApiTestCase
     {
         $user = $this->createUser('reader@example.com', ['ROLE_USER']);
         $client = $this->createAuthenticatedClient($user);
-        $this->sendRequest($client, 'GET', '/api/notifications');
+        $this->sendRequest($client, 'GET', '/api/admin/system/roles');
 
         $this->assertJsonMessageResponse($client, 403);
     }

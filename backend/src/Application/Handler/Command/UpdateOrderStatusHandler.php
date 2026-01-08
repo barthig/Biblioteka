@@ -26,22 +26,24 @@ class UpdateOrderStatusHandler
             throw new \RuntimeException('Cancelled orders cannot be received');
         }
 
-        $status = strtoupper($command->status);
+        $status = strtoupper(trim($command->status));
         switch ($status) {
             case AcquisitionOrder::STATUS_SUBMITTED:
-                $order->markSubmitted();
+                $order->setStatus(AcquisitionOrder::STATUS_SUBMITTED);
                 break;
             case AcquisitionOrder::STATUS_ORDERED:
                 $orderedAt = $command->orderedAt && strtotime($command->orderedAt)
                     ? new \DateTimeImmutable($command->orderedAt)
                     : null;
-                $order->markOrdered($orderedAt);
+                $order->setStatus(AcquisitionOrder::STATUS_ORDERED);
+                $order->setOrderedAt($orderedAt ?? new \DateTimeImmutable());
                 break;
             case AcquisitionOrder::STATUS_RECEIVED:
                 $receivedAt = $command->receivedAt && strtotime($command->receivedAt)
                     ? new \DateTimeImmutable($command->receivedAt)
                     : null;
-                $order->markReceived($receivedAt);
+                $order->setStatus(AcquisitionOrder::STATUS_RECEIVED);
+                $order->setReceivedAt($receivedAt ?? new \DateTimeImmutable());
                 break;
             case AcquisitionOrder::STATUS_CANCELLED:
                 $order->cancel();

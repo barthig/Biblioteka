@@ -47,7 +47,17 @@ class AcquisitionBudgetController extends AbstractController
             return $this->json(['message' => 'Forbidden'], 403);
         }
 
-        $data = json_decode($request->getContent(), true) ?: [];
+        $data = $request->request->all();
+        if ($data === []) {
+            try {
+                $data = $request->toArray();
+            } catch (\Throwable) {
+                $data = json_decode($request->getContent(), true);
+                if (!is_array($data)) {
+                    $data = [];
+                }
+            }
+        }
         
         $dto = $this->mapArrayToDto($data, new CreateAcquisitionBudgetRequest());
         $errors = $validator->validate($dto);
