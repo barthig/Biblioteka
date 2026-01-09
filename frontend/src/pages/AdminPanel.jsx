@@ -4,6 +4,9 @@ import PageHeader from '../components/ui/PageHeader'
 import StatGrid from '../components/ui/StatGrid'
 import StatCard from '../components/ui/StatCard'
 import FeedbackCard from '../components/ui/FeedbackCard'
+import UserManagement from '../components/admin/UserManagement'
+import SystemSettings from '../components/admin/SystemSettings'
+import RolesAndAudit from '../components/admin/RolesAndAudit'
 
 const defaultIntegration = {
   name: '',
@@ -404,23 +407,100 @@ export default function AdminPanel() {
       {error && <FeedbackCard variant="error">{error}</FeedbackCard>}
       {success && <FeedbackCard variant="success">{success}</FeedbackCard>}
 
-      <div className="tabs">
-        <button className={`tab ${activeTab === 'users' ? 'tab--active' : ''}`} onClick={() => setActiveTab('users')}>
+      <div className="tabs" role="tablist" aria-label="Admin Panel Tabs">
+        <button 
+          className={`tab ${activeTab === 'users' ? 'tab--active' : ''}`} 
+          onClick={() => setActiveTab('users')}
+          role="tab"
+          aria-selected={activeTab === 'users'}
+          aria-controls="users-panel"
+        >
           Zarządzanie użytkownikami
         </button>
-        <button className={`tab ${activeTab === 'system' ? 'tab--active' : ''}`} onClick={() => setActiveTab('system')}>
+        <button 
+          className={`tab ${activeTab === 'system' ? 'tab--active' : ''}`} 
+          onClick={() => setActiveTab('system')}
+          role="tab"
+          aria-selected={activeTab === 'system'}
+          aria-controls="system-panel"
+        >
           System i integracje
         </button>
-        <button className={`tab ${activeTab === 'roles' ? 'tab--active' : ''}`} onClick={() => setActiveTab('roles')}>
+        <button 
+          className={`tab ${activeTab === 'roles' ? 'tab--active' : ''}`} 
+          onClick={() => setActiveTab('roles')}
+          role="tab"
+          aria-selected={activeTab === 'roles'}
+          aria-controls="roles-panel"
+        >
           Audyt i role
         </button>
       </div>
 
-      {activeTab === 'users' && (
-        <div className="surface-card">
-          <div className="section-header">
-            <h2>Użytkownicy</h2>
-            {!loading && <button className="btn btn-secondary" onClick={loadUsers}>Odśwież</button>}
+      <div id="users-panel" role="tabpanel" hidden={activeTab !== 'users'}>
+        {activeTab === 'users' && (
+          <UserManagement
+            users={users}
+            loading={loading}
+            userSearchQuery={userSearchQuery}
+            setUserSearchQuery={setUserSearchQuery}
+            searchUsers={searchUsers}
+            loadUsers={loadUsers}
+            setEditingUser={setEditingUser}
+            updateUserPermissions={updateUserPermissions}
+            toggleUserBlock={toggleUserBlock}
+            deleteUser={deleteUser}
+            editingUser={editingUser}
+            updateUserData={updateUserData}
+          />
+        )}
+      </div>
+
+      <div id="system-panel" role="tabpanel" hidden={activeTab !== 'system'}>
+        {activeTab === 'system' && (
+          <SystemSettings
+            settings={settings}
+            integrations={integrations}
+            loading={loading}
+            systemLoaded={systemLoaded}
+            loadSystem={loadSystem}
+            updateSetting={updateSetting}
+            integrationForm={integrationForm}
+            setIntegrationForm={setIntegrationForm}
+            createIntegration={createIntegration}
+            toggleIntegration={toggleIntegration}
+            testIntegration={testIntegration}
+          />
+        )}
+      </div>
+
+      <div id="roles-panel" role="tabpanel" hidden={activeTab !== 'roles'}>
+        {activeTab === 'roles' && (
+          <RolesAndAudit
+            roles={roles}
+            auditLogs={auditLogs}
+            users={users}
+            loading={loading}
+            rolesLoaded={rolesLoaded}
+            loadRolesAndAudit={loadRolesAndAudit}
+            roleForm={roleForm}
+            setRoleForm={setRoleForm}
+            createRole={createRole}
+            updateRole={updateRole}
+            assignForm={assignForm}
+            setAssignForm={setAssignForm}
+            assignRole={assignRole}
+            entityAuditForm={entityAuditForm}
+            setEntityAuditForm={setEntityAuditForm}
+            entityAuditLogs={entityAuditLogs}
+            entityAuditLoading={entityAuditLoading}
+            loadEntityAudit={loadEntityAudit}
+            defaultRole={defaultRole}
+          
+      </div>
+    </div>
+  )
+}
           </div>
           <div className="form-field">
             <label>Wyszukaj</label>

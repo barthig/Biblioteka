@@ -116,19 +116,7 @@ class AccountController extends AbstractController
             $user = $envelope->last(HandledStamp::class)?->getResult();
             return $this->json($user, 200);
         } catch (\Throwable $e) {
-            if ($e instanceof HandlerFailedException) {
-                $e = $e->getPrevious() ?? $e;
-            }
-            if ($e instanceof HttpExceptionInterface) {
-                return $this->json(['message' => $e->getMessage()], $e->getStatusCode());
-            }
-            $statusCode = match (true) {
-                str_contains($e->getMessage(), 'User not found') => 404,
-                str_contains($e->getMessage(), 'Email is already taken') => 409,
-                str_contains($e->getMessage(), 'cannot be empty') => 400,
-                default => 500
-            };
-            return $this->json(['message' => $e->getMessage()], $statusCode);
+            return $this->handleCommandException($e);
         }
     }
 
@@ -180,17 +168,7 @@ class AccountController extends AbstractController
             $this->commandBus->dispatch($command);
             return $this->json(['message' => 'Hasło zostało zaktualizowane']);
         } catch (\Throwable $e) {
-            if ($e instanceof HandlerFailedException) {
-                $e = $e->getPrevious() ?? $e;
-            }
-            if ($e instanceof HttpExceptionInterface) {
-                return $this->json(['message' => $e->getMessage()], $e->getStatusCode());
-            }
-            $statusCode = match (true) {
-                str_contains($e->getMessage(), 'User not found') => 404,
-                default => 400
-            };
-            return $this->json(['message' => $e->getMessage()], $statusCode);
+            return $this->handleCommandException($e);
         }
     }
 
@@ -210,6 +188,31 @@ class AccountController extends AbstractController
         }
 
         return false;
+    }
+
+    /**
+     * Handles command exceptions and returns appropriate JSON response
+     */
+    private function handleCommandException(\Throwable $e): JsonResponse
+    {
+        if ($e instanceof HandlerFailedException) {
+            $e = $e->getPrevious() ?? $e;
+        }
+        
+        if ($e instanceof HttpExceptionInterface) {
+            return $this->json(['message' => $e->getMessage()], $e->getStatusCode());
+        }
+        
+        $statusCode = match (true) {
+            str_contains($e->getMessage(), 'User not found') => 404,
+            str_contains($e->getMessage(), 'Email is already taken') => 409,
+            str_contains($e->getMessage(), 'cannot be empty') => 400,
+            str_contains($e->getMessage(), 'Invalid password') => 400,
+            str_contains($e->getMessage(), 'Current password') => 400,
+            default => 500
+        };
+        
+        return $this->json(['message' => $e->getMessage()], $statusCode);
     }
 
     #[OA\Put(

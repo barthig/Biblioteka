@@ -6,13 +6,13 @@ use App\Application\Command\Book\DeleteBookCommand;
 use App\Application\Command\Book\UpdateBookCommand;
 use App\Application\Query\Book\GetBookQuery;
 use App\Application\Query\Book\ListBooksQuery;
+use App\Application\Query\User\GetUserByIdQuery;
 use App\Controller\Traits\ExceptionHandlingTrait;
 use App\Controller\Traits\ValidationTrait;
 use App\Entity\Book;
 use App\Request\CreateBookRequest;
 use App\Request\UpdateBookRequest;
 use App\Dto\ApiError;
-use App\Repository\UserRepository;
 use App\Service\PersonalizedRecommendationService;
 use App\Service\SecurityService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -35,8 +35,7 @@ class BookController extends AbstractController
         private readonly MessageBusInterface $commandBus,
         private readonly MessageBusInterface $queryBus,
         private readonly SecurityService $security,
-        private readonly PersonalizedRecommendationService $recommendations,
-        private readonly UserRepository $userRepository
+        private readonly PersonalizedRecommendationService $recommendations
     ) {}
 
     #[OA\Get(
@@ -449,7 +448,11 @@ class BookController extends AbstractController
             $userId = $this->security->getCurrentUserId($request);
             error_log('BookController::recommended - userId: ' . ($userId ?? 'null'));
             
-            $user = $userId ? $this->userRepository->find($userId) : null;
+            $user = null;
+            if ($userId) {
+                $envelope = $this->queryBus->dispatch(new GetUserByIdQuery($userId));
+                $user = $envelope->last(HandledStamp::class)?->getResult();
+            }
             error_log('BookController::recommended - user loaded: ' . ($user ? 'yes' : 'no'));
 
             error_log('BookController::recommended - calling getRecommendationsForUser');

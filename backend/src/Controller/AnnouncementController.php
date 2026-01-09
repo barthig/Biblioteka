@@ -240,7 +240,8 @@ class AnnouncementController extends AbstractController
             return $this->json(['message' => 'Unauthorized'], 401);
         }
 
-        $user = $this->userRepository->find((int) $payload['sub']);
+        $envelope = $this->queryBus->dispatch(new GetUserByIdQuery((int) $payload['sub']));
+        $user = $envelope->last(HandledStamp::class)?->getResult();
         if (!$user || (!in_array('ROLE_LIBRARIAN', $user->getRoles()) && !in_array('ROLE_ADMIN', $user->getRoles()))) {
             return $this->json(['message' => 'Access denied'], 403);
         }

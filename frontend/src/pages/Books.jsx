@@ -368,6 +368,9 @@ export default function Books() {
               type="button"
               className="btn btn-ghost"
               onClick={() => setShowAdvanced(prev => !prev)}
+              aria-expanded={showAdvanced}
+              aria-controls="advanced-filters"
+              aria-label={showAdvanced ? 'Ukryj zaawansowane filtry' : 'Pokaż zaawansowane filtry'}
             >
               {showAdvanced ? 'Ukryj zaawansowane' : 'Pokaż zaawansowane filtry'}
             </button>
@@ -375,7 +378,7 @@ export default function Books() {
         </div>
 
         {showAdvanced && (
-          <div className="book-search__advanced" role="group" aria-label="Filtry zaawansowane">
+          <div id="advanced-filters" className="book-search__advanced" role="group" aria-label="Filtry zaawansowane">
             <div className="book-search__group">
               <label htmlFor="filter-author">Autor</label>
               <select

@@ -35,12 +35,14 @@ export default function LibrarianDashboard() {
     return (
       <div className="page">
         <PageHeader title="Dashboard" subtitle="Statystyki biblioteki" />
-        <StatGrid>
-          <StatCardSkeleton />
-          <StatCardSkeleton />
-          <StatCardSkeleton />
-          <StatCardSkeleton />
-        </StatGrid>
+        <div aria-live="polite" aria-busy="true" role="status">
+          <StatGrid>
+            <StatCardSkeleton />
+            <StatCardSkeleton />
+            <StatCardSkeleton />
+            <StatCardSkeleton />
+          </StatGrid>
+        </div>
       </div>
     )
   }
@@ -62,7 +64,11 @@ export default function LibrarianDashboard() {
         title="Dashboard"
         subtitle="Statystyki biblioteki"
         actions={
-          <button className="btn btn-outline" onClick={loadStats}>
+          <button 
+            className="btn btn-outline" 
+            onClick={loadStats}
+            aria-label="Odśwież statystyki biblioteki"
+          >
             Odśwież
           </button>
         }
