@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Application\Query\Book\ExportBooksQuery;
 use App\Entity\Book;
-use App\Repository\BookRepository;
 use App\Service\SecurityService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\Messenger\MessageBusInterface;
+use Symfony\Component\Messenger\Stamp\HandledStamp;
 use Symfony\Component\Routing\Annotation\Route;
 use OpenApi\Attributes as OA;
 
@@ -17,7 +19,7 @@ use OpenApi\Attributes as OA;
 class ExportController extends AbstractController
 {
     public function __construct(
-        private readonly BookRepository $bookRepository,
+        private readonly MessageBusInterface $queryBus,
         private readonly SecurityService $security
     ) {}
 
@@ -44,7 +46,8 @@ class ExportController extends AbstractController
     )]
     public function exportBooks(): Response
     {
-        $books = $this->bookRepository->findAll();
+        $envelope = $this->queryBus->dispatch(new ExportBooksQuery());
+        $books = $envelope->last(HandledStamp::class)?->getResult();
 
         $response = new StreamedResponse(function() use ($books) {
             $handle = fopen('php://output', 'w');

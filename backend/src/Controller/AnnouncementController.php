@@ -8,11 +8,11 @@ use App\Application\Command\Announcement\PublishAnnouncementCommand;
 use App\Application\Command\Announcement\UpdateAnnouncementCommand;
 use App\Application\Query\Announcement\GetAnnouncementQuery;
 use App\Application\Query\Announcement\ListAnnouncementsQuery;
+use App\Application\Query\User\GetUserByIdQuery;
 use App\Controller\Traits\ExceptionHandlingTrait;
 use App\Controller\Traits\ValidationTrait;
 use App\Dto\ApiError;
 use App\Entity\User;
-use App\Repository\UserRepository;
 use App\Service\SecurityService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -28,8 +28,7 @@ class AnnouncementController extends AbstractController
     use ValidationTrait;
     public function __construct(
         private readonly MessageBusInterface $queryBus,
-        private readonly MessageBusInterface $commandBus,
-        private readonly UserRepository $userRepository
+        private readonly MessageBusInterface $commandBus
     ) {
     }
     
@@ -63,7 +62,8 @@ class AnnouncementController extends AbstractController
             $isAdmin = false;
             
             if ($payload && isset($payload['sub'])) {
-                $user = $this->userRepository->find((int) $payload['sub']);
+                $envelope = $this->queryBus->dispatch(new GetUserByIdQuery((int) $payload['sub']));
+                $user = $envelope->last(HandledStamp::class)?->getResult();
                 if ($user) {
                     $roles = $user->getRoles();
                     $isLibrarian = in_array('ROLE_LIBRARIAN', $roles);
@@ -122,7 +122,8 @@ class AnnouncementController extends AbstractController
         $isAdmin = false;
         
         if ($payload && isset($payload['sub'])) {
-            $user = $this->userRepository->find((int) $payload['sub']);
+            $envelope = $this->queryBus->dispatch(new GetUserByIdQuery((int) $payload['sub']));
+            $user = $envelope->last(HandledStamp::class)?->getResult();
             if ($user) {
                 $roles = $user->getRoles();
                 $isLibrarian = in_array('ROLE_LIBRARIAN', $roles);
@@ -177,7 +178,9 @@ class AnnouncementController extends AbstractController
             return $this->json(['message' => 'Unauthorized'], 401);
         }
 
-        $user = $this->userRepository->find((int) $payload['sub']);
+        $envelope = $this->queryBus->dispatch(new GetUserByIdQuery((int) $payload['sub']));
+        $user = $envelope->last(HandledStamp::class)?->getResult(y((int) $payload['sub']));
+        $user = $envelope->last(HandledStamp::class)?->getResult();
         if (!$user) {
             return $this->json(['message' => 'User not found'], 404);
         }
@@ -288,7 +291,8 @@ class AnnouncementController extends AbstractController
             return $this->json(['message' => 'Unauthorized'], 401);
         }
 
-        $user = $this->userRepository->find((int) $payload['sub']);
+        $envelope = $this->queryBus->dispatch(new GetUserByIdQuery((int) $payload['sub']));
+        $user = $envelope->last(HandledStamp::class)?->getResult();
         if (!$user || (!in_array('ROLE_LIBRARIAN', $user->getRoles()) && !in_array('ROLE_ADMIN', $user->getRoles()))) {
             return $this->json(['message' => 'Access denied'], 403);
         }
@@ -324,7 +328,8 @@ class AnnouncementController extends AbstractController
             return $this->json(['message' => 'Unauthorized'], 401);
         }
 
-        $user = $this->userRepository->find((int) $payload['sub']);
+        $envelope = $this->queryBus->dispatch(new GetUserByIdQuery((int) $payload['sub']));
+        $user = $envelope->last(HandledStamp::class)?->getResult();
         if (!$user || (!in_array('ROLE_LIBRARIAN', $user->getRoles()) && !in_array('ROLE_ADMIN', $user->getRoles()))) {
             return $this->json(['message' => 'Access denied'], 403);
         }
@@ -360,7 +365,8 @@ class AnnouncementController extends AbstractController
             return $this->json(['message' => 'Unauthorized'], 401);
         }
 
-        $user = $this->userRepository->find((int) $payload['sub']);
+        $envelope = $this->queryBus->dispatch(new GetUserByIdQuery((int) $payload['sub']));
+        $user = $envelope->last(HandledStamp::class)?->getResult();
         if (!$user || (!in_array('ROLE_LIBRARIAN', $user->getRoles()) && !in_array('ROLE_ADMIN', $user->getRoles()))) {
             return $this->json(['message' => 'Access denied'], 403);
         }

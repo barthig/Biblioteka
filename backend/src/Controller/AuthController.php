@@ -165,7 +165,7 @@ class AuthController extends AbstractController
             new OA\Response(response: 404, description: 'User not found', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
         ]
     )]
-    public function profile(Request $request, UserRepository $repo): JsonResponse
+    public function profile(Request $request, MessageBusInterface $queryBus): JsonResponse
     {
         $payload = $request->attributes->get('jwt_payload');
         if (!$payload) {
@@ -177,7 +177,8 @@ class AuthController extends AbstractController
             return $this->jsonError(ApiError::unauthorized());
         }
 
-        $user = $repo->find($userId);
+        $envelope = $queryBus->dispatch(new GetUserByIdQuery($userId));
+        $user = $envelope->last(HandledStamp::class)?->getResult();
         if (!$user) {
             return $this->jsonError(ApiError::notFound('User'));
         }
@@ -306,14 +307,15 @@ class AuthController extends AbstractController
             new OA\Response(response: 404, description: 'User not found', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
         ]
     )]
-    public function logoutAll(Request $request, UserRepository $userRepository): JsonResponse
+    public function logoutAll(Request $request, MessageBusInterface $queryBus): JsonResponse
     {
         $payload = $request->attributes->get('jwt_payload');
         if (!$payload) {
             return $this->json(['message' => 'Unauthorized'], 401);
         }
 
-        $user = $userRepository->find($payload['sub']);
+        $envelope = $queryBus->dispatch(new GetUserByIdQuery($payload['sub']));
+        $user = $envelope->last(HandledStamp::class)?->getResult();
         if (!$user) {
             return $this->json(['message' => 'User not found'], 404);
         }

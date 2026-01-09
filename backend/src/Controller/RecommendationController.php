@@ -1,16 +1,18 @@
 <?php
 namespace App\Controller;
 
+use App\Application\Query\Recommendation\FindSimilarBooksQuery;
+use App\Application\Query\User\GetUserByIdQuery;
 use App\Controller\Traits\ExceptionHandlingTrait;
 use App\Dto\ApiError;
-use App\Repository\UserRepository;
-use App\Repository\BookRepository;
 use App\Service\RecommendationService;
 use App\Service\SecurityService;
 use App\Service\OpenAIEmbeddingService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Messenger\MessageBusInterface;
+use Symfony\Component\Messenger\Stamp\HandledStamp;
 use OpenApi\Attributes as OA;
 
 #[OA\Tag(name: 'Recommendation')]
@@ -18,10 +20,9 @@ class RecommendationController extends AbstractController
 {
     public function __construct(
         private readonly OpenAIEmbeddingService $embeddingService,
-        private readonly BookRepository $bookRepository,
+        private readonly MessageBusInterface $queryBus,
         private readonly RecommendationService $recommendationService,
-        private readonly SecurityService $security,
-        private readonly UserRepository $users
+        private readonly SecurityService $security
     ) {}
 
     #[OA\Post(
@@ -57,8 +58,10 @@ class RecommendationController extends AbstractController
         $vector = $this->embeddingService->getVector($query);
         $embeddingMs = (int) round((microtime(true) - $embeddingStart) * 1000);
         error_log('RecommendationController::recommend - embedding in ' . $embeddingMs . 'ms');
+        
         $queryStart = microtime(true);
-        $books = $this->bookRepository->findSimilarBooks($vector, 5);
+        $envelope = $this->queryBus->dispatch(new FindSimilarBooksQuery($vector, 5));
+        $books = $envelope->last(HandledStamp::class)?->getResult();
         $queryMs = (int) round((microtime(true) - $queryStart) * 1000);
         $totalMs = (int) round((microtime(true) - $start) * 1000);
         error_log('RecommendationController::recommend - query in ' . $queryMs . 'ms, total ' . $totalMs . 'ms');
@@ -85,7 +88,8 @@ class RecommendationController extends AbstractController
             return $this->json(['message' => 'Unauthorized'], 401);
         }
 
-        $user = $this->users->find($userId);
+        $envelope = $this->queryBus->dispatch(new GetUserByIdQuery($userId));
+        $user = $envelope->last(HandledStamp::class)?->getResult();
         if (!$user) {
             return $this->json(['message' => 'User not found'], 404);
         }

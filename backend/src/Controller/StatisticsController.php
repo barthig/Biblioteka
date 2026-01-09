@@ -4,13 +4,11 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Repository\LoanRepository;
-use App\Repository\ReservationRepository;
-use App\Repository\UserRepository;
-use App\Repository\BookRepository;
-use App\Repository\AuditLogRepository;
+use App\Application\Query\Statistics\GetLibraryStatisticsQuery;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\Messenger\MessageBusInterface;
+use Symfony\Component\Messenger\Stamp\HandledStamp;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use OpenApi\Attributes as OA;
@@ -19,11 +17,7 @@ use OpenApi\Attributes as OA;
 class StatisticsController extends AbstractController
 {
     public function __construct(
-        private readonly LoanRepository $loanRepository,
-        private readonly ReservationRepository $reservationRepository,
-        private readonly UserRepository $userRepository,
-        private readonly BookRepository $bookRepository,
-        private readonly AuditLogRepository $auditLogRepository
+        private readonly MessageBusInterface $queryBus
     ) {}
 
     #[Route('/api/statistics/dashboard', methods: ['GET'])]
@@ -75,53 +69,9 @@ class StatisticsController extends AbstractController
     )]
     public function dashboard(): JsonResponse
     {
-        // Count active loans (not returned yet)
-        $activeLoans = $this->loanRepository->countActiveLoans();
+        $envelope = $this->queryBus->dispatch(new GetLibraryStatisticsQuery());
+        $result = $envelope->last(HandledStamp::class)?->getResult();
 
-        // Count overdue loans
-        $overdueLoans = $this->loanRepository->countOverdueLoans();
-
-        // Count pending reservations
-        $pendingReservations = $this->reservationRepository->countPendingReservations();
-
-        // Total users
-        $totalUsers = $this->userRepository->count([]);
-
-        // Total books
-        $totalBooks = $this->bookRepository->count([]);
-
-        // Available copies across all books
-        $availableCopies = $this->bookRepository->countTotalAvailableCopies();
-
-        // Most popular books (by borrow count)
-        $popularBooks = $this->bookRepository->findMostPopular(10);
-        $popularBooksData = array_map(fn($book) => [
-            'id' => $book->getId(),
-            'title' => $book->getTitle(),
-            'author' => $book->getAuthorName(),
-            'borrowCount' => $book->getBorrowedCopiesCount() ?? 0
-        ], $popularBooks);
-
-        // Recent activity (audit log)
-        $recentActivity = $this->auditLogRepository->findRecent(20);
-        $activityData = array_map(fn($log) => [
-            'id' => $log->getId(),
-            'action' => $log->getAction(),
-            'entity' => $log->getEntityType(),
-            'entityId' => $log->getEntityId(),
-            'user' => $log->getUser()?->getName() ?? 'System',
-            'timestamp' => $log->getTimestamp()->format('Y-m-d H:i:s')
-        ], $recentActivity);
-
-        return $this->json([
-            'activeLoans' => $activeLoans,
-            'overdueLoans' => $overdueLoans,
-            'pendingReservations' => $pendingReservations,
-            'totalUsers' => $totalUsers,
-            'totalBooks' => $totalBooks,
-            'availableCopies' => $availableCopies,
-            'popularBooks' => $popularBooksData,
-            'recentActivity' => $activityData
-        ]);
+        return $this->json($result);
     }
 }

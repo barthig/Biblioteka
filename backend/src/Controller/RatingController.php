@@ -3,12 +3,12 @@ namespace App\Controller;
 
 use App\Application\Command\Rating\DeleteRatingCommand;
 use App\Application\Command\Rating\RateBookCommand;
+use App\Application\Query\User\GetUserByIdQuery;
 use App\Controller\Traits\ExceptionHandlingTrait;
 use App\Dto\ApiError;
 use App\Entity\Rating;
 use App\Repository\BookRepository;
 use App\Repository\RatingRepository;
-use App\Repository\UserRepository;
 use App\Service\SecurityService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -25,8 +25,8 @@ class RatingController extends AbstractController
         private readonly SecurityService $security,
         private readonly RatingRepository $ratingRepo,
         private readonly BookRepository $bookRepo,
-        private readonly UserRepository $userRepository,
-        private readonly MessageBusInterface $commandBus
+        private readonly MessageBusInterface $commandBus,
+        private readonly MessageBusInterface $queryBus
     ) {}
 
     #[OA\Get(
@@ -186,7 +186,8 @@ class RatingController extends AbstractController
             return $this->jsonError(ApiError::unauthorized());
         }
 
-        $user = $this->userRepository->find($userId);
+        $envelope = $this->queryBus->dispatch(new GetUserByIdQuery($userId));
+        $user = $envelope->last(HandledStamp::class)?->getResult();
         if (!$user) {
             return $this->jsonError(ApiError::notFound('User'));
         }
