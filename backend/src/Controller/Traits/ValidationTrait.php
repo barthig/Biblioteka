@@ -1,37 +1,41 @@
 <?php
 namespace App\Controller\Traits;
 
+use App\Dto\ApiError;
+use App\Dto\ApiResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
 
 trait ValidationTrait
 {
     /**
-     * Konwertuje błędy walidacji na odpowiedź JSON
+     * Convert validation errors to unified JSON response
      */
     protected function validationErrorResponse(ConstraintViolationListInterface $errors): JsonResponse
     {
-        $messages = [];
+        $fieldErrors = [];
         foreach ($errors as $error) {
             $property = $error->getPropertyPath();
             $message = $error->getMessage();
             
-            if (isset($messages[$property])) {
-                if (is_array($messages[$property])) {
-                    $messages[$property][] = $message;
+            if (isset($fieldErrors[$property])) {
+                if (is_array($fieldErrors[$property])) {
+                    $fieldErrors[$property][] = $message;
                 } else {
-                    $messages[$property] = [$messages[$property], $message];
+                    $fieldErrors[$property] = [$fieldErrors[$property], $message];
                 }
             } else {
-                $messages[$property] = $message;
+                $fieldErrors[$property] = $message;
             }
         }
         
-        return $this->json(['message' => 'Validation failed', 'errors' => $messages], 400);
+        $error = ApiError::validationFailed($fieldErrors);
+        $response = ApiResponse::error($error);
+        return $this->json($response->toArray(), 400);
     }
 
     /**
-     * Mapuje dane z tablicy do obiektu DTO
+     * Maps array to DTO object
      */
     protected function mapArrayToDto(array $data, object $dto): object
     {

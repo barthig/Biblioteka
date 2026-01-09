@@ -283,27 +283,78 @@ nelmio_api_doc:
               example: OK
         ErrorResponse:
           type: object
+          required:
+            - error
           properties:
-            message:
-              type: string
-              example: Something went wrong
+            error:
+              type: object
+              required:
+                - code
+                - message
+                - statusCode
+              properties:
+                code:
+                  type: string
+                  description: "Machine-readable error code (e.g., NOT_FOUND, BAD_REQUEST, VALIDATION_FAILED)"
+                  example: NOT_FOUND
+                  enum:
+                    - BAD_REQUEST
+                    - UNAUTHORIZED
+                    - FORBIDDEN
+                    - NOT_FOUND
+                    - CONFLICT
+                    - VALIDATION_FAILED
+                    - UNPROCESSABLE_ENTITY
+                    - LOCKED
+                    - RATE_LIMIT_EXCEEDED
+                    - INTERNAL_ERROR
+                    - SERVICE_UNAVAILABLE
+                message:
+                  type: string
+                  description: "Human-readable error message"
+                  example: "User not found"
+                statusCode:
+                  type: integer
+                  description: "HTTP status code"
+                  example: 404
+                details:
+                  type: object
+                  description: "Optional additional error details (validation errors, nested info, etc.)"
+                  nullable: true
+                  example: null
         ValidationErrorResponse:
           type: object
+          required:
+            - error
           properties:
-            message:
-              type: string
-              example: Validation failed
-            errors:
-              type: array
-              items:
-                type: object
-                properties:
-                  field:
-                    type: string
-                    example: title
-                  message:
-                    type: string
-                    example: This value should not be blank.
+            error:
+              type: object
+              required:
+                - code
+                - message
+                - statusCode
+                - details
+              properties:
+                code:
+                  type: string
+                  description: "Machine-readable error code for validation failures"
+                  example: VALIDATION_FAILED
+                  enum:
+                    - VALIDATION_FAILED
+                message:
+                  type: string
+                  description: "Standard validation failed message"
+                  example: "Validation failed"
+                statusCode:
+                  type: integer
+                  description: "HTTP status code for validation errors"
+                  example: 400
+                details:
+                  type: object
+                  description: "Field-specific validation error messages"
+                  example:
+                    email: "This value is not a valid email"
+                    password: "This value is too short. It should have 8 characters or more"
     security:
       - BearerAuth: []
       - ApiSecret: []

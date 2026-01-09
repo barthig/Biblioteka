@@ -2,13 +2,17 @@
 
 namespace App\Controller;
 
+use App\Controller\Traits\ExceptionHandlingTrait;
+use App\Dto\ApiError;
 use App\Repository\UserRepository;
 use App\Service\JwtService;
 use App\Service\RefreshTokenService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use OpenApi\Attributes as OA;
 
+#[OA\Tag(name: 'TestAuth')]
 class TestAuthController extends AbstractController
 {
     public function __construct(
@@ -16,6 +20,28 @@ class TestAuthController extends AbstractController
     ) {
     }
 
+    #[OA\Post(
+        path: '/api/test-login',
+        summary: 'Test login (tylko dev/test)',
+        description: 'Endpoint testowy do logowania bez weryfikacji hasła (dostępny tylko w środowisku dev/test)',
+        tags: ['TestAuth'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['email', 'password'],
+                properties: [
+                    new OA\Property(property: 'email', type: 'string'),
+                    new OA\Property(property: 'password', type: 'string')
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'Login successful', content: new OA\JsonContent(type: 'object')),
+            new OA\Response(response: 400, description: 'Błąd walidacji', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 401, description: 'Nieprawidłowe hasło', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'Użytkownik nie znaleziony lub endpoint niedostępny', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
+        ]
+    )]
     public function testLogin(Request $request, UserRepository $repo): JsonResponse
     {
         $env = getenv('APP_ENV') ?: ($_ENV['APP_ENV'] ?? 'prod');

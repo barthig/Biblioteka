@@ -8,6 +8,7 @@ use App\Application\Command\Acquisition\UpdateOrderStatusCommand;
 use App\Application\Query\Acquisition\ListOrdersQuery;
 use App\Controller\Traits\ExceptionHandlingTrait;
 use App\Controller\Traits\ValidationTrait;
+use App\Dto\ApiError;
 use App\Request\CreateAcquisitionOrderRequest;
 use App\Service\SecurityService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -16,7 +17,9 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use OpenApi\Attributes as OA;
 
+#[OA\Tag(name: 'AcquisitionOrder')]
 class AcquisitionOrderController extends AbstractController
 {
     use ValidationTrait;
@@ -28,10 +31,27 @@ class AcquisitionOrderController extends AbstractController
     ) {
     }
 
+    #[OA\Get(
+        path: '/api/orders',
+        summary: 'Lista zamówień akwizycyjnych',
+        description: 'Zwraca listę zamówień z filtrowaniem i paginacją. Wymaga roli LIBRARIAN.',
+        tags: ['AcquisitionOrder'],
+        parameters: [
+            new OA\Parameter(name: 'page', in: 'query', schema: new OA\Schema(type: 'integer', default: 1)),
+            new OA\Parameter(name: 'limit', in: 'query', schema: new OA\Schema(type: 'integer', default: 20, minimum: 10, maximum: 100)),
+            new OA\Parameter(name: 'status', in: 'query', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'supplierId', in: 'query', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'budgetId', in: 'query', schema: new OA\Schema(type: 'integer'))
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'Lista zamówień', content: new OA\JsonContent(type: 'object')),
+            new OA\Response(response: 403, description: 'Brak uprawnień', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
+        ]
+    )]
     public function list(Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['message' => 'Forbidden'], 403);
+            return $this->jsonError(ApiError::forbidden());
         }
 
         $page = max(1, $request->query->getInt('page', 1));
@@ -62,10 +82,40 @@ class AcquisitionOrderController extends AbstractController
         return $this->json($result, 200, [], ['groups' => ['acquisition:read', 'supplier:read', 'budget:read']]);
     }
 
+    #[OA\Post(
+        path: '/api/orders',
+        summary: 'Utwórz zamówienie',
+        description: 'Tworzy nowe zamówienie akwizycyjne. Wymaga roli LIBRARIAN.',
+        tags: ['AcquisitionOrder'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['supplierId', 'title', 'totalAmount'],
+                properties: [
+                    new OA\Property(property: 'supplierId', type: 'integer'),
+                    new OA\Property(property: 'budgetId', type: 'integer'),
+                    new OA\Property(property: 'title', type: 'string'),
+                    new OA\Property(property: 'totalAmount', type: 'string'),
+                    new OA\Property(property: 'currency', type: 'string', default: 'PLN'),
+                    new OA\Property(property: 'description', type: 'string'),
+                    new OA\Property(property: 'referenceNumber', type: 'string'),
+                    new OA\Property(property: 'items', type: 'array', items: new OA\Items(type: 'object')),
+                    new OA\Property(property: 'expectedAt', type: 'string'),
+                    new OA\Property(property: 'status', type: 'string')
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 201, description: 'Zamówienie utworzone', content: new OA\JsonContent(type: 'object')),
+            new OA\Response(response: 400, description: 'Błąd walidacji', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 403, description: 'Brak uprawnień', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'Dostawca lub budżet nie znaleziony', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
+        ]
+    )]
     public function create(Request $request, SecurityService $security, ValidatorInterface $validator): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['message' => 'Forbidden'], 403);
+            return $this->jsonError(ApiError::forbidden());
         }
 
         try {
@@ -86,7 +136,7 @@ class AcquisitionOrderController extends AbstractController
         $budgetId = null;
         if (!empty($data['budgetId'])) {
             if (!ctype_digit((string) $data['budgetId'])) {
-                return $this->json(['message' => 'Invalid budgetId'], 400);
+                return $this->jsonError(ApiError::badRequest('Invalid budgetId'));
             }
             $budgetId = (int) $data['budgetId'];
         }
@@ -116,21 +166,50 @@ class AcquisitionOrderController extends AbstractController
             }
             $statusCode = 400;
             if (str_contains($e->getMessage(), 'not found')) {
-                $statusCode = 404;
+                return $this->jsonError(ApiError::notFound($e->getMessage()));
             } elseif (str_contains($e->getMessage(), 'inactive') || str_contains($e->getMessage(), 'mismatch')) {
                 $statusCode = 409;
             }
-            return $this->json(['message' => $e->getMessage()], $statusCode);
+            return $this->jsonError(ApiError::badRequest($e->getMessage()));
         }
     }
 
+    #[OA\Put(
+        path: '/api/orders/{id}/status',
+        summary: 'Aktualizuj status zamówienia',
+        description: 'Aktualizuje status zamówienia. Wymaga roli LIBRARIAN.',
+        tags: ['AcquisitionOrder'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['status'],
+                properties: [
+                    new OA\Property(property: 'status', type: 'string'),
+                    new OA\Property(property: 'orderedAt', type: 'string'),
+                    new OA\Property(property: 'receivedAt', type: 'string'),
+                    new OA\Property(property: 'expectedAt', type: 'string'),
+                    new OA\Property(property: 'totalAmount', type: 'string'),
+                    new OA\Property(property: 'items', type: 'array', items: new OA\Items(type: 'object'))
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'Status zaktualizowany', content: new OA\JsonContent(type: 'object')),
+            new OA\Response(response: 400, description: 'Błąd walidacji', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 403, description: 'Brak uprawnień', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'Zamówienie nie znalezione', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
+        ]
+    )]
     public function updateStatus(string $id, Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['message' => 'Forbidden'], 403);
+            return $this->jsonError(ApiError::forbidden());
         }
         if (!ctype_digit($id) || (int) $id <= 0) {
-            return $this->json(['message' => 'Invalid order id'], 400);
+            return $this->jsonError(ApiError::badRequest('Invalid order id'));
         }
 
         try {
@@ -142,7 +221,7 @@ class AcquisitionOrderController extends AbstractController
             }
         }
         if (empty($data['status'])) {
-            return $this->json(['message' => 'Status is required'], 400);
+            return $this->jsonError(ApiError::badRequest('Status is required'));
         }
 
         try {
@@ -165,18 +244,46 @@ class AcquisitionOrderController extends AbstractController
             if ($response = $this->jsonFromHttpException($e)) {
                 return $response;
             }
-            $statusCode = str_contains($e->getMessage(), 'not found') ? 404 : 409;
-            return $this->json(['message' => $e->getMessage()], $statusCode);
+            if (str_contains($e->getMessage(), 'not found')) {
+                return $this->jsonError(ApiError::notFound($e->getMessage()));
+            }
+            return $this->jsonError(ApiError::conflict($e->getMessage()));
         }
     }
 
+    #[OA\Post(
+        path: '/api/orders/{id}/receive',
+        summary: 'Odbierz zamówienie',
+        description: 'Oznacza zamówienie jako odebrane. Wymaga roli LIBRARIAN.',
+        tags: ['AcquisitionOrder'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
+        ],
+        requestBody: new OA\RequestBody(
+            required: false,
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: 'receivedAt', type: 'string'),
+                    new OA\Property(property: 'totalAmount', type: 'string'),
+                    new OA\Property(property: 'items', type: 'array', items: new OA\Items(type: 'object')),
+                    new OA\Property(property: 'expenseAmount', type: 'string'),
+                    new OA\Property(property: 'expenseDescription', type: 'string')
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'Zamówienie odebrane', content: new OA\JsonContent(type: 'object')),
+            new OA\Response(response: 403, description: 'Brak uprawnień', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'Zamówienie nie znalezione', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
+        ]
+    )]
     public function receive(string $id, Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['message' => 'Forbidden'], 403);
+            return $this->jsonError(ApiError::forbidden());
         }
         if (!ctype_digit($id) || (int) $id <= 0) {
-            return $this->json(['message' => 'Invalid order id'], 400);
+            return $this->jsonError(ApiError::badRequest('Invalid order id'));
         }
 
         $data = $request->request->all();
@@ -210,17 +317,61 @@ class AcquisitionOrderController extends AbstractController
             if ($response = $this->jsonFromHttpException($e)) {
                 return $response;
             }
-            return $this->json(['message' => $e->getMessage()], 404);
+            return $this->jsonError(ApiError::notFound($e->getMessage()));
         }
     }
 
+    #[OA\Post(
+        path: '/api/orders/{id}/cancel',
+        summary: 'Anuluj zamówienie',
+        description: 'Anuluje zamówienie. Wymaga roli LIBRARIAN.',
+        tags: ['AcquisitionOrder'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
+        ],
+        requestBody: new OA\RequestBody(
+            required: false,
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: 'reason', type: 'string')
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'Zamówienie anulowane', content: new OA\JsonContent(type: 'object')),
+            new OA\Response(response: 403, description: 'Brak uprawnień', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'Zamówienie nie znalezione', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
+        ]
+    )]
+    #[OA\Post(
+        path: '/api/orders/{id}/cancel',
+        summary: 'Anuluj zamówienie',
+        description: 'Anuluje zamówienie. Wymaga roli LIBRARIAN.',
+        tags: ['AcquisitionOrder'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
+        ],
+        requestBody: new OA\RequestBody(
+            required: false,
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: 'reason', type: 'string')
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'Zamówienie anulowane', content: new OA\JsonContent(type: 'object')),
+            new OA\Response(response: 403, description: 'Brak uprawnień', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'Zamówienie nie znalezione', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
+        ]
+    )]
     public function cancel(string $id, Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['message' => 'Forbidden'], 403);
+            return $this->jsonError(ApiError::forbidden());
         }
         if (!ctype_digit($id) || (int) $id <= 0) {
-            return $this->json(['message' => 'Invalid order id'], 400);
+            return $this->jsonError(ApiError::badRequest('Invalid order id'));
         }
 
         try {
@@ -231,8 +382,10 @@ class AcquisitionOrderController extends AbstractController
             if ($response = $this->jsonFromHttpException($e)) {
                 return $response;
             }
-            $statusCode = str_contains($e->getMessage(), 'not found') ? 404 : 409;
-            return $this->json(['message' => $e->getMessage()], $statusCode);
+            if (str_contains($e->getMessage(), 'not found')) {
+                return $this->jsonError(ApiError::notFound($e->getMessage()));
+            }
+            return $this->jsonError(ApiError::conflict($e->getMessage()));
         }
     }
 }

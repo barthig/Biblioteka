@@ -8,6 +8,7 @@ use App\Application\Query\Acquisition\GetBudgetSummaryQuery;
 use App\Application\Query\Acquisition\ListBudgetsQuery;
 use App\Controller\Traits\ExceptionHandlingTrait;
 use App\Controller\Traits\ValidationTrait;
+use App\Dto\ApiError;
 use App\Request\CreateAcquisitionBudgetRequest;
 use App\Service\SecurityService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -16,7 +17,9 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use OpenApi\Attributes as OA;
 
+#[OA\Tag(name: 'AcquisitionBudget')]
 class AcquisitionBudgetController extends AbstractController
 {
     use ValidationTrait;
@@ -28,6 +31,19 @@ class AcquisitionBudgetController extends AbstractController
     ) {
     }
 
+    #[OA\Get(
+        path: '/api/budgets',
+        summary: 'Lista budżetów',
+        description: 'Zwraca listę budżetów akwizycyjnych z opcjonalnym filtrowaniem po roku. Wymaga roli LIBRARIAN.',
+        tags: ['AcquisitionBudget'],
+        parameters: [
+            new OA\Parameter(name: 'year', in: 'query', schema: new OA\Schema(type: 'string'))
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'Lista budżetów', content: new OA\JsonContent(type: 'array', items: new OA\Items(type: 'object'))),
+            new OA\Response(response: 403, description: 'Brak uprawnień', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
+        ]
+    )]
     public function list(Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
@@ -41,6 +57,30 @@ class AcquisitionBudgetController extends AbstractController
         return $this->json($budgets, 200, [], ['groups' => ['budget:read']]);
     }
 
+    #[OA\Post(
+        path: '/api/budgets',
+        summary: 'Utwórz budżet',
+        description: 'Tworzy nowy budżet akwizycyjny. Wymaga roli LIBRARIAN.',
+        tags: ['AcquisitionBudget'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['name', 'fiscalYear', 'allocatedAmount'],
+                properties: [
+                    new OA\Property(property: 'name', type: 'string'),
+                    new OA\Property(property: 'fiscalYear', type: 'string'),
+                    new OA\Property(property: 'allocatedAmount', type: 'string'),
+                    new OA\Property(property: 'currency', type: 'string', default: 'PLN'),
+                    new OA\Property(property: 'spentAmount', type: 'string')
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 201, description: 'Budżet utworzony', content: new OA\JsonContent(type: 'object')),
+            new OA\Response(response: 400, description: 'Błąd walidacji', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 403, description: 'Brak uprawnień', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
+        ]
+    )]
     public function create(Request $request, SecurityService $security, ValidatorInterface $validator): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
@@ -87,6 +127,32 @@ class AcquisitionBudgetController extends AbstractController
         }
     }
 
+    #[OA\Put(
+        path: '/api/budgets/{id}',
+        summary: 'Aktualizuj budżet',
+        description: 'Aktualizuje dane budżetu. Wymaga roli LIBRARIAN.',
+        tags: ['AcquisitionBudget'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: 'name', type: 'string'),
+                    new OA\Property(property: 'fiscalYear', type: 'string'),
+                    new OA\Property(property: 'allocatedAmount', type: 'string'),
+                    new OA\Property(property: 'currency', type: 'string')
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'Budżet zaktualizowany', content: new OA\JsonContent(type: 'object')),
+            new OA\Response(response: 400, description: 'Błąd walidacji', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 403, description: 'Brak uprawnień', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'Budżet nie znaleziony', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
+        ]
+    )]
     public function update(string $id, Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
@@ -120,6 +186,33 @@ class AcquisitionBudgetController extends AbstractController
         }
     }
 
+    #[OA\Post(
+        path: '/api/budgets/{id}/expense',
+        summary: 'Dodaj wydatek do budżetu',
+        description: 'Dodaje nowy wydatek do budżetu. Wymaga roli LIBRARIAN.',
+        tags: ['AcquisitionBudget'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['amount', 'description'],
+                properties: [
+                    new OA\Property(property: 'amount', type: 'string'),
+                    new OA\Property(property: 'description', type: 'string'),
+                    new OA\Property(property: 'type', type: 'string'),
+                    new OA\Property(property: 'postedAt', type: 'string')
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 201, description: 'Wydatek dodany', content: new OA\JsonContent(type: 'object')),
+            new OA\Response(response: 400, description: 'Błąd walidacji', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 403, description: 'Brak uprawnień', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'Budżet nie znaleziony', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
+        ]
+    )]
     public function addExpense(string $id, Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
@@ -160,6 +253,20 @@ class AcquisitionBudgetController extends AbstractController
         }
     }
 
+    #[OA\Get(
+        path: '/api/budgets/{id}/summary',
+        summary: 'Podsumowanie budżetu',
+        description: 'Zwraca szczegółowe podsumowanie budżetu wraz z wydatkami. Wymaga roli LIBRARIAN.',
+        tags: ['AcquisitionBudget'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'Podsumowanie budżetu', content: new OA\JsonContent(type: 'object')),
+            new OA\Response(response: 403, description: 'Brak uprawnień', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'Budżet nie znaleziony', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
+        ]
+    )]
     public function summary(string $id, Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {

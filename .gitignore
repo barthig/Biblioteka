@@ -11,3 +11,5 @@ frontend/test-results/
 archive/
 frontend/coverage/
 coverage/
+docks/
+docs/API_ERROR_STANDARDIZATION.md

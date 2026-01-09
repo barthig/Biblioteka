@@ -3,6 +3,8 @@ namespace App\Controller;
 
 use App\Application\Query\AuditLog\ListAuditLogsQuery;
 use App\Application\Query\AuditLog\GetEntityHistoryQuery;
+use App\Controller\Traits\ExceptionHandlingTrait;
+use App\Dto\ApiError;
 use App\Service\SecurityService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -11,6 +13,7 @@ use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
 use OpenApi\Attributes as OA;
 
+#[OA\Tag(name: 'AuditLog')]
 class AuditLogController extends AbstractController
 {
     public function __construct(

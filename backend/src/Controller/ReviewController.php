@@ -6,6 +6,7 @@ use App\Application\Command\Review\DeleteReviewCommand;
 use App\Application\Query\Review\ListBookReviewsQuery;
 use App\Controller\Traits\ExceptionHandlingTrait;
 use App\Controller\Traits\ValidationTrait;
+use App\Dto\ApiError;
 use App\Request\CreateReviewRequest;
 use App\Service\SecurityService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -14,7 +15,9 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use OpenApi\Attributes as OA;
 
+#[OA\Tag(name: 'Review')]
 class ReviewController extends AbstractController
 {
     use ValidationTrait;
@@ -27,6 +30,18 @@ class ReviewController extends AbstractController
     ) {
     }
 
+    #[OA\Get(
+        path: '/api/books/{id}/reviews',
+        summary: 'List reviews for a book',
+        tags: ['Reviews'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'OK', content: new OA\JsonContent(type: 'object')),
+            new OA\Response(response: 404, description: 'Book not found', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
     public function list(int $id, Request $request): JsonResponse
     {
         $query = new ListBookReviewsQuery(bookId: $id);
@@ -40,19 +55,42 @@ class ReviewController extends AbstractController
             if ($response = $this->jsonFromHttpException($e)) {
                 return $response;
             }
-            $statusCode = match ($e->getMessage()) {
-                'Book not found' => 404,
-                default => 500
-            };
-            return $this->json(['message' => $e->getMessage()], $statusCode);
+            if ($e->getMessage() === 'Book not found') {
+                return $this->jsonError(ApiError::notFound('Book'));
+            }
+            return $this->jsonError(ApiError::internalError($e->getMessage()));
         }
     }
 
+    #[OA\Post(
+        path: '/api/books/{id}/reviews',
+        summary: 'Create or update review',
+        tags: ['Reviews'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['rating', 'comment'],
+                properties: [
+                    new OA\Property(property: 'rating', type: 'integer', minimum: 1, maximum: 5),
+                    new OA\Property(property: 'comment', type: 'string'),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'OK', content: new OA\JsonContent(type: 'object')),
+            new OA\Response(response: 400, description: 'Validation error', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 401, description: 'Unauthorized', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'Not found', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
     public function upsert(int $id, Request $request, ValidatorInterface $validator): JsonResponse
     {
         $payload = $this->security->getJwtPayload($request);
         if (!$payload || !isset($payload['sub'])) {
-            return $this->json(['message' => 'Unauthorized'], 401);
+            return $this->jsonError(ApiError::unauthorized());
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
@@ -90,6 +128,20 @@ class ReviewController extends AbstractController
         }
     }
 
+    #[OA\Delete(
+        path: '/api/books/{id}/reviews',
+        summary: 'Delete review',
+        tags: ['Reviews'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: 204, description: 'Deleted'),
+            new OA\Response(response: 401, description: 'Unauthorized', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'Review not found', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
     public function delete(int $id, Request $request): JsonResponse
     {
         $payload = $this->security->getJwtPayload($request);

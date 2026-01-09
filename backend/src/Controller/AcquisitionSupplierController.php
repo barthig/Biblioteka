@@ -7,6 +7,7 @@ use App\Application\Command\Acquisition\UpdateSupplierCommand;
 use App\Application\Query\Acquisition\ListSuppliersQuery;
 use App\Controller\Traits\ExceptionHandlingTrait;
 use App\Controller\Traits\ValidationTrait;
+use App\Dto\ApiError;
 use App\Request\CreateSupplierRequest;
 use App\Service\SecurityService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -15,7 +16,9 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use OpenApi\Attributes as OA;
 
+#[OA\Tag(name: 'AcquisitionSupplier')]
 class AcquisitionSupplierController extends AbstractController
 {
     use ValidationTrait;
@@ -27,10 +30,20 @@ class AcquisitionSupplierController extends AbstractController
     ) {
     }
     
+    #[OA\Get(
+        path: '/api/suppliers',
+        summary: 'List acquisition suppliers',
+        tags: ['AcquisitionSupplier'],
+        parameters: [new OA\Parameter(name: 'active', in: 'query', schema: new OA\Schema(type: 'boolean', nullable: true))],
+        responses: [
+            new OA\Response(response: 200, description: 'OK', content: new OA\JsonContent(type: 'array')),
+            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
     public function list(Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['message' => 'Forbidden'], 403);
+            return $this->jsonError(ApiError::forbidden());
         }
 
         $activeParam = $request->query->get('active');
@@ -46,10 +59,37 @@ class AcquisitionSupplierController extends AbstractController
         return $this->json($result['items'] ?? [], 200, [], ['groups' => ['supplier:read']]);
     }
 
+    #[OA\Post(
+        path: '/api/suppliers',
+        summary: 'Create acquisition supplier',
+        tags: ['AcquisitionSupplier'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['name'],
+                properties: [
+                    new OA\Property(property: 'name', type: 'string'),
+                    new OA\Property(property: 'active', type: 'boolean', nullable: true),
+                    new OA\Property(property: 'contactEmail', type: 'string', nullable: true),
+                    new OA\Property(property: 'contactPhone', type: 'string', nullable: true),
+                    new OA\Property(property: 'addressLine', type: 'string', nullable: true),
+                    new OA\Property(property: 'city', type: 'string', nullable: true),
+                    new OA\Property(property: 'country', type: 'string', nullable: true),
+                    new OA\Property(property: 'taxIdentifier', type: 'string', nullable: true),
+                    new OA\Property(property: 'notes', type: 'string', nullable: true),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 201, description: 'Created', content: new OA\JsonContent(type: 'object')),
+            new OA\Response(response: 400, description: 'Validation error', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
     public function create(Request $request, SecurityService $security, ValidatorInterface $validator): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['message' => 'Forbidden'], 403);
+            return $this->jsonError(ApiError::forbidden());
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
@@ -62,7 +102,7 @@ class AcquisitionSupplierController extends AbstractController
 
         $activeFlag = filter_var($data['active'] ?? true, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
         if ($activeFlag === null) {
-            return $this->json(['message' => 'Invalid active flag'], 400);
+            return $this->jsonError(ApiError::badRequest('Invalid active flag'));
         }
 
         $command = new CreateSupplierCommand(
@@ -83,13 +123,25 @@ class AcquisitionSupplierController extends AbstractController
         return $this->json($supplier, 201, [], ['groups' => ['supplier:read']]);
     }
 
+    #[OA\Put(
+        path: '/api/suppliers/{id}',
+        summary: 'Update acquisition supplier',
+        tags: ['AcquisitionSupplier'],
+        parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'string'))],
+        requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(type: 'object')),
+        responses: [
+            new OA\Response(response: 200, description: 'OK', content: new OA\JsonContent(type: 'object')),
+            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'Not found', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
     public function update(string $id, Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['message' => 'Forbidden'], 403);
+            return $this->jsonError(ApiError::forbidden());
         }
         if (!ctype_digit($id) || (int) $id <= 0) {
-            return $this->json(['message' => 'Invalid supplier id'], 400);
+            return $this->jsonError(ApiError::badRequest('Invalid supplier id'));
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
@@ -98,7 +150,7 @@ class AcquisitionSupplierController extends AbstractController
         if (array_key_exists('active', $data)) {
             $activeValue = filter_var($data['active'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
             if ($activeValue === null) {
-                return $this->json(['message' => 'Invalid active flag'], 400);
+                return $this->jsonError(ApiError::badRequest('Invalid active flag'));
             }
         }
 
@@ -125,17 +177,28 @@ class AcquisitionSupplierController extends AbstractController
             if ($response = $this->jsonFromHttpException($e)) {
                 return $response;
             }
-            return $this->json(['message' => $e->getMessage()], 404);
+            return $this->jsonError(ApiError::notFound('Supplier'));
         }
     }
 
+    #[OA\Delete(
+        path: '/api/suppliers/{id}',
+        summary: 'Deactivate acquisition supplier',
+        tags: ['AcquisitionSupplier'],
+        parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'string'))],
+        responses: [
+            new OA\Response(response: 204, description: 'Deleted'),
+            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'Not found', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
     public function deactivate(string $id, Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['message' => 'Forbidden'], 403);
+            return $this->jsonError(ApiError::forbidden());
         }
         if (!ctype_digit($id) || (int) $id <= 0) {
-            return $this->json(['message' => 'Invalid supplier id'], 400);
+            return $this->jsonError(ApiError::badRequest('Invalid supplier id'));
         }
 
         try {
@@ -148,7 +211,7 @@ class AcquisitionSupplierController extends AbstractController
             if ($response = $this->jsonFromHttpException($e)) {
                 return $response;
             }
-            return $this->json(['message' => $e->getMessage()], 404);
+            return $this->jsonError(ApiError::notFound('Supplier'));
         }
     }
 }

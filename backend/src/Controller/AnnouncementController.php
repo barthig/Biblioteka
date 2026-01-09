@@ -9,6 +9,8 @@ use App\Application\Command\Announcement\UpdateAnnouncementCommand;
 use App\Application\Query\Announcement\GetAnnouncementQuery;
 use App\Application\Query\Announcement\ListAnnouncementsQuery;
 use App\Controller\Traits\ExceptionHandlingTrait;
+use App\Controller\Traits\ValidationTrait;
+use App\Dto\ApiError;
 use App\Entity\User;
 use App\Repository\UserRepository;
 use App\Service\SecurityService;
@@ -23,6 +25,7 @@ use OpenApi\Attributes as OA;
 class AnnouncementController extends AbstractController
 {
     use ExceptionHandlingTrait;
+    use ValidationTrait;
     public function __construct(
         private readonly MessageBusInterface $queryBus,
         private readonly MessageBusInterface $commandBus,

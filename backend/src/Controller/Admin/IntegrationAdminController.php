@@ -12,7 +12,9 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
+use OpenApi\Attributes as OA;
 
+#[OA\Tag(name: 'Admin/IntegrationAdmin')]
 class IntegrationAdminController extends AbstractController
 {
     public function __construct(
@@ -20,6 +22,15 @@ class IntegrationAdminController extends AbstractController
         private MessageBusInterface $queryBus
     ) {}
 
+    #[OA\Get(
+        path: '/api/admin/integrations',
+        summary: 'List integration configurations',
+        tags: ['Admin/IntegrationAdmin'],
+        responses: [
+            new OA\Response(response: 200, description: 'OK', content: new OA\JsonContent(type: 'object')),
+            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
     public function list(Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_ADMIN')) {
@@ -45,6 +56,28 @@ class IntegrationAdminController extends AbstractController
         return $this->json(['integrations' => $data], 200);
     }
 
+    #[OA\Post(
+        path: '/api/admin/integrations',
+        summary: 'Create integration configuration',
+        tags: ['Admin/IntegrationAdmin'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['name', 'provider'],
+                properties: [
+                    new OA\Property(property: 'name', type: 'string'),
+                    new OA\Property(property: 'provider', type: 'string'),
+                    new OA\Property(property: 'enabled', type: 'boolean', nullable: true),
+                    new OA\Property(property: 'settings', type: 'object', nullable: true),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 201, description: 'Created', content: new OA\JsonContent(type: 'object')),
+            new OA\Response(response: 400, description: 'Validation error', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
     public function create(Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_ADMIN')) {
@@ -79,6 +112,18 @@ class IntegrationAdminController extends AbstractController
         ], 201);
     }
 
+    #[OA\Put(
+        path: '/api/admin/integrations/{id}',
+        summary: 'Update integration configuration',
+        tags: ['Admin/IntegrationAdmin'],
+        parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
+        requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(type: 'object')),
+        responses: [
+            new OA\Response(response: 200, description: 'OK', content: new OA\JsonContent(type: 'object')),
+            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'Not found', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
     public function update(int $id, Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_ADMIN')) {
@@ -106,6 +151,18 @@ class IntegrationAdminController extends AbstractController
         ], 200);
     }
 
+    #[OA\Post(
+        path: '/api/admin/integrations/{id}/test',
+        summary: 'Test integration connection',
+        tags: ['Admin/IntegrationAdmin'],
+        parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
+        responses: [
+            new OA\Response(response: 200, description: 'OK', content: new OA\JsonContent(type: 'object')),
+            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'Not found', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 422, description: 'Unprocessable entity', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
     public function testConnection(int $id, Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_ADMIN')) {
@@ -137,3 +194,4 @@ class IntegrationAdminController extends AbstractController
         ], empty($missing) ? 200 : 422);
     }
 }
+

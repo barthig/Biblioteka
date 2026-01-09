@@ -3,13 +3,17 @@ namespace App\Controller;
 
 use App\Application\Command\Recommendation\RemoveRecommendationFeedbackCommand;
 use App\Application\Command\Recommendation\UpsertRecommendationFeedbackCommand;
+use App\Controller\Traits\ExceptionHandlingTrait;
+use App\Dto\ApiError;
 use App\Entity\RecommendationFeedback;
 use App\Service\SecurityService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Messenger\MessageBusInterface;
+use OpenApi\Attributes as OA;
 
+#[OA\Tag(name: 'RecommendationFeedback')]
 class RecommendationFeedbackController extends AbstractController
 {
     public function __construct(
@@ -17,6 +21,27 @@ class RecommendationFeedbackController extends AbstractController
         private readonly MessageBusInterface $commandBus
     ) {}
 
+    #[OA\Post(
+        path: '/api/recommendation-feedback',
+        summary: 'Dodaj feedback do rekomendacji',
+        description: 'Zapisuje feedback użytkownika do rekomendowanej książki (zainteresowany/odrzucona)',
+        tags: ['RecommendationFeedback'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['bookId', 'feedbackType'],
+                properties: [
+                    new OA\Property(property: 'bookId', type: 'integer'),
+                    new OA\Property(property: 'feedbackType', type: 'string', enum: ['dismiss', 'interested'])
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'Feedback zapisany', content: new OA\JsonContent(type: 'object')),
+            new OA\Response(response: 400, description: 'Błąd walidacji', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 401, description: 'Nieautoryzowany', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
+        ]
+    )]
     public function addFeedback(Request $request): JsonResponse
     {
         $userId = $this->security->getCurrentUserId($request);
@@ -50,6 +75,19 @@ class RecommendationFeedbackController extends AbstractController
         ]);
     }
 
+    #[OA\Delete(
+        path: '/api/recommendation-feedback/{bookId}',
+        summary: 'Usuń feedback do rekomendacji',
+        description: 'Usuwa zapisany feedback użytkownika dla książki',
+        tags: ['RecommendationFeedback'],
+        parameters: [
+            new OA\Parameter(name: 'bookId', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'Feedback usunięty', content: new OA\JsonContent(type: 'object')),
+            new OA\Response(response: 401, description: 'Nieautoryzowany', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
+        ]
+    )]
     public function removeFeedback(int $bookId, Request $request): JsonResponse
     {
         $userId = $this->security->getCurrentUserId($request);

@@ -27,10 +27,17 @@ export async function apiFetch(path, opts = {}) {
       try {
         const parsed = JSON.parse(body)
         if (parsed && typeof parsed === 'object') {
-          if (typeof parsed.error === 'string' && parsed.error.trim() !== '') {
-            message = parsed.error
-          } else if (typeof parsed.message === 'string' && parsed.message.trim() !== '') {
+          // Handle new standardized error response format
+          if (parsed.error && typeof parsed.error === 'object') {
+            message = parsed.error.message || parsed.error.code || body
+          }
+          // Handle legacy 'message' field
+          else if (typeof parsed.message === 'string' && parsed.message.trim() !== '') {
             message = parsed.message
+          }
+          // Handle legacy 'error' string field
+          else if (typeof parsed.error === 'string' && parsed.error.trim() !== '') {
+            message = parsed.error
           }
         }
       } catch (parseErr) {

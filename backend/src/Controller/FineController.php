@@ -7,6 +7,7 @@ use App\Application\Command\Fine\PayFineCommand;
 use App\Application\Query\Fine\ListFinesQuery;
 use App\Controller\Traits\ExceptionHandlingTrait;
 use App\Controller\Traits\ValidationTrait;
+use App\Dto\ApiError;
 use App\Request\CreateFineRequest;
 use App\Service\SecurityService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -15,7 +16,9 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use OpenApi\Attributes as OA;
 
+#[OA\Tag(name: 'Fine')]
 class FineController extends AbstractController
 {
     use ValidationTrait;
@@ -28,6 +31,33 @@ class FineController extends AbstractController
     ) {
     }
 
+    #[OA\Get(
+        path: '/api/fines',
+        summary: 'List fines',
+        tags: ['Fines'],
+        parameters: [
+            new OA\Parameter(name: 'page', in: 'query', schema: new OA\Schema(type: 'integer', default: 1)),
+            new OA\Parameter(name: 'limit', in: 'query', schema: new OA\Schema(type: 'integer', default: 20)),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'OK',
+                content: new OA\JsonContent(
+                    type: 'object',
+                    properties: [
+                        new OA\Property(
+                            property: 'data',
+                            type: 'array',
+                            items: new OA\Items(ref: '#/components/schemas/Fine')
+                        ),
+                        new OA\Property(property: 'meta', ref: '#/components/schemas/PaginationMeta'),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Unauthorized', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
     public function list(Request $request): JsonResponse
     {
         $page = max(1, $request->query->getInt('page', 1));
@@ -39,7 +69,7 @@ class FineController extends AbstractController
 
         if (!$isLibrarian) {
             if (!$payload || !isset($payload['sub'])) {
-                return $this->json(['message' => 'Unauthorized'], 401);
+                return $this->jsonError(ApiError::unauthorized());
             }
             $userId = (int) $payload['sub'];
         }
@@ -60,10 +90,33 @@ class FineController extends AbstractController
         ]);
     }
 
+    #[OA\Post(
+        path: '/api/fines',
+        summary: 'Create fine',
+        tags: ['Fines'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['loanId', 'amount', 'currency'],
+                properties: [
+                    new OA\Property(property: 'loanId', type: 'integer'),
+                    new OA\Property(property: 'amount', type: 'string'),
+                    new OA\Property(property: 'currency', type: 'string'),
+                    new OA\Property(property: 'reason', type: 'string', nullable: true),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 201, description: 'Created', content: new OA\JsonContent(ref: '#/components/schemas/Fine')),
+            new OA\Response(response: 400, description: 'Validation error', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'Loan not found', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
     public function create(Request $request, ValidatorInterface $validator): JsonResponse
     {
         if (!$this->security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['message' => 'Forbidden'], 403);
+            return $this->jsonError(ApiError::forbidden());
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
@@ -93,18 +146,31 @@ class FineController extends AbstractController
             if ($response = $this->jsonFromHttpException($e)) {
                 return $response;
             }
-            $statusCode = match ($e->getMessage()) {
-                'Loan not found' => 404,
-                default => 500
-            };
-            return $this->json(['message' => $e->getMessage()], $statusCode);
+            if ($e->getMessage() === 'Loan not found') {
+                return $this->jsonError(ApiError::notFound('Loan'));
+            }
+            return $this->jsonError(ApiError::internalError($e->getMessage()));
         }
     }
 
+    #[OA\Post(
+        path: '/api/fines/{id}/pay',
+        summary: 'Pay fine',
+        tags: ['Fines'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/Fine')),
+            new OA\Response(response: 400, description: 'Invalid id or already paid', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'Fine not found', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
     public function pay(string $id, Request $request): JsonResponse
     {
         if (!ctype_digit($id) || (int) $id <= 0) {
-            return $this->json(['message' => 'Invalid fine id'], 400);
+            return $this->jsonError(ApiError::badRequest('Invalid fine id'));
         }
 
         $payload = $this->security->getJwtPayload($request);
@@ -129,23 +195,38 @@ class FineController extends AbstractController
             if ($response = $this->jsonFromHttpException($e)) {
                 return $response;
             }
-            $statusCode = match ($e->getMessage()) {
-                'Fine not found' => 404,
-                'Fine already paid' => 400,
-                'Forbidden' => 403,
-                default => 500
+            $errorMessage = $e->getMessage();
+            $error = match ($errorMessage) {
+                'Fine not found' => ApiError::notFound('Fine'),
+                'Fine already paid' => ApiError::badRequest('Fine already paid'),
+                'Forbidden' => ApiError::forbidden(),
+                default => ApiError::internalError($errorMessage)
             };
-            return $this->json(['message' => $e->getMessage()], $statusCode);
+            return $this->jsonError($error);
         }
     }
 
+    #[OA\Delete(
+        path: '/api/fines/{id}',
+        summary: 'Cancel fine',
+        tags: ['Fines'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: 204, description: 'Cancelled'),
+            new OA\Response(response: 400, description: 'Invalid id', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'Fine not found', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
     public function cancel(string $id, Request $request): JsonResponse
     {
         if (!$this->security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['message' => 'Forbidden'], 403);
+            return $this->jsonError(ApiError::forbidden());
         }
         if (!ctype_digit($id) || (int) $id <= 0) {
-            return $this->json(['message' => 'Invalid fine id'], 400);
+            return $this->jsonError(ApiError::badRequest('Invalid fine id'));
         }
 
         $command = new CancelFineCommand(fineId: (int) $id);
@@ -158,12 +239,13 @@ class FineController extends AbstractController
             if ($response = $this->jsonFromHttpException($e)) {
                 return $response;
             }
-            $statusCode = match ($e->getMessage()) {
-                'Fine not found' => 404,
-                'Cannot cancel a paid fine' => 400,
-                default => 500
+            $errorMessage = $e->getMessage();
+            $error = match ($errorMessage) {
+                'Fine not found' => ApiError::notFound('Fine'),
+                'Cannot cancel a paid fine' => ApiError::badRequest('Cannot cancel a paid fine'),
+                default => ApiError::internalError($errorMessage)
             };
-            return $this->json(['message' => $e->getMessage()], $statusCode);
+            return $this->jsonError($error);
         }
     }
 }

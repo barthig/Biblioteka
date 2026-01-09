@@ -6,6 +6,8 @@ use App\Application\Command\SystemSetting\DeleteSystemSettingCommand;
 use App\Application\Command\SystemSetting\UpdateSystemSettingCommand;
 use App\Application\Query\SystemSetting\GetSystemSettingQuery;
 use App\Application\Query\SystemSetting\ListSystemSettingsQuery;
+use App\Controller\Traits\ExceptionHandlingTrait;
+use App\Dto\ApiError;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -13,7 +15,9 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use OpenApi\Attributes as OA;
 
+#[OA\Tag(name: 'SystemSetting')]
 class SystemSettingController extends AbstractController
 {
     public function __construct(
@@ -22,6 +26,19 @@ class SystemSettingController extends AbstractController
     }
 
     #[IsGranted('ROLE_ADMIN')]
+    #[OA\Get(
+        path: '/api/system-settings',
+        summary: 'List system settings',
+        tags: ['SystemSetting'],
+        parameters: [
+            new OA\Parameter(name: 'page', in: 'query', schema: new OA\Schema(type: 'integer', default: 1)),
+            new OA\Parameter(name: 'limit', in: 'query', schema: new OA\Schema(type: 'integer', default: 50)),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'OK', content: new OA\JsonContent(type: 'object')),
+            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
     public function list(Request $request): JsonResponse
     {
         $page = max(1, (int) $request->query->get('page', 1));
@@ -35,6 +52,16 @@ class SystemSettingController extends AbstractController
     }
 
     #[IsGranted('ROLE_ADMIN')]
+    #[OA\Get(
+        path: '/api/system-settings/{id}',
+        summary: 'Get system setting',
+        tags: ['SystemSetting'],
+        parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
+        responses: [
+            new OA\Response(response: 200, description: 'OK', content: new OA\JsonContent(type: 'object')),
+            new OA\Response(response: 404, description: 'Not found', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
     public function get(int $id): JsonResponse
     {
         $query = new GetSystemSettingQuery(settingId: $id);
@@ -45,6 +72,27 @@ class SystemSettingController extends AbstractController
     }
 
     #[IsGranted('ROLE_ADMIN')]
+    #[OA\Post(
+        path: '/api/system-settings',
+        summary: 'Create system setting',
+        tags: ['SystemSetting'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['key', 'value'],
+                properties: [
+                    new OA\Property(property: 'key', type: 'string'),
+                    new OA\Property(property: 'value', type: 'string'),
+                    new OA\Property(property: 'valueType', type: 'string', nullable: true),
+                    new OA\Property(property: 'description', type: 'string', nullable: true),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 201, description: 'Created', content: new OA\JsonContent(type: 'object')),
+            new OA\Response(response: 400, description: 'Validation error', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
     public function create(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
@@ -63,6 +111,17 @@ class SystemSettingController extends AbstractController
     }
 
     #[IsGranted('ROLE_ADMIN')]
+    #[OA\Put(
+        path: '/api/system-settings/{id}',
+        summary: 'Update system setting',
+        tags: ['SystemSetting'],
+        parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
+        requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(type: 'object')),
+        responses: [
+            new OA\Response(response: 200, description: 'OK', content: new OA\JsonContent(type: 'object')),
+            new OA\Response(response: 404, description: 'Not found', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
     public function update(int $id, Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
@@ -80,6 +139,16 @@ class SystemSettingController extends AbstractController
     }
 
     #[IsGranted('ROLE_ADMIN')]
+    #[OA\Delete(
+        path: '/api/system-settings/{id}',
+        summary: 'Delete system setting',
+        tags: ['SystemSetting'],
+        parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
+        responses: [
+            new OA\Response(response: 204, description: 'Deleted'),
+            new OA\Response(response: 404, description: 'Not found', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
     public function delete(int $id): JsonResponse
     {
         $command = new DeleteSystemSettingCommand(settingId: $id);

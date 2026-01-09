@@ -13,7 +13,9 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
+use OpenApi\Attributes as OA;
 
+#[OA\Tag(name: 'Admin/SystemConfig')]
 class SystemConfigController extends AbstractController
 {
     public function __construct(
@@ -24,6 +26,15 @@ class SystemConfigController extends AbstractController
     {
     }
 
+    #[OA\Get(
+        path: '/api/admin/system/settings',
+        summary: 'List system settings',
+        tags: ['Admin'],
+        responses: [
+            new OA\Response(response: 200, description: 'OK', content: new OA\JsonContent(type: 'object')),
+            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
     public function list(Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_ADMIN')) {
@@ -46,6 +57,29 @@ class SystemConfigController extends AbstractController
         return $this->json(['settings' => $data], 200, [], ['json_encode_options' => JSON_PRESERVE_ZERO_FRACTION]);
     }
 
+    #[OA\Post(
+        path: '/api/admin/system/settings',
+        summary: 'Create system setting',
+        tags: ['Admin'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['key', 'value'],
+                properties: [
+                    new OA\Property(property: 'key', type: 'string'),
+                    new OA\Property(property: 'value', type: 'string'),
+                    new OA\Property(property: 'type', type: 'string', nullable: true),
+                    new OA\Property(property: 'description', type: 'string', nullable: true),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 201, description: 'Created', content: new OA\JsonContent(type: 'object')),
+            new OA\Response(response: 400, description: 'Validation error', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 409, description: 'Already exists', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
     public function create(Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_ADMIN')) {
@@ -83,6 +117,28 @@ class SystemConfigController extends AbstractController
         ], 201, [], ['json_encode_options' => JSON_PRESERVE_ZERO_FRACTION]);
     }
 
+    #[OA\Put(
+        path: '/api/admin/system/settings/{key}',
+        summary: 'Update system setting',
+        tags: ['Admin'],
+        parameters: [
+            new OA\Parameter(name: 'key', in: 'path', required: true, schema: new OA\Schema(type: 'string')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: false,
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: 'value', type: 'string', nullable: true),
+                    new OA\Property(property: 'description', type: 'string', nullable: true),
+                    new OA\Property(property: 'type', type: 'string', nullable: true),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'OK', content: new OA\JsonContent(type: 'object')),
+            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
     public function update(string $key, Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_ADMIN')) {

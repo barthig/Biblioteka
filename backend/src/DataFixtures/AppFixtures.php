@@ -22,7 +22,7 @@ class AppFixtures extends Fixture
     public function load(ObjectManager $manager): void
     {
         $authors = [];
-        for ($i = 1; $i <= 10; $i++) {
+        for ($i = 1; $i <= 30; $i++) {
             $author = (new Author())
                 ->setName('Author ' . $i);
 
@@ -31,13 +31,12 @@ class AppFixtures extends Fixture
         }
 
         $categoryNames = [
-            'Science Fiction',
-            'Fantasy',
-            'Non-fiction',
-            'Technology',
-            'History',
-            'Mystery',
-            'Romance',
+            'Science Fiction', 'Fantasy', 'Non-fiction', 'Technology', 'History',
+            'Mystery', 'Romance', 'Thriller', 'Biography', 'Self-Help',
+            'Poetry', 'Drama', 'Adventure', 'Horror', 'Philosophy',
+            'Psychology', 'Science', 'Mathematics', 'Art', 'Music',
+            'Travel', 'Cooking', 'Health', 'Business', 'Economics',
+            'Politics', 'Religion', 'Education', 'Children', 'Young Adult',
         ];
 
         $categories = [];
@@ -67,22 +66,22 @@ class AppFixtures extends Fixture
             User::GROUP_RESEARCHER,
             User::GROUP_CHILD,
         ];
-        for ($i = 1; $i <= 6; $i++) {
+        for ($i = 1; $i <= 30; $i++) {
             $roles = $i === 1 ? ['ROLE_LIBRARIAN'] : ['ROLE_USER'];
             $user = (new User())
                 ->setName('User ' . $i)
                 ->setEmail('user' . $i . '@example.com')
                 ->setRoles($roles)
                 ->setMembershipGroup($groupSequence[($i - 1) % count($groupSequence)])
-                ->setPhoneNumber('+48 600 000 0' . $i)
+                ->setPhoneNumber('+48 600 ' . str_pad((string) $i, 6, '0', STR_PAD_LEFT))
                 ->setAddressLine('Ul. Biblioteczna ' . $i)
                 ->setCity('Miasto ' . $i)
-                ->setPostalCode('00-0' . $i)
+                ->setPostalCode(str_pad((string) $i, 5, '0', STR_PAD_LEFT))
                 ->setPassword(password_hash('password' . $i, PASSWORD_BCRYPT));
 
             $user->markVerified();
 
-            if ($i === 6) {
+            if ($i === 30) {
                 $user->block('Przykładowa blokada testowa');
             }
 
@@ -139,33 +138,36 @@ class AppFixtures extends Fixture
         $manager->flush();
 
         // Sample suppliers and budgets for acquisitions
-        $supplierA = (new Supplier())
-            ->setName('Księgarnia Główna')
-            ->setContactEmail('kontakt@ksiegarnia-glowna.pl')
-            ->setContactPhone('+48 22 123 45 67')
-            ->setCity('Warszawa')
-            ->setCountry('Polska');
+        $suppliers = [];
+        for ($i = 1; $i <= 30; $i++) {
+            $supplier = (new Supplier())
+                ->setName('Supplier ' . $i)
+                ->setContactEmail('contact' . $i . '@supplier.pl')
+                ->setContactPhone('+48 ' . str_pad((string)(100000000 + $i), 9, '0', STR_PAD_LEFT))
+                ->setCity('City ' . $i)
+                ->setCountry('Polska');
+            
+            $manager->persist($supplier);
+            $suppliers[] = $supplier;
+        }
 
-        $supplierB = (new Supplier())
-            ->setName('Digital Reads Sp. z o.o.')
-            ->setContactEmail('sales@digitalreads.pl')
-            ->setContactPhone('+48 58 987 65 43')
-            ->setCity('Gdańsk')
-            ->setCountry('Polska');
-
-        $budget2025 = (new AcquisitionBudget())
-            ->setName('Budżet podstawowy 2025')
-            ->setFiscalYear('2025')
-            ->setCurrency('PLN')
-            ->setAllocatedAmount('50000.00');
-
-        $manager->persist($supplierA);
-        $manager->persist($supplierB);
-        $manager->persist($budget2025);
+        // Acquisition budgets
+        $budgets = [];
+        for ($i = 1; $i <= 30; $i++) {
+            $year = 2024 + ($i % 3);
+            $budget = (new AcquisitionBudget())
+                ->setName('Budget ' . $i . ' - ' . $year)
+                ->setFiscalYear((string) $year)
+                ->setCurrency('PLN')
+                ->setAllocatedAmount((string) (10000 + ($i * 1000)));
+            
+            $manager->persist($budget);
+            $budgets[] = $budget;
+        }
 
         $manager->flush();
 
-        for ($i = 0; $i < 15; $i++) {
+        for ($i = 0; $i < 30; $i++) {
             $book = $books[$i];
             if ($book->getCopies() <= 0) {
                 continue;
@@ -224,55 +226,76 @@ class AppFixtures extends Fixture
 
         $manager->flush();
 
-        // Seed acquisition order and expense
-        $order = (new AcquisitionOrder())
-            ->setSupplier($supplierA)
-            ->setBudget($budget2025)
-            ->setTitle('Nowo?>ci wydawnicze - stycze?"')
-            ->setDescription('Zakup nowo?>ci do dzia?u literatury pi?tknej i naukowej')
-            ->setItems([
-                ['title' => 'Nowa era AI', 'quantity' => 10, 'unitPrice' => 45.50],
-                ['title' => 'Historia regionu', 'quantity' => 6, 'unitPrice' => 52.00],
-            ])
-            ->setCurrency('PLN')
-            ->setTotalAmount('986.00')
-            ->markOrdered()
-            ->setExpectedAt((new \DateTimeImmutable())->modify('+14 days'));
+        // Seed acquisition orders and expenses (30 each)
+        $orders = [];
+        for ($i = 1; $i <= 30; $i++) {
+            $supplier = $suppliers[$i % count($suppliers)];
+            $budget = $budgets[$i % count($budgets)];
+            
+            $order = (new AcquisitionOrder())
+                ->setSupplier($supplier)
+                ->setBudget($budget)
+                ->setTitle('Acquisition Order ' . $i)
+                ->setDescription('Order description for acquisition ' . $i)
+                ->setItems([
+                    ['title' => 'Book Set ' . $i, 'quantity' => 5 + ($i % 10), 'unitPrice' => 30.00 + ($i * 2)],
+                ])
+                ->setCurrency('PLN')
+                ->setTotalAmount((string) ((5 + ($i % 10)) * (30.00 + ($i * 2))))
+                ->markOrdered()
+                ->setExpectedAt((new \DateTimeImmutable())->modify('+' . (7 + $i) . ' days'));
+            
+            if ($i % 3 === 0) {
+                $order->markReceived();
+            }
+            
+            $manager->persist($order);
+            $orders[] = $order;
+            
+            // Create expense for each order
+            $expenseAmount = (string) ((5 + ($i % 10)) * (30.00 + ($i * 2)));
+            $expense = (new AcquisitionExpense())
+                ->setBudget($budget)
+                ->setOrder($order)
+                ->setAmount($expenseAmount)
+                ->setCurrency('PLN')
+                ->setDescription('Invoice for order ' . $i)
+                ->setType(AcquisitionExpense::TYPE_ORDER);
+            
+            $budget->registerExpense($expenseAmount);
+            $manager->persist($expense);
+            $manager->persist($budget);
+        }
 
-        $manager->persist($order);
         $manager->flush();
 
-        $expense = (new AcquisitionExpense())
-            ->setBudget($budget2025)
-            ->setOrder($order)
-            ->setAmount('986.00')
-            ->setCurrency('PLN')
-            ->setDescription('Zakup nowo?>ci wydawniczych - faktura FV/01/2025')
-            ->setType(AcquisitionExpense::TYPE_ORDER);
-
-        $budget2025->registerExpense('986.00');
-
-        $manager->persist($expense);
-        $manager->persist($budget2025);
-        $manager->flush();
-
-        // Sample weeding record
-        $firstBook = $books[0];
-        $firstCopy = $firstBook->getInventory()->first() ?: null;
-        if ($firstCopy instanceof BookCopy) {
-            $firstCopy->setStatus(BookCopy::STATUS_WITHDRAWN)->setConditionState('Zniszczony egzemplarz');
-            $firstBook->recalculateInventoryCounters();
-
+        // Weeding records (30)
+        $weedingActions = [WeedingRecord::ACTION_DISCARD, WeedingRecord::ACTION_DONATE, WeedingRecord::ACTION_TRANSFER];
+        $weedingReasons = ['Damaged', 'Outdated', 'Duplicate', 'Low circulation', 'Poor condition'];
+        $conditions = ['Good', 'Fair', 'Poor', 'Damaged'];
+        
+        for ($i = 0; $i < 30; $i++) {
+            $book = $books[$i];
+            $copies = $book->getInventory()->toArray();
+            if (empty($copies)) {
+                continue;
+            }
+            
+            $copy = $copies[0];
+            $copy->setStatus(BookCopy::STATUS_WITHDRAWN)
+                 ->setConditionState($conditions[$i % count($conditions)]);
+            $book->recalculateInventoryCounters();
+            
             $weeding = (new WeedingRecord())
-                ->setBook($firstBook)
-                ->setBookCopy($firstCopy)
-                ->setProcessedBy($users[0])
-                ->setReason('Uszkodzenia uniemo??liwiaj??ce wypo??yczenia')
-                ->setAction(WeedingRecord::ACTION_DISCARD)
-                ->setNotes('Wycofano podczas przegl??du rocznego');
-
-            $manager->persist($firstCopy);
-            $manager->persist($firstBook);
+                ->setBook($book)
+                ->setBookCopy($copy)
+                ->setProcessedBy($users[$i % count($users)])
+                ->setReason($weedingReasons[$i % count($weedingReasons)])
+                ->setAction($weedingActions[$i % count($weedingActions)])
+                ->setNotes('Weeding record ' . ($i + 1));
+            
+            $manager->persist($copy);
+            $manager->persist($book);
             $manager->persist($weeding);
         }
 

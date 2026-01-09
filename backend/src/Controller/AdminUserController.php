@@ -3,6 +3,8 @@ namespace App\Controller;
 
 use App\Application\Command\User\DeleteUserCommand;
 use App\Application\Command\User\UpdateUserCommand;
+use App\Controller\Traits\ExceptionHandlingTrait;
+use App\Dto\ApiError;
 use App\Service\SecurityService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -10,9 +12,11 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use OpenApi\Attributes as OA;
 
 class AdminUserController extends AbstractController
 {
+    #[OA\Tag(name: 'AdminUser')]
     public function __construct(
         private readonly SecurityService $security,
         private readonly MessageBusInterface $commandBus
@@ -20,6 +24,24 @@ class AdminUserController extends AbstractController
     }
 
     #[IsGranted('ROLE_ADMIN')]
+    #[OA\Put(
+        path: '/api/admin/users/{id}',
+        summary: 'Update user (admin)',
+        tags: ['AdminUser'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(type: 'object')
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/User')),
+            new OA\Response(response: 400, description: 'Validation error', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'User not found', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
     public function update(int $id, Request $request): JsonResponse
     {
         if (!$this->security->hasRole($request, 'ROLE_ADMIN')) {
@@ -51,6 +73,20 @@ class AdminUserController extends AbstractController
     }
 
     #[IsGranted('ROLE_ADMIN')]
+    #[OA\Delete(
+        path: '/api/admin/users/{id}',
+        summary: 'Delete user (admin)',
+        tags: ['AdminUser'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: 204, description: 'Deleted'),
+            new OA\Response(response: 400, description: 'Bad request', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'User not found', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
     public function delete(int $id, Request $request): JsonResponse
     {
         if (!$this->security->hasRole($request, 'ROLE_ADMIN')) {

@@ -9,7 +9,9 @@ use App\Application\Command\Account\UpdateAccountUiPreferencesCommand;
 use App\Application\Command\Account\UpdateAccountPinCommand;
 use App\Application\Command\Account\CompleteOnboardingCommand;
 use App\Application\Query\Account\GetAccountDetailsQuery;
+use App\Controller\Traits\ExceptionHandlingTrait;
 use App\Controller\Traits\ValidationTrait;
+use App\Dto\ApiError;
 use App\Request\ChangePasswordRequest;
 use App\Request\UpdateAccountRequest;
 use App\Service\SecurityService;
@@ -22,16 +24,28 @@ use Symfony\Component\Messenger\Stamp\HandledStamp;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use OpenApi\Attributes as OA;
 
+#[OA\Tag(name: 'Account')]
 class AccountController extends AbstractController
 {
     use ValidationTrait;
+    use ExceptionHandlingTrait;
 
     public function __construct(
         private readonly MessageBusInterface $commandBus,
         private readonly MessageBusInterface $queryBus,
         private readonly SecurityService $security
     ) {}
+    #[OA\Get(
+        path: '/api/me',
+        summary: 'Get current account details',
+        tags: ['Account'],
+        responses: [
+            new OA\Response(response: 200, description: 'OK', content: new OA\JsonContent(type: 'object')),
+            new OA\Response(response: 401, description: 'Unauthorized', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
     public function me(Request $request): JsonResponse
     {
         $userId = $this->security->getCurrentUserId($request);
@@ -45,6 +59,32 @@ class AccountController extends AbstractController
         return $this->json($payload);
     }
 
+    #[OA\Put(
+        path: '/api/me',
+        summary: 'Update account profile',
+        tags: ['Account'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: 'email', type: 'string', format: 'email'),
+                    new OA\Property(property: 'name', type: 'string'),
+                    new OA\Property(property: 'phoneNumber', type: 'string', nullable: true),
+                    new OA\Property(property: 'addressLine', type: 'string', nullable: true),
+                    new OA\Property(property: 'city', type: 'string', nullable: true),
+                    new OA\Property(property: 'postalCode', type: 'string', nullable: true),
+                    new OA\Property(property: 'newsletterSubscribed', type: 'boolean', nullable: true),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'OK', content: new OA\JsonContent(type: 'object')),
+            new OA\Response(response: 400, description: 'Validation error', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 401, description: 'Unauthorized', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'User not found', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 409, description: 'Email conflict', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
     public function update(Request $request, ValidatorInterface $validator): JsonResponse
     {
         $userId = $this->security->getCurrentUserId($request);
@@ -92,6 +132,28 @@ class AccountController extends AbstractController
         }
     }
 
+    #[OA\Put(
+        path: '/api/me/password',
+        summary: 'Change account password',
+        tags: ['Account'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['currentPassword', 'newPassword'],
+                properties: [
+                    new OA\Property(property: 'currentPassword', type: 'string', format: 'password'),
+                    new OA\Property(property: 'newPassword', type: 'string', format: 'password'),
+                    new OA\Property(property: 'confirmPassword', type: 'string', format: 'password', nullable: true),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/MessageResponse')),
+            new OA\Response(response: 400, description: 'Validation error', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 401, description: 'Unauthorized', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'User not found', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
     public function changePassword(Request $request, ValidatorInterface $validator): JsonResponse
     {
         $userId = $this->security->getCurrentUserId($request);
@@ -150,6 +212,26 @@ class AccountController extends AbstractController
         return false;
     }
 
+    #[OA\Put(
+        path: '/api/me/contact',
+        summary: 'Update contact info',
+        tags: ['Account'],
+        requestBody: new OA\RequestBody(
+            required: false,
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: 'phoneNumber', type: 'string', nullable: true),
+                    new OA\Property(property: 'addressLine', type: 'string', nullable: true),
+                    new OA\Property(property: 'city', type: 'string', nullable: true),
+                    new OA\Property(property: 'postalCode', type: 'string', nullable: true),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/MessageResponse')),
+            new OA\Response(response: 401, description: 'Unauthorized', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
     public function updateContact(Request $request): JsonResponse
     {
         $userId = $this->security->getCurrentUserId($request);
@@ -169,6 +251,29 @@ class AccountController extends AbstractController
         return $this->json(['message' => 'Contact information updated']);
     }
 
+    #[OA\Put(
+        path: '/api/me/preferences',
+        summary: 'Update account preferences',
+        tags: ['Account'],
+        requestBody: new OA\RequestBody(
+            required: false,
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: 'defaultBranch', type: 'string', nullable: true),
+                    new OA\Property(property: 'newsletter', type: 'boolean', nullable: true),
+                    new OA\Property(property: 'keepHistory', type: 'boolean', nullable: true),
+                    new OA\Property(property: 'emailLoans', type: 'boolean', nullable: true),
+                    new OA\Property(property: 'emailReservations', type: 'boolean', nullable: true),
+                    new OA\Property(property: 'emailFines', type: 'boolean', nullable: true),
+                    new OA\Property(property: 'emailAnnouncements', type: 'boolean', nullable: true),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/MessageResponse')),
+            new OA\Response(response: 401, description: 'Unauthorized', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
     public function updatePreferences(Request $request): JsonResponse
     {
         $userId = $this->security->getCurrentUserId($request);
@@ -191,6 +296,25 @@ class AccountController extends AbstractController
         return $this->json(['message' => 'Preferences updated']);
     }
 
+    #[OA\Put(
+        path: '/api/me/ui-preferences',
+        summary: 'Update UI preferences',
+        tags: ['Account'],
+        requestBody: new OA\RequestBody(
+            required: false,
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: 'theme', type: 'string', nullable: true),
+                    new OA\Property(property: 'fontSize', type: 'string', nullable: true),
+                    new OA\Property(property: 'language', type: 'string', nullable: true),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/MessageResponse')),
+            new OA\Response(response: 401, description: 'Unauthorized', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
     public function updateUIPreferences(Request $request): JsonResponse
     {
         $userId = $this->security->getCurrentUserId($request);
@@ -209,6 +333,26 @@ class AccountController extends AbstractController
         return $this->json(['message' => 'UI preferences updated']);
     }
 
+    #[OA\Put(
+        path: '/api/me/pin',
+        summary: 'Update account PIN',
+        tags: ['Account'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['currentPin', 'newPin'],
+                properties: [
+                    new OA\Property(property: 'currentPin', type: 'string'),
+                    new OA\Property(property: 'newPin', type: 'string'),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/MessageResponse')),
+            new OA\Response(response: 400, description: 'Validation error', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 401, description: 'Unauthorized', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
     public function updatePin(Request $request): JsonResponse
     {
         $userId = $this->security->getCurrentUserId($request);
@@ -234,6 +378,41 @@ class AccountController extends AbstractController
         return $this->json(['message' => 'PIN updated']);
     }
 
+    #[OA\Post(
+        path: '/api/users/me/onboarding',
+        summary: 'Complete onboarding',
+        tags: ['Account'],
+        requestBody: new OA\RequestBody(
+            required: false,
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(
+                        property: 'preferredCategories',
+                        type: 'array',
+                        items: new OA\Items(type: 'string')
+                    ),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'OK',
+                content: new OA\JsonContent(
+                    type: 'object',
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string'),
+                        new OA\Property(
+                            property: 'preferredCategories',
+                            type: 'array',
+                            items: new OA\Items(type: 'string')
+                        ),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Unauthorized', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
     #[Route('/users/me/onboarding', methods: ['POST'])]
     public function completeOnboarding(Request $request): JsonResponse
     {

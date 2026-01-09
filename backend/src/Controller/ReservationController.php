@@ -5,7 +5,9 @@ use App\Application\Command\Reservation\CancelReservationCommand;
 use App\Application\Command\Reservation\CreateReservationCommand;
 use App\Application\Command\Reservation\FulfillReservationWorkflowCommand;
 use App\Application\Query\Reservation\ListReservationsQuery;
+use App\Controller\Traits\ExceptionHandlingTrait;
 use App\Controller\Traits\ValidationTrait;
+use App\Dto\ApiError;
 use App\Request\CreateReservationRequest;
 use App\Service\SecurityService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -16,10 +18,13 @@ use Symfony\Component\Messenger\Exception\HandlerFailedException;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use OpenApi\Attributes as OA;
 
+#[OA\Tag(name: 'Reservation')]
 class ReservationController extends AbstractController
 {
     use ValidationTrait;
+    use ExceptionHandlingTrait;
 
     public function __construct(
         private MessageBusInterface $commandBus,
@@ -28,6 +33,36 @@ class ReservationController extends AbstractController
     ) {
     }
 
+    #[OA\Get(
+        path: '/api/reservations',
+        summary: 'List reservations',
+        tags: ['Reservations'],
+        parameters: [
+            new OA\Parameter(name: 'page', in: 'query', schema: new OA\Schema(type: 'integer', default: 1)),
+            new OA\Parameter(name: 'limit', in: 'query', schema: new OA\Schema(type: 'integer', default: 20)),
+            new OA\Parameter(name: 'status', in: 'query', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'userId', in: 'query', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'history', in: 'query', schema: new OA\Schema(type: 'boolean')),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'OK',
+                content: new OA\JsonContent(
+                    type: 'object',
+                    properties: [
+                        new OA\Property(
+                            property: 'data',
+                            type: 'array',
+                            items: new OA\Items(ref: '#/components/schemas/Reservation')
+                        ),
+                        new OA\Property(property: 'meta', ref: '#/components/schemas/PaginationMeta'),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Unauthorized', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
     public function list(Request $request): JsonResponse
     {
         $page = max(1, $request->query->getInt('page', 1));
@@ -44,7 +79,7 @@ class ReservationController extends AbstractController
         if (!$isLibrarian) {
             $payload = $this->security->getJwtPayload($request);
             if (!$payload || !isset($payload['sub'])) {
-                return $this->json(['message' => 'Unauthorized'], 401);
+                return $this->jsonError(ApiError::unauthorized());
             }
             $userId = (int)$payload['sub'];
             
@@ -71,6 +106,37 @@ class ReservationController extends AbstractController
         return $this->json($result, 200, [], ['groups' => ['reservation:read']]);
     }
 
+    #[OA\Post(
+        path: '/api/reservations',
+        summary: 'Create reservation',
+        tags: ['Reservations'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['bookId'],
+                properties: [
+                    new OA\Property(property: 'bookId', type: 'integer'),
+                    new OA\Property(property: 'days', type: 'integer', nullable: true),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: 'Created',
+                content: new OA\JsonContent(
+                    type: 'object',
+                    properties: [
+                        new OA\Property(property: 'data', ref: '#/components/schemas/Reservation'),
+                    ]
+                )
+            ),
+            new OA\Response(response: 400, description: 'Validation error', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 401, description: 'Unauthorized', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'Not found', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 409, description: 'Conflict', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
     public function create(Request $request, ValidatorInterface $validator): JsonResponse
     {
         $payload = $this->security->getJwtPayload($request);
@@ -128,6 +194,21 @@ class ReservationController extends AbstractController
         }
     }
 
+    #[OA\Delete(
+        path: '/api/reservations/{id}',
+        summary: 'Cancel reservation',
+        tags: ['Reservations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: 204, description: 'Cancelled'),
+            new OA\Response(response: 400, description: 'Invalid id', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 401, description: 'Unauthorized', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'Reservation not found', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
     public function cancel(string $id, Request $request): JsonResponse
     {
         error_log('ReservationController::cancel - id: ' . $id);
@@ -187,6 +268,20 @@ class ReservationController extends AbstractController
         }
     }
 
+    #[OA\Post(
+        path: '/api/reservations/{id}/fulfill',
+        summary: 'Fulfill reservation and create loan',
+        tags: ['Reservations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/MessageResponse')),
+            new OA\Response(response: 400, description: 'Invalid id', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'Reservation not found', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
     public function fulfill(string $id, Request $request): JsonResponse
     {
         if (!ctype_digit($id) || (int)$id <= 0) {

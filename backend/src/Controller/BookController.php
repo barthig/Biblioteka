@@ -11,6 +11,7 @@ use App\Controller\Traits\ValidationTrait;
 use App\Entity\Book;
 use App\Request\CreateBookRequest;
 use App\Request\UpdateBookRequest;
+use App\Dto\ApiError;
 use App\Repository\UserRepository;
 use App\Service\PersonalizedRecommendationService;
 use App\Service\SecurityService;
@@ -24,6 +25,7 @@ use Symfony\Component\Messenger\Stamp\HandledStamp;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use OpenApi\Attributes as OA;
 
+#[OA\Tag(name: 'Book')]
 class BookController extends AbstractController
 {
     use ValidationTrait;
@@ -105,6 +107,23 @@ class BookController extends AbstractController
         return $this->json($result, 200, [], ['groups' => ['book:read']]);
     }
 
+    #[OA\Get(
+        path: '/api/books/filters',
+        summary: 'Dostępne filtry dla książek',
+        description: 'Zwraca listę dostępnych wartości filtrów (grupy wiekowe)',
+        tags: ['Books'],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Lista filtrów',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'ageGroups', type: 'array', items: new OA\Items(type: 'object'))
+                    ]
+                )
+            )
+        ]
+    )]
     public function filters(): JsonResponse
     {
         $ageGroups = [];
@@ -124,6 +143,19 @@ class BookController extends AbstractController
         return $this->json(['ageGroups' => $ageGroups]);
     }
 
+    #[OA\Get(
+        path: '/api/books/{id}',
+        summary: 'Szczegóły książki',
+        description: 'Zwraca pełne informacje o książce, włącznie z relacjami i dostępnością',
+        tags: ['Books'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'Szczegóły książki', content: new OA\JsonContent(ref: '#/components/schemas/Book')),
+            new OA\Response(response: 404, description: 'Książka nie znaleziona', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
+        ]
+    )]
     public function getBook(int $id, Request $request): JsonResponse
     {
         $query = new GetBookQuery(
@@ -140,14 +172,46 @@ class BookController extends AbstractController
             if ($response = $this->jsonFromHttpException($e)) {
                 return $response;
             }
-            return $this->json(['message' => $e->getMessage()], 404);
+            return $this->jsonError(ApiError::notFound($e->getMessage()));
         }
     }
 
+    #[OA\Post(
+        path: '/api/books',
+        summary: 'Utwórz nową książkę',
+        description: 'Tworzy nową książkę w katalogu. Wymaga roli LIBRARIAN.',
+        tags: ['Books'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['title', 'authorId', 'categoryIds'],
+                properties: [
+                    new OA\Property(property: 'title', type: 'string'),
+                    new OA\Property(property: 'authorId', type: 'integer'),
+                    new OA\Property(property: 'categoryIds', type: 'array', items: new OA\Items(type: 'integer')),
+                    new OA\Property(property: 'description', type: 'string'),
+                    new OA\Property(property: 'isbn', type: 'string'),
+                    new OA\Property(property: 'publisher', type: 'string'),
+                    new OA\Property(property: 'publicationYear', type: 'integer'),
+                    new OA\Property(property: 'resourceType', type: 'string'),
+                    new OA\Property(property: 'signature', type: 'string'),
+                    new OA\Property(property: 'targetAgeGroup', type: 'string'),
+                    new OA\Property(property: 'totalCopies', type: 'integer'),
+                    new OA\Property(property: 'copies', type: 'integer')
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 201, description: 'Książka utworzona', content: new OA\JsonContent(ref: '#/components/schemas/Book')),
+            new OA\Response(response: 400, description: 'Błąd walidacji', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 403, description: 'Brak uprawnień', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'Autor lub kategoria nie znaleziona', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
+        ]
+    )]
     public function create(Request $request, ValidatorInterface $validator): JsonResponse
     {
         if (!$this->security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['message' => 'Forbidden'], 403);
+            return $this->jsonError(ApiError::forbidden());
         }
 
         $data = json_decode($request->getContent(), true) ?? [];
@@ -186,7 +250,7 @@ class BookController extends AbstractController
                 $e = $e->getPrevious() ?? $e;
             }
             if ($e instanceof HttpExceptionInterface) {
-                return $this->json(['message' => $e->getMessage()], $e->getStatusCode());
+                return $this->jsonError(ApiError::fromException($e));
             }
             $statusCode = match (true) {
                 str_contains($e->getMessage(), 'Author not found') => 404,
@@ -194,20 +258,55 @@ class BookController extends AbstractController
                 str_contains($e->getMessage(), 'At least one category') => 400,
                 default => 500
             };
-            return $this->json(['message' => $e->getMessage()], $statusCode);
+            if ($statusCode === 404) {
+                return $this->jsonError(ApiError::notFound($e->getMessage()));
+            }
+            return $this->jsonError(ApiError::badRequest($e->getMessage()));
         }
     }
 
+    #[OA\Put(
+        path: '/api/books/{id}',
+        summary: 'Aktualizuj książkę',
+        description: 'Aktualizuje dane książki. Wymaga roli LIBRARIAN. Nie można edytować liczby kopii.',
+        tags: ['Books'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: 'title', type: 'string'),
+                    new OA\Property(property: 'authorId', type: 'integer'),
+                    new OA\Property(property: 'categoryIds', type: 'array', items: new OA\Items(type: 'integer')),
+                    new OA\Property(property: 'description', type: 'string'),
+                    new OA\Property(property: 'isbn', type: 'string'),
+                    new OA\Property(property: 'publisher', type: 'string'),
+                    new OA\Property(property: 'publicationYear', type: 'integer'),
+                    new OA\Property(property: 'resourceType', type: 'string'),
+                    new OA\Property(property: 'signature', type: 'string'),
+                    new OA\Property(property: 'targetAgeGroup', type: 'string')
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'Książka zaktualizowana', content: new OA\JsonContent(ref: '#/components/schemas/Book')),
+            new OA\Response(response: 400, description: 'Błąd walidacji', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 403, description: 'Brak uprawnień', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'Książka, autor lub kategoria nie znaleziona', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
+        ]
+    )]
     public function update(int $id, Request $request, ValidatorInterface $validator): JsonResponse
     {
         if (!$this->security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['message' => 'Forbidden'], 403);
+            return $this->jsonError(ApiError::forbidden());
         }
 
         $data = json_decode($request->getContent(), true) ?? [];
         
         if (isset($data['copies']) || isset($data['totalCopies'])) {
-            return $this->json(['message' => 'Inventory is managed automatycznie przez system wypożyczeń i nie może być edytowane ręcznie'], 400);
+            return $this->jsonError(ApiError::badRequest('Inventory is managed automatycznie przez system wypożyczeń i nie może być edytowane ręcznie'));
         }
         
         $dto = $this->mapArrayToDto($data, new UpdateBookRequest());
@@ -240,7 +339,7 @@ class BookController extends AbstractController
                 $e = $e->getPrevious() ?? $e;
             }
             if ($e instanceof HttpExceptionInterface) {
-                return $this->json(['message' => $e->getMessage()], $e->getStatusCode());
+                return $this->jsonError(ApiError::fromException($e));
             }
             $statusCode = match (true) {
                 str_contains($e->getMessage(), 'Book not found') => 404,
@@ -249,14 +348,31 @@ class BookController extends AbstractController
                 str_contains($e->getMessage(), 'At least one category') => 400,
                 default => 500
             };
-            return $this->json(['message' => $e->getMessage()], $statusCode);
+            if ($statusCode === 404) {
+                return $this->jsonError(ApiError::notFound($e->getMessage()));
+            }
+            return $this->jsonError(ApiError::badRequest($e->getMessage()));
         }
     }
 
+    #[OA\Delete(
+        path: '/api/books/{id}',
+        summary: 'Usuń książkę',
+        description: 'Usuwa książkę z katalogu. Wymaga roli LIBRARIAN.',
+        tags: ['Books'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
+        ],
+        responses: [
+            new OA\Response(response: 204, description: 'Książka usunięta'),
+            new OA\Response(response: 403, description: 'Brak uprawnień', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'Książka nie znaleziona', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
+        ]
+    )]
     public function delete(int $id, Request $request): JsonResponse
     {
         if (!$this->security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['message' => 'Forbidden'], 403);
+            return $this->jsonError(ApiError::forbidden());
         }
 
         $command = new DeleteBookCommand(bookId: $id);
@@ -269,10 +385,28 @@ class BookController extends AbstractController
             if ($response = $this->jsonFromHttpException($e)) {
                 return $response;
             }
-            return $this->json(['message' => $e->getMessage()], 404);
+            return $this->jsonError(ApiError::notFound($e->getMessage()));
         }
     }
 
+    #[OA\Get(
+        path: '/api/books/recommended',
+        summary: 'Rekomendacje książek',
+        description: 'Zwraca spersonalizowane rekomendacje książek dla zalogowanego użytkownika lub ogólne dla gości',
+        tags: ['Books'],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Grupy rekomendowanych książek',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'groups', type: 'array', items: new OA\Items(type: 'object'))
+                    ]
+                )
+            ),
+            new OA\Response(response: 500, description: 'Błąd serwera', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
+        ]
+    )]
     public function recommended(Request $request): JsonResponse
     {
         try {
@@ -298,10 +432,30 @@ class BookController extends AbstractController
             error_log('BookController::recommended - Exception type: ' . get_class($e));
             error_log('BookController::recommended - File: ' . $e->getFile() . ':' . $e->getLine());
             error_log('BookController::recommended - Stack trace: ' . $e->getTraceAsString());
-            return $this->json(['message' => 'Internal error: ' . $e->getMessage()], 500);
+            return $this->jsonError(ApiError::internalError($e->getMessage()));
         }
     }
 
+    #[OA\Get(
+        path: '/api/books/popular',
+        summary: 'Popularne książki',
+        description: 'Zwraca listę najpopularniejszych książek',
+        tags: ['Books'],
+        parameters: [
+            new OA\Parameter(name: 'limit', in: 'query', schema: new OA\Schema(type: 'integer', default: 20, minimum: 1, maximum: 50))
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Lista popularnych książek',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'data', type: 'array', items: new OA\Items(ref: '#/components/schemas/Book'))
+                    ]
+                )
+            )
+        ]
+    )]
     public function popular(Request $request): JsonResponse
     {
         $limit = min(50, max(1, (int) $request->query->get('limit', 20)));
@@ -313,6 +467,26 @@ class BookController extends AbstractController
         return $this->json(['data' => $books], 200, [], ['groups' => ['book:read']]);
     }
 
+    #[OA\Get(
+        path: '/api/books/newest',
+        summary: 'Najnowsze książki',
+        description: 'Zwraca listę ostatnio dodanych książek',
+        tags: ['Books'],
+        parameters: [
+            new OA\Parameter(name: 'limit', in: 'query', schema: new OA\Schema(type: 'integer', default: 20, minimum: 1, maximum: 50))
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Lista najnowszych książek',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'data', type: 'array', items: new OA\Items(ref: '#/components/schemas/Book'))
+                    ]
+                )
+            )
+        ]
+    )]
     public function newest(Request $request): JsonResponse
     {
         $limit = min(50, max(1, (int) $request->query->get('limit', 20)));
@@ -324,6 +498,19 @@ class BookController extends AbstractController
         return $this->json(['data' => $books], 200, [], ['groups' => ['book:read']]);
     }
 
+    #[OA\Get(
+        path: '/api/books/{id}/availability',
+        summary: 'Dostępność książki',
+        description: 'Zwraca informacje o dostępności egzemplarzy książki',
+        tags: ['Books'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'Informacje o dostępności', content: new OA\JsonContent(type: 'object')),
+            new OA\Response(response: 404, description: 'Książka nie znaleziona', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
+        ]
+    )]
     public function availability(int $id): JsonResponse
     {
         $availability = $this->queryBus->dispatch(
@@ -331,7 +518,7 @@ class BookController extends AbstractController
         )->last(HandledStamp::class)?->getResult();
 
         if (!$availability) {
-            return $this->json(['message' => 'Book not found'], 404);
+            return $this->jsonError(ApiError::notFound('Book not found'));
         }
 
         return $this->json($availability, 200);

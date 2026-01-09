@@ -1,7 +1,9 @@
 <?php
 namespace App\Controller;
 
+use App\Controller\Traits\ExceptionHandlingTrait;
 use App\Controller\Traits\ValidationTrait;
+use App\Dto\ApiError;
 use App\Request\RegistrationRequest;
 use App\Service\RegistrationException;
 use App\Service\RegistrationService;
@@ -10,7 +12,9 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\RateLimiter\RateLimiterFactory;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use OpenApi\Attributes as OA;
 
+#[OA\Tag(name: 'Registration')]
 class RegistrationController extends AbstractController
 {
     use ValidationTrait;
@@ -20,6 +24,48 @@ class RegistrationController extends AbstractController
     ) {
     }
 
+    #[OA\Post(
+        path: '/api/auth/register',
+        summary: 'Register new account',
+        tags: ['Auth'],
+        security: [],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['email', 'name', 'password', 'privacyConsent'],
+                properties: [
+                    new OA\Property(property: 'email', type: 'string', format: 'email'),
+                    new OA\Property(property: 'name', type: 'string'),
+                    new OA\Property(property: 'password', type: 'string', format: 'password'),
+                    new OA\Property(property: 'phoneNumber', type: 'string', nullable: true),
+                    new OA\Property(property: 'addressLine', type: 'string', nullable: true),
+                    new OA\Property(property: 'city', type: 'string', nullable: true),
+                    new OA\Property(property: 'postalCode', type: 'string', nullable: true),
+                    new OA\Property(property: 'membershipGroup', type: 'string', nullable: true),
+                    new OA\Property(property: 'privacyConsent', type: 'boolean'),
+                    new OA\Property(property: 'newsletterSubscribed', type: 'boolean', nullable: true),
+                    new OA\Property(property: 'tastePrompt', type: 'string', nullable: true),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: 'Created',
+                content: new OA\JsonContent(
+                    type: 'object',
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', example: 'pending_verification'),
+                        new OA\Property(property: 'userId', type: 'integer'),
+                        new OA\Property(property: 'verificationToken', type: 'string'),
+                    ]
+                )
+            ),
+            new OA\Response(response: 400, description: 'Validation error', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 429, description: 'Rate limit exceeded', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 500, description: 'Internal error', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
     public function register(Request $request, RegistrationService $registrationService, ValidatorInterface $validator): JsonResponse
     {
         // Rate limiting - max 3 rejestracje na godzinę z tego samego IP
@@ -79,6 +125,31 @@ class RegistrationController extends AbstractController
         ], 201);
     }
 
+    #[OA\Get(
+        path: '/api/auth/verify/{token}',
+        summary: 'Verify registration token',
+        tags: ['Auth'],
+        security: [],
+        parameters: [
+            new OA\Parameter(name: 'token', in: 'path', required: true, schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'OK',
+                content: new OA\JsonContent(
+                    type: 'object',
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', example: 'account_verified'),
+                        new OA\Property(property: 'userId', type: 'integer'),
+                        new OA\Property(property: 'pendingApproval', type: 'boolean'),
+                    ]
+                )
+            ),
+            new OA\Response(response: 400, description: 'Invalid token', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 500, description: 'Internal error', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
     public function verify(string $token, RegistrationService $registrationService): JsonResponse
     {
         try {

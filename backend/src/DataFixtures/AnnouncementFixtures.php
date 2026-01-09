@@ -124,6 +124,56 @@ class AnnouncementFixtures extends Fixture
         // Pozostaw jako draft - nie publikuj
         $manager->persist($draft);
 
+        // 9-30: Additional announcements for comprehensive seed data
+        $announcementData = [
+            ['Warsztaty literackie dla dzieci', 'Zapraszamy na warsztaty literackie dla dzieci w wieku 7-12 lat. Sobota, godz. 10:00.', 'event', false, true, ['children']],
+            ['Klub książki - spotkanie', 'Miłośnicy literatury - zapraszamy na spotkanie klubu książki. Omawiamy "Mistrza i Małgorzatę".', 'event', false, true, ['all']],
+            ['Zmiany w katalogu', 'Wprowadziliśmy usprawnienia w systemie wyszukiwania książek. Przetestujcie!', 'info', false, true, ['all']],
+            ['Nowe stanowiska komputerowe', 'Udostępniliśmy 5 nowych stanowisk komputerowych w czytelni głównej.', 'info', false, true, ['all']],
+            ['Wydłużone godziny w grudniu', 'W okresie przedświątecznym biblioteka otwarta będzie dłużej - do 22:00.', 'info', true, true, ['all']],
+            ['Szkolenie z baz danych', 'Bezpłatne szkolenie z obsługi naukowych baz danych - zapisy w recepcji.', 'info', false, true, ['researchers']],
+            ['Kary administracyjne', 'Przypominamy o możliwości regulowania kar online poprzez system płatności.', 'warning', false, true, ['users']],
+            ['Nowa aplikacja mobilna', 'Uruchomiliśmy aplikację mobilną dla czytelników. Dostępna w Google Play i App Store.', 'info', true, true, ['all']],
+            ['Kolekcja audiobooków', 'Rozszerzyliśmy ofertę o 200 nowych audiobooków w języku polskim i angielskim.', 'info', false, true, ['all']],
+            ['Remont czytelni', 'W styczniu planowany jest remont czytelni naukowej. Czytelnia będzie nieczynna 7-14.01.', 'maintenance', true, true, ['all']],
+            ['Konkurs fotograficzny', 'Konkurs fotograficzny "Moja ulubiona książka" - przyjmujemy zgłoszenia do końca miesiąca.', 'event', false, true, ['all']],
+            ['Spotkanie z autorem', 'Spotkanie z Olgą Tokarczuk - 20 grudnia, godz. 18:00. Liczba miejsc ograniczona.', 'event', true, true, ['all']],
+            ['Dni otwarte biblioteki', 'Zapraszamy na dni otwarte - zwiedzanie magazynów i warsztaty introligatorskie.', 'event', false, true, ['all']],
+            ['Znaleziono dokumenty', 'W czytelni znaleziono dokumenty osobiste. Prosimy o kontakt z recepcją.', 'info', false, false, ['all']],
+            ['Newsletter miesięczny', 'Zapisz się na newsletter i bądź na bieżąco z wydarzeniami i nowościami w bibliotece.', 'info', false, true, ['all']],
+            ['Zmiana regulaminu dostępu', 'Aktualizacja regulaminu dostępu do zbiorów specjalnych. Szczegóły na stronie.', 'warning', false, true, ['researchers']],
+            ['Inwentaryzacja roczna', 'W dniach 2-4 stycznia przeprowadzimy inwentaryzację. Możliwe opóźnienia w wypożyczeniach.', 'maintenance', true, true, ['all']],
+            ['Zbiórka książek', 'Prowadzimy zbiórkę używanych książek dla szpitala dziecięcego. Dary przyjmujemy w recepcji.', 'info', false, true, ['all']],
+            ['Zmiana hasła systemowego', 'Ze względów bezpieczeństwa prosimy o zmianę hasła co 90 dni.', 'warning', false, false, ['all']],
+            ['Nowy system rezerwacji', 'Uruchomiliśmy nowy system rezerwacji sal i stanowisk komputerowych.', 'info', false, true, ['all']],
+            ['Godziny dla seniorów', 'Czwartki 9:00-11:00 to godziny dedykowane seniorom - pomoc w obsłudze katalogu.', 'info', true, true, ['all']],
+            ['Urlop bibliotekarza', 'Pani Maria będzie nieobecna 10-20 stycznia. Zastępstwo: Pan Tomasz.', 'info', false, false, ['librarians']],
+        ];
+
+        foreach ($announcementData as $index => $data) {
+            $announcement = new Announcement();
+            $announcement->setTitle($data[0]);
+            $announcement->setContent($data[1]);
+            $announcement->setType($data[2]);
+            $announcement->setCreatedBy($adminUser);
+            $announcement->setIsPinned($data[3]);
+            $announcement->setShowOnHomepage($data[4]);
+            $announcement->setTargetAudience($data[5]);
+            
+            // Set expiration for some announcements
+            if ($index % 5 === 0) {
+                $announcement->setExpiresAt((new \DateTimeImmutable())->modify('+' . (30 + $index) . ' days'));
+            }
+            
+            // Set event date for event types
+            if ($data[2] === 'event') {
+                $announcement->setEventAt((new \DateTimeImmutable())->modify('+' . (7 + $index) . ' days')->setTime(15, 0));
+            }
+            
+            $announcement->publish();
+            $manager->persist($announcement);
+        }
+
         $manager->flush();
     }
 }

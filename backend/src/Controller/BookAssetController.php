@@ -5,6 +5,7 @@ use App\Application\Command\BookAsset\DeleteBookAssetCommand;
 use App\Application\Command\BookAsset\UploadBookAssetCommand;
 use App\Application\Query\BookAsset\GetBookAssetQuery;
 use App\Application\Query\BookAsset\ListBookAssetsQuery;
+use App\Dto\ApiError;
 use App\Entity\BookDigitalAsset;
 use App\Controller\Traits\ExceptionHandlingTrait;
 use App\Service\SecurityService;
@@ -18,7 +19,9 @@ use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\Messenger\Exception\HandlerFailedException;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
+use OpenApi\Attributes as OA;
 
+#[OA\Tag(name: 'BookAsset')]
 class BookAssetController extends AbstractController
 {
     use ExceptionHandlingTrait;
@@ -30,10 +33,23 @@ class BookAssetController extends AbstractController
     ) {
     }
 
+    #[OA\Get(
+        path: '/api/admin/books/{id}/assets',
+        summary: 'List book assets',
+        tags: ['Assets'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'OK', content: new OA\JsonContent(type: 'object')),
+            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'Book not found', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
     public function list(int $id, Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['message' => 'Forbidden'], 403);
+            return $this->jsonError(ApiError::forbidden());
         }
 
         try {
@@ -45,14 +61,40 @@ class BookAssetController extends AbstractController
             if ($response = $this->jsonFromHttpException($e)) {
                 return $response;
             }
-            return $this->json(['message' => $e->getMessage()], 404);
+            return $this->jsonError(ApiError::notFound($e->getMessage()));
         }
     }
 
+    #[OA\Post(
+        path: '/api/admin/books/{id}/assets',
+        summary: 'Upload book asset',
+        tags: ['Assets'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['content'],
+                properties: [
+                    new OA\Property(property: 'label', type: 'string', nullable: true),
+                    new OA\Property(property: 'filename', type: 'string', nullable: true),
+                    new OA\Property(property: 'mimeType', type: 'string', nullable: true),
+                    new OA\Property(property: 'content', type: 'string', description: 'Base64 file content'),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 201, description: 'Created', content: new OA\JsonContent(type: 'object')),
+            new OA\Response(response: 400, description: 'Validation error', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'Book not found', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
     public function upload(int $id, Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['message' => 'Forbidden'], 403);
+            return $this->jsonError(ApiError::forbidden());
         }
 
         $data = json_decode($request->getContent(), true) ?? [];
@@ -62,7 +104,7 @@ class BookAssetController extends AbstractController
         $content = isset($data['content']) && is_string($data['content']) ? $data['content'] : null;
 
         if ($content === null) {
-            return $this->json(['message' => 'Missing content payload (base64)'], 400);
+            return $this->jsonError(ApiError::badRequest('Missing content payload (base64)'));
         }
 
         try {
@@ -76,30 +118,55 @@ class BookAssetController extends AbstractController
                 $e = $e->getPrevious() ?? $e;
             }
             if ($e instanceof HttpExceptionInterface) {
-                return $this->json(['message' => $e->getMessage()], $e->getStatusCode());
+                return $this->jsonError(ApiError::fromException($e));
             }
             $statusCode = match (true) {
                 str_contains($e->getMessage(), 'not found') => 404,
                 str_contains($e->getMessage(), 'Invalid base64 payload') => 400,
                 default => 500,
             };
-            return $this->json(['message' => $e->getMessage()], $statusCode);
+            if ($statusCode === 404) {
+                return $this->jsonError(ApiError::notFound($e->getMessage()));
+            } elseif ($statusCode === 400) {
+                return $this->jsonError(ApiError::badRequest($e->getMessage()));
+            }
+            return $this->jsonError(ApiError::internalError($e->getMessage()));
         }
     }
 
+    #[OA\Get(
+        path: '/api/admin/books/{id}/assets/{assetId}',
+        summary: 'Download book asset',
+        tags: ['Assets'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'assetId', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'File download', content: new OA\MediaType(mediaType: 'application/octet-stream')),
+            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'Not found', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 410, description: 'File removed', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
     public function download(int $id, int $assetId, Request $request, SecurityService $security): BinaryFileResponse|JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['message' => 'Forbidden'], 403);
+            return $this->jsonError(ApiError::forbidden());
         }
 
         try {
-            $envelope = $this->queryBus->dispatch(new GetBookAssetQuery($id, $assetId));
+            $query = new GetBookAssetQuery(bookId: $id, assetId: $assetId);
+            $envelope = $this->queryBus->dispatch($query);
             $asset = $envelope->last(HandledStamp::class)?->getResult();
+            
+            if (!$asset) {
+                return $this->jsonError(ApiError::notFound('Asset'));
+            }
             
             $path = $this->assetDirectory() . DIRECTORY_SEPARATOR . $asset->getStorageName();
             if (!is_file($path)) {
-                return $this->json(['message' => 'File has been removed from storage'], 410);
+                return $this->jsonError(ApiError::internalError('File has been removed from storage'));
             }
 
             $response = new BinaryFileResponse($path);
@@ -115,14 +182,28 @@ class BookAssetController extends AbstractController
             if ($response = $this->jsonFromHttpException($e)) {
                 return $response;
             }
-            return $this->json(['message' => $e->getMessage()], 404);
+            return $this->jsonError(ApiError::notFound($e->getMessage()));
         }
     }
 
+    #[OA\Delete(
+        path: '/api/admin/books/{id}/assets/{assetId}',
+        summary: 'Delete book asset',
+        tags: ['Assets'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'assetId', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: 204, description: 'Deleted'),
+            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'Not found', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
     public function delete(int $id, int $assetId, Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['message' => 'Forbidden'], 403);
+            return $this->jsonError(ApiError::forbidden());
         }
 
         try {
@@ -133,7 +214,7 @@ class BookAssetController extends AbstractController
             if ($response = $this->jsonFromHttpException($e)) {
                 return $response;
             }
-            return $this->json(['message' => $e->getMessage()], 404);
+            return $this->jsonError(ApiError::notFound($e->getMessage()));
         }
     }
 

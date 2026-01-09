@@ -3,6 +3,7 @@ namespace App\Controller;
 
 use App\Application\Query\User\GetUserDetailsQuery;
 use App\Controller\Traits\ExceptionHandlingTrait;
+use App\Dto\ApiError;
 use App\Entity\User;
 use App\Repository\UserRepository;
 use App\Service\SecurityService;
@@ -12,7 +13,9 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Messenger\HandleTrait;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use OpenApi\Attributes as OA;
 
+#[OA\Tag(name: 'User')]
 class UserController extends AbstractController
 {
     use HandleTrait;
@@ -24,6 +27,59 @@ class UserController extends AbstractController
     ) {
     }
 
+    #[OA\Get(
+        path: '/api/users',
+        summary: 'List users',
+        tags: ['Users'],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'OK',
+                content: new OA\JsonContent(
+                    type: 'array',
+                    items: new OA\Items(ref: '#/components/schemas/User')
+                )
+            ),
+            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
+    #[OA\Get(
+        path: '/api/users/search',
+        summary: 'Search users',
+        tags: ['Users'],
+        parameters: [
+            new OA\Parameter(name: 'q', in: 'query', required: true, schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'OK',
+                content: new OA\JsonContent(
+                    type: 'array',
+                    items: new OA\Items(ref: '#/components/schemas/User')
+                )
+            ),
+            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
+    #[OA\Get(
+        path: '/api/users/{id}/details',
+        summary: 'Get user details (loans and fines)',
+        tags: ['Users'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'OK',
+                content: new OA\JsonContent(type: 'object')
+            ),
+            new OA\Response(response: 400, description: 'Invalid id', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'User not found', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
     #[IsGranted('ROLE_LIBRARIAN')]
     public function list(UserRepository $repo, Request $request): JsonResponse
     {
@@ -39,6 +95,20 @@ class UserController extends AbstractController
         return $this->json($users, 200, [], ['groups' => ['user:read']]);
     }
 
+    #[OA\Get(
+        path: '/api/users/{id}',
+        summary: 'Get user by id',
+        tags: ['Users'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/User')),
+            new OA\Response(response: 400, description: 'Invalid id', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'User not found', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
     public function getUserById(string $id, UserRepository $repo, Request $request): JsonResponse
     {
         // validate id — should be positive integer
@@ -105,6 +175,31 @@ class UserController extends AbstractController
     }
 
     #[IsGranted('ROLE_ADMIN')]
+    #[OA\Put(
+        path: '/api/users/{id}',
+        summary: 'Aktualizuj użytkownika',
+        description: 'Aktualizuje dane użytkownika. Wymaga roli ADMIN.',
+        tags: ['Users'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: 'name', type: 'string'),
+                    new OA\Property(property: 'email', type: 'string'),
+                    new OA\Property(property: 'roles', type: 'array', items: new OA\Items(type: 'string')),
+                    new OA\Property(property: 'active', type: 'boolean')
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'Użytkownik zaktualizowany', content: new OA\JsonContent(ref: '#/components/schemas/User')),
+            new OA\Response(response: 403, description: 'Brak uprawnień', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'Użytkownik nie znaleziony', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
+        ]
+    )]
     public function update(string $id, UserRepository $repo, Request $request): JsonResponse
     {
         if (!$this->security->hasRole($request, 'ROLE_ADMIN')) {
@@ -145,6 +240,21 @@ class UserController extends AbstractController
     }
 
     #[IsGranted('ROLE_ADMIN')]
+    #[OA\Delete(
+        path: '/api/users/{id}',
+        summary: 'Usuń użytkownika',
+        description: 'Usuwa użytkownika. Wymaga roli ADMIN. Nie można usunąć własnego konta.',
+        tags: ['Users'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
+        ],
+        responses: [
+            new OA\Response(response: 204, description: 'Użytkownik usunięty'),
+            new OA\Response(response: 400, description: 'Nie można usunąć własnego konta', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 403, description: 'Brak uprawnień', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'Użytkownik nie znaleziony', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
+        ]
+    )]
     public function delete(string $id, UserRepository $repo, Request $request): JsonResponse
     {
         if (!$this->security->hasRole($request, 'ROLE_ADMIN')) {

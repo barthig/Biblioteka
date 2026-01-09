@@ -8,7 +8,9 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Messenger\MessageBusInterface;
+use OpenApi\Attributes as OA;
 
+#[OA\Tag(name: 'Admin/Vector')]
 class AdminVectorController extends AbstractController
 {
     public function __construct(
@@ -18,6 +20,15 @@ class AdminVectorController extends AbstractController
     ) {
     }
 
+    #[OA\Post(
+        path: '/api/admin/books/embeddings/reindex',
+        summary: 'Reindex all book embeddings',
+        tags: ['Admin/Vector'],
+        responses: [
+            new OA\Response(response: 202, description: 'Accepted', content: new OA\JsonContent(type: 'object')),
+            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
     public function reindexAll(Request $request): JsonResponse
     {
         if (!$this->security->hasRole($request, 'ROLE_ADMIN')) {
@@ -40,6 +51,15 @@ class AdminVectorController extends AbstractController
         return $this->json(['dispatched' => $count], 202);
     }
 
+    #[OA\Get(
+        path: '/api/admin/books/embeddings/stats',
+        summary: 'Get embedding statistics',
+        tags: ['Admin/Vector'],
+        responses: [
+            new OA\Response(response: 200, description: 'OK', content: new OA\JsonContent(type: 'object')),
+            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
     public function stats(Request $request): JsonResponse
     {
         if (!$this->security->hasRole($request, 'ROLE_ADMIN')) {

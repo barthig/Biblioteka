@@ -1,6 +1,8 @@
 <?php
 namespace App\Controller;
 
+use App\Controller\Traits\ExceptionHandlingTrait;
+use App\Dto\ApiError;
 use App\Repository\UserRepository;
 use App\Repository\BookRepository;
 use App\Service\RecommendationService;
@@ -9,7 +11,9 @@ use App\Service\OpenAIEmbeddingService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use OpenApi\Attributes as OA;
 
+#[OA\Tag(name: 'Recommendation')]
 class RecommendationController extends AbstractController
 {
     public function __construct(
@@ -20,6 +24,25 @@ class RecommendationController extends AbstractController
         private readonly UserRepository $users
     ) {}
 
+    #[OA\Post(
+        path: '/api/recommendations',
+        summary: 'Rekomendacje na podstawie zapytania',
+        description: 'Zwraca rekomendacje książek na podstawie zapytania tekstowego (wyszukiwanie semantyczne)',
+        tags: ['Recommendations'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['query'],
+                properties: [
+                    new OA\Property(property: 'query', type: 'string')
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'Lista rekomendowanych książek', content: new OA\JsonContent(type: 'object')),
+            new OA\Response(response: 400, description: 'Brak zapytania', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
+        ]
+    )]
     public function recommend(Request $request): JsonResponse
     {
         $start = microtime(true);
@@ -43,6 +66,17 @@ class RecommendationController extends AbstractController
         return $this->json(['data' => $books], 200, [], ['groups' => ['book:read']]);
     }
 
+    #[OA\Get(
+        path: '/api/recommendations/personal',
+        summary: 'Spersonalizowane rekomendacje',
+        description: 'Zwraca spersonalizowane rekomendacje dla zalogowanego użytkownika na podstawie historii wypożyczeń i preferencji',
+        tags: ['Recommendations'],
+        responses: [
+            new OA\Response(response: 200, description: 'Spersonalizowane rekomendacje', content: new OA\JsonContent(type: 'object')),
+            new OA\Response(response: 401, description: 'Nieautoryzowany', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'Użytkownik nie znaleziony', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
+        ]
+    )]
     public function personal(Request $request): JsonResponse
     {
         $start = microtime(true);

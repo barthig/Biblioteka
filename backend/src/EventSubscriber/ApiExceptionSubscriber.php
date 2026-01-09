@@ -1,6 +1,8 @@
 <?php
 namespace App\EventSubscriber;
 
+use App\Dto\ApiError;
+use App\Dto\ApiResponse;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Event\ExceptionEvent;
@@ -41,9 +43,14 @@ class ApiExceptionSubscriber implements EventSubscriberInterface
             $message = $throwable->getMessage();
         }
 
-        $event->setResponse(new JsonResponse([
-            'message' => $message,
-        ], $statusCode));
+        $error = new ApiError(
+            code: $this->getErrorCode($statusCode),
+            message: $message,
+            statusCode: $statusCode
+        );
+
+        $response = ApiResponse::error($error);
+        $event->setResponse(new JsonResponse($response->toArray(), $statusCode));
     }
 
     private function wantsJson(\Symfony\Component\HttpFoundation\Request $request): bool
@@ -64,5 +71,22 @@ class ApiExceptionSubscriber implements EventSubscriberInterface
     {
         $value = getenv('APP_DEBUG') ?: ($_ENV['APP_DEBUG'] ?? '0');
         return in_array(strtolower((string) $value), ['1', 'true', 'yes', 'on'], true);
+    }
+
+    private function getErrorCode(int $statusCode): string
+    {
+        return match ($statusCode) {
+            400 => 'BAD_REQUEST',
+            401 => 'UNAUTHORIZED',
+            403 => 'FORBIDDEN',
+            404 => 'NOT_FOUND',
+            409 => 'CONFLICT',
+            422 => 'UNPROCESSABLE_ENTITY',
+            423 => 'LOCKED',
+            429 => 'RATE_LIMIT_EXCEEDED',
+            500 => 'INTERNAL_ERROR',
+            503 => 'SERVICE_UNAVAILABLE',
+            default => 'ERROR',
+        };
     }
 }

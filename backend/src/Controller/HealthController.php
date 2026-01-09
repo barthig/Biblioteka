@@ -1,16 +1,38 @@
 <?php
 namespace App\Controller;
 
+use App\Controller\Traits\ExceptionHandlingTrait;
+use App\Dto\ApiError;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Doctrine\DBAL\Connection;
+use OpenApi\Attributes as OA;
 
+#[OA\Tag(name: 'Health')]
 class HealthController extends AbstractController
 {
     public function __construct(private Connection $connection)
     {
     }
 
+    #[OA\Get(
+        path: '/health',
+        summary: 'Health check',
+        tags: ['Health'],
+        security: [],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'OK',
+                content: new OA\JsonContent(type: 'object')
+            ),
+            new OA\Response(
+                response: 500,
+                description: 'Degraded',
+                content: new OA\JsonContent(type: 'object')
+            ),
+        ]
+    )]
     public function health(): JsonResponse
     {
         $dbStatus = 'ok';

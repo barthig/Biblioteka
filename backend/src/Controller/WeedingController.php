@@ -5,6 +5,7 @@ use App\Application\Command\Weeding\CreateWeedingRecordCommand;
 use App\Application\Query\Weeding\ListWeedingRecordsQuery;
 use App\Controller\Traits\ExceptionHandlingTrait;
 use App\Controller\Traits\ValidationTrait;
+use App\Dto\ApiError;
 use App\Request\CreateWeedingRecordRequest;
 use App\Service\SecurityService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -13,7 +14,9 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use OpenApi\Attributes as OA;
 
+#[OA\Tag(name: 'Weeding')]
 class WeedingController extends AbstractController
 {
     use ValidationTrait;
@@ -24,7 +27,17 @@ class WeedingController extends AbstractController
         private readonly MessageBusInterface $commandBus
     ) {
     }
-
+    
+    #[OA\Get(
+        path: '/api/weeding',
+        summary: 'List weeding records',
+        tags: ['Weeding'],
+        parameters: [new OA\Parameter(name: 'limit', in: 'query', schema: new OA\Schema(type: 'integer', default: 200))],
+        responses: [
+            new OA\Response(response: 200, description: 'OK', content: new OA\JsonContent(type: 'object')),
+            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
     public function list(Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
@@ -38,6 +51,32 @@ class WeedingController extends AbstractController
         return $this->json($records, 200, [], ['groups' => ['weeding:read', 'book:read', 'inventory:read']]);
     }
 
+    #[OA\Post(
+        path: '/api/weeding',
+        summary: 'Create weeding record',
+        tags: ['Weeding'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['bookId', 'copyId', 'reason'],
+                properties: [
+                    new OA\Property(property: 'bookId', type: 'integer'),
+                    new OA\Property(property: 'copyId', type: 'integer'),
+                    new OA\Property(property: 'reason', type: 'string'),
+                    new OA\Property(property: 'action', type: 'string', nullable: true),
+                    new OA\Property(property: 'conditionState', type: 'string', nullable: true),
+                    new OA\Property(property: 'notes', type: 'string', nullable: true),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 201, description: 'Created', content: new OA\JsonContent(type: 'object')),
+            new OA\Response(response: 400, description: 'Validation error', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'Not found', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 409, description: 'Conflict', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
     public function create(Request $request, SecurityService $security, ValidatorInterface $validator): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {

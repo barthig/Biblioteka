@@ -1,6 +1,8 @@
 <?php
 namespace App\EventSubscriber;
 
+use App\Dto\ApiError;
+use App\Dto\ApiResponse;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
@@ -32,22 +34,35 @@ class ApiResponseNormalizationSubscriber implements EventSubscriberInterface
             return;
         }
 
-        $modified = false;
-        if (isset($data['error'])) {
-            if (!isset($data['message'])) {
-                $data['message'] = $data['error'];
-            }
-            unset($data['error']);
-            $modified = true;
+        // If already in new format (has 'error' or 'data'), skip normalization
+        if (isset($data['error']) && is_array($data['error']) && isset($data['error']['code'])) {
+            return;
         }
 
-        if (isset($data['errors']) && !isset($data['message'])) {
-            $data['message'] = 'Validation failed';
+        // Handle legacy error format: ['message' => '...', 'errors' => [...]]
+        $modified = false;
+        if (isset($data['message']) && !isset($data['error']) && !isset($data['data'])) {
+            // This is an error message - convert to new format
+            $isValidationError = isset($data['errors']) && is_array($data['errors']);
+            $statusCode = (int) $response->getStatusCode();
+            
+            if ($isValidationError) {
+                $error = ApiError::validationFailed($data['errors']);
+            } else {
+                $error = new ApiError(
+                    code: $this->getErrorCode($statusCode, $data['message']),
+                    message: $data['message'],
+                    statusCode: $statusCode
+                );
+            }
+            
+            $apiResponse = ApiResponse::error($error);
+            $response->setContent(json_encode($apiResponse->toArray()));
             $modified = true;
         }
 
         if ($modified) {
-            $response->setContent(json_encode($data));
+            // Status code already set by response
         }
     }
 
@@ -63,5 +78,25 @@ class ApiResponseNormalizationSubscriber implements EventSubscriberInterface
 
         $accept = $request->headers->get('Accept', '');
         return str_contains($accept, 'application/json');
+    }
+
+    /**
+     * Map HTTP status codes to error codes
+     */
+    private function getErrorCode(int $statusCode, string $message = ''): string
+    {
+        return match ($statusCode) {
+            400 => 'BAD_REQUEST',
+            401 => 'UNAUTHORIZED',
+            403 => 'FORBIDDEN',
+            404 => 'NOT_FOUND',
+            409 => 'CONFLICT',
+            422 => 'UNPROCESSABLE_ENTITY',
+            423 => 'LOCKED',
+            429 => 'RATE_LIMIT_EXCEEDED',
+            500 => 'INTERNAL_ERROR',
+            503 => 'SERVICE_UNAVAILABLE',
+            default => 'ERROR',
+        };
     }
 }

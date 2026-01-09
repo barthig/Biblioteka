@@ -1,13 +1,33 @@
 <?php
 namespace App\Controller;
 
+use App\Controller\Traits\ExceptionHandlingTrait;
+use App\Dto\ApiError;
 use App\Service\SecurityService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use OpenApi\Attributes as OA;
 
+#[OA\Tag(name: 'Notification')]
 class NotificationController extends AbstractController
 {
+    #[OA\Get(
+        path: '/api/notifications',
+        summary: 'List notifications',
+        tags: ['Notifications'],
+        parameters: [
+            new OA\Parameter(name: 'serviceDown', in: 'query', schema: new OA\Schema(type: 'boolean')),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'OK',
+                content: new OA\JsonContent(type: 'array', items: new OA\Items(type: 'object'))
+            ),
+            new OA\Response(response: 503, description: 'Service unavailable', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
     public function list(Request $request, SecurityService $security): JsonResponse
     {
         if ($request->query->getBoolean('serviceDown', false)) {
@@ -37,6 +57,41 @@ class NotificationController extends AbstractController
         return $this->json($notifications, 200);
     }
 
+    #[OA\Post(
+        path: '/api/notifications/test',
+        summary: 'Trigger test notification',
+        tags: ['Notifications'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['channel', 'target'],
+                properties: [
+                    new OA\Property(property: 'channel', type: 'string', enum: ['email', 'sms']),
+                    new OA\Property(property: 'target', type: 'string'),
+                    new OA\Property(property: 'message', type: 'string', nullable: true),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 202,
+                description: 'Queued',
+                content: new OA\JsonContent(
+                    type: 'object',
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string'),
+                        new OA\Property(property: 'channel', type: 'string'),
+                        new OA\Property(property: 'target', type: 'string'),
+                        new OA\Property(property: 'message', type: 'string'),
+                    ]
+                )
+            ),
+            new OA\Response(response: 400, description: 'Missing input', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 422, description: 'Unsupported channel', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 503, description: 'Queue unavailable', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
     public function triggerTest(Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {

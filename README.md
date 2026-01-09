@@ -35,6 +35,12 @@ Frontend:
 
 Database is seeded from `backend/init-db-expanded-v2.sql`.
 
+## Database normalization (3NF)
+- Core entities are normalized and related via join tables (e.g., books/authors/categories).
+- The `book` table includes derived counters (`copies`, `total_copies`, `storage_copies`, `open_stack_copies`) for read performance.
+  The source of truth is `book_copy`; these fields are treated as cached aggregates updated by the application.
+  If strict 3NF is required, remove the counters from `book` and compute them from `book_copy` (or use a view/materialized view).
+
 ## Run locally (manual)
 Backend:
 ```powershell

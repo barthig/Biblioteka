@@ -8,13 +8,24 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\KernelInterface;
+use OpenApi\Attributes as OA;
 
 class SecurityAdminController extends AbstractController
 {
+    #[OA\Tag(name: 'Admin/SecurityAdmin')]
     public function __construct(private BackupService $backupService, private BackupRecordRepository $backups)
     {
     }
 
+    #[OA\Post(
+        path: '/api/admin/backups',
+        summary: 'Create database backup',
+        tags: ['Admin/SecurityAdmin'],
+        responses: [
+            new OA\Response(response: 201, description: 'Created', content: new OA\JsonContent(type: 'object')),
+            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
     public function createBackup(Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_ADMIN')) {
@@ -34,6 +45,15 @@ class SecurityAdminController extends AbstractController
         ], 201);
     }
 
+    #[OA\Get(
+        path: '/api/admin/backups',
+        summary: 'List backups',
+        tags: ['Admin/SecurityAdmin'],
+        responses: [
+            new OA\Response(response: 200, description: 'OK', content: new OA\JsonContent(type: 'object')),
+            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
     public function listBackups(Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_ADMIN')) {
@@ -52,6 +72,16 @@ class SecurityAdminController extends AbstractController
         return $this->json(['backups' => $records], 200);
     }
 
+    #[OA\Get(
+        path: '/api/admin/logs',
+        summary: 'View application logs',
+        tags: ['Admin/SecurityAdmin'],
+        parameters: [new OA\Parameter(name: 'limit', in: 'query', schema: new OA\Schema(type: 'integer', default: 50))],
+        responses: [
+            new OA\Response(response: 200, description: 'OK', content: new OA\JsonContent(type: 'object')),
+            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
     public function viewLogs(Request $request, SecurityService $security, KernelInterface $kernel): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_ADMIN')) {

@@ -7,6 +7,7 @@ use App\Application\Command\BookInventory\UpdateBookCopyCommand;
 use App\Application\Query\BookInventory\ListBookCopiesQuery;
 use App\Controller\Traits\ExceptionHandlingTrait;
 use App\Controller\Traits\ValidationTrait;
+use App\Dto\ApiError;
 use App\Entity\BookCopy;
 use App\Repository\BookCopyRepository;
 use App\Request\CreateBookCopyRequest;
@@ -18,7 +19,9 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use OpenApi\Attributes as OA;
 
+#[OA\Tag(name: 'BookInventory')]
 class BookInventoryController extends AbstractController
 {
     use ValidationTrait;
@@ -30,10 +33,23 @@ class BookInventoryController extends AbstractController
     ) {
     }
     
+    #[OA\Get(
+        path: '/api/admin/books/{id}/copies',
+        summary: 'List book copies',
+        tags: ['Inventory'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'OK', content: new OA\JsonContent(type: 'object')),
+            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'Book not found', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
     public function list(int $id, Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['message' => 'Forbidden'], 403);
+            return $this->jsonError(ApiError::forbidden());
         }
 
         try {
@@ -45,10 +61,37 @@ class BookInventoryController extends AbstractController
             if ($response = $this->jsonFromHttpException($e)) {
                 return $response;
             }
-            return $this->json(['message' => $e->getMessage()], 404);
+            return $this->jsonError(ApiError::notFound($e->getMessage()));
         }
     }
 
+    #[OA\Post(
+        path: '/api/admin/books/{id}/copies',
+        summary: 'Create book copy',
+        tags: ['Inventory'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: 'inventoryCode', type: 'string'),
+                    new OA\Property(property: 'status', type: 'string'),
+                    new OA\Property(property: 'accessType', type: 'string'),
+                    new OA\Property(property: 'location', type: 'string', nullable: true),
+                    new OA\Property(property: 'condition', type: 'string', nullable: true),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 201, description: 'Created', content: new OA\JsonContent(type: 'object')),
+            new OA\Response(response: 400, description: 'Validation error', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'Book not found', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 409, description: 'Already exists', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
     public function create(
         int $id,
         Request $request,
@@ -88,12 +131,40 @@ class BookInventoryController extends AbstractController
             }
             $statusCode = str_contains($e->getMessage(), 'not found') ? 404 : 400;
             if (str_contains($e->getMessage(), 'already exists')) {
-                $statusCode = 409;
+                return $this->jsonError(ApiError::conflict($e->getMessage()));
+            } elseif ($statusCode === 404) {
+                return $this->jsonError(ApiError::notFound($e->getMessage()));
             }
-            return $this->json(['message' => $e->getMessage()], $statusCode);
+            return $this->jsonError(ApiError::badRequest($e->getMessage()));
         }
     }
 
+    #[OA\Put(
+        path: '/api/admin/books/{id}/copies/{copyId}',
+        summary: 'Update book copy',
+        tags: ['Inventory'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'copyId', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: false,
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: 'status', type: 'string', nullable: true),
+                    new OA\Property(property: 'accessType', type: 'string', nullable: true),
+                    new OA\Property(property: 'location', type: 'string', nullable: true),
+                    new OA\Property(property: 'condition', type: 'string', nullable: true),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'OK', content: new OA\JsonContent(type: 'object')),
+            new OA\Response(response: 400, description: 'Validation error', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'Not found', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
     public function update(
         int $id,
         int $copyId,
@@ -102,7 +173,7 @@ class BookInventoryController extends AbstractController
         ValidatorInterface $validator
     ): JsonResponse {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['message' => 'Forbidden'], 403);
+            return $this->jsonError(ApiError::forbidden());
         }
 
         $data = json_decode($request->getContent(), true) ?? [];
@@ -132,10 +203,25 @@ class BookInventoryController extends AbstractController
             if ($response = $this->jsonFromHttpException($e)) {
                 return $response;
             }
-            return $this->json(['message' => $e->getMessage()], 404);
+            return $this->jsonError(ApiError::notFound($e->getMessage()));
         }
     }
 
+    #[OA\Delete(
+        path: '/api/admin/books/{id}/copies/{copyId}',
+        summary: 'Delete book copy',
+        tags: ['Inventory'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'copyId', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: 204, description: 'Deleted'),
+            new OA\Response(response: 400, description: 'Invalid id', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'Not found', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
     public function delete(
         int $id,
         int $copyId,
@@ -143,7 +229,7 @@ class BookInventoryController extends AbstractController
         SecurityService $security
     ): JsonResponse {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['message' => 'Forbidden'], 403);
+            return $this->jsonError(ApiError::forbidden());
         }
 
         try {
@@ -154,10 +240,23 @@ class BookInventoryController extends AbstractController
             if ($response = $this->jsonFromHttpException($e)) {
                 return $response;
             }
-            return $this->json(['message' => $e->getMessage()], 400);
+            return $this->jsonError(ApiError::badRequest($e->getMessage()));
         }
     }
 
+    #[OA\Get(
+        path: '/api/admin/copies/barcode/{barcode}',
+        summary: 'Find copy by barcode',
+        tags: ['Inventory'],
+        parameters: [
+            new OA\Parameter(name: 'barcode', in: 'path', required: true, schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'OK', content: new OA\JsonContent(type: 'object')),
+            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'Not found', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
     public function findByBarcode(
         string $barcode,
         Request $request,
@@ -165,12 +264,12 @@ class BookInventoryController extends AbstractController
         BookCopyRepository $copyRepo
     ): JsonResponse {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['message' => 'Forbidden'], 403);
+            return $this->jsonError(ApiError::forbidden());
         }
 
         $copy = $copyRepo->findOneBy(['inventoryCode' => $barcode]);
         if (!$copy) {
-            return $this->json(['message' => 'Nie znaleziono egzemplarza o tym kodzie kreskowym'], 404);
+            return $this->jsonError(ApiError::notFound('Nie znaleziono egzemplarza o tym kodzie kreskowym'));
         }
 
         return $this->json([

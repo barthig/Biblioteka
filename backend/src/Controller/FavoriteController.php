@@ -5,6 +5,8 @@ use App\Application\Command\Favorite\AddFavoriteCommand;
 use App\Application\Command\Favorite\RemoveFavoriteCommand;
 use App\Application\Query\Favorite\ListUserFavoritesQuery;
 use App\Controller\Traits\ValidationTrait;
+use App\Controller\Traits\ExceptionHandlingTrait;
+use App\Dto\ApiError;
 use App\Entity\Favorite;
 use App\Request\AddFavoriteRequest;
 use App\Service\SecurityService;
@@ -16,10 +18,13 @@ use Symfony\Component\Messenger\Exception\HandlerFailedException;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use OpenApi\Attributes as OA;
 
+#[OA\Tag(name: 'Favorite')]
 class FavoriteController extends AbstractController
 {
     use ValidationTrait;
+    use ExceptionHandlingTrait;
 
     public function __construct(
         private MessageBusInterface $commandBus,
@@ -28,11 +33,24 @@ class FavoriteController extends AbstractController
     ) {
     }
 
+    #[OA\Get(
+        path: '/api/favorites',
+        summary: 'List user favorites',
+        tags: ['Favorites'],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'OK',
+                content: new OA\JsonContent(type: 'object')
+            ),
+            new OA\Response(response: 401, description: 'Unauthorized', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
     public function list(Request $request): JsonResponse
     {
         $payload = $this->security->getJwtPayload($request);
         if (!$payload || !isset($payload['sub'])) {
-            return $this->json(['message' => 'Unauthorized'], 401);
+            return $this->jsonError(ApiError::unauthorized());
         }
 
         $query = new ListUserFavoritesQuery(userId: (int) $payload['sub']);
@@ -42,11 +60,41 @@ class FavoriteController extends AbstractController
         return $this->json($result, 200, [], ['groups' => ['favorite:read', 'book:read']]);
     }
 
+    #[OA\Post(
+        path: '/api/favorites',
+        summary: 'Add favorite',
+        tags: ['Favorites'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['bookId'],
+                properties: [
+                    new OA\Property(property: 'bookId', type: 'integer'),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: 'Created',
+                content: new OA\JsonContent(
+                    type: 'object',
+                    properties: [
+                        new OA\Property(property: 'data', type: 'object'),
+                    ]
+                )
+            ),
+            new OA\Response(response: 400, description: 'Validation error', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 401, description: 'Unauthorized', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'Not found', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 409, description: 'Already exists', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
     public function add(Request $request, ValidatorInterface $validator): JsonResponse
     {
         $payload = $this->security->getJwtPayload($request);
         if (!$payload || !isset($payload['sub'])) {
-            return $this->json(['message' => 'Unauthorized'], 401);
+            return $this->jsonError(ApiError::unauthorized());
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
@@ -71,7 +119,7 @@ class FavoriteController extends AbstractController
                 $e = $e->getPrevious() ?? $e;
             }
             if ($e instanceof HttpExceptionInterface) {
-                return $this->json(['message' => $e->getMessage()], $e->getStatusCode());
+                return $this->jsonError(ApiError::fromException($e));
             }
 
             $statusCode = match ($e->getMessage()) {
@@ -79,19 +127,39 @@ class FavoriteController extends AbstractController
                 'Ksi????ka znajduje si?? ju?? na Twojej p????ce' => 409,
                 default => 500
             };
-            return $this->json(['message' => $e->getMessage()], $statusCode);
+            $errorMessage = $e->getMessage();
+            $error = match ($statusCode) {
+                404 => ApiError::notFound('User or book'),
+                409 => ApiError::conflict($errorMessage),
+                default => ApiError::internalError($errorMessage)
+            };
+            return $this->jsonError($error);
         }
     }
 
-    public function remove(string $bookId, Request $request): JsonResponse
+    #[OA\Delete(
+        path: '/api/favorites/{bookId}',
+        summary: 'Remove favorite by book id',
+        tags: ['Favorites'],
+        parameters: [
+            new OA\Parameter(name: 'bookId', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: 204, description: 'Removed'),
+            new OA\Response(response: 400, description: 'Invalid id', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 401, description: 'Unauthorized', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
+    public function removeByBookId(string $bookId, Request $request): JsonResponse
     {
         if (!ctype_digit($bookId) || (int) $bookId <= 0) {
-            return $this->json(['message' => 'Invalid book id'], 400);
+            return $this->jsonError(ApiError::badRequest('Invalid book id'));
         }
 
         $payload = $this->security->getJwtPayload($request);
         if (!$payload || !isset($payload['sub'])) {
-            return $this->json(['message' => 'Unauthorized'], 401);
+            return $this->jsonError(ApiError::unauthorized());
         }
 
         // Note: RemoveFavoriteCommand uses favoriteId, but the route uses bookId
@@ -111,7 +179,7 @@ class FavoriteController extends AbstractController
         }
 
         if (!$favorite) {
-            return $this->json(['message' => 'Pozycja nie znajduje si?? na Twojej p????ce'], 404);
+            return $this->jsonError(ApiError::notFound('Favorite item'));
         }
 
         $command = new RemoveFavoriteCommand(
@@ -127,7 +195,7 @@ class FavoriteController extends AbstractController
                 $e = $e->getPrevious() ?? $e;
             }
             if ($e instanceof HttpExceptionInterface) {
-                return $this->json(['message' => $e->getMessage()], $e->getStatusCode());
+                return $this->jsonError(ApiError::fromException($e));
             }
 
             $statusCode = match ($e->getMessage()) {
@@ -135,13 +203,16 @@ class FavoriteController extends AbstractController
                 'You can only remove your own favorites' => 403,
                 default => 500
             };
-            return $this->json(['message' => $e->getMessage()], $statusCode);
+            $errorMessage = $e->getMessage();
+            $error = match ($statusCode) {
+                404 => ApiError::notFound('Favorite'),
+                403 => ApiError::forbidden(),
+                default => ApiError::internalError($errorMessage)
+            };
+            return $this->jsonError($error);
         }
     }
 }
-
-
-
 
 
 

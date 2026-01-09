@@ -8,6 +8,7 @@ use App\Application\Command\User\UnblockUserCommand;
 use App\Application\Command\User\UpdateUserCommand;
 use App\Controller\Traits\ExceptionHandlingTrait;
 use App\Controller\Traits\ValidationTrait;
+use App\Dto\ApiError;
 use App\Repository\StaffRoleRepository;
 use App\Request\CreateUserRequest;
 use App\Request\UpdateUserRequest;
@@ -18,7 +19,9 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use OpenApi\Attributes as OA;
 
+#[OA\Tag(name: 'UserManagement')]
 class UserManagementController extends AbstractController
 {
     use ValidationTrait;
@@ -29,10 +32,44 @@ class UserManagementController extends AbstractController
         private readonly SecurityService $security,
         private readonly StaffRoleRepository $staffRoles
     ) {}
+
+    #[OA\Post(
+        path: '/api/user-management',
+        summary: 'Utwórz użytkownika',
+        description: 'Tworzy nowego użytkownika. Wymaga roli LIBRARIAN.',
+        tags: ['UserManagement'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['email', 'name', 'password'],
+                properties: [
+                    new OA\Property(property: 'email', type: 'string'),
+                    new OA\Property(property: 'name', type: 'string'),
+                    new OA\Property(property: 'password', type: 'string'),
+                    new OA\Property(property: 'roles', type: 'array', items: new OA\Items(type: 'string')),
+                    new OA\Property(property: 'membershipGroup', type: 'string'),
+                    new OA\Property(property: 'loanLimit', type: 'integer'),
+                    new OA\Property(property: 'phoneNumber', type: 'string'),
+                    new OA\Property(property: 'addressLine', type: 'string'),
+                    new OA\Property(property: 'city', type: 'string'),
+                    new OA\Property(property: 'postalCode', type: 'string'),
+                    new OA\Property(property: 'blocked', type: 'boolean'),
+                    new OA\Property(property: 'blockedReason', type: 'string'),
+                    new OA\Property(property: 'pendingApproval', type: 'boolean'),
+                    new OA\Property(property: 'verified', type: 'boolean')
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 201, description: 'Użytkownik utworzony', content: new OA\JsonContent(ref: '#/components/schemas/User')),
+            new OA\Response(response: 400, description: 'Błąd walidacji', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 403, description: 'Brak uprawnień', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
+        ]
+    )]
 public function create(Request $request, ValidatorInterface $validator): JsonResponse
     {
         if (!$this->security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['message' => 'Forbidden'], 403);
+            return $this->jsonError(ApiError::forbidden());
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
@@ -69,15 +106,36 @@ public function create(Request $request, ValidatorInterface $validator): JsonRes
             if ($response = $this->jsonFromHttpException($e)) {
                 return $response;
             }
-            $statusCode = str_contains($e->getMessage(), 'Unknown membership group') ? 400 : 500;
-            return $this->json(['message' => $e->getMessage()], $statusCode);
+            $error = str_contains($e->getMessage(), 'Unknown membership group')
+                ? ApiError::badRequest($e->getMessage())
+                : ApiError::internalError($e->getMessage());
+            return $this->jsonError($error);
         }
     }
 
+    #[OA\Put(
+        path: '/api/user-management/{id}',
+        summary: 'Aktualizuj użytkownika',
+        description: 'Aktualizuje dane użytkownika. Wymaga roli LIBRARIAN lub własności zasobu.',
+        tags: ['UserManagement'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(type: 'object')
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'Użytkownik zaktualizowany', content: new OA\JsonContent(ref: '#/components/schemas/User')),
+            new OA\Response(response: 400, description: 'Błąd walidacji', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 403, description: 'Brak uprawnień', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'Użytkownik nie znaleziony', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
+        ]
+    )]
     public function update(string $id, Request $request, ValidatorInterface $validator): JsonResponse
     {
         if (!ctype_digit($id) || (int) $id <= 0) {
-            return $this->json(['message' => 'Invalid id parameter'], 400);
+            return $this->jsonError(ApiError::badRequest('Invalid id parameter'));
         }
 
         $isAdmin = $this->security->hasRole($request, 'ROLE_ADMIN');
@@ -87,7 +145,7 @@ public function create(Request $request, ValidatorInterface $validator): JsonRes
         $isOwner = $payload && isset($payload['sub']) && (int) $payload['sub'] === (int) $id;
 
         if (!($canManage || $isOwner)) {
-            return $this->json(['message' => 'Forbidden'], 403);
+            return $this->jsonError(ApiError::forbidden());
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
@@ -100,11 +158,11 @@ public function create(Request $request, ValidatorInterface $validator): JsonRes
 
         // Authorization checks for specific fields
         if (isset($data['roles']) && !$isAdmin) {
-            return $this->json(['message' => 'Forbidden to change roles'], 403);
+            return $this->jsonError(ApiError::forbidden());
         }
         if ((array_key_exists('pendingApproval', $data) || array_key_exists('verified', $data) || 
              isset($data['membershipGroup']) || isset($data['loanLimit']) || isset($data['blocked'])) && !$isLibrarian) {
-            return $this->json(['message' => 'Forbidden to change this field'], 403);
+            return $this->jsonError(ApiError::forbidden());
         }
 
         $command = new UpdateUserCommand(
@@ -135,22 +193,36 @@ public function create(Request $request, ValidatorInterface $validator): JsonRes
             if ($response = $this->jsonFromHttpException($e)) {
                 return $response;
             }
-            $statusCode = match (true) {
-                str_contains($e->getMessage(), 'User not found') => 404,
-                str_contains($e->getMessage(), 'Unknown membership group') => 400,
-                default => 500
+            $error = match (true) {
+                str_contains($e->getMessage(), 'User not found') => ApiError::notFound('User'),
+                str_contains($e->getMessage(), 'Unknown membership group') => ApiError::badRequest($e->getMessage()),
+                default => ApiError::internalError($e->getMessage())
             };
-            return $this->json(['message' => $e->getMessage()], $statusCode);
+            return $this->jsonError($error);
         }
     }
 
+    #[OA\Delete(
+        path: '/api/user-management/{id}',
+        summary: 'Usuń użytkownika',
+        description: 'Usuwa użytkownika. Wymaga roli LIBRARIAN.',
+        tags: ['UserManagement'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
+        ],
+        responses: [
+            new OA\Response(response: 204, description: 'Użytkownik usunięty'),
+            new OA\Response(response: 403, description: 'Brak uprawnień', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'Użytkownik nie znaleziony', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
+        ]
+    )]
     public function delete(string $id, Request $request): JsonResponse
     {
         if (!$this->security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['message' => 'Forbidden'], 403);
+            return $this->jsonError(ApiError::forbidden());
         }
         if (!ctype_digit($id) || (int) $id <= 0) {
-            return $this->json(['message' => 'Invalid id parameter'], 400);
+            return $this->jsonError(ApiError::badRequest('Invalid id parameter'));
         }
 
         $command = new DeleteUserCommand(userId: (int) $id);
@@ -167,23 +239,47 @@ public function create(Request $request, ValidatorInterface $validator): JsonRes
         }
     }
 
+    #[OA\Put(
+        path: '/api/user-management/{id}/permissions',
+        summary: 'Aktualizuj uprawnienia użytkownika',
+        description: 'Aktualizuje role/uprawnienia użytkownika. Wymaga roli ADMIN.',
+        tags: ['UserManagement'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['roles'],
+                properties: [
+                    new OA\Property(property: 'roles', type: 'array', items: new OA\Items(type: 'string'))
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'Uprawnienia zaktualizowane', content: new OA\JsonContent(ref: '#/components/schemas/User')),
+            new OA\Response(response: 400, description: 'Błąd walidacji', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 403, description: 'Brak uprawnień', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'Użytkownik nie znaleziony', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
+        ]
+    )]
     public function updatePermissions(string $id, Request $request): JsonResponse
     {
         if (!$this->security->hasRole($request, 'ROLE_ADMIN')) {
-            return $this->json(['message' => 'Forbidden'], 403);
+            return $this->jsonError(ApiError::forbidden());
         }
         if (!ctype_digit($id) || (int) $id <= 0) {
-            return $this->json(['message' => 'Invalid id parameter'], 400);
+            return $this->jsonError(ApiError::badRequest('Invalid id parameter'));
         }
 
         $data = json_decode($request->getContent(), true);
         if (!is_array($data)) {
-            return $this->json(['message' => 'Invalid JSON payload'], 400);
+            return $this->jsonError(ApiError::badRequest('Invalid JSON payload'));
         }
 
         $roles = $data['roles'] ?? $data['permissions'] ?? null;
         if (!is_array($roles) || count($roles) === 0) {
-            return $this->json(['message' => 'roles are required'], 400);
+            return $this->jsonError(ApiError::badRequest('roles are required'));
         }
 
         $roles = array_values(array_unique(array_filter(array_map(static function ($role) {
@@ -195,7 +291,7 @@ public function create(Request $request, ValidatorInterface $validator): JsonRes
         }, $roles))));
 
         if (count($roles) === 0) {
-            return $this->json(['message' => 'roles are required'], 400);
+            return $this->jsonError(ApiError::badRequest('roles are required'));
         }
 
         $allowedBaseRoles = ['ROLE_USER', 'ROLE_LIBRARIAN', 'ROLE_ADMIN', 'ROLE_SYSTEM'];
@@ -211,10 +307,7 @@ public function create(Request $request, ValidatorInterface $validator): JsonRes
         }
 
         if (count($invalidRoles) > 0) {
-            return $this->json([
-                'message' => 'Invalid roles',
-                'invalidRoles' => $invalidRoles,
-            ], 400);
+            return $this->jsonError(ApiError::badRequest('Invalid roles', ['invalidRoles' => $invalidRoles]));
         }
 
         $command = new UpdateUserCommand(
@@ -231,17 +324,39 @@ public function create(Request $request, ValidatorInterface $validator): JsonRes
             if ($response = $this->jsonFromHttpException($e)) {
                 return $response;
             }
-            return $this->json(['message' => $e->getMessage()], 500);
+            return $this->jsonError(ApiError::internalError($e->getMessage()));
         }
     }
 
+    #[OA\Post(
+        path: '/api/user-management/{id}/block',
+        summary: 'Zablokuj użytkownika',
+        description: 'Blokuje konto użytkownika. Wymaga roli LIBRARIAN.',
+        tags: ['UserManagement'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
+        ],
+        requestBody: new OA\RequestBody(
+            required: false,
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: 'reason', type: 'string')
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'Użytkownik zablokowany', content: new OA\JsonContent(ref: '#/components/schemas/User')),
+            new OA\Response(response: 403, description: 'Brak uprawnień', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'Użytkownik nie znaleziony', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
+        ]
+    )]
     public function block(string $id, Request $request): JsonResponse
     {
         if (!$this->security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['message' => 'Forbidden'], 403);
+            return $this->jsonError(ApiError::forbidden());
         }
         if (!ctype_digit($id) || (int) $id <= 0) {
-            return $this->json(['message' => 'Invalid id parameter'], 400);
+            return $this->jsonError(ApiError::badRequest('Invalid id parameter'));
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
@@ -259,17 +374,31 @@ public function create(Request $request, ValidatorInterface $validator): JsonRes
             if ($response = $this->jsonFromHttpException($e)) {
                 return $response;
             }
-            return $this->json(['message' => $e->getMessage()], 404);
+            return $this->jsonError(ApiError::notFound('User'));
         }
     }
 
+    #[OA\Post(
+        path: '/api/user-management/{id}/unblock',
+        summary: 'Odblokuj użytkownika',
+        description: 'Odblokowuje konto użytkownika. Wymaga roli LIBRARIAN.',
+        tags: ['UserManagement'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'Użytkownik odblokowany', content: new OA\JsonContent(ref: '#/components/schemas/User')),
+            new OA\Response(response: 403, description: 'Brak uprawnień', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'Użytkownik nie znaleziony', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
+        ]
+    )]
     public function unblock(string $id, Request $request): JsonResponse
     {
         if (!$this->security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['message' => 'Forbidden'], 403);
+            return $this->jsonError(ApiError::forbidden());
         }
         if (!ctype_digit($id) || (int) $id <= 0) {
-            return $this->json(['message' => 'Invalid id parameter'], 400);
+            return $this->jsonError(ApiError::badRequest('Invalid id parameter'));
         }
 
         $command = new UnblockUserCommand(userId: (int) $id);
