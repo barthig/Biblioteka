@@ -7,6 +7,8 @@
                     "php":  "^8.1",
                     "ext-pdo":  "*",
                     "symfony/framework-bundle":  "^6.4",
+                    "symfony/twig-bundle":  "^6.4",
+                    "symfony/asset":  "^6.4",
                     "symfony/orm-pack":  "^2.2",
                     "doctrine/doctrine-bundle":  "^2.8",
                     "symfony/messenger":  "^6.4",

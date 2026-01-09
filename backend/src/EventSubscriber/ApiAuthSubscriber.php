@@ -41,6 +41,10 @@ class ApiAuthSubscriber implements EventSubscriberInterface
             return;
         }
 
+        if ($path === '/api/docs' || $path === '/api/docs.json') {
+            return;
+        }
+
         $apiSecretStatus = $this->attachApiSecretIdentity($request);
         $jwtStatus = $this->attachJwtPayload($request);
 
