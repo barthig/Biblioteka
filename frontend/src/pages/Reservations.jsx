@@ -8,6 +8,7 @@ import StatGrid from '../components/ui/StatGrid'
 import StatCard from '../components/ui/StatCard'
 import SectionCard from '../components/ui/SectionCard'
 import FeedbackCard from '../components/ui/FeedbackCard'
+import { logger } from '../utils/logger'
 
 function formatDate(value) {
   return value ? new Date(value).toLocaleDateString('pl-PL') : '-'
@@ -115,7 +116,7 @@ export default function Reservations() {
       // Invalidate recommended cache as book availability may have changed
       invalidateResource('recommended:*')
     } catch (err) {
-      console.error('Error cancelling reservation:', err)
+      logger.error('Error cancelling reservation:', err)
       setActionError(err.message || 'Nie udało się anulować rezerwacji')
     }
   }

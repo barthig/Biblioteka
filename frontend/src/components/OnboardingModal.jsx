@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { apiFetch } from '../api'
+import { logger } from '../utils/logger'
 
 const AVAILABLE_CATEGORIES = [
   'Kryminał', 'Fantastyka', 'Romans', 'Thriller', 'Science Fiction',
@@ -30,7 +31,7 @@ export default function OnboardingModal({ onComplete }) {
       })
       onComplete?.()
     } catch (err) {
-      console.error('Onboarding failed:', err)
+      logger.error('Onboarding failed:', err)
       // Nawet jeśli fail, pozwól przejść dalej
       onComplete?.()
     } finally {

@@ -8,6 +8,7 @@ import PageHeader from '../components/ui/PageHeader'
 import StatGrid from '../components/ui/StatGrid'
 import StatCard from '../components/ui/StatCard'
 import SectionCard from '../components/ui/SectionCard'
+import { logger } from '../utils/logger'
 import FeedbackCard from '../components/ui/FeedbackCard'
 
 function formatDate(value, withTime = false) {
@@ -152,7 +153,7 @@ export default function BookDetails() {
           userRating: data.userRating || null
         })
       } catch (err) {
-        console.error('Failed to load ratings:', err)
+        logger.error('Failed to load ratings:', err)
       }
     }
     

@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { apiFetch } from '../api';
 import './UserDetails.css';
+import { logger } from '../utils/logger';
 
 const UserDetails = () => {
   const { id } = useParams();
@@ -47,7 +48,7 @@ const UserDetails = () => {
       setError('');
     } catch (err) {
       setError(err.message || 'Błąd podczas ładowania danych użytkownika');
-      console.error('Error fetching user details:', err);
+      logger.error('Error fetching user details:', err);
     } finally {
       setLoading(false);
     }
@@ -88,7 +89,7 @@ const UserDetails = () => {
       alert('Dane użytkownika zostały zaktualizowane');
     } catch (err) {
       alert(err.message || 'Błąd podczas zapisywania danych');
-      console.error('Error updating user:', err);
+      logger.error('Error updating user:', err);
     }
   };
 

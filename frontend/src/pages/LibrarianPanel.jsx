@@ -8,6 +8,7 @@ import PageHeader from '../components/ui/PageHeader'
 import StatGrid from '../components/ui/StatGrid'
 import StatCard from '../components/ui/StatCard'
 import FeedbackCard from '../components/ui/FeedbackCard'
+import { logger } from '../utils/logger'
 
 export default function LibrarianPanel() {
   const { user } = useAuth()
@@ -262,7 +263,7 @@ export default function LibrarianPanel() {
       const data = await apiFetch(`/api/books?q=${encodeURIComponent(query)}&limit=10`)
       setAvailableBooks(Array.isArray(data?.data) ? data.data : [])
     } catch (err) {
-      console.error('Blad wyszukiwania ksiazek:', err)
+      logger.error('Blad wyszukiwania ksiazek:', err)
     }
   }
 
@@ -483,7 +484,7 @@ export default function LibrarianPanel() {
       const data = await apiFetch(`/api/books?q=${encodeURIComponent(query)}`)
       setCollectionBookResults(data.data || [])
     } catch (err) {
-      console.error('Book search failed:', err)
+      logger.error('Book search failed:', err)
     }
   }
 

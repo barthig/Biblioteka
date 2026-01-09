@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { authService } from '../services/authService'
 import { apiFetch } from '../api'
 import { applyUiPreferences, clearUiPreferences, loadStoredUiPreferences, storeUiPreferences } from '../utils/uiPreferences'
+import { logger } from '../utils/logger'
 
 const AuthContext = createContext(null)
 
@@ -26,7 +27,7 @@ function decodeJwt(token) {
     // Check if token is expired
     const now = Math.floor(Date.now() / 1000)
     if (payload.exp && payload.exp < now) {
-      console.warn('JWT token expired')
+      logger.warn('JWT token expired')
       return null
     }
     
@@ -39,7 +40,7 @@ function decodeJwt(token) {
       raw: payload,
     }
   } catch (err) {
-    console.warn('Failed to decode JWT', err)
+    logger.warn('Failed to decode JWT', err)
     return null
   }
 }

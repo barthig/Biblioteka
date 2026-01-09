@@ -8,6 +8,7 @@ use App\Entity\Loan;
 use App\Entity\Reservation;
 use App\Entity\User;
 use App\Entity\UserBookInteraction;
+use App\Event\BookBorrowedEvent;
 use App\Repository\BookCopyRepository;
 use App\Repository\LoanRepository;
 use App\Repository\ReservationRepository;
@@ -15,6 +16,7 @@ use App\Service\BookService;
 use App\Service\SystemSettingsService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 #[AsMessageHandler]
 class CreateLoanHandler
@@ -25,7 +27,8 @@ class CreateLoanHandler
         private LoanRepository $loanRepository,
         private ReservationRepository $reservationRepository,
         private BookCopyRepository $bookCopyRepository,
-        private SystemSettingsService $settingsService
+        private SystemSettingsService $settingsService,
+        private EventDispatcherInterface $eventDispatcher
     ) {
     }
 
@@ -109,6 +112,10 @@ class CreateLoanHandler
             }
             $this->em->flush();
             $this->em->commit();
+            
+            // Dispatch event
+            $this->eventDispatcher->dispatch(new BookBorrowedEvent($loan));
+            
         } catch (\Exception $e) {
             $this->em->rollback();
             error_log('CreateLoanHandler exception: ' . $e->getMessage());

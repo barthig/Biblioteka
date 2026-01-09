@@ -7,6 +7,7 @@ import { announcementService } from '../services/announcementService'
 import PageHeader from '../components/ui/PageHeader'
 import SectionCard from '../components/ui/SectionCard'
 import FeedbackCard from '../components/ui/FeedbackCard'
+import { logger } from '../utils/logger'
 
 const EVENT_KEYWORDS = [
   'spotkanie',
@@ -103,7 +104,7 @@ export default function Announcements() {
           }
         }
       } catch (err) {
-        console.error('Błąd ładowania ogłoszeń:', err)
+        logger.error('Błąd ładowania ogłoszeń:', err)
         if (!abortController.signal.aborted) {
           setError(err.message || 'Nie udało się załadować ogłoszeń')
           setAnnouncements([])

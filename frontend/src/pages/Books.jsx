@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext'
 import PageHeader from '../components/ui/PageHeader'
 import StatGrid from '../components/ui/StatGrid'
 import StatCard from '../components/ui/StatCard'
+import { logger } from '../utils/logger'
 import SectionCard from '../components/ui/SectionCard'
 import FeedbackCard from '../components/ui/FeedbackCard'
 import Pagination from '../components/Pagination'
@@ -199,7 +200,7 @@ export default function Books() {
       setFacets(normalized)
       setCachedResource(cacheKey, normalized)
     } catch (err) {
-      console.warn('Nie udało się pobrać metadanych filtrów książek:', err)
+      logger.warn('Nie udało się pobrać metadanych filtrów książek:', err)
     }
   }
 

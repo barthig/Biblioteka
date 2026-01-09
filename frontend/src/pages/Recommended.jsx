@@ -8,6 +8,7 @@ import StatGrid from '../components/ui/StatGrid'
 import StatCard from '../components/ui/StatCard'
 import SectionCard from '../components/ui/SectionCard'
 import FeedbackCard from '../components/ui/FeedbackCard'
+import { logger } from '../utils/logger'
 
 const CACHE_TTL = 60000
 const CACHE_KEY = 'recommended:/api/books/recommended'
@@ -37,7 +38,7 @@ export default function Recommended() {
       setLastDismissedId(bookId)
       invalidateResource(cacheKey)
     } catch (err) {
-      console.error('Failed to dismiss book:', err)
+      logger.error('Failed to dismiss book:', err)
     }
   }
 
@@ -53,7 +54,7 @@ export default function Recommended() {
       setLastDismissedId(null)
       invalidateResource(cacheKey)
     } catch (err) {
-      console.error('Failed to undo dismiss:', err)
+      logger.error('Failed to undo dismiss:', err)
     }
   }
 

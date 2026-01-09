@@ -17,5 +17,14 @@ module.exports = {
   extends: ["eslint:recommended", "plugin:react/recommended", "plugin:react-hooks/recommended"],
   rules: {
     "react/prop-types": "off",
+    "no-console": "warn", // Warn about console usage - use logger utility instead
   },
+  overrides: [
+    {
+      files: ["**/utils/logger.js"],
+      rules: {
+        "no-console": "off", // Logger utility is allowed to use console
+      },
+    },
+  ],
 };

@@ -5,6 +5,7 @@ use App\Application\Command\Loan\ReturnLoanCommand;
 use App\Entity\BookCopy;
 use App\Entity\Fine;
 use App\Entity\Loan;
+use App\Event\BookReturnedEvent;
 use App\Message\ReservationReadyMessage;
 use App\Repository\LoanRepository;
 use App\Repository\ReservationRepository;
@@ -13,6 +14,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Symfony\Component\Messenger\MessageBusInterface;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 #[AsMessageHandler]
 class ReturnLoanHandler
@@ -23,7 +25,8 @@ class ReturnLoanHandler
         private LoanRepository $loanRepository,
         private ReservationRepository $reservationRepository,
         private MessageBusInterface $bus,
-        private LoggerInterface $logger
+        private LoggerInterface $logger,
+        private EventDispatcherInterface $eventDispatcher
     ) {
     }
 
@@ -121,6 +124,9 @@ class ReturnLoanHandler
             // Fine was already persisted above
             $this->em->flush();
         }
+
+        // Dispatch event
+        $this->eventDispatcher->dispatch(new BookReturnedEvent($loan));
 
         return $loan;
     }
