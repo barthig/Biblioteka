@@ -8,6 +8,8 @@ namespace App\Dto;
  */
 class ApiResponse
 {
+    use HateoasTrait;
+
     /**
      * Response data (for success responses)
      * @var mixed

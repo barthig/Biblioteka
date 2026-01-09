@@ -1,5 +1,6 @@
 ﻿import React from 'react'
 import { Routes, Route } from 'react-router-dom'
+import { Toaster } from 'react-hot-toast'
 import { AuthProvider } from './context/AuthContext'
 import { ResourceCacheProvider } from './context/ResourceCacheContext'
 import Navbar from './components/Navbar'
@@ -25,6 +26,30 @@ export default function App() {
   return (
     <AuthProvider>
       <ResourceCacheProvider>
+        <Toaster 
+          position="top-right"
+          toastOptions={{
+            duration: 4000,
+            style: {
+              background: '#363636',
+              color: '#fff',
+            },
+            success: {
+              duration: 3000,
+              iconTheme: {
+                primary: '#4caf50',
+                secondary: '#fff',
+              },
+            },
+            error: {
+              duration: 5000,
+              iconTheme: {
+                primary: '#f44336',
+                secondary: '#fff',
+              },
+            },
+          }}
+        />
         <div className="app-shell">
           <Navbar />
           <main className="main">

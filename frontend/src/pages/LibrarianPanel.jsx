@@ -1,7 +1,9 @@
 
 import React, { useEffect, useMemo, useState } from 'react'
+import toast from 'react-hot-toast'
 import { apiFetch } from '../api'
 import { useAuth } from '../context/AuthContext'
+import LibrarianDashboard from './LibrarianDashboard'
 import PageHeader from '../components/ui/PageHeader'
 import StatGrid from '../components/ui/StatGrid'
 import StatCard from '../components/ui/StatCard'
@@ -10,7 +12,7 @@ import FeedbackCard from '../components/ui/FeedbackCard'
 export default function LibrarianPanel() {
   const { user } = useAuth()
   const isAdmin = user?.roles?.includes('ROLE_ADMIN')
-  const [activeTab, setActiveTab] = useState('loans')
+  const [activeTab, setActiveTab] = useState('dashboard')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [success, setSuccess] = useState(null)
@@ -543,24 +545,18 @@ export default function LibrarianPanel() {
         subtitle="Obsluga wypozyczen i zarzadzanie biblioteka"
       />
 
-      <StatGrid>
-        <StatCard title="Aktywne wypozyczenia" value={stats.activeLoans ?? 0} />
-        <StatCard title="Przeterminowane" value={stats.overdueLoans ?? 0} />
-        <StatCard title="Rezerwacje" value={reservations.length} />
-      </StatGrid>
-
       {error && <FeedbackCard variant="error">{error}</FeedbackCard>}
       {success && <FeedbackCard variant="success">{success}</FeedbackCard>}
 
       <div className="tabs">
+        <button className={`tab ${activeTab === 'dashboard' ? 'tab--active' : ''}`} onClick={() => setActiveTab('dashboard')}>
+          Dashboard
+        </button>
         <button className={`tab ${activeTab === 'loans' ? 'tab--active' : ''}`} onClick={() => setActiveTab('loans')}>
           Wypozyczenia
         </button>
         <button className={`tab ${activeTab === 'create' ? 'tab--active' : ''}`} onClick={() => setActiveTab('create')}>
           Nowe wypozyczenie
-        </button>
-        <button className={`tab ${activeTab === 'stats' ? 'tab--active' : ''}`} onClick={() => setActiveTab('stats')}>
-          Statystyki
         </button>
         <button className={`tab ${activeTab === 'reservations' ? 'tab--active' : ''}`} onClick={() => setActiveTab('reservations')}>
           Rezerwacje
@@ -575,6 +571,8 @@ export default function LibrarianPanel() {
           Kolekcje
         </button>
       </div>
+
+      {activeTab === 'dashboard' && <LibrarianDashboard />}
 
       {returnModal.show && (
         <div className="modal-overlay" onClick={() => setReturnModal({ show: false, loan: null, fine: null })}>

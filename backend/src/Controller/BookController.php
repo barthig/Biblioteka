@@ -104,6 +104,40 @@ class BookController extends AbstractController
         $envelope = $this->queryBus->dispatch($query);
         $result = $envelope->last(HandledStamp::class)?->getResult();
 
+        // Add HATEOAS links to books
+        if (isset($result['items']) && is_array($result['items'])) {
+            foreach ($result['items'] as &$book) {
+                if (isset($book['id'])) {
+                    $book['_links'] = [
+                        'self' => ['href' => '/api/books/' . $book['id']],
+                        'copies' => ['href' => '/api/books/' . $book['id'] . '/copies'],
+                        'loans' => ['href' => '/api/loans?bookId=' . $book['id']],
+                        'ratings' => ['href' => '/api/books/' . $book['id'] . '/ratings']
+                    ];
+                }
+            }
+        }
+
+        // Add pagination links
+        if (isset($result['meta'])) {
+            $page = $result['meta']['page'] ?? 1;
+            $totalPages = $result['meta']['totalPages'] ?? 1;
+            
+            $result['_links'] = [
+                'self' => ['href' => '/api/books?page=' . $page],
+            ];
+            
+            if ($page > 1) {
+                $result['_links']['prev'] = ['href' => '/api/books?page=' . ($page - 1)];
+                $result['_links']['first'] = ['href' => '/api/books?page=1'];
+            }
+            
+            if ($page < $totalPages) {
+                $result['_links']['next'] = ['href' => '/api/books?page=' . ($page + 1)];
+                $result['_links']['last'] = ['href' => '/api/books?page=' . $totalPages];
+            }
+        }
+
         return $this->json($result, 200, [], ['groups' => ['book:read']]);
     }
 

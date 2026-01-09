@@ -278,4 +278,88 @@ class UserController extends AbstractController
 
         return new JsonResponse(null, 204);
     }
+
+    #[OA\Put(
+        path: '/api/users/me/password',
+        summary: 'Change current user password',
+        tags: ['User'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: 'oldPassword', type: 'string', example: 'oldpass123'),
+                    new OA\Property(property: 'newPassword', type: 'string', example: 'newpass123')
+                ],
+                required: ['oldPassword', 'newPassword']
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Password changed successfully',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'Password changed successfully')
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 400,
+                description: 'Invalid old password or validation error',
+                content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')
+            ),
+            new OA\Response(response: 401, description: 'Unauthorized', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
+        ]
+    )]
+    #[IsGranted('ROLE_USER')]
+    public function changePassword(Request $request, UserRepository $repo): JsonResponse
+    {
+        try {
+            $data = json_decode($request->getContent(), true);
+            
+            if (!isset($data['oldPassword']) || !isset($data['newPassword'])) {
+                return $this->json([
+                    'message' => 'Missing required fields: oldPassword, newPassword'
+                ], 400);
+            }
+
+            $oldPassword = $data['oldPassword'];
+            $newPassword = $data['newPassword'];
+
+            // Validate new password
+            if (strlen($newPassword) < 6) {
+                return $this->json([
+                    'message' => 'New password must be at least 6 characters long'
+                ], 400);
+            }
+
+            $currentUserId = $this->security->getCurrentUserId($request);
+            $user = $repo->find($currentUserId);
+
+            if (!$user) {
+                return $this->json(['message' => 'User not found'], 404);
+            }
+
+            // Verify old password
+            if (!password_verify($oldPassword, $user->getPassword())) {
+                return $this->json([
+                    'message' => 'Invalid old password'
+                ], 400);
+            }
+
+            // Hash and set new password
+            $hashedPassword = password_hash($newPassword, PASSWORD_BCRYPT);
+            $user->setPassword($hashedPassword);
+            $repo->save($user, true);
+
+            return $this->json([
+                'message' => 'Password changed successfully'
+            ]);
+
+        } catch (\Exception $e) {
+            return $this->json([
+                'message' => 'Failed to change password: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

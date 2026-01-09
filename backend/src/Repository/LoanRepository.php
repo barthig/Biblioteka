@@ -121,4 +121,30 @@ class LoanRepository extends ServiceEntityRepository
 
         return array_map(static fn (array $row) => (int) $row['userId'], $rows);
     }
+
+    /**
+     * Count active loans (not returned yet).
+     */
+    public function countActiveLoans(): int
+    {
+        return (int) $this->createQueryBuilder('l')
+            ->select('COUNT(l.id)')
+            ->andWhere('l.returnedAt IS NULL')
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    /**
+     * Count overdue loans (past due date and not returned).
+     */
+    public function countOverdueLoans(): int
+    {
+        return (int) $this->createQueryBuilder('l')
+            ->select('COUNT(l.id)')
+            ->andWhere('l.returnedAt IS NULL')
+            ->andWhere('l.dueAt < :now')
+            ->setParameter('now', new \DateTimeImmutable())
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
 }

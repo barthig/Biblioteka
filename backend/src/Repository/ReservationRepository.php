@@ -143,4 +143,17 @@ class ReservationRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    /**
+     * Count pending reservations (status = queued).
+     */
+    public function countPendingReservations(): int
+    {
+        return (int) $this->createQueryBuilder('r')
+            ->select('COUNT(r.id)')
+            ->andWhere('r.status = :status')
+            ->setParameter('status', Reservation::STATUS_QUEUED)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
 }

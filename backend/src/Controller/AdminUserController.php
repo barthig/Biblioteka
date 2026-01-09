@@ -26,19 +26,60 @@ class AdminUserController extends AbstractController
     #[IsGranted('ROLE_ADMIN')]
     #[OA\Put(
         path: '/api/admin/users/{id}',
-        summary: 'Update user (admin)',
+        summary: 'Update user (admin only)',
+        description: 'Allows administrators to update user details including roles, account status, and blocking status',
         tags: ['AdminUser'],
         parameters: [
-            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                description: 'User ID',
+                schema: new OA\Schema(type: 'integer', example: 42)
+            ),
         ],
         requestBody: new OA\RequestBody(
             required: true,
-            content: new OA\JsonContent(type: 'object')
+            description: 'User data to update',
+            content: new OA\JsonContent(
+                type: 'object',
+                properties: [
+                    new OA\Property(property: 'name', type: 'string', example: 'Jan Kowalski'),
+                    new OA\Property(property: 'email', type: 'string', format: 'email', example: 'jan.kowalski@example.com'),
+                    new OA\Property(
+                        property: 'roles',
+                        type: 'array',
+                        items: new OA\Items(type: 'string', enum: ['ROLE_USER', 'ROLE_LIBRARIAN', 'ROLE_ADMIN']),
+                        example: ['ROLE_USER', 'ROLE_LIBRARIAN']
+                    ),
+                    new OA\Property(property: 'cardNumber', type: 'string', example: '123456789'),
+                    new OA\Property(property: 'accountStatus', type: 'string', enum: ['active', 'inactive', 'suspended'], example: 'active'),
+                    new OA\Property(property: 'blocked', type: 'boolean', example: false),
+                    new OA\Property(property: 'blockedReason', type: 'string', nullable: true, example: null)
+                ]
+            )
         ),
         responses: [
-            new OA\Response(response: 200, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/User')),
+            new OA\Response(
+                response: 200,
+                description: 'User updated successfully',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'User updated successfully'),
+                        new OA\Property(
+                            property: 'user',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'id', type: 'integer', example: 42),
+                                new OA\Property(property: 'name', type: 'string', example: 'Jan Kowalski'),
+                                new OA\Property(property: 'email', type: 'string', example: 'jan.kowalski@example.com')
+                            ]
+                        )
+                    ]
+                )
+            ),
             new OA\Response(response: 400, description: 'Validation error', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
-            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 403, description: 'Forbidden - Admin role required', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
             new OA\Response(response: 404, description: 'User not found', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
         ]
     )]
@@ -75,15 +116,33 @@ class AdminUserController extends AbstractController
     #[IsGranted('ROLE_ADMIN')]
     #[OA\Delete(
         path: '/api/admin/users/{id}',
-        summary: 'Delete user (admin)',
+        summary: 'Delete user (admin only)',
+        description: 'Permanently deletes a user account. Cannot delete own account. Use with caution.',
         tags: ['AdminUser'],
         parameters: [
-            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                description: 'User ID to delete',
+                schema: new OA\Schema(type: 'integer', example: 42)
+            ),
         ],
         responses: [
-            new OA\Response(response: 204, description: 'Deleted'),
-            new OA\Response(response: 400, description: 'Bad request', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
-            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(
+                response: 204,
+                description: 'User deleted successfully (no content)'
+            ),
+            new OA\Response(
+                response: 400,
+                description: 'Cannot delete own account',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'Cannot delete your own account')
+                    ]
+                )
+            ),
+            new OA\Response(response: 403, description: 'Forbidden - Admin role required', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
             new OA\Response(response: 404, description: 'User not found', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
         ]
     )]

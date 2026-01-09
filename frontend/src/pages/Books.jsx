@@ -1,7 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react'
+import toast from 'react-hot-toast'
 import { apiFetch } from '../api'
 import BookItem from '../components/BookItem'
+import { BookSkeleton } from '../components/ui/Skeleton'
 import { useResourceCache } from '../context/ResourceCacheContext'
+import { useAuth } from '../context/AuthContext'
 import PageHeader from '../components/ui/PageHeader'
 import StatGrid from '../components/ui/StatGrid'
 import StatCard from '../components/ui/StatCard'
@@ -24,6 +27,7 @@ const initialFilters = {
 const DEFAULT_LIMIT = 20
 
 export default function Books() {
+  const { user } = useAuth()
   const [books, setBooks] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -281,15 +285,53 @@ export default function Books() {
   ].filter(Boolean).length
   const resultCount = totalItems || books.length
 
+  const isLibrarianOrAdmin = user && (user.roles?.includes('ROLE_LIBRARIAN') || user.roles?.includes('ROLE_ADMIN'))
+
+  async function handleExportCSV() {
+    try {
+      const token = localStorage.getItem('token')
+      const response = await fetch('http://localhost:8000/api/books/export', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (!response.ok) {
+        throw new Error('Eksport nie powiódł się')
+      }
+
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `books_export_${new Date().toISOString().split('T')[0]}.csv`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      window.URL.revokeObjectURL(url)
+      
+      toast.success('Eksport zakończony pomyślnie!')
+    } catch (err) {
+      toast.error('Nie udało się wyeksportować książek')
+    }
+  }
+
   return (
     <div className="page">
       <PageHeader
         title="Książki"
         subtitle="Przeglądaj katalog i błyskawicznie wypożycz dostępne egzemplarze."
         actions={(
-          <button className="btn btn-outline" onClick={() => load(undefined, undefined, { force: true, page: 1 })} disabled={loading}>
-            {loading ? 'Odświeżanie...' : 'Odśwież listę'}
-          </button>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            {isLibrarianOrAdmin && (
+              <button className="btn btn-outline" onClick={handleExportCSV}>
+                Eksportuj CSV
+              </button>
+            )}
+            <button className="btn btn-outline" onClick={() => load(undefined, undefined, { force: true, page: 1 })} disabled={loading}>
+              {loading ? 'Odświeżanie...' : 'Odśwież listę'}
+            </button>
+          </div>
         )}
       />
 
@@ -458,7 +500,13 @@ export default function Books() {
       </form>
 
       {loading && (
-        <SectionCard className="empty-state">Trwa ładowanie książek...</SectionCard>
+        <div className="books-loading">
+          <BookSkeleton />
+          <BookSkeleton />
+          <BookSkeleton />
+          <BookSkeleton />
+          <BookSkeleton />
+        </div>
       )}
 
       {!loading && error && <FeedbackCard variant="error">{error}</FeedbackCard>}

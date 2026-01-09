@@ -774,4 +774,30 @@ class BookRepository extends ServiceEntityRepository
             ];
         }, $rows);
     }
+
+    /**
+     * Find most popular books by borrow count.
+     *
+     * @return Book[]
+     */
+    public function findMostPopular(int $limit = 10): array
+    {
+        return $this->createQueryBuilder('b')
+            ->orderBy('b.borrowedCopies', 'DESC')
+            ->addOrderBy('b.averageRating', 'DESC')
+            ->setMaxResults(max(1, $limit))
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Count total available copies across all books.
+     */
+    public function countTotalAvailableCopies(): int
+    {
+        return (int) $this->createQueryBuilder('b')
+            ->select('SUM(b.copies)')
+            ->getQuery()
+            ->getSingleScalarResult() ?? 0;
+    }
 }

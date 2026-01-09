@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import toast from 'react-hot-toast'
 import { apiFetch } from '../api'
 import { useAuth } from '../context/AuthContext'
 import { ratingService } from '../services/ratingService'
@@ -197,25 +198,30 @@ export default function Profile() {
     setSuccess(null)
 
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      setError('Nowe hasło i powtórzone hasło muszą być takie same')
+      toast.error('Nowe hasło i powtórzone hasło muszą być takie same')
+      return
+    }
+
+    if (passwordForm.newPassword.length < 6) {
+      toast.error('Nowe hasło musi mieć minimum 6 znaków')
       return
     }
 
     setSaving(true)
 
     try {
-      await apiFetch('/api/me/password', {
+      await apiFetch('/api/users/me/password', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          currentPassword: passwordForm.currentPassword,
+          oldPassword: passwordForm.currentPassword,
           newPassword: passwordForm.newPassword
         })
       })
-      setSuccess('Hasło zostało zmienione')
+      toast.success('Hasło zostało zmienione!')
       setPasswordForm(initialPasswordForm)
     } catch (err) {
-      setError(err.message || 'Nie udało się zmienić hasła')
+      toast.error(err.message || 'Nie udało się zmienić hasła')
     } finally {
       setSaving(false)
     }
