@@ -35,4 +35,10 @@ describe('Notifications page', () => {
     render(<Notifications />)
     expect(await screen.findByRole('button', { name: /test/i })).toBeInTheDocument()
   })
+
+  it('shows error when notifications fail to load', async () => {
+    mockList.mockRejectedValue(new Error('Load failed'))
+    render(<Notifications />)
+    expect(await screen.findByText(/Load failed/i)).toBeInTheDocument()
+  })
 })

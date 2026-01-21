@@ -51,4 +51,13 @@ describe('Reservations page', () => {
     await userEvent.click(screen.getByRole('button', { name: /Anuluj/i }))
     expect(apiFetch).toHaveBeenCalledWith('/api/reservations/1', { method: 'DELETE' })
   })
+
+  it('shows error when loading reservations fails', async () => {
+    mockUser = { id: 1 }
+    apiFetch.mockRejectedValue(new Error('Load failed'))
+
+    renderPage()
+
+    expect(await screen.findByText(/Load failed/i)).toBeInTheDocument()
+  })
 })

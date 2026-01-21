@@ -53,4 +53,13 @@ describe('DigitalAssets page', () => {
 
     expect(digitalAssetService.upload).toHaveBeenCalledWith('7', file)
   })
+
+  it('shows error when loading assets fails', async () => {
+    mockUser = { roles: ['ROLE_LIBRARIAN'] }
+    digitalAssetService.list.mockRejectedValue(new Error('Load failed'))
+    const { container } = render(<DigitalAssets />)
+
+    await userEvent.type(container.querySelector('input[type="number"]'), '10')
+    expect(await screen.findByText(/Load failed/i)).toBeInTheDocument()
+  })
 })

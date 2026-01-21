@@ -19,7 +19,12 @@ vi.mock('../services/ratingService', () => ({
 
 let mockUser = null
 vi.mock('../context/AuthContext', () => ({
-  useAuth: () => ({ user: mockUser })
+  useAuth: () => ({
+    user: mockUser,
+    refreshSession: vi.fn(),
+    logoutAll: vi.fn(),
+    fetchAuthProfile: vi.fn()
+  })
 }))
 
 describe('Profile page', () => {
@@ -79,5 +84,55 @@ describe('Profile page', () => {
     await userEvent.click(screen.getByRole('button', { name: /Zmie.*has/i }))
 
     expect(await screen.findByText(/Nowe has/i, { selector: '.error' })).toBeInTheDocument()
+  })
+
+  it('loads fees tab with empty state', async () => {
+    mockUser = { id: 3 }
+    apiFetch
+      .mockResolvedValueOnce({
+        name: 'Jan Kowalski',
+        email: 'jan@example.com',
+        cardNumber: '123456'
+      })
+      .mockResolvedValueOnce({ data: [] })
+    ratingService.getMyRatings.mockResolvedValue({ data: [] })
+
+    render(
+      <MemoryRouter>
+        <Profile />
+      </MemoryRouter>
+    )
+
+    await screen.findByText(/Moje konto/i)
+    await userEvent.click(screen.getByRole('button', { name: /Oplaty i platnosci/i }))
+
+    expect(apiFetch).toHaveBeenCalledWith('/api/me/fees')
+    expect(await screen.findByText(/Brak aktywnych oplat do uregulowania/i)).toBeInTheDocument()
+  })
+
+  it('shows error when fee payment fails', async () => {
+    mockUser = { id: 4 }
+    apiFetch
+      .mockResolvedValueOnce({
+        name: 'Jan Kowalski',
+        email: 'jan@example.com',
+        cardNumber: '123456'
+      })
+      .mockResolvedValueOnce({ data: [{ id: 9, amount: 12.5, currency: 'PLN', reason: 'Kara' }] })
+      .mockRejectedValueOnce(new Error('Pay failed'))
+    ratingService.getMyRatings.mockResolvedValue({ data: [] })
+
+    render(
+      <MemoryRouter>
+        <Profile />
+      </MemoryRouter>
+    )
+
+    await screen.findByText(/Moje konto/i)
+    await userEvent.click(screen.getByRole('button', { name: /Oplaty i platnosci/i }))
+    await screen.findByText(/Kara/i)
+
+    await userEvent.click(screen.getByRole('button', { name: /Ureguluj online/i }))
+    expect(await screen.findByText(/Pay failed/i)).toBeInTheDocument()
   })
 })

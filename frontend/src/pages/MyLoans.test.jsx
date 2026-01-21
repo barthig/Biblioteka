@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import MyLoans from './MyLoans'
 import { apiFetch } from '../api'
@@ -50,5 +51,32 @@ describe('MyLoans page', () => {
     expect(await screen.findByText('Active Book')).toBeInTheDocument()
     expect(screen.getByText('Returned Book')).toBeInTheDocument()
     expect(apiFetch).toHaveBeenCalledWith('/api/me/loans')
+  })
+
+  it('shows error when loans fail to load', async () => {
+    mockAuth = { token: 'token', user: { id: 1 } }
+    apiFetch.mockRejectedValue(new Error('Load failed'))
+
+    renderPage()
+
+    expect(await screen.findByText(/Load failed/i)).toBeInTheDocument()
+  })
+
+  it('extends loan for logged-in user', async () => {
+    mockAuth = { token: 'token', user: { id: 1 } }
+    apiFetch
+      .mockResolvedValueOnce({
+        data: [
+          { id: 1, book: { title: 'Active Book' }, dueAt: '2025-02-01', returnedAt: null, extensionsCount: 0 }
+        ]
+      })
+      .mockResolvedValueOnce({ data: { id: 1, book: { title: 'Active Book' }, dueAt: '2025-02-15', returnedAt: null, extensionsCount: 1 } })
+
+    renderPage()
+
+    expect(await screen.findByText('Active Book')).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: /Przed/i }))
+
+    expect(apiFetch).toHaveBeenCalledWith('/api/loans/1/extend', expect.objectContaining({ method: 'PUT' }))
   })
 })
