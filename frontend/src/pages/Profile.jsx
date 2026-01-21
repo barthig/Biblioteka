@@ -422,7 +422,12 @@ export default function Profile() {
       {activeTab === 'security' && (
         <div className="form-section">
           <div className="form-section__header">
-            <div className="form-section__icon">SEC</div>
+            <div className="form-section__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="18" height="18" role="img" focusable="false">
+                <path d="M12 3l7 3v6c0 5.25-3.5 7.75-7 9-3.5-1.25-7-3.75-7-9V6l7-3z" fill="none" stroke="currentColor" strokeWidth="1.6" />
+                <path d="M9 12l2 2 4-4" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
             <div>
               <h2 className="form-section__title">Bezpieczeństwo konta</h2>
               <p className="form-section__description">Zarzadzaj haslem i aktywnymi sesjami</p>
@@ -489,7 +494,11 @@ export default function Profile() {
       {activeTab === 'contact' && (
         <div className="form-section">
           <div className="form-section__header">
-            <div className="form-section__icon">KON</div>
+            <div className="form-section__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="18" height="18" role="img" focusable="false">
+                <path d="M4 6c0-1.1.9-2 2-2h3l1 4-2 1c.6 1.3 1.7 2.4 3 3l1-2 4 1v3c0 1.1-.9 2-2 2h-1c-5.5 0-10-4.5-10-10V6z" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+              </svg>
+            </div>
             <div>
               <h2 className="form-section__title">Dane kontaktowe</h2>
               <p className="form-section__description">Utrzymuj aktualny adres i telefon dla powiadomień</p>
@@ -578,7 +587,14 @@ export default function Profile() {
       {activeTab === 'preferences' && (
         <div className="form-section">
           <div className="form-section__header">
-            <div className="form-section__icon">PREF</div>
+            <div className="form-section__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="18" height="18" role="img" focusable="false">
+                <path d="M4 6h10M4 12h16M4 18h10" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+                <circle cx="16" cy="6" r="2" fill="none" stroke="currentColor" strokeWidth="1.6" />
+                <circle cx="8" cy="18" r="2" fill="none" stroke="currentColor" strokeWidth="1.6" />
+                <circle cx="14" cy="12" r="2" fill="none" stroke="currentColor" strokeWidth="1.6" />
+              </svg>
+            </div>
             <div>
               <h2 className="form-section__title">Preferencje biblioteczne</h2>
               <p className="form-section__description">Dostosuj sposób działania biblioteki do swoich potrzeb</p>
@@ -699,7 +715,12 @@ export default function Profile() {
       {activeTab === 'ui' && (
         <div className="form-section">
           <div className="form-section__header">
-            <div className="form-section__icon">UI</div>
+            <div className="form-section__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="18" height="18" role="img" focusable="false">
+                <rect x="3" y="4" width="18" height="12" rx="2" ry="2" fill="none" stroke="currentColor" strokeWidth="1.6" />
+                <path d="M8 20h8M12 16v4" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+              </svg>
+            </div>
             <div>
               <h2 className="form-section__title">Dostępność i interfejs</h2>
               <p className="form-section__description">Dostosuj wygląd i język systemu</p>
@@ -764,7 +785,12 @@ export default function Profile() {
       {activeTab === 'account' && (
         <div className="form-section">
           <div className="form-section__header">
-            <div className="form-section__icon">INFO</div>
+            <div className="form-section__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="18" height="18" role="img" focusable="false">
+                <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="1.6" />
+                <path d="M12 10v6M12 7h.01" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+              </svg>
+            </div>
             <div>
               <h2 className="form-section__title">Informacje o koncie</h2>
               <p className="form-section__description">Dane tylko do odczytu - zmiana wymaga wizyty z dowodem</p>

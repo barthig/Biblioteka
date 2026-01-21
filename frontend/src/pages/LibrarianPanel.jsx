@@ -540,7 +540,7 @@ export default function LibrarianPanel() {
   }
 
   return (
-    <div className="page">
+    <div className="page librarian-panel">
       <PageHeader
         title="Panel bibliotekarza"
         subtitle="Obsluga wypozyczen i zarzadzanie biblioteka"

@@ -151,7 +151,7 @@ export default function MyLoans() {
   }
 
   return (
-    <div className="page">
+    <div className="page loans-panel">
       <PageHeader
         title="Moje wypożyczenia"
         subtitle="Sprawdź bieżące wypożyczenia oraz historię zwrotów."

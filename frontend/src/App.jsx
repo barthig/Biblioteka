@@ -50,7 +50,7 @@ export default function App() {
             },
           }}
         />
-        <div className="app-shell">
+        <div className="app-shell theme-root">
           <Navbar />
           <main className="main">
             <div className="content-shell">

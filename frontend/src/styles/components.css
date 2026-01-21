@@ -598,8 +598,8 @@
   position: absolute;
   top: 0.5rem;
   right: 0.5rem;
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid #e5e7eb;
+  background: var(--card-bg);
+  border: 2px solid var(--border);
   border-radius: 50%;
   width: 28px;
   height: 28px;
@@ -609,7 +609,7 @@
   cursor: pointer;
   transition: all 0.2s;
   font-size: 1.2rem;
-  color: var(--text-secondary);
+  color: var(--text-strong);
   padding: 0;
   z-index: 10;
 }
