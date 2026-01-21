@@ -19,9 +19,11 @@ use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
  */
 final class CsrfRuntime
 {
-    public function __construct(
-        private CsrfTokenManagerInterface $csrfTokenManager,
-    ) {
+    private CsrfTokenManagerInterface $csrfTokenManager;
+
+    public function __construct(CsrfTokenManagerInterface $csrfTokenManager)
+    {
+        $this->csrfTokenManager = $csrfTokenManager;
     }
 
     public function getCsrfToken(string $tokenId): string

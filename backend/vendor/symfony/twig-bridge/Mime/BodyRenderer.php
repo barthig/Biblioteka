@@ -26,15 +26,17 @@ use Twig\Environment;
  */
 final class BodyRenderer implements BodyRendererInterface
 {
+    private Environment $twig;
+    private array $context;
     private HtmlToTextConverterInterface $converter;
+    private ?LocaleSwitcher $localeSwitcher = null;
 
-    public function __construct(
-        private Environment $twig,
-        private array $context = [],
-        ?HtmlToTextConverterInterface $converter = null,
-        private ?LocaleSwitcher $localeSwitcher = null,
-    ) {
+    public function __construct(Environment $twig, array $context = [], ?HtmlToTextConverterInterface $converter = null, ?LocaleSwitcher $localeSwitcher = null)
+    {
+        $this->twig = $twig;
+        $this->context = $context;
         $this->converter = $converter ?: (interface_exists(HtmlConverterInterface::class) ? new LeagueHtmlToMarkdownConverter() : new DefaultHtmlToTextConverter());
+        $this->localeSwitcher = $localeSwitcher;
     }
 
     public function render(Message $message): void

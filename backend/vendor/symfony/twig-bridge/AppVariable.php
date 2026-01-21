@@ -13,7 +13,6 @@ namespace Symfony\Bridge\Twig;
 
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Component\HttpFoundation\Session\FlashBagAwareSessionInterface;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
@@ -34,22 +33,34 @@ class AppVariable
     private LocaleSwitcher $localeSwitcher;
     private array $enabledLocales;
 
-    public function setTokenStorage(TokenStorageInterface $tokenStorage): void
+    /**
+     * @return void
+     */
+    public function setTokenStorage(TokenStorageInterface $tokenStorage)
     {
         $this->tokenStorage = $tokenStorage;
     }
 
-    public function setRequestStack(RequestStack $requestStack): void
+    /**
+     * @return void
+     */
+    public function setRequestStack(RequestStack $requestStack)
     {
         $this->requestStack = $requestStack;
     }
 
-    public function setEnvironment(string $environment): void
+    /**
+     * @return void
+     */
+    public function setEnvironment(string $environment)
     {
         $this->environment = $environment;
     }
 
-    public function setDebug(bool $debug): void
+    /**
+     * @return void
+     */
+    public function setDebug(bool $debug)
     {
         $this->debug = $debug;
     }
@@ -168,12 +179,16 @@ class AppVariable
     public function getFlashes(string|array|null $types = null): array
     {
         try {
-            $session = $this->getSession();
+            if (null === $session = $this->getSession()) {
+                return [];
+            }
         } catch (\RuntimeException) {
             return [];
         }
 
-        if (!$session instanceof FlashBagAwareSessionInterface) {
+        // In 7.0 (when symfony/http-foundation: 6.4 is required) this can be updated to
+        // check if the session is an instance of FlashBagAwareSessionInterface
+        if (!method_exists($session, 'getFlashBag')) {
             return [];
         }
 

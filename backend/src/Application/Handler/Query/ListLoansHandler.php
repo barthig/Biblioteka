@@ -36,6 +36,18 @@ class ListLoansHandler
             $qb->andWhere('l.returnedAt IS NOT NULL');
         }
 
+        if ($query->userQuery) {
+            $term = '%' . mb_strtolower($query->userQuery) . '%';
+            $qb->andWhere('LOWER(u.name) LIKE :userTerm OR LOWER(u.email) LIKE :userTerm')
+                ->setParameter('userTerm', $term);
+        }
+
+        if ($query->bookQuery) {
+            $term = '%' . mb_strtolower($query->bookQuery) . '%';
+            $qb->andWhere('LOWER(b.title) LIKE :bookTerm')
+                ->setParameter('bookTerm', $term);
+        }
+
         // Filter by overdue
         if ($query->overdue !== null) {
             if ($query->overdue) {
@@ -61,6 +73,20 @@ class ListLoansHandler
             $countQb->andWhere('l.returnedAt IS NULL');
         } elseif ($query->status === 'returned') {
             $countQb->andWhere('l.returnedAt IS NOT NULL');
+        }
+
+        if ($query->userQuery) {
+            $countQb->leftJoin('l.user', 'u');
+            $term = '%' . mb_strtolower($query->userQuery) . '%';
+            $countQb->andWhere('LOWER(u.name) LIKE :userTerm OR LOWER(u.email) LIKE :userTerm')
+                ->setParameter('userTerm', $term);
+        }
+
+        if ($query->bookQuery) {
+            $countQb->leftJoin('l.book', 'b');
+            $term = '%' . mb_strtolower($query->bookQuery) . '%';
+            $countQb->andWhere('LOWER(b.title) LIKE :bookTerm')
+                ->setParameter('bookTerm', $term);
         }
 
         if ($query->overdue !== null) {

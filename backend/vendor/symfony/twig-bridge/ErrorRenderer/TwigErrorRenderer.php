@@ -25,17 +25,16 @@ use Twig\Environment;
  */
 class TwigErrorRenderer implements ErrorRendererInterface
 {
+    private Environment $twig;
     private HtmlErrorRenderer $fallbackErrorRenderer;
     private \Closure|bool $debug;
 
     /**
      * @param bool|callable $debug The debugging mode as a boolean or a callable that should return it
      */
-    public function __construct(
-        private Environment $twig,
-        ?HtmlErrorRenderer $fallbackErrorRenderer = null,
-        bool|callable $debug = false,
-    ) {
+    public function __construct(Environment $twig, ?HtmlErrorRenderer $fallbackErrorRenderer = null, bool|callable $debug = false)
+    {
+        $this->twig = $twig;
         $this->fallbackErrorRenderer = $fallbackErrorRenderer ?? new HtmlErrorRenderer();
         $this->debug = \is_bool($debug) ? $debug : $debug(...);
     }

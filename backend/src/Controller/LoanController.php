@@ -5,6 +5,7 @@ use App\Application\Command\Loan\CreateLoanCommand;
 use App\Application\Command\Loan\DeleteLoanCommand;
 use App\Application\Command\Loan\ExtendLoanCommand;
 use App\Application\Command\Loan\ReturnLoanCommand;
+use App\Application\Command\Loan\UpdateLoanCommand;
 use App\Application\Query\Loan\GetLoanQuery;
 use App\Application\Query\Loan\ListLoansQuery;
 use App\Application\Query\Loan\ListUserLoansQuery;
@@ -12,6 +13,7 @@ use App\Controller\Traits\ExceptionHandlingTrait;
 use App\Controller\Traits\ValidationTrait;
 use App\Dto\ApiError;
 use App\Request\CreateLoanRequest;
+use App\Request\UpdateLoanRequest;
 use App\Service\SecurityService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -78,6 +80,8 @@ class LoanController extends AbstractController
             new OA\Parameter(name: 'limit', in: 'query', schema: new OA\Schema(type: 'integer', default: 20)),
             new OA\Parameter(name: 'status', in: 'query', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'overdue', in: 'query', schema: new OA\Schema(type: 'boolean')),
+            new OA\Parameter(name: 'user', in: 'query', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'book', in: 'query', schema: new OA\Schema(type: 'string')),
         ],
         responses: [
             new OA\Response(
@@ -104,6 +108,13 @@ class LoanController extends AbstractController
         $limit = min(100, max(10, $request->query->getInt('limit', 20)));
         $status = $request->query->get('status');
         $overdue = $request->query->get('overdue');
+        $userQuery = $request->query->get('user');
+        $bookQuery = $request->query->get('book');
+
+        if ($status === 'overdue') {
+            $overdue = true;
+            $status = null;
+        }
 
         $isLibrarian = $this->security->hasRole($request, 'ROLE_LIBRARIAN');
         $userId = null;
@@ -122,7 +133,9 @@ class LoanController extends AbstractController
             page: $page,
             limit: $limit,
             status: $status,
-            overdue: $overdue !== null ? filter_var($overdue, FILTER_VALIDATE_BOOLEAN) : null
+            overdue: $overdue !== null ? filter_var($overdue, FILTER_VALIDATE_BOOLEAN) : null,
+            userQuery: $userQuery,
+            bookQuery: $bookQuery
         );
 
         $envelope = $this->queryBus->dispatch($query);
@@ -500,6 +513,87 @@ class LoanController extends AbstractController
         try {
             $this->commandBus->dispatch($command);
             return new JsonResponse(null, 204);
+        } catch (\Throwable $e) {
+            return $this->handleException($e);
+        }
+    }
+
+    #[OA\Put(
+        path: '/api/loans/{id}',
+        summary: 'Update loan (admin)',
+        tags: ['Loans'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: 'dueAt', type: 'string'),
+                    new OA\Property(property: 'status', type: 'string'),
+                    new OA\Property(property: 'bookId', type: 'integer'),
+                    new OA\Property(property: 'bookCopyId', type: 'integer'),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'OK',
+                content: new OA\JsonContent(
+                    type: 'object',
+                    properties: [
+                        new OA\Property(property: 'data', ref: '#/components/schemas/Loan'),
+                    ]
+                )
+            ),
+            new OA\Response(response: 400, description: 'Validation error', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 401, description: 'Unauthorized', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'Loan not found', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
+    public function update(string $id, Request $request, ValidatorInterface $validator): JsonResponse
+    {
+        if (!$this->security->hasRole($request, 'ROLE_ADMIN')) {
+            return $this->json(['message' => 'Forbidden'], 403);
+        }
+
+        if (!ctype_digit($id) || (int)$id <= 0) {
+            return $this->json(['message' => 'Invalid id parameter'], 400);
+        }
+
+        $data = json_decode($request->getContent(), true) ?: [];
+        $dto = $this->mapArrayToDto($data, new UpdateLoanRequest());
+        $errors = $validator->validate($dto);
+        if (count($errors) > 0) {
+            return $this->validationErrorResponse($errors);
+        }
+
+        $command = new UpdateLoanCommand(
+            loanId: (int)$id,
+            dueAt: $dto->dueAt,
+            status: $dto->status,
+            bookId: $dto->bookId,
+            bookCopyId: $dto->bookCopyId
+        );
+
+        try {
+            $envelope = $this->commandBus->dispatch($command);
+            $loan = $envelope->last(HandledStamp::class)->getResult();
+
+            if ($dto->status === 'returned' && $loan && $loan->getReturnedAt() === null) {
+                $payload = $this->security->getJwtPayload($request);
+                $userId = $payload && isset($payload['sub']) ? (int)$payload['sub'] : 0;
+                $returnCommand = new ReturnLoanCommand(
+                    loanId: (int)$id,
+                    userId: $userId
+                );
+                $returnEnvelope = $this->commandBus->dispatch($returnCommand);
+                $loan = $returnEnvelope->last(HandledStamp::class)->getResult();
+            }
+
+            return $this->json(['data' => $loan], 200, [], ['groups' => ['loan:read']]);
         } catch (\Throwable $e) {
             return $this->handleException($e);
         }

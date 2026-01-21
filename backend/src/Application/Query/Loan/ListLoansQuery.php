@@ -9,7 +9,9 @@ class ListLoansQuery
         public readonly int $page = 1,
         public readonly int $limit = 20,
         public readonly ?string $status = null,
-        public readonly ?bool $overdue = null
+        public readonly ?bool $overdue = null,
+        public readonly ?string $userQuery = null,
+        public readonly ?string $bookQuery = null
     ) {
     }
 }

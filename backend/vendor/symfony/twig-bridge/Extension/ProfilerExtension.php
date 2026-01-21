@@ -21,17 +21,18 @@ use Twig\Profiler\Profile;
  */
 final class ProfilerExtension extends BaseProfilerExtension
 {
+    private ?Stopwatch $stopwatch;
+
     /**
      * @var \SplObjectStorage<Profile, StopwatchEvent>
      */
     private \SplObjectStorage $events;
 
-    public function __construct(
-        Profile $profile,
-        private ?Stopwatch $stopwatch = null,
-    ) {
+    public function __construct(Profile $profile, ?Stopwatch $stopwatch = null)
+    {
         parent::__construct($profile);
 
+        $this->stopwatch = $stopwatch;
         $this->events = new \SplObjectStorage();
     }
 

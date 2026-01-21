@@ -28,7 +28,10 @@ class TemplateAttributeListener implements EventSubscriberInterface
     ) {
     }
 
-    public function onKernelView(ViewEvent $event): void
+    /**
+     * @return void
+     */
+    public function onKernelView(ViewEvent $event)
     {
         $parameters = $event->getControllerResult();
 
@@ -55,16 +58,8 @@ class TemplateAttributeListener implements EventSubscriberInterface
         }
 
         $event->setResponse($attribute->stream
-            ? new StreamedResponse(
-                null !== $attribute->block
-                    ? fn () => $this->twig->load($attribute->template)->displayBlock($attribute->block, $parameters)
-                    : fn () => $this->twig->display($attribute->template, $parameters),
-                $status)
-            : new Response(
-                null !== $attribute->block
-                    ? $this->twig->load($attribute->template)->renderBlock($attribute->block, $parameters)
-                    : $this->twig->render($attribute->template, $parameters),
-                $status)
+            ? new StreamedResponse(fn () => $this->twig->display($attribute->template, $parameters), $status)
+            : new Response($this->twig->render($attribute->template, $parameters), $status)
         );
     }
 

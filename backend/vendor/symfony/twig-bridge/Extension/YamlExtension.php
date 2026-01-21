@@ -36,7 +36,11 @@ final class YamlExtension extends AbstractExtension
 
         $dumper ??= new YamlDumper();
 
-        return $dumper->dump($input, $inline, 0, $dumpObjects);
+        if (\defined('Symfony\Component\Yaml\Yaml::DUMP_OBJECT')) {
+            return $dumper->dump($input, $inline, 0, $dumpObjects);
+        }
+
+        return $dumper->dump($input, $inline, 0, false, $dumpObjects);
     }
 
     public function dump(mixed $value, int $inline = 0, int $dumpObjects = 0): string

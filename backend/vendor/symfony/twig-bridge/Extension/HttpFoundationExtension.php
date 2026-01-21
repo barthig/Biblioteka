@@ -23,9 +23,11 @@ use Twig\TwigFunction;
  */
 final class HttpFoundationExtension extends AbstractExtension
 {
-    public function __construct(
-        private UrlHelper $urlHelper,
-    ) {
+    private UrlHelper $urlHelper;
+
+    public function __construct(UrlHelper $urlHelper)
+    {
+        $this->urlHelper = $urlHelper;
     }
 
     public function getFunctions(): array

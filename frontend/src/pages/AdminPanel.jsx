@@ -7,6 +7,8 @@ import FeedbackCard from '../components/ui/FeedbackCard'
 import UserManagement from '../components/admin/UserManagement'
 import SystemSettings from '../components/admin/SystemSettings'
 import RolesAndAudit from '../components/admin/RolesAndAudit'
+import LoanManagement from '../components/admin/LoanManagement'
+import { loanService } from '../services/loanService'
 
 const defaultIntegration = {
   name: '',
@@ -43,6 +45,18 @@ export default function AdminPanel() {
   const [roleForm, setRoleForm] = useState(defaultRole)
   const [assignForm, setAssignForm] = useState({ roleKey: '', userId: '' })
 
+  // Loans
+  const [loans, setLoans] = useState([])
+  const [loansLoading, setLoansLoading] = useState(false)
+  const [loanFilters, setLoanFilters] = useState({ user: '', book: '', status: 'all' })
+  const [editingLoan, setEditingLoan] = useState(null)
+  const [loanEditForm, setLoanEditForm] = useState({
+    dueAt: '',
+    status: 'active',
+    bookId: '',
+    bookCopyId: ''
+  })
+
   const systemLoaded = useMemo(() => settings.length > 0 || integrations.length > 0, [settings, integrations])
   const rolesLoaded = useMemo(() => roles.length > 0, [roles])
 
@@ -57,8 +71,17 @@ export default function AdminPanel() {
       loadSystem()
     } else if (activeTab === 'roles') {
       loadRolesAndAudit()
+    } else if (activeTab === 'loans') {
+      loadLoans()
     }
   }, [activeTab])
+
+  const formatDateInput = (value) => {
+    if (!value) return ''
+    const date = new Date(value)
+    if (Number.isNaN(date.getTime())) return ''
+    return date.toISOString().slice(0, 10)
+  }
 
   async function loadLibraryStats() {
     setLibraryStatsLoading(true)
@@ -373,6 +396,101 @@ export default function AdminPanel() {
     }
   }
 
+  async function loadLoans(filters = loanFilters) {
+    setLoansLoading(true)
+    setError(null)
+    try {
+      const params = {
+        user: filters.user,
+        book: filters.book
+      }
+      if (filters.status && filters.status !== 'all') {
+        params.status = filters.status
+      }
+      const data = await loanService.getAllLoans(params)
+      const items = data?.data || data?.items || data || []
+      setLoans(Array.isArray(items) ? items : [])
+    } catch (err) {
+      setError(err.message || 'Nie udało się pobrać wypożyczeń')
+    } finally {
+      setLoansLoading(false)
+    }
+  }
+
+  function resetLoanFilters() {
+    const cleared = { user: '', book: '', status: 'all' }
+    setLoanFilters(cleared)
+    loadLoans(cleared)
+  }
+
+  function openLoanEdit(loan) {
+    setEditingLoan(loan)
+    setLoanEditForm({
+      dueAt: formatDateInput(loan.dueAt),
+      status: loan.returnedAt ? 'returned' : 'active',
+      bookId: loan.book?.id ?? '',
+      bookCopyId: loan.bookCopy?.id ?? ''
+    })
+  }
+
+  async function saveLoanEdit() {
+    if (!editingLoan) return
+    setError(null)
+    setSuccess(null)
+    const payload = {}
+    if (loanEditForm.dueAt) payload.dueAt = loanEditForm.dueAt
+    if (loanEditForm.status) payload.status = loanEditForm.status
+    if (loanEditForm.bookId) payload.bookId = parseInt(loanEditForm.bookId, 10)
+    if (loanEditForm.bookCopyId) payload.bookCopyId = parseInt(loanEditForm.bookCopyId, 10)
+
+    try {
+      await loanService.updateLoan(editingLoan.id, payload)
+      setSuccess('Wypożyczenie zostało zaktualizowane')
+      setEditingLoan(null)
+      loadLoans()
+    } catch (err) {
+      setError(err.message || 'Nie udało się zaktualizować wypożyczenia')
+    }
+  }
+
+  async function returnLoan(loan) {
+    if (!confirm('Potwierdzić zwrot wypożyczenia?')) return
+    setError(null)
+    setSuccess(null)
+    try {
+      await loanService.returnLoan(loan.id)
+      setSuccess('Wypożyczenie zostało zwrócone')
+      loadLoans()
+    } catch (err) {
+      setError(err.message || 'Nie udało się zwrócić wypożyczenia')
+    }
+  }
+
+  async function extendLoan(loan) {
+    setError(null)
+    setSuccess(null)
+    try {
+      await loanService.extendLoan(loan.id)
+      setSuccess('Wypożyczenie zostało przedłużone')
+      loadLoans()
+    } catch (err) {
+      setError(err.message || 'Nie udało się przedłużyć wypożyczenia')
+    }
+  }
+
+  async function deleteLoan(loan) {
+    if (!confirm('Na pewno usunąć wypożyczenie?')) return
+    setError(null)
+    setSuccess(null)
+    try {
+      await loanService.deleteLoan(loan.id)
+      setSuccess('Wypożyczenie zostało usunięte')
+      loadLoans()
+    } catch (err) {
+      setError(err.message || 'Nie udało się usunąć wypożyczenia')
+    }
+  }
+
   return (
     <div className="page admin-panel">
       <PageHeader
@@ -435,6 +553,15 @@ export default function AdminPanel() {
         >
           Audyt i role
         </button>
+        <button 
+          className={`tab ${activeTab === 'loans' ? 'tab--active' : ''}`} 
+          onClick={() => setActiveTab('loans')}
+          role="tab"
+          aria-selected={activeTab === 'loans'}
+          aria-controls="loans-panel"
+        >
+          Wypożyczenia
+        </button>
       </div>
 
       <div id="users-panel" role="tabpanel" hidden={activeTab !== 'users'}>
@@ -496,6 +623,28 @@ export default function AdminPanel() {
             entityAuditLoading={entityAuditLoading}
             loadEntityAudit={loadEntityAudit}
             defaultRole={defaultRole}
+          />
+        )}
+      </div>
+
+      <div id="loans-panel" role="tabpanel" hidden={activeTab !== 'loans'}>
+        {activeTab === 'loans' && (
+          <LoanManagement
+            loans={loans}
+            loading={loansLoading}
+            filters={loanFilters}
+            setFilters={setLoanFilters}
+            onSearch={() => loadLoans()}
+            onReset={resetLoanFilters}
+            onEdit={openLoanEdit}
+            onReturn={returnLoan}
+            onExtend={extendLoan}
+            onDelete={deleteLoan}
+            editingLoan={editingLoan}
+            editForm={loanEditForm}
+            setEditForm={setLoanEditForm}
+            onSaveEdit={saveLoanEdit}
+            onCloseEdit={() => setEditingLoan(null)}
           />
         )}
       </div>

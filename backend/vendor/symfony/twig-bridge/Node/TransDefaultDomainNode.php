@@ -11,6 +11,7 @@
 
 namespace Symfony\Bridge\Twig\Node;
 
+use Twig\Attribute\FirstClassTwigCallableReady;
 use Twig\Attribute\YieldReady;
 use Twig\Compiler;
 use Twig\Node\Expression\AbstractExpression;
@@ -22,9 +23,13 @@ use Twig\Node\Node;
 #[YieldReady]
 final class TransDefaultDomainNode extends Node
 {
-    public function __construct(AbstractExpression $expr, int $lineno = 0)
+    public function __construct(AbstractExpression $expr, int $lineno = 0, ?string $tag = null)
     {
-        parent::__construct(['expr' => $expr], [], $lineno);
+        if (class_exists(FirstClassTwigCallableReady::class)) {
+            parent::__construct(['expr' => $expr], [], $lineno);
+        } else {
+            parent::__construct(['expr' => $expr], [], $lineno, $tag);
+        }
     }
 
     public function compile(Compiler $compiler): void

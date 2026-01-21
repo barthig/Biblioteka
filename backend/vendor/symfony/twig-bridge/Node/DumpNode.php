@@ -11,6 +11,7 @@
 
 namespace Symfony\Bridge\Twig\Node;
 
+use Twig\Attribute\FirstClassTwigCallableReady;
 use Twig\Attribute\YieldReady;
 use Twig\Compiler;
 use Twig\Node\Expression\Variable\LocalVariable;
@@ -22,17 +23,22 @@ use Twig\Node\Node;
 #[YieldReady]
 final class DumpNode extends Node
 {
-    public function __construct(
-        private LocalVariable|string $varPrefix,
-        ?Node $values,
-        int $lineno,
-    ) {
+    private LocalVariable|string $varPrefix;
+
+    public function __construct(LocalVariable|string $varPrefix, ?Node $values, int $lineno, ?string $tag = null)
+    {
         $nodes = [];
         if (null !== $values) {
             $nodes['values'] = $values;
         }
 
-        parent::__construct($nodes, [], $lineno);
+        if (class_exists(FirstClassTwigCallableReady::class)) {
+            parent::__construct($nodes, [], $lineno);
+        } else {
+            parent::__construct($nodes, [], $lineno, $tag);
+        }
+
+        $this->varPrefix = $varPrefix;
     }
 
     public function compile(Compiler $compiler): void

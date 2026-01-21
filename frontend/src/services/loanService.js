@@ -57,6 +57,26 @@ export const loanService = {
   },
 
   /**
+   * Update loan (admin)
+   */
+  async updateLoan(loanId, updates) {
+    return await apiFetch(`/api/loans/${loanId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates)
+    })
+  },
+
+  /**
+   * Delete loan (admin/librarian)
+   */
+  async deleteLoan(loanId) {
+    return await apiFetch(`/api/loans/${loanId}`, {
+      method: 'DELETE'
+    })
+  },
+
+  /**
    * Get loan statistics
    */
   async getStatistics() {
