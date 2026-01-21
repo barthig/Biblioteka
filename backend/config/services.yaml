@@ -148,7 +148,6 @@ services:
     arguments:
       $queryBus: '@query.bus'
       $commandBus: '@command.bus'
-      $userRepository: '@App\Repository\UserRepository'
 
   App\Controller\AcquisitionBudgetController:
     arguments:

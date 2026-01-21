@@ -496,38 +496,12 @@ export default function AdminPanel() {
             entityAuditLoading={entityAuditLoading}
             loadEntityAudit={loadEntityAudit}
             defaultRole={defaultRole}
-          
+          />
+        )}
       </div>
     </div>
   )
 }
-          </div>
-          <div className="form-field">
-            <label>Wyszukaj</label>
-            <input
-              value={userSearchQuery}
-              onChange={(e) => {
-                const value = e.target.value
-                setUserSearchQuery(value)
-                searchUsers(value)
-              }}
-              placeholder="Szukaj po imieniu, emailu lub karcie"
-            />
-          </div>
-
-          {loading && <p>Ładowanie...</p>}
-          {!loading && users.length === 0 && <p>Brak użytkowników.</p>}
-
-          {!loading && users.length > 0 && (
-            <div className="table-responsive">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>Użytkownik</th>
-                    <th>Email</th>
-                    <th>Role</th>
-                    <th>Status</th>
-                    <th>Akcje</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -888,5 +862,5 @@ export default function AdminPanel() {
         </div>
       )}
     </div>
-  )
-}
+  
+

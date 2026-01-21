@@ -78,7 +78,7 @@ export default function Navbar() {
               Polecane
             </NavLink>
             <NavLink to="/announcements" className={navLinkClass} onClick={closeMenu}>
-              Og?oszenia
+              Ogłoszenia
             </NavLink>
           </div>
 
@@ -90,7 +90,7 @@ export default function Navbar() {
                     Panel administratora
                   </NavLink>
                   <NavLink to="/my-loans" className={navLinkClass} onMouseEnter={prefetchLoans} onFocus={prefetchLoans} onClick={closeMenu}>
-                    Wypo?yczenia
+                    Wypożyczenia
                   </NavLink>
                   <NavLink to="/reservations" className={navLinkClass} onMouseEnter={prefetchReservations} onFocus={prefetchReservations} onClick={closeMenu}>
                     Rezerwacje
@@ -117,7 +117,7 @@ export default function Navbar() {
               ) : (
                 <>
                   <NavLink to="/my-loans" className={navLinkClass} onMouseEnter={prefetchLoans} onFocus={prefetchLoans} onClick={closeMenu}>
-                    Wypo?yczenia
+                    Wypożyczenia
                   </NavLink>
                   <NavLink to="/reservations" className={navLinkClass} onMouseEnter={prefetchReservations} onFocus={prefetchReservations} onClick={closeMenu}>
                     Rezerwacje

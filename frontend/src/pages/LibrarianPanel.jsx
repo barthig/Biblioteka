@@ -553,6 +553,9 @@ export default function LibrarianPanel() {
         <button className={`tab ${activeTab === 'dashboard' ? 'tab--active' : ''}`} onClick={() => setActiveTab('dashboard')}>
           Dashboard
         </button>
+        <button className={`tab ${activeTab === 'stats' ? 'tab--active' : ''}`} onClick={() => setActiveTab('stats')}>
+          Statystyki
+        </button>
         <button className={`tab ${activeTab === 'loans' ? 'tab--active' : ''}`} onClick={() => setActiveTab('loans')}>
           Wypozyczenia
         </button>
@@ -1297,4 +1300,3 @@ export default function LibrarianPanel() {
     </div>
   )
 }
-

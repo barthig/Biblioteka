@@ -37,6 +37,7 @@ export default function Profile() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [success, setSuccess] = useState(null)
+  const [passwordError, setPasswordError] = useState(null)
   const [passwordForm, setPasswordForm] = useState(initialPasswordForm)
   const [saving, setSaving] = useState(false)
   const [activeTab, setActiveTab] = useState('security')
@@ -196,14 +197,15 @@ export default function Profile() {
     event.preventDefault()
     setError(null)
     setSuccess(null)
+    setPasswordError(null)
 
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      toast.error('Nowe hasło i powtórzone hasło muszą być takie same')
+      setPasswordError('Nowe hasło i powtórzone hasło muszą być takie same')
       return
     }
 
     if (passwordForm.newPassword.length < 6) {
-      toast.error('Nowe hasło musi mieć minimum 6 znaków')
+      setPasswordError('Nowe hasło musi mieć minimum 6 znaków')
       return
     }
 
@@ -219,9 +221,10 @@ export default function Profile() {
         })
       })
       toast.success('Hasło zostało zmienione!')
+      setPasswordError(null)
       setPasswordForm(initialPasswordForm)
     } catch (err) {
-      toast.error(err.message || 'Nie udało się zmienić hasła')
+      setPasswordError(err.message || 'Nie udało się zmienić hasła')
     } finally {
       setSaving(false)
     }
@@ -473,6 +476,7 @@ export default function Profile() {
               </div>
             </div>
             <div className="form-actions">
+              {passwordError && <p className="error">{passwordError}</p>}
               <button type="submit" className="btn btn-primary" disabled={saving}>
                 {saving ? 'Zapisywanie...' : 'Zmień hasło'}
               </button>

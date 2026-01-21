@@ -229,9 +229,10 @@
 }
 
 .loan-date-label {
-  color: var(--text-muted);
+  color: var(--text-secondary);
   display: block;
   margin-bottom: 0.25rem;
+  font-weight: 500;
 }
 
 .loan-date-value {
@@ -296,7 +297,7 @@
 
 .reservation-status-cancelled {
   background-color: #f3f4f6;
-  color: #6b7280;
+  color: #374151;
 }
 
 .reservation-status-expired {
@@ -608,14 +609,14 @@
   cursor: pointer;
   transition: all 0.2s;
   font-size: 1.2rem;
-  color: #6b7280;
+  color: var(--text-secondary);
   padding: 0;
   z-index: 10;
 }
 
 .dismiss-btn:hover {
   background: #fee2e2;
-  color: #dc2626;
+  color: #991b1b;
   border-color: #fca5a5;
   transform: scale(1.1);
 }
@@ -792,7 +793,7 @@
   justify-content: center;
   font-size: 2.25rem;
   font-weight: 700;
-  color: var(--text-muted);
+  color: var(--text-secondary);
   background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
 }
 

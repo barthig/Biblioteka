@@ -179,7 +179,6 @@ class AnnouncementController extends AbstractController
         }
 
         $envelope = $this->queryBus->dispatch(new GetUserByIdQuery((int) $payload['sub']));
-        $user = $envelope->last(HandledStamp::class)?->getResult(y((int) $payload['sub']));
         $user = $envelope->last(HandledStamp::class)?->getResult();
         if (!$user) {
             return $this->json(['message' => 'User not found'], 404);

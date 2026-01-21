@@ -28,7 +28,8 @@ const initialFilters = {
 const DEFAULT_LIMIT = 20
 
 export default function Books() {
-  const { user } = useAuth()
+  const auth = useAuth() || {}
+  const { user } = auth
   const [books, setBooks] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)

@@ -106,10 +106,15 @@ All 14 evaluation criteria met:
 - **[📚 Documentation Index](docs/INDEX.md)** — Complete guide to all documentation
 - **[Database Architecture](docs/DATABASE_ARCHITECTURE.md)** — Complete schema overview, entity relationships, indexing strategy
 - **[Entity Relationship Diagram](docs/ERD.md)** — Visual ERD with ASCII diagrams
-- **[Current Schema SQL](backend/schema_current.sql)** — Full PostgreSQL DDL
+- **[Current Schema SQL](backend/schema_current.sql)** — Full PostgreSQL DDL (694 lines, committed to repo)
 - **[Schema Guide](docs/SCHEMA_GUIDE.md)** — Quick reference for developers
 - **[Detailed Audit Report](docs/DETAILED_AUDIT_2026.md)** — Comprehensive audit of all 14 criteria (99.3/100)
 - **[Fixes & Improvements](docs/FIXES_AND_IMPROVEMENTS.md)** — Action plan and completed fixes
+
+**Database Initialization:**
+- `backend/init-db-expanded-v2.sql` — Full schema + seed data (1504 lines) for Docker initialization
+- `backend/schema_current.sql` — Clean DDL export without seed data (694 lines) for reference
+- Migrations automatically skipped if schema already exists (see docker-compose.yml)
 
 ### Key Features
 
@@ -267,6 +272,28 @@ docker ps | findstr postgres
 # Check logs
 docker compose logs db
 ```
+
+**Migration/Schema collision errors (SQLSTATE[42P07]):**
+
+If you see errors like "announcement_id_seq already exists" or 502 errors:
+
+```powershell
+# Option 1: Use the pre-seeded database (recommended for development)
+# The init-db-expanded-v2.sql already contains the full schema + seed data
+# Migrations are automatically skipped if schema exists
+
+# Option 2: Start fresh (removes ALL data)
+docker compose down -v
+docker compose up -d
+
+# The startup command now checks if schema exists before running migrations
+# See docker-compose.yml line 91-95 for the logic
+```
+
+**Note:** The docker-compose.yml includes a smart migration check:
+- If `app_user` table exists → skip migrations (schema already initialized)
+- If table doesn't exist → run migrations to create schema
+- This prevents conflicts between `init-db-expanded-v2.sql` and Doctrine migrations
 
 **JWT token errors:**
 ```powershell

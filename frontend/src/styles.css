@@ -12,6 +12,7 @@
         --color-orange-strong: #d9ad5c;
         --color-text: #2d3748;
         --color-muted: #718096;
+        --color-text-muted: var(--color-muted);
         --color-danger: #de9a9a;
         --font-base: 'Inter', 'Space Grotesk', 'Segoe UI', Roboto, sans-serif;
         --radius-sm: 10px;
@@ -53,10 +54,10 @@ html[data-theme="dark"] {
         --color-bg: #0f162c;
         --color-bg-soft: #0f162c;
         --color-surface: #121826;
-        --color-surface-alt: #0b1220;
+        --color-surface-alt: #9aa4b2;
         --color-border: #2a3448;
         --color-border-strong: #384563;
-        --color-text: #e5e7eb;
+        --color-text: #919295;
         --color-muted: #9aa4b2;
 }
 
@@ -64,7 +65,7 @@ html[data-theme="contrast"] {
         --color-bg: #000000;
         --color-bg-soft: #000000;
         --color-surface: #000000;
-        --color-surface-alt: #000000;
+        --color-surface-alt: #9aa4b2;
         --color-border: #ffffff;
         --color-border-strong: #ffffff;
         --color-text: #ffffff;
@@ -79,10 +80,10 @@ html[data-theme="contrast"] {
                 --color-bg: #0f162c;
                 --color-bg-soft: #0f162c;
                 --color-surface: #121826;
-                --color-surface-alt: #0b1220;
+                --color-surface-alt: rgba(255, 255, 255, 0);
                 --color-border: #2a3448;
                 --color-border-strong: #384563;
-                --color-text: #e5e7eb;
+                --color-text: #919295;
                 --color-muted: #9aa4b2;
         }
 }
@@ -945,7 +946,7 @@ select:disabled {
 .form-section__title {
 	font-size: 1.1rem;
 	font-weight: 600;
-	color: #fff;
+	color: var(--color-muted);
 	margin: 0;
 }
 
@@ -1120,7 +1121,7 @@ select:disabled {
 	padding: var(--space-2);
 	border-radius: var(--radius-md);
 	border: 1px solid var(--color-border);
-	background: #f4f6ff;
+	background: var(--color-surface-alt);
 	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
 
@@ -1551,22 +1552,22 @@ select:disabled {
 }
 
 .hero-guest__search {
-        display: grid;
-        gap: 0.75rem;
-        background: #ffffff;
-        border-radius: 16px;
-        padding: 0.75rem;
-        box-shadow: 0 20px 40px rgba(10, 18, 36, 0.28);
+	display: grid;
+	gap: 0.75rem;
+	background: var(--color-surface);
+	border-radius: 16px;
+	padding: 0.75rem;
+	box-shadow: 0 20px 40px rgba(10, 18, 36, 0.28);
 }
 
 .hero-guest__search input {
-        border: none;
-        font-size: 1rem;
-        padding: 0.75rem 1rem;
-        border-radius: 12px;
-        outline: none;
-        background: #f6f7fb;
-        color: #0f172a;
+	border: none;
+	font-size: 1rem;
+	padding: 0.75rem 1rem;
+	border-radius: 12px;
+	outline: none;
+	background: var(--color-bg-soft);
+	color: var(--color-text);
 }
 
 .hero-guest__filters {
@@ -1592,13 +1593,13 @@ select:disabled {
 }
 
 .info-bar {
-        display: grid;
-        gap: 1rem;
-        padding: 1.5rem;
-        border-radius: 20px;
-        background: #fff7e6;
-        color: #1f2937;
-        box-shadow: var(--shadow-sm);
+	display: grid;
+	gap: 1rem;
+	padding: 1.5rem;
+	border-radius: 20px;
+	background: var(--color-surface-alt);
+	color: var(--color-text);
+	box-shadow: var(--shadow-sm);
 }
 
 .info-bar__item {
@@ -1642,12 +1643,12 @@ select:disabled {
 }
 
 .book-card {
-        background: #ffffff;
-        border-radius: 18px;
-        padding: 1.5rem;
-        box-shadow: var(--shadow-sm);
-        display: grid;
-        gap: 1rem;
+	background: var(--color-surface);
+	border-radius: 18px;
+	padding: 1.5rem;
+	box-shadow: var(--shadow-sm);
+	display: grid;
+	gap: 1rem;
 }
 
 .book-card__cover {
@@ -1672,14 +1673,14 @@ select:disabled {
 }
 
 .event-card {
-        display: grid;
-        grid-template-columns: minmax(70px, 90px) 1fr;
-        gap: 1.5rem;
-        align-items: center;
-        padding: 1.25rem 1.5rem;
-        border-radius: 18px;
-        background: #ffffff;
-        box-shadow: var(--shadow-sm);
+	display: grid;
+	grid-template-columns: minmax(70px, 90px) 1fr;
+	gap: 1.5rem;
+	align-items: center;
+	padding: 1.25rem 1.5rem;
+	border-radius: 18px;
+	background: var(--color-surface);
+	box-shadow: var(--shadow-sm);
 }
 
 .event-card__date {
@@ -1854,7 +1855,8 @@ select:disabled {
 	border-radius: var(--radius-sm);
 	font-size: 1rem;
 	transition: all 0.2s ease;
-	background: #fafbfc;
+	background: var(--color-surface-alt);
+	color: var(--color-text);
 }
 
 .form-field input:focus {
@@ -1991,7 +1993,7 @@ select:disabled {
 .data-table {
 	width: 100%;
 	border-collapse: collapse;
-	background: white;
+	background: var(--color-surface);
 }
 
 .data-table th,
