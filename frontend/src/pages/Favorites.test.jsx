@@ -47,4 +47,11 @@ describe('Favorites page', () => {
     expect(await screen.findByText('Alpha')).toBeInTheDocument()
     expect(screen.getByText(/Author A/i)).toBeInTheDocument()
   })
+
+  it('shows error when favorites fail to load', async () => {
+    apiFetch.mockRejectedValue(new Error('Load failed'))
+    renderPage({ id: 123 })
+
+    expect(await screen.findByText(/Load failed/i)).toBeInTheDocument()
+  })
 })
