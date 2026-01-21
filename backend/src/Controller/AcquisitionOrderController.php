@@ -164,11 +164,10 @@ class AcquisitionOrderController extends AbstractController
             if ($response = $this->jsonFromHttpException($e)) {
                 return $response;
             }
-            $statusCode = 400;
             if (str_contains($e->getMessage(), 'not found')) {
                 return $this->jsonError(ApiError::notFound($e->getMessage()));
             } elseif (str_contains($e->getMessage(), 'inactive') || str_contains($e->getMessage(), 'mismatch')) {
-                $statusCode = 409;
+                return $this->jsonError(ApiError::conflict($e->getMessage()));
             }
             return $this->jsonError(ApiError::badRequest($e->getMessage()));
         }

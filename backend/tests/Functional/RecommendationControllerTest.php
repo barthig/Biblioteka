@@ -58,7 +58,8 @@ class RecommendationControllerTest extends ApiTestCase
 
         $this->assertResponseStatusCodeSame(400);
         $payload = $this->getJsonResponse($client);
-        $this->assertSame('Query is required.', $payload['message'] ?? null);
+        $message = $payload['error']['message'] ?? $payload['message'] ?? null;
+        $this->assertSame('Query is required.', $message);
     }
 
     public function testPersonalRecommendationsReturnsPayload(): void

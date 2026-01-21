@@ -18,6 +18,8 @@ use OpenApi\Attributes as OA;
 #[OA\Tag(name: 'Auth')]
 class AuthController extends AbstractController
 {
+    use ExceptionHandlingTrait;
+
     public function __construct(
         private RateLimiterFactory $loginAttemptsLimiter,
         private RefreshTokenService $refreshTokenService,

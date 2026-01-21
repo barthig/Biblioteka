@@ -15,8 +15,8 @@ class ErrorResponseTest extends ApiTestCase
         $this->assertStringContainsString('application/json', (string) $response->headers->get('Content-Type'));
 
         $data = $this->getJsonResponse($client);
-        $this->assertArrayHasKey('message', $data);
-        $this->assertNotSame('', (string) $data['message']);
+        $message = $data['error']['message'] ?? $data['message'] ?? '';
+        $this->assertNotSame('', (string) $message);
     }
 
     public function testUnauthorizedReturnsJsonMessage(): void
@@ -138,7 +138,7 @@ class ErrorResponseTest extends ApiTestCase
         $this->assertStringContainsString('application/json', (string) $response->headers->get('Content-Type'));
 
         $data = $this->getJsonResponse($client);
-        $this->assertArrayHasKey('message', $data);
-        $this->assertNotSame('', (string) $data['message']);
+        $message = $data['error']['message'] ?? $data['message'] ?? '';
+        $this->assertNotSame('', (string) $message);
     }
 }

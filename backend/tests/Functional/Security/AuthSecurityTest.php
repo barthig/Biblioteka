@@ -45,7 +45,8 @@ class AuthSecurityTest extends WebTestCase
                     'Login should be rate limited after 5 attempts');
                 
                 $data = json_decode($this->client->getResponse()->getContent(), true);
-                $this->assertStringContainsString('Zbyt wiele', $data['message'] ?? '');
+                $message = $data['error']['message'] ?? $data['message'] ?? '';
+                $this->assertStringContainsString('Zbyt wiele', $message);
             }
         }
     }
@@ -74,7 +75,8 @@ class AuthSecurityTest extends WebTestCase
             'Login should return 500 when refresh token creation fails');
 
         $data = json_decode($client->getResponse()->getContent(), true);
-        $this->assertStringContainsString('Failed to create session', $data['message'] ?? '');
+        $message = $data['error']['message'] ?? $data['message'] ?? '';
+        $this->assertStringContainsString('Failed to create session', $message);
         static::ensureKernelShutdown();
     }
 
@@ -248,7 +250,8 @@ class AuthSecurityTest extends WebTestCase
             'Login should return 500 when refresh token creation fails');
 
         $data = json_decode($client->getResponse()->getContent(), true);
-        $this->assertStringContainsString('Failed to create session', $data['message'] ?? '');
+        $message = $data['error']['message'] ?? $data['message'] ?? '';
+        $this->assertStringContainsString('Failed to create session', $message);
         static::ensureKernelShutdown();
     }
 

@@ -69,6 +69,7 @@ trait ExceptionHandlingTrait
             403 => 'FORBIDDEN',
             404 => 'NOT_FOUND',
             409 => 'CONFLICT',
+            410 => 'GONE',
             422 => 'UNPROCESSABLE_ENTITY',
             423 => 'LOCKED',
             429 => 'RATE_LIMIT_EXCEEDED',

@@ -111,6 +111,16 @@ class ApiError
         );
     }
 
+    public static function gone(string $message, ?array $details = null): self
+    {
+        return new self(
+            code: 'GONE',
+            message: $message,
+            statusCode: 410,
+            details: $details
+        );
+    }
+
     public static function badRequest(string $message, ?array $details = null): self
     {
         return new self(

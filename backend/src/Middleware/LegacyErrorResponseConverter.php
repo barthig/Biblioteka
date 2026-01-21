@@ -18,6 +18,10 @@ class LegacyErrorResponseConverter
      */
     public static function convertIfNeeded(JsonResponse $response): void
     {
+        if ($response->getStatusCode() < 400) {
+            return;
+        }
+
         // Skip if already converted (has proper structure with 'error' code field)
         $content = json_decode($response->getContent(), true);
         if (!is_array($content)) {
@@ -62,6 +66,7 @@ class LegacyErrorResponseConverter
             403 => 'FORBIDDEN',
             404 => 'NOT_FOUND',
             409 => 'CONFLICT',
+            410 => 'GONE',
             422 => 'UNPROCESSABLE_ENTITY',
             423 => 'LOCKED',
             429 => 'RATE_LIMIT_EXCEEDED',

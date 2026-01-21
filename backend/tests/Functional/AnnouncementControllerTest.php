@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Tests\Functional;
 
@@ -125,7 +125,7 @@ class AnnouncementControllerTest extends ApiTestCase
                 ->findOneBy(['createdBy' => $librarian], ['id' => 'DESC']);
             $this->assertNotNull($created);
         } else {
-            $this->assertSame('Nowe og??oszenie', $responseData['title']);
+            $this->assertSame('Nowe ogłoszenie', $responseData['title']);
             $this->assertNotNull($responseData['id']);
         }
     }
@@ -143,12 +143,12 @@ class AnnouncementControllerTest extends ApiTestCase
     public function testUpdateAnnouncementAsLibrarian(): void
     {
         $librarian = $this->createUser('updater@example.com', ['ROLE_LIBRARIAN']);
-        $announcement = $this->createAnnouncement($librarian, ['title' => 'Stara treść', 'status' => 'draft']);
+        $announcement = $this->createAnnouncement($librarian, ['title' => 'Stara Treść', 'status' => 'draft']);
         $client = $this->createAuthenticatedClient($librarian);
 
         $this->jsonRequest($client, 'PUT', sprintf('/api/announcements/%d', $announcement->getId()), [
             'title' => 'Zmienione',
-            'content' => 'Nowa treść',
+            'content' => 'Nowa Treść',
         ]);
 
         $this->assertResponseStatusCodeSame(200);

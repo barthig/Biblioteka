@@ -55,13 +55,12 @@ final class BookReturnedSubscriber implements EventSubscriberInterface
             $auditLog->setEntityType('Loan');
             $auditLog->setEntityId($loan->getId());
             $auditLog->setUser($loan->getUser());
-            $auditLog->setTimestamp(new \DateTimeImmutable());
-            $auditLog->setDetails([
+            $auditLog->setNewValues(json_encode([
                 'bookId' => $loan->getBook()?->getId(),
                 'bookTitle' => $loan->getBook()?->getTitle(),
                 'wasOverdue' => $event->isOverdue(),
                 'returnedAt' => $loan->getReturnedAt()?->format('Y-m-d H:i:s')
-            ]);
+            ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
             
             $this->auditLogRepository->save($auditLog, true);
             

@@ -166,7 +166,7 @@ class BookAssetController extends AbstractController
             
             $path = $this->assetDirectory() . DIRECTORY_SEPARATOR . $asset->getStorageName();
             if (!is_file($path)) {
-                return $this->jsonError(ApiError::internalError('File has been removed from storage'));
+                return $this->jsonError(ApiError::gone('File has been removed from storage'));
             }
 
             $response = new BinaryFileResponse($path);

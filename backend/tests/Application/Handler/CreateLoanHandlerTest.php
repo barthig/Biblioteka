@@ -13,6 +13,7 @@ use App\Repository\ReservationRepository;
 use App\Service\BookService;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 class CreateLoanHandlerTest extends TestCase
 {
@@ -22,6 +23,7 @@ class CreateLoanHandlerTest extends TestCase
     private ReservationRepository $reservationRepository;
     private BookCopyRepository $bookCopyRepository;
     private \App\Service\SystemSettingsService $settingsService;
+    private EventDispatcherInterface $eventDispatcher;
     private CreateLoanHandler $handler;
 
     protected function setUp(): void
@@ -32,6 +34,7 @@ class CreateLoanHandlerTest extends TestCase
         $this->reservationRepository = $this->createMock(ReservationRepository::class);
         $this->bookCopyRepository = $this->createMock(BookCopyRepository::class);
         $this->settingsService = $this->createMock(\App\Service\SystemSettingsService::class);
+        $this->eventDispatcher = $this->createMock(EventDispatcherInterface::class);
 
         $this->handler = new CreateLoanHandler(
             $this->em,
@@ -39,7 +42,8 @@ class CreateLoanHandlerTest extends TestCase
             $this->loanRepository,
             $this->reservationRepository,
             $this->bookCopyRepository,
-            $this->settingsService
+            $this->settingsService,
+            $this->eventDispatcher
         );
     }
 

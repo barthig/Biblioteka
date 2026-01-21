@@ -13,6 +13,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
 use PHPUnit\Framework\TestCase;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 class ReturnLoanHandlerTest extends TestCase
 {
@@ -22,6 +23,7 @@ class ReturnLoanHandlerTest extends TestCase
     private ReservationRepository $reservationRepository;
     private MessageBusInterface $bus;
     private LoggerInterface $logger;
+    private EventDispatcherInterface $eventDispatcher;
     private ReturnLoanHandler $handler;
 
     protected function setUp(): void
@@ -32,6 +34,7 @@ class ReturnLoanHandlerTest extends TestCase
         $this->bus = $this->createMock(MessageBusInterface::class);
         $this->logger = $this->createMock(LoggerInterface::class);
         $this->bookService = $this->createMock(BookService::class);
+        $this->eventDispatcher = $this->createMock(EventDispatcherInterface::class);
 
         $this->handler = new ReturnLoanHandler(
             $this->em,
@@ -39,7 +42,8 @@ class ReturnLoanHandlerTest extends TestCase
             $this->loanRepository,
             $this->reservationRepository,
             $this->bus,
-            $this->logger
+            $this->logger,
+            $this->eventDispatcher
         );
     }
 

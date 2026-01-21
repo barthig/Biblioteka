@@ -1,21 +1,18 @@
 <?php
 namespace App\Tests\Functional;
 
-use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
-use Symfony\Component\HttpFoundation\Response;
-
 /**
  * Tests that all API error responses follow the standardized ApiError envelope format
  */
-class ErrorResponseFormatTest extends WebTestCase
+class ErrorResponseFormatTest extends ApiTestCase
 {
     /**
      * Test that 404 errors return proper ApiError format
      */
     public function testNotFoundErrorFormat(): void
     {
-        $client = static::createClient();
-        $client->request('GET', '/api/users/999999');
+        $client = $this->createApiClient();
+        $this->sendRequest($client, 'GET', '/api/books/999999');
 
         $this->assertResponseStatusCodeSame(404);
         $response = $this->getJsonResponse($client);
@@ -27,9 +24,9 @@ class ErrorResponseFormatTest extends WebTestCase
      */
     public function testForbiddenErrorFormat(): void
     {
-        $client = static::createClient();
-        // Access admin endpoint without authentication
-        $client->request('GET', '/api/reports/usage');
+        $user = $this->createUser('forbidden-format@example.com', ['ROLE_USER']);
+        $client = $this->createAuthenticatedClient($user);
+        $this->sendRequest($client, 'GET', '/api/admin/system/roles');
 
         $this->assertResponseStatusCodeSame(403);
         $response = $this->getJsonResponse($client);
@@ -41,7 +38,7 @@ class ErrorResponseFormatTest extends WebTestCase
      */
     public function testUnauthorizedErrorFormat(): void
     {
-        $client = static::createClient();
+        $client = $this->createClientWithoutSecret();
         $client->request('POST', '/api/reservations', [], [], ['HTTP_AUTHORIZATION' => 'Bearer invalid.token.here']);
 
         $this->assertResponseStatusCodeSame(401);
@@ -54,7 +51,7 @@ class ErrorResponseFormatTest extends WebTestCase
      */
     public function testBadRequestErrorFormat(): void
     {
-        $client = static::createClient();
+        $client = $this->createClientWithoutSecret();
         // Invalid JSON payload
         $client->request('POST', '/api/auth/login', [], [], ['CONTENT_TYPE' => 'application/json'], '{ invalid json');
 
@@ -70,7 +67,7 @@ class ErrorResponseFormatTest extends WebTestCase
      */
     public function testValidationErrorFormat(): void
     {
-        $client = static::createClient();
+        $client = $this->createClientWithoutSecret();
         // POST with missing required fields
         $client->request(
             'POST',
@@ -106,10 +103,10 @@ class ErrorResponseFormatTest extends WebTestCase
      */
     public function testConflictErrorFormat(): void
     {
-        $client = static::createClient();
+        $client = $this->createApiClient();
         // Try to create duplicate - would return 409 Conflict
         // This test is conditional based on actual implementation
-        $client->request('GET', '/api/health'); // Health check endpoint
+        $this->sendRequest($client, 'GET', '/api/health'); // Health check endpoint
         
         // If API has conflict scenario, verify format
         if ($client->getResponse()->getStatusCode() === 409) {
@@ -123,8 +120,8 @@ class ErrorResponseFormatTest extends WebTestCase
      */
     public function testUnprocessableEntityErrorFormat(): void
     {
-        $client = static::createClient();
-        $client->request('GET', '/api/nonexistent');
+        $client = $this->createApiClient();
+        $this->sendRequest($client, 'GET', '/api/nonexistent');
         
         // If endpoint returns 422, verify format
         if ($client->getResponse()->getStatusCode() === 422) {
@@ -138,9 +135,9 @@ class ErrorResponseFormatTest extends WebTestCase
      */
     public function testInternalErrorFormat(): void
     {
-        $client = static::createClient();
+        $client = $this->createApiClient();
         // Trigger an error condition - request an invalid endpoint
-        $client->request('GET', '/api/invalid-endpoint-that-does-not-exist');
+        $this->sendRequest($client, 'GET', '/api/invalid-endpoint-that-does-not-exist');
         
         // 404 or 500 - both should follow format
         $response = $this->getJsonResponse($client);
@@ -157,8 +154,8 @@ class ErrorResponseFormatTest extends WebTestCase
      */
     public function testSuccessResponseFormat(): void
     {
-        $client = static::createClient();
-        $client->request('GET', '/api/health');
+        $client = $this->createApiClient();
+        $this->sendRequest($client, 'GET', '/api/health');
 
         $response = $this->getJsonResponse($client);
         
@@ -202,7 +199,7 @@ class ErrorResponseFormatTest extends WebTestCase
     /**
      * Helper to extract JSON response
      */
-    private function getJsonResponse($client): array
+    protected function getJsonResponse($client): array
     {
         $response = $client->getResponse();
         $content = $response->getContent();

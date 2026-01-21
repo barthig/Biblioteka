@@ -2051,7 +2051,7 @@ select option {
 
 .form-field input:focus {
 	border-color: var(--color-primary);
-	background: #fff;
+	background: #212122;
 	box-shadow: 0 0 0 3px rgba(65, 84, 241, 0.1);
 	outline: none;
 }
