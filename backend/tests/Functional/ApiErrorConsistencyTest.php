@@ -1,20 +1,18 @@
 <?php
 namespace App\Tests\Functional;
 
-use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
-
 /**
  * Integration tests to verify API error responses are consistent across controllers
  * Tests that the ApiError standardization is working properly
  */
-class ApiErrorConsistencyTest extends WebTestCase
+class ApiErrorConsistencyTest extends ApiTestCase
 {
     /**
      * Test that auth endpoints return standardized error format
      */
     public function testAuthControllerErrors(): void
     {
-        $client = static::createClient();
+        $client = $this->createClientWithoutSecret();
         
         // Test invalid login credentials
         $client->request('POST', '/api/auth/login', [], [], ['CONTENT_TYPE' => 'application/json'], json_encode([
@@ -38,7 +36,7 @@ class ApiErrorConsistencyTest extends WebTestCase
      */
     public function testBookControllerErrors(): void
     {
-        $client = static::createClient();
+        $client = $this->createClientWithoutSecret();
         
         // Request non-existent book
         $client->request('GET', '/api/books/999999');
@@ -57,7 +55,7 @@ class ApiErrorConsistencyTest extends WebTestCase
      */
     public function testUserControllerErrors(): void
     {
-        $client = static::createClient();
+        $client = $this->createClientWithoutSecret();
         
         // Request without auth
         $client->request('GET', '/api/users');
@@ -81,18 +79,16 @@ class ApiErrorConsistencyTest extends WebTestCase
      */
     public function testReportControllerErrors(): void
     {
-        $client = static::createClient();
+        $client = $this->createClientWithoutSecret();
         
         // Try accessing reports without proper auth
         $client->request('GET', '/api/reports/usage');
 
-        if ($client->getResponse()->getStatusCode() === 403) {
-            $response = json_decode($client->getResponse()->getContent(), true);
-            
-            $this->assertArrayHasKey('error', $response);
-            $this->assertSame('FORBIDDEN', $response['error']['code']);
-            $this->assertSame(403, $response['error']['statusCode']);
-        }
+        $this->assertResponseStatusCodeSame(401);
+        $response = json_decode($client->getResponse()->getContent(), true);
+        $this->assertArrayHasKey('error', $response);
+        $this->assertSame('UNAUTHORIZED', $response['error']['code']);
+        $this->assertSame(401, $response['error']['statusCode']);
     }
 
     /**
@@ -127,7 +123,7 @@ class ApiErrorConsistencyTest extends WebTestCase
      */
     public function testLegacyResponseConversion(): void
     {
-        $client = static::createClient();
+        $client = $this->createClientWithoutSecret();
         
         // Make a request that should trigger an error
         $client->request('GET', '/api/books/invalid-id');
@@ -155,7 +151,7 @@ class ApiErrorConsistencyTest extends WebTestCase
      */
     public function testMultipleEndpointsConsistency(): void
     {
-        $client = static::createClient();
+        $client = $this->createClientWithoutSecret();
         
         $testEndpoints = [
             ['GET', '/api/health'],
@@ -186,7 +182,7 @@ class ApiErrorConsistencyTest extends WebTestCase
      */
     public function testValidationErrorDetails(): void
     {
-        $client = static::createClient();
+        $client = $this->createClientWithoutSecret();
         
         // Make a request that fails validation
         $client->request(
@@ -201,13 +197,17 @@ class ApiErrorConsistencyTest extends WebTestCase
             ])
         );
         
-        if ($client->getResponse()->getStatusCode() === 400) {
-            $response = json_decode($client->getResponse()->getContent(), true);
-            
-            if (isset($response['error']['code']) && $response['error']['code'] === 'VALIDATION_FAILED') {
-                // Validation errors should include details
-                $this->assertArrayHasKey('details', $response['error']);
-            }
+        $this->assertResponseStatusCodeSame(400);
+        $response = json_decode($client->getResponse()->getContent(), true);
+        $this->assertArrayHasKey('error', $response);
+        $error = $response['error'];
+        $this->assertArrayHasKey('code', $error);
+        $this->assertSame(400, $error['statusCode']);
+
+        if ($error['code'] === 'VALIDATION_FAILED') {
+            $this->assertArrayHasKey('details', $error);
+        } else {
+            $this->assertSame('BAD_REQUEST', $error['code']);
         }
     }
 
@@ -216,7 +216,7 @@ class ApiErrorConsistencyTest extends WebTestCase
      */
     public function testErrorMessagesAreHumanReadable(): void
     {
-        $client = static::createClient();
+        $client = $this->createClientWithoutSecret();
         
         $client->request('GET', '/api/users/invalid');
 

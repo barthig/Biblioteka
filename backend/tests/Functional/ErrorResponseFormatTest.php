@@ -55,11 +55,10 @@ class ErrorResponseFormatTest extends ApiTestCase
         // Invalid JSON payload
         $client->request('POST', '/api/auth/login', [], [], ['CONTENT_TYPE' => 'application/json'], '{ invalid json');
 
+        $this->assertResponseStatusCodeSame(400);
         $response = $client->getResponse();
-        if ($response->getStatusCode() === 400) {
-            $data = json_decode($response->getContent(), true);
-            $this->assertErrorResponseStructure($data, 'BAD_REQUEST', 400);
-        }
+        $data = json_decode($response->getContent(), true);
+        $this->assertErrorResponseStructure($data, 'BAD_REQUEST', 400);
     }
 
     /**
@@ -78,23 +77,20 @@ class ErrorResponseFormatTest extends ApiTestCase
             json_encode(['email' => '', 'password' => ''])
         );
 
-        if ($client->getResponse()->getStatusCode() === 400) {
-            $response = $this->getJsonResponse($client);
-            
-            $this->assertArrayHasKey('error', $response);
-            $error = $response['error'];
-            
-            // Validation errors should have VALIDATION_FAILED code
-            if (isset($error['code']) && $error['code'] === 'VALIDATION_FAILED') {
-                $this->assertSame('VALIDATION_FAILED', $error['code']);
-                $this->assertSame(400, $error['statusCode']);
-                $this->assertStringContainsString('Validation', $error['message']);
-                
-                // Should have details with field errors
-                if (isset($error['details'])) {
-                    $this->assertIsArray($error['details']);
-                }
+        $this->assertResponseStatusCodeSame(400);
+        $response = $this->getJsonResponse($client);
+        
+        $this->assertArrayHasKey('error', $response);
+        $error = $response['error'];
+        
+        $this->assertSame(400, $error['statusCode']);
+        if ($error['code'] === 'VALIDATION_FAILED') {
+            $this->assertStringContainsString('Validation', $error['message']);
+            if (isset($error['details'])) {
+                $this->assertIsArray($error['details']);
             }
+        } else {
+            $this->assertSame('BAD_REQUEST', $error['code']);
         }
     }
 
@@ -103,16 +99,19 @@ class ErrorResponseFormatTest extends ApiTestCase
      */
     public function testConflictErrorFormat(): void
     {
-        $client = $this->createApiClient();
-        // Try to create duplicate - would return 409 Conflict
-        // This test is conditional based on actual implementation
-        $this->sendRequest($client, 'GET', '/api/health'); // Health check endpoint
-        
-        // If API has conflict scenario, verify format
-        if ($client->getResponse()->getStatusCode() === 409) {
-            $response = $this->getJsonResponse($client);
-            $this->assertErrorResponseStructure($response, 'CONFLICT', 409);
-        }
+        $librarian = $this->createUser('conflict-format@example.com', ['ROLE_LIBRARIAN']);
+        $client = $this->createAuthenticatedClient($librarian);
+        $supplier = $this->createSupplier('Conflict Supplier', false);
+
+        $this->jsonRequest($client, 'POST', '/api/admin/acquisitions/orders', [
+            'supplierId' => $supplier->getId(),
+            'title' => 'Conflict Order',
+            'totalAmount' => '50.00',
+        ]);
+
+        $this->assertResponseStatusCodeSame(409);
+        $response = $this->getJsonResponse($client);
+        $this->assertErrorResponseStructure($response, 'CONFLICT', 409);
     }
 
     /**
@@ -120,14 +119,17 @@ class ErrorResponseFormatTest extends ApiTestCase
      */
     public function testUnprocessableEntityErrorFormat(): void
     {
-        $client = $this->createApiClient();
-        $this->sendRequest($client, 'GET', '/api/nonexistent');
-        
-        // If endpoint returns 422, verify format
-        if ($client->getResponse()->getStatusCode() === 422) {
-            $response = $this->getJsonResponse($client);
-            $this->assertErrorResponseStructure($response, 'UNPROCESSABLE_ENTITY', 422);
-        }
+        $librarian = $this->createUser('unprocessable-format@example.com', ['ROLE_LIBRARIAN']);
+        $client = $this->createAuthenticatedClient($librarian);
+
+        $this->jsonRequest($client, 'POST', '/api/notifications/test', [
+            'channel' => 'fax',
+            'target' => 'receiver',
+        ]);
+
+        $this->assertResponseStatusCodeSame(422);
+        $response = $this->getJsonResponse($client);
+        $this->assertErrorResponseStructure($response, 'UNPROCESSABLE_ENTITY', 422);
     }
 
     /**
@@ -155,23 +157,16 @@ class ErrorResponseFormatTest extends ApiTestCase
     public function testSuccessResponseFormat(): void
     {
         $client = $this->createApiClient();
-        $this->sendRequest($client, 'GET', '/api/health');
+        $this->sendRequest($client, 'GET', '/health');
 
         $response = $this->getJsonResponse($client);
         
-        // Health check should be accessible without auth
-        if ($client->getResponse()->getStatusCode() === 200) {
-            // Success responses have either 'data' or direct response
-            // Verify structure is either:
-            // 1. {data: ...} format
-            // 2. Direct object (for backward compatibility)
-            // 3. Array without 'error' key indicates success
-            
-            $this->assertFalse(
-                isset($response['error']) && is_array($response['error']),
-                'Success response should not have error object'
-            );
-        }
+        $this->assertResponseStatusCodeSame(200);
+        $this->assertIsArray($response);
+        $this->assertFalse(
+            isset($response['error']) && is_array($response['error']),
+            'Success response should not have error object'
+        );
     }
 
     /**

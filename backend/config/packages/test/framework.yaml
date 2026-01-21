@@ -1,5 +1,7 @@
 framework:
   test: true
+  php_errors:
+    log: false
   session:
     storage_factory_id: session.storage.factory.mock_file
 
