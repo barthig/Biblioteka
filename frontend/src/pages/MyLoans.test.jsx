@@ -33,6 +33,7 @@ describe('MyLoans page', () => {
   it('prompts to log in when no token', () => {
     renderPage()
     expect(screen.getByText(/zaloguj/i)).toBeInTheDocument()
+    expect(apiFetch).not.toHaveBeenCalled()
   })
 
   it('renders active and history loans for logged-in user', async () => {
@@ -48,5 +49,6 @@ describe('MyLoans page', () => {
 
     expect(await screen.findByText('Active Book')).toBeInTheDocument()
     expect(screen.getByText('Returned Book')).toBeInTheDocument()
+    expect(apiFetch).toHaveBeenCalledWith('/api/me/loans')
   })
 })

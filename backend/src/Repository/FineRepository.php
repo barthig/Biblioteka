@@ -72,6 +72,33 @@ class FineRepository extends ServiceEntityRepository
     }
 
     /**
+     * @return Fine[]
+     */
+    public function findOutstandingByUser(User $user): array
+    {
+        return $this->createQueryBuilder('f')
+            ->join('f.loan', 'l')
+            ->andWhere('l.user = :user')
+            ->andWhere('f.paidAt IS NULL')
+            ->setParameter('user', $user)
+            ->orderBy('f.createdAt', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function findOneByIdAndUser(int $id, User $user): ?Fine
+    {
+        return $this->createQueryBuilder('f')
+            ->join('f.loan', 'l')
+            ->andWhere('f.id = :id')
+            ->andWhere('l.user = :user')
+            ->setParameter('id', $id)
+            ->setParameter('user', $user)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
+    /**
      * @param float $minimum
      * @return int[] user IDs that meet or exceed the outstanding threshold
      */

@@ -272,6 +272,60 @@ class LoanController extends AbstractController
     }
 
     #[OA\Get(
+        path: '/api/me/loans',
+        summary: 'List loans for current user',
+        tags: ['Loans'],
+        parameters: [
+            new OA\Parameter(name: 'page', in: 'query', schema: new OA\Schema(type: 'integer', default: 1)),
+            new OA\Parameter(name: 'limit', in: 'query', schema: new OA\Schema(type: 'integer', default: 20)),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'OK',
+                content: new OA\JsonContent(
+                    type: 'object',
+                    properties: [
+                        new OA\Property(
+                            property: 'data',
+                            type: 'array',
+                            items: new OA\Items(ref: '#/components/schemas/Loan')
+                        ),
+                        new OA\Property(property: 'meta', ref: '#/components/schemas/PaginationMeta'),
+                    ]
+                )
+            ),
+            new OA\Response(response: 204, description: 'No content'),
+            new OA\Response(response: 401, description: 'Unauthorized', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
+    public function listMe(Request $request): JsonResponse
+    {
+        $payload = $this->security->getJwtPayload($request);
+        if (!$payload || !isset($payload['sub'])) {
+            return $this->json(['message' => 'Unauthorized'], 401);
+        }
+
+        $page = max(1, $request->query->getInt('page', 1));
+        $limit = min(100, max(10, $request->query->getInt('limit', 20)));
+
+        $query = new ListUserLoansQuery(
+            userId: (int)$payload['sub'],
+            page: $page,
+            limit: $limit
+        );
+
+        $envelope = $this->queryBus->dispatch($query);
+        $result = $envelope->last(HandledStamp::class)->getResult();
+
+        if (empty($result['data'])) {
+            return new JsonResponse(null, 204);
+        }
+
+        return $this->json($result, 200, [], ['groups' => ['loan:read']]);
+    }
+
+    #[OA\Get(
         path: '/api/loans/user/{id}',
         summary: 'List loans for user',
         tags: ['Loans'],

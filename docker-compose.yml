@@ -96,6 +96,8 @@ services:
           php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration || echo 'Migrations skipped';
         fi &&
         php bin/console cache:warmup --env=prod &&
+        chown -R www-data:www-data /app/var &&
+        chmod -R 775 /app/var &&
         php-fpm -F
       "
 
@@ -188,4 +190,3 @@ volumes:
     driver: local
   backend_var:
     driver: local
-

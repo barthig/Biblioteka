@@ -63,6 +63,10 @@ export default function Profile() {
   const [ratings, setRatings] = useState([])
   const [ratingsError, setRatingsError] = useState(null)
   const [ratingsLoading, setRatingsLoading] = useState(false)
+  const [fees, setFees] = useState([])
+  const [feesError, setFeesError] = useState(null)
+  const [feesLoading, setFeesLoading] = useState(false)
+  const [feesPayingId, setFeesPayingId] = useState(null)
   const [sessionStatus, setSessionStatus] = useState(null)
   const [sessionLoading, setSessionLoading] = useState(false)
 
@@ -85,6 +89,25 @@ export default function Profile() {
       setRatingsError(`${err?.message || 'Nie udalo sie pobrac ocen'}${statusInfo}`)
     } finally {
       setRatingsLoading(false)
+    }
+  }
+
+  async function refreshFees() {
+    setFeesLoading(true)
+    setFeesError(null)
+    try {
+      const data = await apiFetch('/api/me/fees')
+      const list = Array.isArray(data?.data)
+        ? data.data
+        : Array.isArray(data)
+          ? data
+          : []
+      setFees(list)
+    } catch (err) {
+      const statusInfo = err?.status ? ` (HTTP ${err.status})` : ''
+      setFeesError(`${err?.message || 'Nie udalo sie pobrac oplat'}${statusInfo}`)
+    } finally {
+      setFeesLoading(false)
     }
   }
 
@@ -149,6 +172,10 @@ export default function Profile() {
   useEffect(() => {
     if (activeTab !== 'ratings' || !user?.id) return
     refreshRatings()
+  }, [activeTab, user?.id])
+  useEffect(() => {
+    if (activeTab !== 'fees' || !user?.id) return
+    refreshFees()
   }, [activeTab, user?.id])
 
 
@@ -280,6 +307,20 @@ export default function Profile() {
       refreshRatings()
     } catch (err) {
       setRatingsError(err.message || 'Nie udało się usunąć oceny')
+    }
+  }
+
+  async function handlePayFee(feeId) {
+    setFeesPayingId(feeId)
+    setFeesError(null)
+    try {
+      await apiFetch(`/api/me/fees/${feeId}/pay`, { method: 'POST' })
+      toast.success('Platnosc zostala zarejestrowana')
+      refreshFees()
+    } catch (err) {
+      setFeesError(err.message || 'Nie udalo sie oplacic oplaty')
+    } finally {
+      setFeesPayingId(null)
     }
   }
 
@@ -415,6 +456,12 @@ export default function Profile() {
           className={`tab ${activeTab === 'ratings' ? 'tab--active' : ''}`}
         >
           Twoje oceny
+        </button>
+        <button
+          onClick={() => setActiveTab('fees')}
+          className={`tab ${activeTab === 'fees' ? 'tab--active' : ''}`}
+        >
+          Oplaty i platnosci
         </button>
       </div>
 
@@ -739,7 +786,7 @@ export default function Profile() {
                   <option value="auto">Automatyczny (systemowy)</option>
                   <option value="light">Jasny</option>
                   <option value="dark">Ciemny</option>
-                  <option value="contrast">Wysoki kontrast (dla słabowidzących)</option>
+                  {/* <option value="contrast">Wysoki kontrast (dla słabowidzących)</option> */}
                 </select>
               </div>
 
@@ -933,6 +980,80 @@ export default function Profile() {
             ))}
           </ul>
         )}
+        </SectionCard>
+      )}
+
+      {activeTab === 'fees' && (
+        <SectionCard title="Oplaty i platnosci">
+          <div className="form-actions">
+            <button type="button" className="btn btn-secondary" onClick={refreshFees} disabled={feesLoading}>
+              {feesLoading ? 'Odswiezanie...' : 'Odswiez oplaty'}
+            </button>
+          </div>
+          <div style={{ marginTop: '1.5rem' }}>
+            <p className="support-copy">
+              Aby oplacic zaleglosci, wybierz oplate z listy i ureguluj platnosc online lub postepuj zgodnie z instrukcja.
+            </p>
+          </div>
+          <div className="surface-card" style={{ marginTop: '1.5rem' }}>
+            <h3>Instrukcja platnosci</h3>
+            <p className="support-copy">
+              W tytule przelewu podaj numer karty lub identyfikator oplaty. Platnosci online sa ksiegowane zwykle w 1-2 dni robocze.
+            </p>
+            <div className="form-row form-row--two">
+              <div className="form-field form-field--readonly">
+                <label>Odbiorca</label>
+                <div className="form-field__value">Miejska Biblioteka Publiczna</div>
+              </div>
+              <div className="form-field form-field--readonly">
+                <label>Numer konta</label>
+                <div className="form-field__value">PL00 0000 0000 0000 0000 0000 0000</div>
+              </div>
+            </div>
+            <div className="form-row form-row--two">
+              <div className="form-field form-field--readonly">
+                <label>Tytul przelewu</label>
+                <div className="form-field__value">Oplata biblioteczna / {profile.cardNumber || 'Numer karty'}</div>
+              </div>
+              <div className="form-field form-field--readonly">
+                <label>Przyklad</label>
+                <div className="form-field__value">Oplata biblioteczna / 123456</div>
+              </div>
+            </div>
+            <div className="form-actions">
+              <button type="button" className="btn btn-ghost">
+                Przejdz do platnosci online
+              </button>
+            </div>
+          </div>
+          {feesError && <p className="error">{feesError}</p>}
+          {fees.length === 0 ? (
+            <p>Brak aktywnych oplat do uregulowania.</p>
+          ) : (
+            <ul className="list list--bordered">
+              {fees.map(fee => (
+                <li key={fee.id}>
+                  <div className="list__title">{fee.reason || 'Oplata biblioteczna'}</div>
+                  <div className="list__meta">
+                    <span>{fee.amount} {fee.currency || 'PLN'}</span>
+                    {fee.createdAt && <span>{new Date(fee.createdAt).toLocaleDateString('pl-PL')}</span>}
+                    {fee.paidAt && <span>Oplacona</span>}
+                  </div>
+                  {!fee.paidAt && fee.id && (
+                    <div className="form-actions">
+                      <button
+                        className="btn btn-primary btn-sm"
+                        onClick={() => handlePayFee(fee.id)}
+                        disabled={feesPayingId === fee.id}
+                      >
+                        {feesPayingId === fee.id ? 'Przetwarzanie...' : 'Ureguluj online'}
+                      </button>
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
         </SectionCard>
       )}
     </div>

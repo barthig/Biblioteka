@@ -112,6 +112,7 @@ class Fine
         return $this;
     }
 
+    #[Groups(['fine:read'])]
     public function isPaid(): bool
     {
         return $this->paidAt !== null;

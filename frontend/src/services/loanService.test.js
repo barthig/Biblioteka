@@ -21,7 +21,7 @@ describe('loanService', () => {
 
       const result = await loanService.getMyLoans()
 
-      expect(api.apiFetch).toHaveBeenCalledWith('/api/loans')
+      expect(api.apiFetch).toHaveBeenCalledWith('/api/me/loans')
       expect(result).toEqual(mockLoans)
     })
   })

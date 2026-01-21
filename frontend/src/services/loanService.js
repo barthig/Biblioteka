@@ -8,7 +8,7 @@ export const loanService = {
    * Get current user's loans
    */
   async getMyLoans() {
-    return await apiFetch('/api/loans')
+    return await apiFetch('/api/me/loans')
   },
 
   /**

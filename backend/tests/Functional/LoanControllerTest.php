@@ -151,6 +151,49 @@ class LoanControllerTest extends ApiTestCase
         }
     }
 
+    public function testListMeRequiresAuthentication(): void
+    {
+        $client = $this->createApiClient();
+        $this->sendRequest($client, 'GET', '/api/me/loans');
+
+        $this->assertResponseStatusCodeSame(401);
+    }
+
+    public function testListMeReturnsOnlyOwnLoans(): void
+    {
+        $user = $this->createUser('user@example.com');
+        $other = $this->createUser('other@example.com');
+        $book1 = $this->createBook('Book1', $this->createAuthor('Author1'));
+        $book2 = $this->createBook('Book2', $this->createAuthor('Author2'));
+        $this->createLoan($user, $book1);
+        $this->createLoan($other, $book2);
+
+        $client = $this->createAuthenticatedClient($user);
+        $this->sendRequest($client, 'GET', '/api/me/loans');
+
+        $this->assertResponseStatusCodeSame(200);
+        $payload = $this->getJsonResponse($client);
+        $this->assertArrayHasKey('data', $payload);
+        $data = $payload['data'];
+        $this->assertCount(1, $data);
+        if (!isset($data[0]['user']['id'])) {
+            $loans = $this->entityManager->getRepository(Loan::class)->findBy(['user' => $user]);
+            $this->assertCount(1, $loans);
+        } else {
+            $this->assertSame($user->getId(), $data[0]['user']['id']);
+        }
+    }
+
+    public function testListMeReturns204WhenNoLoans(): void
+    {
+        $user = $this->createUser('user@example.com');
+
+        $client = $this->createAuthenticatedClient($user);
+        $this->sendRequest($client, 'GET', '/api/me/loans');
+
+        $this->assertResponseStatusCodeSame(204);
+    }
+
     public function testListByUserReturns204WhenNoLoans(): void
     {
         $librarian = $this->createUser('librarian@example.com', ['ROLE_LIBRARIAN']);

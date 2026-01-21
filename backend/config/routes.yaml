@@ -42,6 +42,12 @@ api_profile:
   controller: App\Controller\AuthController::profile
   methods: [GET]
 
+# Current user loans
+api_account_loans_list:
+  path: /api/me/loans
+  controller: App\Controller\LoanController::listMe
+  methods: [GET]
+
 # Dashboard overview
 api_dashboard_overview:
   path: /api/dashboard
@@ -577,6 +583,18 @@ api_account_ui_preferences:
   path: /api/me/ui-preferences
   controller: App\Controller\AccountController::updateUIPreferences
   methods: [PUT]
+
+api_account_fees_list:
+  path: /api/me/fees
+  controller: App\Controller\UserFeeController::list
+  methods: [GET]
+
+api_account_fees_pay:
+  path: /api/me/fees/{feeId}/pay
+  controller: App\Controller\UserFeeController::pay
+  methods: [POST]
+  requirements:
+    feeId: '[0-9]+'
 
 api_account_pin:
   path: /api/me/pin

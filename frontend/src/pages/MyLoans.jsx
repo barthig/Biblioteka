@@ -23,7 +23,7 @@ export default function MyLoans() {
   const [extendDays, setExtendDays] = useState({})
   const [extendLoading, setExtendLoading] = useState({})
   const { getCachedResource, setCachedResource, invalidateResource } = useResourceCache()
-  const CACHE_KEY = 'loans:/api/loans'
+  const CACHE_KEY = 'loans:/api/me/loans'
   const CACHE_TTL = 60000
 
   useEffect(() => {
@@ -51,7 +51,7 @@ export default function MyLoans() {
       setActionError(null)
       setActionSuccess(null)
       try {
-        const data = await apiFetch('/api/loans')
+        const data = await apiFetch('/api/me/loans')
         if (!cancelled) {
           const list = Array.isArray(data?.data) ? data.data : []
           setLoans(list)
