@@ -176,10 +176,6 @@ class ReservationController extends AbstractController
                 return $this->json(['message' => $e->getMessage()], 400);
             }
             
-            // Log the full exception for debugging
-            error_log('ReservationController exception: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
-            error_log('Stack trace: ' . $e->getTraceAsString());
-            
             if ($e instanceof \RuntimeException) {
                 $statusCode = match ($e->getMessage()) {
                     'User or book not found' => 404,
@@ -211,7 +207,6 @@ class ReservationController extends AbstractController
     )]
     public function cancel(string $id, Request $request): JsonResponse
     {
-        error_log('ReservationController::cancel - id: ' . $id);
         if (!ctype_digit($id) || (int)$id <= 0) {
             return $this->json(['message' => 'Invalid reservation id'], 400);
         }
@@ -224,7 +219,6 @@ class ReservationController extends AbstractController
         }
 
         $userId = (int)$payload['sub'];
-        error_log('ReservationController::cancel - userId: ' . $userId . ', isLibrarian: ' . ($isLibrarian ? 'yes' : 'no'));
 
         $command = new CancelReservationCommand(
             reservationId: (int)$id,
@@ -234,10 +228,8 @@ class ReservationController extends AbstractController
 
         try {
             $this->commandBus->dispatch($command);
-            error_log('ReservationController::cancel - SUCCESS, returning 204');
             return new JsonResponse(null, 204);
         } catch (\Throwable $e) {
-            error_log('ReservationController::cancel - EXCEPTION: ' . $e->getMessage());
             if ($e instanceof HandlerFailedException) {
                 $e = $e->getPrevious() ?? $e;
             }

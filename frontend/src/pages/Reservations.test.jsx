@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+﻿import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
@@ -17,7 +17,7 @@ vi.mock('../context/AuthContext', () => ({
 
 const renderPage = () => {
   return render(
-    <MemoryRouter>
+    <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <ResourceCacheProvider>
         <Reservations />
       </ResourceCacheProvider>
@@ -61,3 +61,4 @@ describe('Reservations page', () => {
     expect(await screen.findByText(/Load failed/i)).toBeInTheDocument()
   })
 })
+

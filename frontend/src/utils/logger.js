@@ -4,27 +4,29 @@
  * In production, errors can be sent to error tracking service (e.g., Sentry)
  */
 const isDev = import.meta.env.DEV;
+const isTest = import.meta.env.MODE === 'test';
+const shouldLog = isDev && !isTest;
 
 export const logger = {
   /**
    * Log general information (development only)
    */
   log: (...args) => {
-    if (isDev) console.log(...args);
+    if (shouldLog) console.log(...args);
   },
   
   /**
    * Log warnings (development only)
    */
   warn: (...args) => {
-    if (isDev) console.warn(...args);
+    if (shouldLog) console.warn(...args);
   },
   
   /**
    * Log errors (development only, could be sent to Sentry in production)
    */
   error: (...args) => {
-    if (isDev) {
+    if (shouldLog) {
       console.error(...args);
     }
     // In production, send to error tracking service
@@ -35,13 +37,13 @@ export const logger = {
    * Log informational messages (development only)
    */
   info: (...args) => {
-    if (isDev) console.info(...args);
+    if (shouldLog) console.info(...args);
   },
   
   /**
    * Log debug information (development only)
    */
   debug: (...args) => {
-    if (isDev) console.debug(...args);
+    if (shouldLog) console.debug(...args);
   }
 };

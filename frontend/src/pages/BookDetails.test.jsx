@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+﻿import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
@@ -22,7 +22,7 @@ vi.mock('../components/StarRating', () => ({
 
 const renderPage = (path = '/books/1') => {
   return render(
-    <MemoryRouter initialEntries={[path]}>
+    <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={[path]}>
       <ResourceCacheProvider>
         <Routes>
           <Route path="/books/:id" element={<BookDetails />} />
@@ -115,3 +115,4 @@ describe('BookDetails page', () => {
     expect(await screen.findByText(/Usu/i)).toBeInTheDocument()
   })
 })
+

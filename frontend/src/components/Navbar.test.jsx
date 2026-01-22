@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest'
+﻿import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import Navbar from './Navbar'
@@ -18,7 +18,7 @@ describe('Navbar', () => {
   it('renders login/register when unauthenticated', () => {
     mockAuth = { token: null, user: null, logout: vi.fn() }
     render(
-      <MemoryRouter>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Navbar />
       </MemoryRouter>
     )
@@ -29,7 +29,7 @@ describe('Navbar', () => {
   it('renders user section and triggers prefetch', () => {
     mockAuth = { token: 'token', user: { name: 'Jan', roles: ['ROLE_USER'] }, logout: vi.fn() }
     render(
-      <MemoryRouter>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Navbar />
       </MemoryRouter>
     )
@@ -41,7 +41,7 @@ describe('Navbar', () => {
   it('shows admin links only for admin', () => {
     mockAuth = { token: 'token', user: { name: 'Admin', roles: ['ROLE_ADMIN'] }, logout: vi.fn() }
     render(
-      <MemoryRouter>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Navbar />
       </MemoryRouter>
     )
@@ -57,7 +57,7 @@ describe('Navbar', () => {
   it('shows librarian links only for librarian', () => {
     mockAuth = { token: 'token', user: { name: 'Librarian', roles: ['ROLE_LIBRARIAN'] }, logout: vi.fn() }
     render(
-      <MemoryRouter>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Navbar />
       </MemoryRouter>
     )
@@ -71,7 +71,7 @@ describe('Navbar', () => {
     const logout = vi.fn()
     mockAuth = { token: 'token', user: { name: 'Jan', roles: ['ROLE_USER'] }, logout }
     render(
-      <MemoryRouter>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Navbar />
       </MemoryRouter>
     )
@@ -79,3 +79,4 @@ describe('Navbar', () => {
     expect(logout).toHaveBeenCalled()
   })
 })
+

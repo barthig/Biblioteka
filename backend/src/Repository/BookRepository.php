@@ -783,7 +783,8 @@ class BookRepository extends ServiceEntityRepository
     public function findMostPopular(int $limit = 10): array
     {
         return $this->createQueryBuilder('b')
-            ->orderBy('b.borrowedCopies', 'DESC')
+            ->addSelect('(b.totalCopies - b.copies) AS HIDDEN borrowedCount')
+            ->orderBy('borrowedCount', 'DESC')
             ->addOrderBy('b.averageRating', 'DESC')
             ->setMaxResults(max(1, $limit))
             ->getQuery()

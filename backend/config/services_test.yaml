@@ -3,6 +3,14 @@ services:
     autowire: true
     autoconfigure: true
 
+  Psr\Log\LoggerInterface:
+    class: Psr\Log\NullLogger
+    public: true
+
+  logger:
+    class: Psr\Log\NullLogger
+    public: true
+
   App\Service\OpenAIEmbeddingService:
     public: true
   App\Service\RecommendationService:

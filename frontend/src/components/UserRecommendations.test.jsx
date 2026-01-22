@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+﻿import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import UserRecommendations from './UserRecommendations'
@@ -19,7 +19,7 @@ describe('UserRecommendations', () => {
       data: [{ id: 1, title: 'Alpha', author: { name: 'Author A' } }]
     })
     render(
-      <MemoryRouter>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <UserRecommendations />
       </MemoryRouter>
     )
@@ -30,7 +30,7 @@ describe('UserRecommendations', () => {
   it('renders not enough data message', async () => {
     apiFetch.mockResolvedValue({ status: 'not_enough_data', data: [] })
     render(
-      <MemoryRouter>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <UserRecommendations />
       </MemoryRouter>
     )
@@ -40,10 +40,11 @@ describe('UserRecommendations', () => {
   it('renders error state', async () => {
     apiFetch.mockRejectedValue(new Error('Nope'))
     render(
-      <MemoryRouter>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <UserRecommendations />
       </MemoryRouter>
     )
     expect(await screen.findByText(/Nope/)).toBeInTheDocument()
   })
 })
+

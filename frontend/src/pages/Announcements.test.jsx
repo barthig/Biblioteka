@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+﻿import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import Announcements from './Announcements'
@@ -27,7 +27,7 @@ describe('Announcements page', () => {
     })
 
     render(
-      <MemoryRouter>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Announcements />
       </MemoryRouter>
     )
@@ -36,3 +36,4 @@ describe('Announcements page', () => {
     expect(screen.getByText('Beta')).toBeInTheDocument()
   })
 })
+

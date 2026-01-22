@@ -13,6 +13,7 @@ use App\Repository\ReservationRepository;
 use App\Service\BookService;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\NullLogger;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 class CreateLoanHandlerTest extends TestCase
@@ -43,7 +44,8 @@ class CreateLoanHandlerTest extends TestCase
             $this->reservationRepository,
             $this->bookCopyRepository,
             $this->settingsService,
-            $this->eventDispatcher
+            $this->eventDispatcher,
+            new NullLogger()
         );
     }
 

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+﻿import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
@@ -35,7 +35,7 @@ describe('Profile page', () => {
   it('asks user to log in when not authenticated', () => {
     mockUser = null
     render(
-      <MemoryRouter>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Profile />
       </MemoryRouter>
     )
@@ -53,7 +53,7 @@ describe('Profile page', () => {
     })
 
     render(
-      <MemoryRouter>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Profile />
       </MemoryRouter>
     )
@@ -69,7 +69,7 @@ describe('Profile page', () => {
     ratingService.getMyRatings.mockResolvedValue({ data: [] })
 
     const { container } = render(
-      <MemoryRouter>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Profile />
       </MemoryRouter>
     )
@@ -98,7 +98,7 @@ describe('Profile page', () => {
     ratingService.getMyRatings.mockResolvedValue({ data: [] })
 
     render(
-      <MemoryRouter>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Profile />
       </MemoryRouter>
     )
@@ -123,7 +123,7 @@ describe('Profile page', () => {
     ratingService.getMyRatings.mockResolvedValue({ data: [] })
 
     render(
-      <MemoryRouter>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Profile />
       </MemoryRouter>
     )
@@ -136,3 +136,4 @@ describe('Profile page', () => {
     expect(await screen.findByText(/Pay failed/i)).toBeInTheDocument()
   })
 })
+

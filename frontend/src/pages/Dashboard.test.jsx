@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+﻿import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import Dashboard from './Dashboard'
@@ -40,14 +40,14 @@ describe('Dashboard page', () => {
     vi.clearAllMocks()
   })
 
-  it('renders landing page when unauthenticated', () => {
+  it('renders landing page when unauthenticated', async () => {
     mockAuth = { token: null, user: null }
     render(
-      <MemoryRouter>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Dashboard />
       </MemoryRouter>
     )
-    expect(screen.getByText(/Znajd/i)).toBeInTheDocument()
+    expect(await screen.findByText(/Znajd/i)).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /Zobacz/i })).toBeInTheDocument()
   })
 
@@ -71,7 +71,7 @@ describe('Dashboard page', () => {
     })
 
     render(
-      <MemoryRouter>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Dashboard />
       </MemoryRouter>
     )
@@ -97,7 +97,7 @@ describe('Dashboard page', () => {
     })
 
     render(
-      <MemoryRouter>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Dashboard />
       </MemoryRouter>
     )
@@ -105,3 +105,4 @@ describe('Dashboard page', () => {
     expect(await screen.findByText(/Panel Administratora/i)).toBeInTheDocument()
   })
 })
+

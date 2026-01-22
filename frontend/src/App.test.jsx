@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest'
+﻿import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import App from './App'
@@ -44,7 +44,7 @@ vi.mock('./pages/SystemLogs', () => ({ default: () => <div>System Logs</div> }))
 describe('App routing', () => {
   it('renders dashboard route', () => {
     render(
-      <MemoryRouter initialEntries={['/']}>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/']}>
         <App />
       </MemoryRouter>
     )
@@ -54,10 +54,11 @@ describe('App routing', () => {
 
   it('renders books route', () => {
     render(
-      <MemoryRouter initialEntries={['/books']}>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/books']}>
         <App />
       </MemoryRouter>
     )
     expect(screen.getByText('Books Page')).toBeInTheDocument()
   })
 })
+

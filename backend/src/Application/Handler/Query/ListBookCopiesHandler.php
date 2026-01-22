@@ -38,6 +38,6 @@ class ListBookCopiesHandler
             ];
         }
 
-        return ['items' => $copies];
+        return ['data' => $copies];
     }
 }

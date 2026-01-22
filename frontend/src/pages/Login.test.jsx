@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+﻿import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
@@ -30,7 +30,7 @@ describe('Login page', () => {
     apiFetch.mockResolvedValue({ token: 'token-123', refreshToken: 'refresh-123' })
 
     render(
-      <MemoryRouter initialEntries={[{ pathname: '/login', state: { from: { pathname: '/books' } } }]}>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={[{ pathname: '/login', state: { from: { pathname: '/books' } } }]}>
         <Login />
       </MemoryRouter>
     )
@@ -54,7 +54,7 @@ describe('Login page', () => {
     apiFetch.mockRejectedValue(new Error('Invalid credentials'))
 
     render(
-      <MemoryRouter>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Login />
       </MemoryRouter>
     )
@@ -66,3 +66,4 @@ describe('Login page', () => {
     expect(await screen.findByText(/Invalid credentials/i)).toBeInTheDocument()
   })
 })
+

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest'
+﻿import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
@@ -40,7 +40,7 @@ describe('UserDetails page', () => {
     window.alert = vi.fn()
 
     const { container } = render(
-      <MemoryRouter initialEntries={['/users/1/details']}>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/users/1/details']}>
         <Routes>
           <Route path="/users/:id/details" element={<UserDetails />} />
         </Routes>
@@ -56,3 +56,4 @@ describe('UserDetails page', () => {
     expect(apiFetch).toHaveBeenCalledWith('/api/users/1', expect.objectContaining({ method: 'PUT' }))
   })
 })
+

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+﻿import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import Favorites from './Favorites'
@@ -17,7 +17,7 @@ vi.mock('../context/AuthContext', () => ({
 const renderPage = (user) => {
   mockUser = user
   return render(
-    <MemoryRouter>
+    <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <ResourceCacheProvider>
         <Favorites />
       </ResourceCacheProvider>
@@ -55,3 +55,4 @@ describe('Favorites page', () => {
     expect(await screen.findByText(/Load failed/i)).toBeInTheDocument()
   })
 })
+

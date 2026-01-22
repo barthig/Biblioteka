@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+﻿import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
@@ -22,7 +22,7 @@ describe('Register page', () => {
 
   it('shows error when passwords do not match', async () => {
     render(
-      <MemoryRouter>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Register />
       </MemoryRouter>
     )
@@ -44,7 +44,7 @@ describe('Register page', () => {
       .mockResolvedValueOnce({ token: 'token-123', refreshToken: 'refresh-123' })
 
     render(
-      <MemoryRouter>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Register />
       </MemoryRouter>
     )
@@ -86,7 +86,7 @@ describe('Register page', () => {
       .mockResolvedValueOnce({ pendingApproval: true })
 
     render(
-      <MemoryRouter>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Register />
       </MemoryRouter>
     )
@@ -101,3 +101,4 @@ describe('Register page', () => {
     expect(mockLogin).not.toHaveBeenCalled()
   })
 })
+

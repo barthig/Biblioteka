@@ -443,32 +443,19 @@ class BookController extends AbstractController
     public function recommended(Request $request): JsonResponse
     {
         try {
-            $start = microtime(true);
-            error_log('BookController::recommended - START');
             $userId = $this->security->getCurrentUserId($request);
-            error_log('BookController::recommended - userId: ' . ($userId ?? 'null'));
             
             $user = null;
             if ($userId) {
                 $envelope = $this->queryBus->dispatch(new GetUserByIdQuery($userId));
                 $user = $envelope->last(HandledStamp::class)?->getResult();
             }
-            error_log('BookController::recommended - user loaded: ' . ($user ? 'yes' : 'no'));
 
-            error_log('BookController::recommended - calling getRecommendationsForUser');
             $recoStart = microtime(true);
             $groups = $this->recommendations->getRecommendationsForUser($user);
-            $recoMs = (int) round((microtime(true) - $recoStart) * 1000);
-            error_log('BookController::recommended - got ' . count($groups) . ' groups');
-            $totalMs = (int) round((microtime(true) - $start) * 1000);
-            error_log('BookController::recommended - reco in ' . $recoMs . 'ms, total ' . $totalMs . 'ms');
 
             return $this->json(['groups' => $groups], 200, [], ['groups' => ['book:read']]);
         } catch (\Exception $e) {
-            error_log('BookController::recommended - EXCEPTION: ' . $e->getMessage());
-            error_log('BookController::recommended - Exception type: ' . get_class($e));
-            error_log('BookController::recommended - File: ' . $e->getFile() . ':' . $e->getLine());
-            error_log('BookController::recommended - Stack trace: ' . $e->getTraceAsString());
             return $this->jsonError(ApiError::internalError($e->getMessage()));
         }
     }

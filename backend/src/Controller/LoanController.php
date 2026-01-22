@@ -40,11 +40,7 @@ class LoanController extends AbstractController
     private function handleException(\Throwable $e): JsonResponse
     {
         $e = $this->unwrapThrowable($e);
-        
-        // Log the full exception for debugging
-        error_log('LoanController exception: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
-        error_log('Stack trace: ' . $e->getTraceAsString());
-        
+
         if ($e instanceof \RuntimeException) {
             $statusCode = match ($e->getMessage()) {
                 'User not found', 'Book not found', 'Loan not found', 'Egzemplarz nie znaleziony' => 404,
@@ -486,7 +482,6 @@ class LoanController extends AbstractController
     )]
     public function extend(string $id, Request $request): JsonResponse
     {
-        error_log('LoanController::extend - id: ' . $id);
         if (!ctype_digit($id) || (int)$id <= 0) {
             return $this->json(['message' => 'Invalid id parameter'], 400);
         }
@@ -498,7 +493,6 @@ class LoanController extends AbstractController
 
         $userId = (int)$payload['sub'];
         $isLibrarian = $this->security->hasRole($request, 'ROLE_LIBRARIAN');
-        error_log('LoanController::extend - userId: ' . $userId . ', isLibrarian: ' . ($isLibrarian ? 'yes' : 'no'));
 
         // First check if user has access to this loan
         $getLoanQuery = new GetLoanQuery(
@@ -512,12 +506,9 @@ class LoanController extends AbstractController
             $loan = $loanEnvelope->last(HandledStamp::class)->getResult();
             
             if (!$loan) {
-                error_log('LoanController::extend - loan not found');
                 return $this->json(['message' => 'Loan not found'], 404);
             }
-            error_log('LoanController::extend - loan found, dispatching ExtendLoanCommand');
         } catch (\Throwable $e) {
-            error_log('LoanController::extend - error getting loan: ' . $e->getMessage());
             return $this->handleException($e);
         }
 
@@ -529,11 +520,9 @@ class LoanController extends AbstractController
         try {
             $envelope = $this->commandBus->dispatch($command);
             $loan = $envelope->last(HandledStamp::class)->getResult();
-            error_log('LoanController::extend - SUCCESS');
 
             return $this->json(['data' => $loan], 200, [], ['groups' => ['loan:read']]);
         } catch (\Throwable $e) {
-            error_log('LoanController::extend - error extending loan: ' . $e->getMessage());
             return $this->handleException($e);
         }
     }

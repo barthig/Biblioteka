@@ -47,14 +47,11 @@ class AnnouncementController extends AbstractController
     )]
     public function list(Request $request, SecurityService $security): JsonResponse
     {
-        $start = microtime(true);
         try {
-            error_log('AnnouncementController::list - START');
             $page = max(1, $request->query->getInt('page', 1));
             $limit = min(100, max(5, $request->query->getInt('limit', 20)));
             $status = $request->query->get('status');
             $homepageOnly = $request->query->getBoolean('homepage', false);
-            error_log('AnnouncementController::list - page: ' . $page . ', limit: ' . $limit . ', status: ' . ($status ?? 'null'));
 
             $payload = $security->getJwtPayload($request);
             $user = null;
@@ -71,34 +68,18 @@ class AnnouncementController extends AbstractController
                 }
             }
             $isStaff = $isLibrarian || $isAdmin;
-            error_log('AnnouncementController::list - isLibrarian: ' . ($isLibrarian ? 'yes' : 'no'));
-            error_log('AnnouncementController::list - isAdmin: ' . ($isAdmin ? 'yes' : 'no'));
 
             $query = new ListAnnouncementsQuery($user, $isStaff, $status, $homepageOnly, $page, $limit);
-            error_log('AnnouncementController::list - dispatching query');
             $envelope = $this->queryBus->dispatch($query);
             $result = $envelope->last(HandledStamp::class)?->getResult();
-            error_log('AnnouncementController::list - result type: ' . gettype($result));
-            if (is_array($result)) {
-                error_log('AnnouncementController::list - result keys: ' . json_encode(array_keys($result)));
-                if (isset($result['data'])) {
-                    error_log('AnnouncementController::list - data count: ' . count($result['data']));
-                }
-            }
 
             $groups = $isStaff ? ['announcement:list', 'announcement:read'] : ['announcement:list'];
-            $durationMs = (int) round((microtime(true) - $start) * 1000);
-            error_log('AnnouncementController::list - DONE in ' . $durationMs . 'ms');
             return $this->json($result, 200, [], ['groups' => $groups]);
         } catch (\Throwable $e) {
             $e = $this->unwrapThrowable($e);
             if ($response = $this->jsonFromHttpException($e)) {
                 return $response;
             }
-            error_log('AnnouncementController::list - EXCEPTION: ' . $e->getMessage());
-            error_log('AnnouncementController::list - Stack: ' . $e->getTraceAsString());
-            $durationMs = (int) round((microtime(true) - $start) * 1000);
-            error_log('AnnouncementController::list - FAILED in ' . $durationMs . 'ms');
             return $this->json(['message' => 'Internal error: ' . $e->getMessage()], 500);
         }
     }

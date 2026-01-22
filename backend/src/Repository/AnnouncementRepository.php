@@ -18,8 +18,6 @@ class AnnouncementRepository extends ServiceEntityRepository
      */
     public function findActiveForUser(?User $user, bool $onlyPinned = false): array
     {
-        $start = microtime(true);
-        error_log('AnnouncementRepository::findActiveForUser - START, onlyPinned: ' . ($onlyPinned ? 'yes' : 'no'));
         $qb = $this->createQueryBuilder('a')
             ->leftJoin('a.createdBy', 'u')
             ->addSelect('u')
@@ -35,21 +33,12 @@ class AnnouncementRepository extends ServiceEntityRepository
             $qb->andWhere('a.isPinned = true');
         }
 
-        $queryStart = microtime(true);
         $announcements = $qb->getQuery()->getResult();
-        $queryMs = (int) round((microtime(true) - $queryStart) * 1000);
-        error_log('AnnouncementRepository::findActiveForUser - query in ' . $queryMs . 'ms');
-        error_log('AnnouncementRepository::findActiveForUser - found ' . count($announcements) . ' announcements before filtering');
 
         // Filtruj po targetAudience
-        $filterStart = microtime(true);
         $filtered = array_filter($announcements, function (Announcement $announcement) use ($user) {
             return $announcement->isVisibleForUser($user);
         });
-        $filterMs = (int) round((microtime(true) - $filterStart) * 1000);
-        error_log('AnnouncementRepository::findActiveForUser - after filtering: ' . count($filtered) . ' announcements');
-        $totalMs = (int) round((microtime(true) - $start) * 1000);
-        error_log('AnnouncementRepository::findActiveForUser - filter in ' . $filterMs . 'ms, total ' . $totalMs . 'ms');
         
         return $filtered;
     }

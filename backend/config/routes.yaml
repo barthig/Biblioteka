@@ -54,6 +54,11 @@ api_dashboard_overview:
   controller: App\Controller\DashboardController::overview
   methods: [GET]
 
+api_statistics_dashboard:
+  path: /api/statistics/dashboard
+  controller: App\Controller\StatisticsController::dashboard
+  methods: [GET]
+
 # User facing queries
 api_users_list:
   path: /api/users
@@ -161,6 +166,11 @@ api_books_recommended:
   controller: App\Controller\BookController::recommended
   methods: [GET]
 
+api_books_export:
+  path: /api/books/export
+  controller: App\Controller\ExportController::exportBooks
+  methods: [GET]
+
 
 # Semantic recommendations
 api_recommend:
@@ -181,6 +191,18 @@ api_recommendations_feedback_create:
 
 api_recommendations_feedback_delete:
   path: /api/recommendations/feedback/{bookId}
+  controller: App\Controller\RecommendationFeedbackController::removeFeedback
+  methods: [DELETE]
+  requirements:
+    bookId: '[0-9]+'
+
+api_recommendation_feedback_create_legacy:
+  path: /api/recommendation-feedback
+  controller: App\Controller\RecommendationFeedbackController::addFeedback
+  methods: [POST]
+
+api_recommendation_feedback_delete_legacy:
+  path: /api/recommendation-feedback/{bookId}
   controller: App\Controller\RecommendationFeedbackController::removeFeedback
   methods: [DELETE]
   requirements:
@@ -403,6 +425,26 @@ api_admin_system_roles_assign:
   controller: App\Controller\Admin\RoleAdminController::assign
   methods: [POST]
 
+api_admin_roles_list_legacy:
+  path: /api/admin/roles
+  controller: App\Controller\Admin\RoleAdminController::list
+  methods: [GET]
+
+api_admin_roles_create_legacy:
+  path: /api/admin/roles
+  controller: App\Controller\Admin\RoleAdminController::create
+  methods: [POST]
+
+api_admin_roles_update_legacy:
+  path: /api/admin/roles/{roleKey}
+  controller: App\Controller\Admin\RoleAdminController::update
+  methods: [PUT]
+
+api_admin_roles_assign_legacy:
+  path: /api/admin/roles/{roleKey}/assign
+  controller: App\Controller\Admin\RoleAdminController::assign
+  methods: [POST]
+
 api_admin_system_integrations_list:
   path: /api/admin/system/integrations
   controller: App\Controller\Admin\IntegrationAdminController::list
@@ -427,6 +469,30 @@ api_admin_system_integrations_test:
   requirements:
     id: '[0-9]+'
 
+api_admin_integrations_list_legacy:
+  path: /api/admin/integrations
+  controller: App\Controller\Admin\IntegrationAdminController::list
+  methods: [GET]
+
+api_admin_integrations_create_legacy:
+  path: /api/admin/integrations
+  controller: App\Controller\Admin\IntegrationAdminController::create
+  methods: [POST]
+
+api_admin_integrations_update_legacy:
+  path: /api/admin/integrations/{id}
+  controller: App\Controller\Admin\IntegrationAdminController::update
+  methods: [PUT]
+  requirements:
+    id: '[0-9]+'
+
+api_admin_integrations_test_legacy:
+  path: /api/admin/integrations/{id}/test
+  controller: App\Controller\Admin\IntegrationAdminController::testConnection
+  methods: [POST]
+  requirements:
+    id: '[0-9]+'
+
 api_admin_system_backups_list:
   path: /api/admin/system/backups
   controller: App\Controller\Admin\SecurityAdminController::listBackups
@@ -437,8 +503,23 @@ api_admin_system_backups_create:
   controller: App\Controller\Admin\SecurityAdminController::createBackup
   methods: [POST]
 
+api_admin_backups_list_legacy:
+  path: /api/admin/backups
+  controller: App\Controller\Admin\SecurityAdminController::listBackups
+  methods: [GET]
+
+api_admin_backups_create_legacy:
+  path: /api/admin/backups
+  controller: App\Controller\Admin\SecurityAdminController::createBackup
+  methods: [POST]
+
 api_admin_system_logs_view:
   path: /api/admin/system/logs
+  controller: App\Controller\Admin\SecurityAdminController::viewLogs
+  methods: [GET]
+
+api_admin_logs_legacy:
+  path: /api/admin/logs
   controller: App\Controller\Admin\SecurityAdminController::viewLogs
   methods: [GET]
 
@@ -450,6 +531,16 @@ api_admin_vectors_reindex:
 
 api_admin_vectors_stats:
   path: /admin/vectors/stats
+  controller: App\Controller\Admin\AdminVectorController::stats
+  methods: [GET]
+
+api_admin_embeddings_reindex:
+  path: /api/admin/books/embeddings/reindex
+  controller: App\Controller\Admin\AdminVectorController::reindexAll
+  methods: [POST]
+
+api_admin_embeddings_stats:
+  path: /api/admin/books/embeddings/stats
   controller: App\Controller\Admin\AdminVectorController::stats
   methods: [GET]
 
@@ -617,6 +708,11 @@ api_library_hours:
   controller: App\Controller\AlertController::getLibraryHours
   methods: [GET]
 
+api_library_hours_legacy:
+  path: /api/library-hours
+  controller: App\Controller\AlertController::getLibraryHours
+  methods: [GET]
+
 # Loan operations
 api_loans_list:
   path: /api/loans
@@ -719,7 +815,7 @@ api_favorites_add:
 
 api_favorites_remove:
   path: /api/favorites/{bookId}
-  controller: App\Controller\FavoriteController::remove
+  controller: App\Controller\FavoriteController::removeByBookId
   methods: [DELETE]
   requirements:
     bookId: '[0-9]+'

@@ -15,6 +15,7 @@ use App\Repository\ReservationRepository;
 use App\Service\BookService;
 use App\Service\SystemSettingsService;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
@@ -28,7 +29,8 @@ class CreateLoanHandler
         private ReservationRepository $reservationRepository,
         private BookCopyRepository $bookCopyRepository,
         private SystemSettingsService $settingsService,
-        private EventDispatcherInterface $eventDispatcher
+        private EventDispatcherInterface $eventDispatcher,
+        private LoggerInterface $logger
     ) {
     }
 
@@ -118,10 +120,10 @@ class CreateLoanHandler
             
         } catch (\Exception $e) {
             $this->em->rollback();
-            error_log('CreateLoanHandler exception: ' . $e->getMessage());
-            error_log('Exception type: ' . get_class($e));
-            error_log('File: ' . $e->getFile() . ':' . $e->getLine());
-            error_log('Stack trace: ' . $e->getTraceAsString());
+            $this->logger->error('CreateLoanHandler exception', [
+                'message' => $e->getMessage(),
+                'exception' => $e,
+            ]);
             if ($e instanceof \RuntimeException) {
                 throw $e;
             }

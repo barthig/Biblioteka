@@ -47,8 +47,8 @@ class GetLibraryStatisticsQueryHandler
         $popularBooksData = array_map(fn($book) => [
             'id' => $book->getId(),
             'title' => $book->getTitle(),
-            'author' => $book->getAuthorName(),
-            'borrowCount' => $book->getBorrowedCopiesCount() ?? 0
+            'author' => $book->getAuthor()->getName(),
+            'borrowCount' => max(0, $book->getTotalCopies() - $book->getCopies()),
         ], $popularBooks);
 
         // Recent activity (audit log)
@@ -59,7 +59,7 @@ class GetLibraryStatisticsQueryHandler
             'entity' => $log->getEntityType(),
             'entityId' => $log->getEntityId(),
             'user' => $log->getUser()?->getName() ?? 'System',
-            'timestamp' => $log->getTimestamp()->format('Y-m-d H:i:s')
+            'timestamp' => $log->getCreatedAt()->format('Y-m-d H:i:s')
         ], $recentActivity);
 
         return [
