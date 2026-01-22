@@ -47,4 +47,16 @@ describe('Reports page', () => {
     expect(screen.getByText(/Alpha/)).toBeInTheDocument()
     expect(screen.getByText(/Student/)).toBeInTheDocument()
   })
+
+  it('shows error when reports fail to load', async () => {
+    mockUser = { roles: ['ROLE_LIBRARIAN'] }
+    reportService.getUsage.mockRejectedValue(new Error('Load failed'))
+    reportService.getPopularTitles.mockResolvedValue({ data: [] })
+    reportService.getPatronSegments.mockResolvedValue({ data: [] })
+    reportService.getFinancialSummary.mockResolvedValue({})
+    reportService.getInventoryOverview.mockResolvedValue({})
+
+    render(<Reports />)
+    expect(await screen.findByText(/Load failed/i)).toBeInTheDocument()
+  })
 })

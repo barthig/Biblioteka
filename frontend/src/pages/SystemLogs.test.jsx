@@ -31,4 +31,11 @@ describe('SystemLogs page', () => {
     render(<SystemLogs />)
     expect(await screen.findByText(/line1/)).toBeInTheDocument()
   })
+
+  it('shows error when logs fail to load', async () => {
+    mockUser = { roles: ['ROLE_ADMIN'] }
+    systemLogService.list.mockRejectedValue(new Error('Load failed'))
+    render(<SystemLogs />)
+    expect(await screen.findByText(/Load failed/i)).toBeInTheDocument()
+  })
 })
