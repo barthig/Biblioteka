@@ -288,6 +288,7 @@ class BookInventoryController extends AbstractController
         ]);
     }
 
+
     private function serializeCopy(BookCopy $copy): array
     {
         return [

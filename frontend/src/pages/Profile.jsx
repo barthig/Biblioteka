@@ -67,6 +67,8 @@ export default function Profile() {
   const [feesError, setFeesError] = useState(null)
   const [feesLoading, setFeesLoading] = useState(false)
   const [feesPayingId, setFeesPayingId] = useState(null)
+  const [feesExpanded, setFeesExpanded] = useState(false)
+  const [feeSearch, setFeeSearch] = useState('')
   const [sessionStatus, setSessionStatus] = useState(null)
   const [sessionLoading, setSessionLoading] = useState(false)
 
@@ -178,6 +180,19 @@ export default function Profile() {
     refreshFees()
   }, [activeTab, user?.id])
 
+  const normalizedFeeSearch = feeSearch.trim().toLowerCase()
+  const filteredFees = normalizedFeeSearch
+    ? fees.filter(fee => {
+      const name = [
+        fee.user?.name,
+        fee.userName,
+        fee.user?.firstName,
+        fee.user?.lastName,
+        fee.user?.fullName,
+      ].filter(Boolean).join(' ').toLowerCase()
+      return name.includes(normalizedFeeSearch)
+    })
+    : fees
 
   
 
@@ -984,76 +999,115 @@ export default function Profile() {
       )}
 
       {activeTab === 'fees' && (
-        <SectionCard title="Oplaty i platnosci">
-          <div className="form-actions">
-            <button type="button" className="btn btn-secondary" onClick={refreshFees} disabled={feesLoading}>
-              {feesLoading ? 'Odswiezanie...' : 'Odswiez oplaty'}
+        <SectionCard
+          className="fees-accordion"
+          header={(
+            <button
+              type="button"
+              className="fees-accordion__header"
+              onClick={() => setFeesExpanded(prev => !prev)}
+              aria-expanded={feesExpanded}
+              aria-controls="fees-panel"
+              aria-label={`${feesExpanded ? 'Zwin' : 'Rozwin'} oplaty i platnosci`}
+            >
+              <div>
+                <h2>Oplaty i platnosci</h2>
+                <p className="support-copy">Kliknij, aby {feesExpanded ? 'zwinac' : 'rozwinac'} sekcje oplat i kar.</p>
+              </div>
+              <div className="fees-accordion__meta">
+                <span className="fees-accordion__count">{fees.length} pozycji</span>
+                <span className={`fees-accordion__chevron ${feesExpanded ? 'is-open' : ''}`} aria-hidden>⌄</span>
+              </div>
             </button>
-          </div>
-          <div style={{ marginTop: '1.5rem' }}>
-            <p className="support-copy">
-              Aby oplacic zaleglosci, wybierz oplate z listy i ureguluj platnosc online lub postepuj zgodnie z instrukcja.
-            </p>
-          </div>
-          <div className="surface-card" style={{ marginTop: '1.5rem' }}>
-            <h3>Instrukcja platnosci</h3>
-            <p className="support-copy">
-              W tytule przelewu podaj numer karty lub identyfikator oplaty. Platnosci online sa ksiegowane zwykle w 1-2 dni robocze.
-            </p>
-            <div className="form-row form-row--two">
-              <div className="form-field form-field--readonly">
-                <label>Odbiorca</label>
-                <div className="form-field__value">Miejska Biblioteka Publiczna</div>
-              </div>
-              <div className="form-field form-field--readonly">
-                <label>Numer konta</label>
-                <div className="form-field__value">PL00 0000 0000 0000 0000 0000 0000</div>
-              </div>
-            </div>
-            <div className="form-row form-row--two">
-              <div className="form-field form-field--readonly">
-                <label>Tytul przelewu</label>
-                <div className="form-field__value">Oplata biblioteczna / {profile.cardNumber || 'Numer karty'}</div>
-              </div>
-              <div className="form-field form-field--readonly">
-                <label>Przyklad</label>
-                <div className="form-field__value">Oplata biblioteczna / 123456</div>
-              </div>
-            </div>
-            <div className="form-actions">
-              <button type="button" className="btn btn-ghost">
-                Przejdz do platnosci online
-              </button>
-            </div>
-          </div>
-          {feesError && <p className="error">{feesError}</p>}
-          {fees.length === 0 ? (
-            <p>Brak aktywnych oplat do uregulowania.</p>
-          ) : (
-            <ul className="list list--bordered">
-              {fees.map(fee => (
-                <li key={fee.id}>
-                  <div className="list__title">{fee.reason || 'Oplata biblioteczna'}</div>
-                  <div className="list__meta">
-                    <span>{fee.amount} {fee.currency || 'PLN'}</span>
-                    {fee.createdAt && <span>{new Date(fee.createdAt).toLocaleDateString('pl-PL')}</span>}
-                    {fee.paidAt && <span>Oplacona</span>}
-                  </div>
-                  {!fee.paidAt && fee.id && (
-                    <div className="form-actions">
-                      <button
-                        className="btn btn-primary btn-sm"
-                        onClick={() => handlePayFee(fee.id)}
-                        disabled={feesPayingId === fee.id}
-                      >
-                        {feesPayingId === fee.id ? 'Przetwarzanie...' : 'Ureguluj online'}
-                      </button>
-                    </div>
-                  )}
-                </li>
-              ))}
-            </ul>
           )}
+        >
+          <div
+            id="fees-panel"
+            className={`fees-accordion__body ${feesExpanded ? 'is-open' : ''}`}
+            hidden={!feesExpanded}
+          >
+            <div className="fees-toolbar">
+              <button type="button" className="btn btn-secondary" onClick={refreshFees} disabled={feesLoading}>
+                {feesLoading ? 'Odswiezanie...' : 'Odswiez oplaty'}
+              </button>
+              <div className="fees-filter">
+                <label htmlFor="fee-search" className="sr-only">Filtruj po imieniu i nazwisku</label>
+                <input
+                  id="fee-search"
+                  type="search"
+                  value={feeSearch}
+                  onChange={event => setFeeSearch(event.target.value)}
+                  placeholder="Filtruj po imieniu i nazwisku"
+                />
+              </div>
+            </div>
+            <div className="fees-note">
+              <p className="support-copy">
+                Aby oplacic zaleglosci, wybierz oplate z listy i ureguluj platnosc online lub postepuj zgodnie z instrukcja.
+              </p>
+            </div>
+            <div className="surface-card fees-payment-card">
+              <h3>Instrukcja platnosci</h3>
+              <p className="support-copy">
+                W tytule przelewu podaj numer karty lub identyfikator oplaty. Platnosci online sa ksiegowane zwykle w 1-2 dni robocze.
+              </p>
+              <div className="form-row form-row--two">
+                <div className="form-field form-field--readonly">
+                  <label>Odbiorca</label>
+                  <div className="form-field__value">Miejska Biblioteka Publiczna</div>
+                </div>
+                <div className="form-field form-field--readonly">
+                  <label>Numer konta</label>
+                  <div className="form-field__value">PL00 0000 0000 0000 0000 0000 0000</div>
+                </div>
+              </div>
+              <div className="form-row form-row--two">
+                <div className="form-field form-field--readonly">
+                  <label>Tytul przelewu</label>
+                  <div className="form-field__value">Oplata biblioteczna / {profile.cardNumber || 'Numer karty'}</div>
+                </div>
+                <div className="form-field form-field--readonly">
+                  <label>Przyklad</label>
+                  <div className="form-field__value">Oplata biblioteczna / 123456</div>
+                </div>
+              </div>
+              <div className="form-actions">
+                <button type="button" className="btn btn-ghost">
+                  Przejdz do platnosci online
+                </button>
+              </div>
+            </div>
+            {feesError && <p className="error">{feesError}</p>}
+            {filteredFees.length === 0 ? (
+              <p>Brak aktywnych oplat do uregulowania.</p>
+            ) : (
+              <ul className="fees-list">
+                {filteredFees.map(fee => (
+                  <li key={fee.id} className="fees-row">
+                    <div className="fees-row__main">
+                      <div className="fees-row__title">{fee.reason || 'Oplata biblioteczna'}</div>
+                      <div className="fees-row__meta">
+                        <span className="fees-row__amount">{fee.amount} {fee.currency || 'PLN'}</span>
+                        {fee.createdAt && <span>{new Date(fee.createdAt).toLocaleDateString('pl-PL')}</span>}
+                        {fee.paidAt && <span className="fees-row__status">Oplacona</span>}
+                      </div>
+                    </div>
+                    {!fee.paidAt && fee.id && (
+                      <div className="fees-row__actions">
+                        <button
+                          className="btn btn-primary btn-sm"
+                          onClick={() => handlePayFee(fee.id)}
+                          disabled={feesPayingId === fee.id}
+                        >
+                          {feesPayingId === fee.id ? 'Przetwarzanie...' : 'Ureguluj online'}
+                        </button>
+                      </div>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </SectionCard>
       )}
     </div>

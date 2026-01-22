@@ -44,8 +44,8 @@ class CancelReservationHandler
             throw new \RuntimeException('Reservation already expired');
         }
 
-        // Only cancel active reservations
-        if ($reservation->getStatus() !== Reservation::STATUS_ACTIVE) {
+        // Can cancel active or prepared reservations
+        if (!in_array($reservation->getStatus(), [Reservation::STATUS_ACTIVE, Reservation::STATUS_PREPARED], true)) {
             throw new \RuntimeException('Cannot cancel reservation with status: ' . $reservation->getStatus());
         }
 

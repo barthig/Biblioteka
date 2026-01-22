@@ -32,9 +32,24 @@ export default function Reports() {
           reportService.getInventoryOverview()
         ])
         if (!active) return
+        const normalizedPopular = Array.isArray(popularData?.items)
+          ? popularData.items
+          : Array.isArray(popularData?.data)
+            ? popularData.data
+            : Array.isArray(popularData)
+              ? popularData
+              : []
+        const normalizedSegments = Array.isArray(segmentsData?.segments)
+          ? segmentsData.segments
+          : Array.isArray(segmentsData?.data)
+            ? segmentsData.data
+            : Array.isArray(segmentsData)
+              ? segmentsData
+              : []
+
         setUsage(usageData || null)
-        setPopular(Array.isArray(popularData?.data) ? popularData.data : Array.isArray(popularData) ? popularData : [])
-        setSegments(Array.isArray(segmentsData?.data) ? segmentsData.data : Array.isArray(segmentsData) ? segmentsData : [])
+        setPopular(normalizedPopular)
+        setSegments(normalizedSegments)
         setFinancial(financialData || null)
         setInventory(inventoryData || null)
       } catch (err) {
@@ -55,8 +70,24 @@ export default function Reports() {
     )
   }
 
-  const usageLoans = usage?.loans ?? usage?.activeLoans ?? null
-  const usageUsers = usage?.activeUsers ?? usage?.users ?? null
+  const usageLoans = usage?.activeLoans ?? usage?.loans ?? usage?.totalLoans ?? null
+  const usageTotalLoans = usage?.totalLoans ?? usage?.loans ?? null
+  const usageUsers = segments.length > 0
+    ? segments.reduce((sum, segment) => sum + (segment.totalUsers ?? segment.count ?? 0), 0)
+    : (usage?.activeUsers ?? usage?.users ?? null)
+  const inventoryBreakdown = Array.isArray(inventory?.copies) ? inventory.copies : null
+  const legacyStorage = inventory?.storageCopies
+  const legacyOpenStack = inventory?.openStackCopies
+  const legacyRemoved = inventory?.removedCopies
+  const legacyTotal = [legacyStorage, legacyOpenStack, legacyRemoved].every(value => typeof value === 'number')
+    ? legacyStorage + legacyOpenStack + legacyRemoved
+    : null
+  const inventoryTotalCopies = inventory?.totalCopies ?? (inventoryBreakdown
+    ? inventoryBreakdown.reduce((sum, row) => sum + (row.total ?? 0), 0)
+    : legacyTotal)
+  const inventoryAvailableCopies = inventoryBreakdown
+    ? inventoryBreakdown.reduce((sum, row) => (row.status === 'AVAILABLE' ? sum + (row.total ?? 0) : sum), 0)
+    : (inventory?.availableCopies ?? (legacyStorage != null && legacyOpenStack != null ? legacyStorage + legacyOpenStack : null))
 
   return (
     <div className="page">
@@ -64,8 +95,8 @@ export default function Reports() {
 
       <StatGrid>
         <StatCard title="Aktywne wypożyczenia" value={usageLoans ?? '-'} subtitle="Według raportu" />
-        <StatCard title="Aktywni użytkownicy" value={usageUsers ?? '-'} subtitle="Ostatni okres" />
-        <StatCard title="Raporty" value={[usage, financial, inventory].filter(Boolean).length} subtitle="Załadowane sekcje" />
+        <StatCard title="Użytkownicy" value={usageUsers ?? '-'} subtitle="Z segmentów" />
+        <StatCard title="Raporty" value={[usage, financial, inventory, popular.length, segments.length].filter(Boolean).length} subtitle="Załadowane sekcje" />
       </StatGrid>
 
       {loading && <SectionCard>Ładowanie...</SectionCard>}
@@ -76,10 +107,10 @@ export default function Reports() {
           <SectionCard>
             <h3>Użycie systemu</h3>
             <ul className="list">
-              <li>Aktywne wypożyczenia: {usage?.loans ?? usage?.activeLoans ?? '-'}</li>
-              <li>Zaległe wypożyczenia: {usage?.overdueLoans ?? '-'}</li>
-              <li>Aktywni użytkownicy: {usage?.activeUsers ?? usage?.users ?? '-'}</li>
-              <li>Dostępne egzemplarze: {usage?.availableCopies ?? '-'}</li>
+              <li>Aktywne wypożyczenia: {usageLoans ?? '-'}</li>
+              <li>Wszystkie wypożyczenia: {usageTotalLoans ?? '-'}</li>
+              <li>Użytkownicy: {usageUsers ?? '-'}</li>
+              <li>Dostępne egzemplarze: {inventoryAvailableCopies ?? '-'}</li>
             </ul>
           </SectionCard>
 
@@ -87,9 +118,25 @@ export default function Reports() {
             <h3>Finanse</h3>
             {financial ? (
               <ul className="list">
-                <li>Przychody: {financial.totalRevenue ?? '-'}</li>
-                <li>Koszty: {financial.totalExpenses ?? '-'}</li>
-                <li>Saldo: {financial.balance ?? '-'}</li>
+                {financial.budgets ? (
+                  <>
+                    <li>Budżet przydzielony: {financial.budgets.allocated} {financial.budgets.currency}</li>
+                    <li>Budżet wydany: {financial.budgets.spent} {financial.budgets.currency}</li>
+                    <li>Budżet pozostały: {financial.budgets.remaining} {financial.budgets.currency}</li>
+                  </>
+                ) : (
+                  <>
+                    <li>Przychody: {financial.totalRevenue ?? '-'}</li>
+                    <li>Koszty: {financial.totalExpenses ?? '-'}</li>
+                    <li>Saldo: {financial.balance ?? '-'}</li>
+                  </>
+                )}
+                {financial.fines && (
+                  <>
+                    <li>Kary nieopłacone: {financial.fines.outstanding} {financial.fines.currency}</li>
+                    <li>Kary opłacone: {financial.fines.collected} {financial.fines.currency}</li>
+                  </>
+                )}
               </ul>
             ) : (
               <p>Brak danych finansowych.</p>
@@ -103,10 +150,10 @@ export default function Reports() {
             ) : (
               <ul className="list list--bordered">
                 {popular.map(item => (
-                  <li key={item.id || item.title}>
+                  <li key={item.id || item.bookId || item.title}>
                     <div className="list__title">{item.title || item.book?.title}</div>
                     <div className="list__meta">
-                      <span>Wypożyczeń: {item.borrowCount ?? item.count ?? '-'}</span>
+                      <span>Wypożyczeń: {item.loanCount ?? item.borrowCount ?? item.count ?? '-'}</span>
                     </div>
                   </li>
                 ))}
@@ -121,10 +168,16 @@ export default function Reports() {
             ) : (
               <ul className="list list--bordered">
                 {segments.map(segment => (
-                  <li key={segment.segment || segment.name}>
-                    <div className="list__title">{segment.segment || segment.name}</div>
+                  <li key={segment.membershipGroup || segment.segment || segment.name}>
+                    <div className="list__title">{segment.membershipGroup || segment.segment || segment.name}</div>
                     <div className="list__meta">
-                      <span>Użytkowników: {segment.count ?? segment.total ?? '-'}</span>
+                      <span>Użytkowników: {segment.totalUsers ?? segment.count ?? segment.total ?? '-'}</span>
+                      {segment.blockedUsers != null && (
+                        <span> • Zablokowani: {segment.blockedUsers}</span>
+                      )}
+                      {segment.activeLoans != null && (
+                        <span> • Aktywne wypożyczenia: {segment.activeLoans}</span>
+                      )}
                     </div>
                   </li>
                 ))}
@@ -135,11 +188,25 @@ export default function Reports() {
           <SectionCard>
             <h3>Stan magazynu</h3>
             {inventory ? (
-              <ul className="list">
-                <li>W magazynie: {inventory.storageCopies ?? '-'}</li>
-                <li>W wolnym dostępie: {inventory.openStackCopies ?? '-'}</li>
-                <li>Ubytki: {inventory.removedCopies ?? '-'}</li>
-              </ul>
+              <>
+                <ul className="list">
+                  <li>Łącznie egzemplarzy: {inventoryTotalCopies ?? '-'}</li>
+                  <li>Wypożyczone (%): {inventory?.borrowedPercentage ?? '-'}</li>
+                  <li>Dostępne: {inventoryAvailableCopies ?? '-'}</li>
+                </ul>
+                {inventoryBreakdown && inventoryBreakdown.length > 0 && (
+                  <ul className="list list--bordered">
+                    {inventoryBreakdown.map(item => (
+                      <li key={item.status}>
+                        <div className="list__title">{item.status}</div>
+                        <div className="list__meta">
+                          <span>Liczba: {item.total}</span>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </>
             ) : (
               <p>Brak danych o magazynie.</p>
             )}

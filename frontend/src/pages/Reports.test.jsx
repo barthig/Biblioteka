@@ -36,11 +36,18 @@ describe('Reports page', () => {
 
   it('renders reports data', async () => {
     mockUser = { roles: ['ROLE_LIBRARIAN'] }
-    reportService.getUsage.mockResolvedValue({ loans: 2, activeUsers: 5, overdueLoans: 1, availableCopies: 10 })
-    reportService.getPopularTitles.mockResolvedValue({ data: [{ id: 1, title: 'Alpha', borrowCount: 3 }] })
-    reportService.getPatronSegments.mockResolvedValue({ data: [{ segment: 'Student', count: 2 }] })
-    reportService.getFinancialSummary.mockResolvedValue({ totalRevenue: 1000, totalExpenses: 200, balance: 800 })
-    reportService.getInventoryOverview.mockResolvedValue({ storageCopies: 20, openStackCopies: 10, removedCopies: 2 })
+    reportService.getUsage.mockResolvedValue({ totalLoans: 5, activeLoans: 2 })
+    reportService.getPopularTitles.mockResolvedValue({ items: [{ bookId: 1, title: 'Alpha', loanCount: 3 }] })
+    reportService.getPatronSegments.mockResolvedValue({ segments: [{ membershipGroup: 'Student', totalUsers: 2 }] })
+    reportService.getFinancialSummary.mockResolvedValue({
+      budgets: { allocated: 1000, spent: 200, remaining: 800, currency: 'PLN' },
+      fines: { outstanding: 10, collected: 5, currency: 'PLN' }
+    })
+    reportService.getInventoryOverview.mockResolvedValue({
+      copies: [{ status: 'AVAILABLE', total: 10 }],
+      totalCopies: 20,
+      borrowedPercentage: 50
+    })
 
     render(<Reports />)
     expect(await screen.findByRole('heading', { level: 1, name: /Raporty/i })).toBeInTheDocument()

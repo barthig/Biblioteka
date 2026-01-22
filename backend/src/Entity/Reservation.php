@@ -8,6 +8,7 @@ use Symfony\Component\Serializer\Annotation\Groups;
 class Reservation
 {
     public const STATUS_ACTIVE = 'ACTIVE';
+    public const STATUS_PREPARED = 'PREPARED';
     public const STATUS_CANCELLED = 'CANCELLED';
     public const STATUS_FULFILLED = 'FULFILLED';
     public const STATUS_EXPIRED = 'EXPIRED';
@@ -51,6 +52,10 @@ class Reservation
 
     #[ORM\Column(type: 'datetime_immutable', nullable: true)]
     #[Groups(['reservation:read'])]
+    private ?\DateTimeImmutable $preparedAt = null;
+
+    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
+    #[Groups(['reservation:read'])]
     private ?\DateTimeImmutable $cancelledAt = null;
 
     #[ORM\Column(type: 'datetime_immutable', nullable: true)]
@@ -59,6 +64,7 @@ class Reservation
 
     public function __construct()
     {
+        $this->status = self::STATUS_ACTIVE;
         $this->reservedAt = new \DateTimeImmutable();
         $this->expiresAt = $this->reservedAt->modify('+3 days');
     }
@@ -114,7 +120,7 @@ class Reservation
 
     public function setStatus(string $status): self
     {
-        if (!in_array($status, [self::STATUS_ACTIVE, self::STATUS_CANCELLED, self::STATUS_FULFILLED, self::STATUS_EXPIRED], true)) {
+        if (!in_array($status, [self::STATUS_ACTIVE, self::STATUS_PREPARED, self::STATUS_CANCELLED, self::STATUS_FULFILLED, self::STATUS_EXPIRED], true)) {
             throw new \InvalidArgumentException('Invalid reservation status: ' . $status);
         }
         $this->status = $status;
@@ -152,6 +158,18 @@ class Reservation
     {
         $this->status = self::STATUS_FULFILLED;
         $this->fulfilledAt = new \DateTimeImmutable();
+        return $this;
+    }
+
+    public function getPreparedAt(): ?\DateTimeImmutable
+    {
+        return $this->preparedAt;
+    }
+
+    public function markPrepared(): self
+    {
+        $this->status = self::STATUS_PREPARED;
+        $this->preparedAt = new \DateTimeImmutable();
         return $this;
     }
 

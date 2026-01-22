@@ -24,8 +24,8 @@ class ExpireReservationHandler
             throw new \RuntimeException('Reservation not found');
         }
 
-        // Only expire active reservations that have passed their expiry date
-        if ($reservation->getStatus() !== Reservation::STATUS_ACTIVE) {
+        // Only expire active or prepared reservations that have passed their expiry date
+        if (!in_array($reservation->getStatus(), [Reservation::STATUS_ACTIVE, Reservation::STATUS_PREPARED], true)) {
             throw new \RuntimeException('Cannot expire reservation with status: ' . $reservation->getStatus());
         }
 

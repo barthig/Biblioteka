@@ -98,9 +98,9 @@ class ReservationRepository extends ServiceEntityRepository
     public function findReadyForPickup(): array
     {
         return $this->createQueryBuilder('r')
-            ->andWhere('r.status = :status')
+            ->andWhere('r.status IN (:statuses)')
             ->andWhere('r.bookCopy IS NOT NULL')
-            ->setParameter('status', Reservation::STATUS_ACTIVE)
+            ->setParameter('statuses', [Reservation::STATUS_ACTIVE, Reservation::STATUS_PREPARED])
             ->orderBy('r.expiresAt', 'ASC')
             ->getQuery()
             ->getResult();
@@ -114,10 +114,10 @@ class ReservationRepository extends ServiceEntityRepository
         ?int $maxResults = null
     ): array {
         $qb = $this->createQueryBuilder('r')
-            ->andWhere('r.status = :status')
+            ->andWhere('r.status IN (:statuses)')
             ->andWhere('r.bookCopy IS NOT NULL')
             ->andWhere('r.expiresAt <= :cutoff')
-            ->setParameter('status', Reservation::STATUS_ACTIVE)
+            ->setParameter('statuses', [Reservation::STATUS_ACTIVE, Reservation::STATUS_PREPARED])
             ->setParameter('cutoff', $cutoff)
             ->orderBy('r.expiresAt', 'ASC');
 
@@ -134,9 +134,9 @@ class ReservationRepository extends ServiceEntityRepository
     public function findExpiringBetween(\DateTimeImmutable $from, \DateTimeImmutable $to): array
     {
         return $this->createQueryBuilder('r')
-            ->andWhere('r.status = :status')
+            ->andWhere('r.status IN (:statuses)')
             ->andWhere('r.expiresAt BETWEEN :from AND :to')
-            ->setParameter('status', Reservation::STATUS_ACTIVE)
+            ->setParameter('statuses', [Reservation::STATUS_ACTIVE, Reservation::STATUS_PREPARED])
             ->setParameter('from', $from)
             ->setParameter('to', $to)
             ->orderBy('r.expiresAt', 'ASC')

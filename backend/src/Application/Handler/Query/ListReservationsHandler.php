@@ -39,6 +39,7 @@ class ListReservationsHandler
         if ($query->isLibrarian) {
             if ($query->status !== null && in_array(strtoupper($query->status), [
                 Reservation::STATUS_ACTIVE,
+                Reservation::STATUS_PREPARED,
                 Reservation::STATUS_CANCELLED,
                 Reservation::STATUS_FULFILLED,
                 Reservation::STATUS_EXPIRED,
@@ -70,6 +71,7 @@ class ListReservationsHandler
         if ($query->isLibrarian) {
             if ($query->status !== null && in_array(strtoupper($query->status), [
                 Reservation::STATUS_ACTIVE,
+                Reservation::STATUS_PREPARED,
                 Reservation::STATUS_CANCELLED,
                 Reservation::STATUS_FULFILLED,
                 Reservation::STATUS_EXPIRED,

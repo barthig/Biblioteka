@@ -574,17 +574,17 @@ export default function Dashboard() {
             <div className="stat-card">
               <h3>Rezerwacje do przygotowania</h3>
               <strong style={{ color: '#667eea' }}>{stats?.pendingReservations ?? 0}</strong>
-              <Link to="/librarian-panel" className="btn btn-ghost">Realizuj</Link>
+              <Link to="/librarian?tab=reservations&status=active" className="btn btn-ghost">Realizuj</Link>
             </div>
             <div className="stat-card">
               <h3>Przetrzymane zwroty</h3>
               <strong style={{ color: '#ff6838' }}>{stats?.overdueLoans ?? 0}</strong>
-              <Link to="/librarian-panel" className="btn btn-ghost">Wyświetl</Link>
+              <Link to="/librarian?tab=loans&loan=overdue" className="btn btn-ghost">Wyświetl</Link>
             </div>
             <div className="stat-card">
               <h3>Niewydane rezerwacje</h3>
-              <strong style={{ color: '#f59e0b' }}>{stats?.expiredReservations ?? 0}</strong>
-              <Link to="/librarian-panel" className="btn btn-ghost">Sprawdź</Link>
+              <strong style={{ color: '#f59e0b' }}>{stats?.preparedReservations ?? 0}</strong>
+              <Link to="/librarian?tab=reservations&status=prepared" className="btn btn-ghost">Sprawdź</Link>
             </div>
           </div>
         </div>
@@ -592,9 +592,11 @@ export default function Dashboard() {
         <div className="surface-card">
           <h2 style={{ marginBottom: 'var(--space-3)' }}>Szybkie akcje</h2>
           <div className="form-actions">
-            <Link to="/librarian-panel" className="btn btn-primary">Panel obsługi</Link>
+            <Link to="/librarian?tab=dashboard" className="btn btn-primary">Panel obsługi</Link>
             <Link to="/books" className="btn btn-ghost">Katalog książek</Link>
-            <Link to="/announcements" className="btn btn-ghost">Ogłoszenia</Link>
+            <Link to="/announcements" className="btn btn-ghost">Ogłoszenia</Link>    
+            <Link to="/librarian?tab=create" className="btn btn-secondary">Nowe wypożyczenie</Link>
+            <Link to="/librarian?tab=loans" className="btn btn-secondary">Zobacz wypożyczenia</Link>
           </div>
         </div>
 

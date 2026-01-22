@@ -59,7 +59,6 @@ class DashboardOverviewHandler
             $stats['pendingReservations'] = $reservationRepo->createQueryBuilder('r')
                 ->select('COUNT(r.id)')
                 ->where('r.status = :status')
-                ->andWhere('r.bookCopy IS NOT NULL')
                 ->setParameter('status', 'ACTIVE')
                 ->getQuery()
                 ->getSingleScalarResult();
@@ -72,13 +71,10 @@ class DashboardOverviewHandler
                 ->getQuery()
                 ->getSingleScalarResult();
 
-            $stats['expiredReservations'] = $reservationRepo->createQueryBuilder('r')
+            $stats['preparedReservations'] = $reservationRepo->createQueryBuilder('r')
                 ->select('COUNT(r.id)')
                 ->where('r.status = :status')
-                ->andWhere('r.bookCopy IS NOT NULL')
-                ->andWhere('r.expiresAt < :now')
-                ->setParameter('status', 'ACTIVE')
-                ->setParameter('now', new \DateTimeImmutable())
+                ->setParameter('status', 'PREPARED')
                 ->getQuery()
                 ->getSingleScalarResult();
         }

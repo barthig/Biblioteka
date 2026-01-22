@@ -105,6 +105,7 @@ describe('Profile page', () => {
 
     await screen.findByText(/Moje konto/i)
     await userEvent.click(screen.getByRole('button', { name: /Oplaty i platnosci/i }))
+    await userEvent.click(screen.getByRole('button', { name: /Rozwin oplaty i platnosci/i }))
 
     expect(apiFetch).toHaveBeenCalledWith('/api/me/fees')
     expect(await screen.findByText(/Brak aktywnych oplat do uregulowania/i)).toBeInTheDocument()
@@ -130,6 +131,7 @@ describe('Profile page', () => {
 
     await screen.findByText(/Moje konto/i)
     await userEvent.click(screen.getByRole('button', { name: /Oplaty i platnosci/i }))
+    await userEvent.click(screen.getByRole('button', { name: /Rozwin oplaty i platnosci/i }))
     await screen.findByText(/Kara/i)
 
     await userEvent.click(screen.getByRole('button', { name: /Ureguluj online/i }))

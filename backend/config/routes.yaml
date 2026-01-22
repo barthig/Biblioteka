@@ -347,6 +347,7 @@ api_admin_copy_by_barcode:
   controller: App\Controller\BookInventoryController::findByBarcode
   methods: [GET]
 
+
 # Digital asset management
 api_admin_book_assets_list:
   path: /api/admin/books/{id}/assets

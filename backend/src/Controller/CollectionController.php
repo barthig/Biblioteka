@@ -69,9 +69,9 @@ class CollectionController extends AbstractController
                     'id' => $book->getId(),
                     'title' => $book->getTitle(),
                     'author' => $book->getAuthor()?->getName(),
-                    'coverUrl' => $book->getCoverUrl(),
+                    'coverUrl' => method_exists($book, 'getCoverUrl') ? $book->getCoverUrl() : null,
                 ], $c->getBooks()->toArray()),
-                'curatedBy' => $c->getCuratedBy()->getName(),
+                'curatedBy' => $c->getCuratedBy()?->getName(),
                 'createdAt' => $c->getCreatedAt()->format('Y-m-d H:i:s'),
             ], $collections)
         ]);
@@ -106,7 +106,7 @@ class CollectionController extends AbstractController
                 'id' => $book->getId(),
                 'title' => $book->getTitle(),
                 'author' => $book->getAuthor()?->getName(),
-                'coverUrl' => $book->getCoverUrl(),
+                'coverUrl' => method_exists($book, 'getCoverUrl') ? $book->getCoverUrl() : null,
                 'isbn' => $book->getIsbn(),
             ], $collection->getBooks()->toArray()),
             'curatedBy' => [

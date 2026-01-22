@@ -22,8 +22,8 @@ describe('LibrarianPanel page', () => {
   it('renders stats tab and loads data', async () => {
     mockUser = { roles: ['ROLE_LIBRARIAN'] }
     apiFetch.mockImplementation((endpoint) => {
-      if (endpoint === '/api/reports/usage') {
-        return Promise.resolve({ loans: 2, overdueLoans: 1, activeUsers: 4, availableCopies: 8 })
+      if (endpoint === '/api/statistics/dashboard') {
+        return Promise.resolve({ activeLoans: 2, overdueLoans: 1, totalUsers: 4, availableCopies: 8 })
       }
       if (endpoint === '/api/settings') {
         return Promise.resolve({ loanLimitPerUser: 5, loanDurationDays: 21, notificationsEnabled: true })
@@ -36,7 +36,7 @@ describe('LibrarianPanel page', () => {
 
     expect(await screen.findByRole('heading', { name: /Statystyki wypozyczen/i })).toBeInTheDocument()
     await waitFor(() => {
-      expect(apiFetch).toHaveBeenCalledWith('/api/reports/usage')
+      expect(apiFetch).toHaveBeenCalledWith('/api/statistics/dashboard')
       expect(apiFetch).toHaveBeenCalledWith('/api/settings')
     })
   })
@@ -68,6 +68,7 @@ describe('LibrarianPanel page', () => {
     await userEvent.click(screen.getByRole('button', { name: /Rezerwacje/i }))
     expect(await screen.findByText('Alpha')).toBeInTheDocument()
 
+    await userEvent.click(screen.getByRole('button', { name: /Rozwin rezerwacje Alpha/i }))
     await userEvent.click(screen.getByRole('button', { name: /Zrealizuj/i }))
     expect(apiFetch).toHaveBeenCalledWith('/api/reservations/10/fulfill', { method: 'POST' })
 
@@ -94,6 +95,7 @@ describe('LibrarianPanel page', () => {
     await userEvent.click(screen.getByRole('button', { name: /Op/ }))
     expect(await screen.findByText(/Late/)).toBeInTheDocument()
 
+    await userEvent.click(screen.getByRole('button', { name: /Rozwin oplaty dla u@example.com/i }))
     await userEvent.click(screen.getByRole('button', { name: /Oznacz/i }))
     expect(apiFetch).toHaveBeenCalledWith('/api/fines/7/pay', { method: 'POST' })
 

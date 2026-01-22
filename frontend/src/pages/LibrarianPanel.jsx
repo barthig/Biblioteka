@@ -1,5 +1,6 @@
 
 import React, { useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { apiFetch } from '../api'
 import { useAuth } from '../context/AuthContext'
@@ -12,6 +13,7 @@ import { logger } from '../utils/logger'
 
 export default function LibrarianPanel() {
   const { user } = useAuth()
+  const [searchParams] = useSearchParams()
   const isAdmin = user?.roles?.includes('ROLE_ADMIN')
   const [activeTab, setActiveTab] = useState('dashboard')
   const [loading, setLoading] = useState(false)
@@ -32,6 +34,7 @@ export default function LibrarianPanel() {
   const [loans, setLoans] = useState([])
   const [loanSearchName, setLoanSearchName] = useState('')
   const [loanSearchTitle, setLoanSearchTitle] = useState('')
+  const [loanStatusFilter, setLoanStatusFilter] = useState('all')
 
   const [collections, setCollections] = useState([])
   const [collectionForm, setCollectionForm] = useState({
@@ -44,6 +47,8 @@ export default function LibrarianPanel() {
   const [editingCollection, setEditingCollection] = useState(null)
   const [collectionBookSearch, setCollectionBookSearch] = useState('')
   const [collectionBookResults, setCollectionBookResults] = useState([])
+  const [collectionSearch, setCollectionSearch] = useState('')
+  const [expandedCollectionId, setExpandedCollectionId] = useState(null)
 
   const [stats, setStats] = useState({
     activeLoans: 0,
@@ -59,12 +64,26 @@ export default function LibrarianPanel() {
   const [librarySettingsLoading, setLibrarySettingsLoading] = useState(false)
 
   const [reservations, setReservations] = useState([])
+  const [reservationStatusFilter, setReservationStatusFilter] = useState('ACTIVE')
+  const [reservationSearch, setReservationSearch] = useState('')
   const [fines, setFines] = useState([])
+  const [fineSearch, setFineSearch] = useState('')
+  const [expandedFineId, setExpandedFineId] = useState(null)
+  const [fineForm, setFineForm] = useState({ userId: '', loanId: '', amount: '', currency: 'PLN', reason: '' })
+  const [fineUserQuery, setFineUserQuery] = useState('')
+  const [fineUserResults, setFineUserResults] = useState([])
+  const [fineUserLoans, setFineUserLoans] = useState([])
+  const [expandedLoanId, setExpandedLoanId] = useState(null)
+  const [expandedReservationId, setExpandedReservationId] = useState(null)
 
   const [inventoryBookId, setInventoryBookId] = useState('')
   const [bookSearchQuery, setBookSearchQuery] = useState('')
   const [availableBooks, setAvailableBooks] = useState([])
   const [copies, setCopies] = useState([])
+  const [selectedBook, setSelectedBook] = useState(null)
+  const [inventorySort, setInventorySort] = useState('bookTitle')
+  const [inventorySortDir, setInventorySortDir] = useState('asc')
+  const [inventorySortOpen, setInventorySortOpen] = useState(true)
   const [copyForm, setCopyForm] = useState({
     inventoryCode: '',
     status: 'AVAILABLE',
@@ -74,6 +93,32 @@ export default function LibrarianPanel() {
   })
 
   const [returnModal, setReturnModal] = useState({ show: false, loan: null, fine: null })
+
+  useEffect(() => {
+    const tab = searchParams.get('tab')
+    const allowedTabs = ['dashboard', 'stats', 'loans', 'create', 'reservations', 'fines', 'inventory', 'collections']
+    if (tab && allowedTabs.includes(tab)) {
+      setActiveTab(tab)
+    }
+
+    const status = searchParams.get('status')
+    if (status) {
+      const normalizedStatus = status.trim().toUpperCase()
+      if (normalizedStatus === 'ALL') {
+        setReservationStatusFilter('ALL')
+      } else if (['ACTIVE', 'CANCELLED', 'FULFILLED', 'EXPIRED'].includes(normalizedStatus)) {
+        setReservationStatusFilter(normalizedStatus)
+      }
+    }
+
+    const loan = searchParams.get('loan')
+    if (loan) {
+      const normalizedLoan = loan.trim().toLowerCase()
+      if (normalizedLoan === 'overdue' || normalizedLoan === 'all') {
+        setLoanStatusFilter(normalizedLoan)
+      }
+    }
+  }, [searchParams])
 
   useEffect(() => {
     if (activeTab === 'loans') {
@@ -90,24 +135,125 @@ export default function LibrarianPanel() {
     }
   }, [activeTab])
 
+  // Przeładuj rezerwacje gdy zmienia się filtr statusu
+  useEffect(() => {
+    if (activeTab === 'reservations') {
+      loadReservations()
+    }
+  }, [reservationStatusFilter])
+
   const filteredLoans = useMemo(() => {
     const name = loanSearchName.trim().toLowerCase()
     const title = loanSearchTitle.trim().toLowerCase()
-    if (!name && !title) return loans
+    const now = new Date()
     return loans.filter(loan => {
       const userName = (loan.user?.name || loan.userName || '').toString().toLowerCase()
       const bookTitle = (loan.book?.title || loan.bookTitle || '').toString().toLowerCase()
       const nameMatch = !name || userName.includes(name)
       const titleMatch = !title || bookTitle.includes(title)
-      return nameMatch && titleMatch
-    })
-  }, [loans, loanSearchName, loanSearchTitle])
+      if (!nameMatch || !titleMatch) return false
 
-  const hasLoanFilters = loanSearchName.trim() !== '' || loanSearchTitle.trim() !== ''
+      if (loanStatusFilter === 'overdue') {
+        const dueValue = loan.dueAt || loan.dueDate
+        if (!dueValue || loan.returnedAt) return false
+        return new Date(dueValue) < now
+      }
+
+      return true
+    })
+  }, [loans, loanSearchName, loanSearchTitle, loanStatusFilter])
+
+  const hasLoanFilters = loanSearchName.trim() !== '' || loanSearchTitle.trim() !== '' || loanStatusFilter !== 'all'
   const availableCopies = useMemo(
     () => copies.filter(copy => ((copy.status || copy.state || '').toUpperCase() === 'AVAILABLE')),
     [copies]
   )
+  const filteredReservations = useMemo(() => {
+    const query = reservationSearch.trim().toLowerCase()
+    return reservations.filter(reservation => {
+      const statusMatch = reservationStatusFilter === 'ALL'
+        ? true
+        : (reservation.status || '').toUpperCase() === reservationStatusFilter
+      if (!statusMatch) return false
+      if (!query) return true
+      const nameParts = [
+        reservation.user?.name,
+        reservation.userName,
+        reservation.user?.firstName,
+        reservation.user?.lastName,
+        reservation.user?.email,
+        reservation.userEmail
+      ].filter(Boolean)
+      const haystack = nameParts.join(' ').toLowerCase()
+      return haystack.includes(query)
+    })
+  }, [reservations, reservationStatusFilter, reservationSearch])
+  const filteredCollections = useMemo(() => {
+    const query = collectionSearch.trim().toLowerCase()
+    if (!query) return collections
+    return collections.filter(collection => {
+      const haystack = [
+        collection.name,
+        collection.description,
+        collection.curatedBy
+      ].filter(Boolean).join(' ').toLowerCase()
+      return haystack.includes(query)
+    })
+  }, [collections, collectionSearch])
+  const filteredFines = useMemo(() => {
+    const query = fineSearch.trim().toLowerCase()
+    if (!query) return fines
+    return fines.filter(fine => {
+      const nameParts = [
+        fine.user?.name,
+        fine.userName,
+        fine.user?.firstName,
+        fine.user?.lastName,
+        fine.user?.email,
+        fine.userEmail
+      ].filter(Boolean)
+      const haystack = nameParts.join(' ').toLowerCase()
+      return haystack.includes(query)
+    })
+  }, [fines, fineSearch])
+  const inventoryRows = useMemo(() => {
+    const bookTitle = selectedBook?.title || copies[0]?.book?.title || 'N/A'
+    const bookAuthor = selectedBook?.author?.name || copies[0]?.book?.author?.name || 'N/A'
+    const totalCopies = copies.length
+    return copies.map(copy => ({
+      id: copy.id,
+      bookTitle,
+      bookAuthor,
+      totalCopies,
+      inventoryCode: copy.inventoryCode || `Egzemplarz #${copy.id}`,
+      status: (copy.status || copy.state || '').toUpperCase() || 'N/A',
+      accessType: copy.accessType || 'N/A',
+      location: copy.location || '',
+      condition: copy.conditionState || copy.condition || ''
+    }))
+  }, [copies, selectedBook])
+  const inventoryCopyById = useMemo(() => {
+    const map = new Map()
+    copies.forEach(copy => map.set(copy.id, copy))
+    return map
+  }, [copies])
+  const sortedInventoryRows = useMemo(() => {
+    const direction = inventorySortDir === 'asc' ? 1 : -1
+    const sorted = [...inventoryRows]
+    sorted.sort((a, b) => {
+      const leftValue = a[inventorySort]
+      const rightValue = b[inventorySort]
+      if (typeof leftValue === 'number' && typeof rightValue === 'number') {
+        return (leftValue - rightValue) * direction
+      }
+      const left = String(leftValue ?? '').toLowerCase()
+      const right = String(rightValue ?? '').toLowerCase()
+      if (left < right) return -1 * direction
+      if (left > right) return 1 * direction
+      return 0
+    })
+    return sorted
+  }, [inventoryRows, inventorySort, inventorySortDir])
 
   async function loadLoans() {
     setLoading(true)
@@ -116,7 +262,7 @@ export default function LibrarianPanel() {
       const data = await apiFetch('/api/loans')
       setLoans(Array.isArray(data) ? data : data.data || [])
     } catch (err) {
-      setError(err.message || 'Nie udalo sie pobrac wypozyczen')
+      setError(err.message || 'Nie udało się pobrać wypożyczeń')
     } finally {
       setLoading(false)
     }
@@ -131,7 +277,7 @@ export default function LibrarianPanel() {
       const data = await apiFetch(`/api/users/search?q=${encodeURIComponent(query)}`)
       setLoanUserResults(Array.isArray(data) ? data : data?.data || [])
     } catch (err) {
-      setError(err.message || 'Nie udalo sie wyszukac uzytkownika')
+      setError(err.message || 'Nie udało się wyszukać użytkownika')
     }
   }
 
@@ -144,7 +290,7 @@ export default function LibrarianPanel() {
       const data = await apiFetch(`/api/books?q=${encodeURIComponent(query)}&limit=10`)
       setLoanBookResults(Array.isArray(data?.data) ? data.data : [])
     } catch (err) {
-      setError(err.message || 'Nie udalo sie wyszukac ksiazki')
+      setError(err.message || 'Nie udało się wyszukać książki')
     }
   }
 
@@ -152,15 +298,15 @@ export default function LibrarianPanel() {
     setLoading(true)
     setError(null)
     try {
-      const data = await apiFetch('/api/reports/usage')
+      const data = await apiFetch('/api/statistics/dashboard')
       setStats({
-        activeLoans: data.loans || 0,
-        overdueLoans: data.overdueLoans || 0,
-        totalUsers: data.activeUsers || 0,
-        availableCopies: data.availableCopies || 0
+        activeLoans: data?.activeLoans ?? 0,
+        overdueLoans: data?.overdueLoans ?? 0,
+        totalUsers: data?.totalUsers ?? 0,
+        availableCopies: data?.availableCopies ?? 0
       })
     } catch (err) {
-      setError(err.message || 'Nie udalo sie pobrac statystyk')
+      setError(err.message || 'Nie udało się pobrać statystyk')
     } finally {
       setLoading(false)
     }
@@ -177,7 +323,7 @@ export default function LibrarianPanel() {
         notificationsEnabled: !!data?.notificationsEnabled
       })
     } catch (err) {
-      setError(err.message || 'Nie udalo sie pobrac ustawien')
+      setError(err.message || 'Nie udało się pobrać ustawień')
     } finally {
       setLibrarySettingsLoading(false)
     }
@@ -205,7 +351,7 @@ export default function LibrarianPanel() {
       })
       setSuccess('Zapisano ustawienia')
     } catch (err) {
-      setError(err.message || 'Nie udalo sie zapisac ustawien')
+      setError(err.message || 'Nie udało się zapisać ustawień')
     }
   }
 
@@ -213,42 +359,60 @@ export default function LibrarianPanel() {
     setLoading(true)
     setError(null)
     try {
-      const data = await apiFetch('/api/reservations?history=true&limit=50')
+      // Pobierz rezerwacje zgodnie z wybranym filtrem lub wszystkie jeśli ALL
+      const statusParam = reservationStatusFilter === 'ALL' ? '' : `&status=${reservationStatusFilter}`
+      const data = await apiFetch(`/api/reservations?history=true&limit=100${statusParam}`)
       setReservations(Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [])
     } catch (err) {
-      setError(err.message || 'Nie udalo sie pobrac rezerwacji')
+      setError(err.message || 'Nie udało się pobrać rezerwacji')
     } finally {
       setLoading(false)
     }
   }
 
   async function cancelReservation(reservationId) {
-    if (!confirm('Anulowac te rezerwacje?')) return
+    if (!confirm('Anulować tę rezerwację?')) return
     setLoading(true)
     setError(null)
     setSuccess(null)
     try {
       await apiFetch(`/api/reservations/${reservationId}`, { method: 'DELETE' })
-      setSuccess('Rezerwacja zostala anulowana')
+      setSuccess('Rezerwacja została anulowana')
       loadReservations()
     } catch (err) {
-      setError(err.message || 'Nie udalo sie anulowac rezerwacji')
+      setError(err.message || 'Nie udało się anulować rezerwacji')
     } finally {
       setLoading(false)
     }
   }
 
   async function fulfillReservation(reservationId) {
-    if (!confirm('Zrealizowac te rezerwacje? Uzytkownik otrzyma wypozyczenie.')) return
+    if (!confirm('Zrealizować tę rezerwację? Użytkownik otrzyma wypożyczenie.')) return
     setLoading(true)
     setError(null)
     setSuccess(null)
     try {
       await apiFetch(`/api/reservations/${reservationId}/fulfill`, { method: 'POST' })
-      setSuccess('Rezerwacja zostala zrealizowana')
+      setSuccess('Rezerwacja została zrealizowana')
       loadReservations()
     } catch (err) {
-      setError(err.message || 'Nie udalo sie zrealizowac rezerwacji')
+      setError(err.message || 'Nie udało się zrealizować rezerwacji')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function prepareReservation(reservationId) {
+    if (!confirm('Oznaczyć rezerwację jako przygotowaną? Użytkownik otrzyma powiadomienie.')) return
+    setLoading(true)
+    setError(null)
+    setSuccess(null)
+    try {
+      await apiFetch(`/api/reservations/${reservationId}/prepare`, { method: 'POST' })
+      setSuccess('Rezerwacja została oznaczona jako przygotowana. Powiadomienie wysłane.')
+      loadReservations()
+    } catch (err) {
+      setError(err.message || 'Nie udało się oznaczyć rezerwacji jako przygotowanej')
     } finally {
       setLoading(false)
     }
@@ -263,7 +427,34 @@ export default function LibrarianPanel() {
       const data = await apiFetch(`/api/books?q=${encodeURIComponent(query)}&limit=10`)
       setAvailableBooks(Array.isArray(data?.data) ? data.data : [])
     } catch (err) {
-      logger.error('Blad wyszukiwania ksiazek:', err)
+      logger.error('Błąd wyszukiwania książek:', err)
+    }
+  }
+
+  async function searchFineUser(query) {
+    if (!query || query.length < 2) {
+      setFineUserResults([])
+      return
+    }
+    try {
+      const data = await apiFetch(`/api/users/search?q=${encodeURIComponent(query)}`)
+      setFineUserResults(Array.isArray(data) ? data : data?.data || [])
+    } catch (err) {
+      setError(err.message || 'Nie udało się wyszukać użytkownika')
+    }
+  }
+
+  async function loadLoansForUser(userId) {
+    if (!userId) {
+      setFineUserLoans([])
+      return
+    }
+    try {
+      const data = await apiFetch(`/api/loans/user/${userId}?limit=50`)
+      const list = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : []
+      setFineUserLoans(list)
+    } catch (err) {
+      setError(err.message || 'Nie udało się pobrać wypożyczeń użytkownika')
     }
   }
 
@@ -274,7 +465,40 @@ export default function LibrarianPanel() {
       const data = await apiFetch('/api/fines?limit=50')
       setFines(Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [])
     } catch (err) {
-      setError(err.message || 'Nie udalo sie pobrac oplat')
+      setError(err.message || 'Nie udało się pobrać opłat')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function createFine(e) {
+    e.preventDefault()
+    if (!fineForm.loanId || !fineForm.amount || !fineForm.reason.trim()) {
+      setError('Wybierz wypożyczenie oraz podaj kwotę i powód')
+      return
+    }
+    setLoading(true)
+    setError(null)
+    setSuccess(null)
+    try {
+      await apiFetch('/api/fines', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          loanId: Number(fineForm.loanId),
+          amount: Number(fineForm.amount),
+          currency: fineForm.currency || 'PLN',
+          reason: fineForm.reason.trim()
+        })
+      })
+      setSuccess('Opłata została utworzona')
+      setFineForm({ userId: '', loanId: '', amount: '', currency: 'PLN', reason: '' })
+      setFineUserQuery('')
+      setFineUserResults([])
+      setFineUserLoans([])
+      loadFines()
+    } catch (err) {
+      setError(err.message || 'Nie udało się utworzyć opłaty')
     } finally {
       setLoading(false)
     }
@@ -285,23 +509,23 @@ export default function LibrarianPanel() {
     setSuccess(null)
     try {
       await apiFetch(`/api/fines/${fineId}/pay`, { method: 'POST' })
-      setSuccess('Oplata zostala oznaczona jako oplacona')
+      setSuccess('Opłata została oznaczona jako opłacona')
       loadFines()
     } catch (err) {
-      setError(err.message || 'Nie udalo sie oplacic naleznosci')
+      setError(err.message || 'Nie udało się opłacić należności')
     }
   }
 
   async function cancelFine(fineId) {
-    if (!confirm('Anulowac naleznosc?')) return
+    if (!confirm('Anulować należność?')) return
     setError(null)
     setSuccess(null)
     try {
       await apiFetch(`/api/fines/${fineId}`, { method: 'DELETE' })
-      setSuccess('Oplata zostala anulowana')
+      setSuccess('Opłata została anulowana')
       loadFines()
     } catch (err) {
-      setError(err.message || 'Nie udalo sie anulowac oplaty')
+      setError(err.message || 'Nie udało się anulować opłaty')
     }
   }
 
@@ -320,16 +544,17 @@ export default function LibrarianPanel() {
             : []
       setCopies(items)
     } catch (err) {
-      setError(err.message || 'Nie udalo sie pobrac egzemplarzy')
+      setError(err.message || 'Nie udało się pobrać egzemplarzy')
     } finally {
       setLoading(false)
     }
   }
 
+
   async function addCopy(e) {
     e.preventDefault()
     if (!inventoryBookId) {
-      setError('Podaj ID ksiazki, do ktorej dodajesz egzemplarz')
+      setError('Podaj ID książki, do której dodajesz egzemplarz')
       return
     }
     setLoading(true)
@@ -341,11 +566,11 @@ export default function LibrarianPanel() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(copyForm)
       })
-      setSuccess('Egzemplarz zostal dodany')
+      setSuccess('Egzemplarz został dodany')
       setCopyForm({ inventoryCode: '', status: 'AVAILABLE', accessType: 'STORAGE', location: '', condition: '' })
       loadCopies(inventoryBookId)
     } catch (err) {
-      setError(err.message || 'Nie udalo sie dodac egzemplarza')
+      setError(err.message || 'Nie udało się dodać egzemplarza')
     } finally {
       setLoading(false)
     }
@@ -371,26 +596,26 @@ export default function LibrarianPanel() {
       setSuccess('Zaktualizowano egzemplarz')
       loadCopies(bookId)
     } catch (err) {
-      setError(err.message || 'Nie udalo sie zaktualizowac egzemplarza')
+      setError(err.message || 'Nie udało się zaktualizować egzemplarza')
     }
   }
 
   async function deleteCopy(copy) {
-    if (!confirm('Usunac egzemplarz?')) return
+    if (!confirm('Usunąć egzemplarz?')) return
     try {
       const bookId = inventoryBookId || copy.bookId || copy.book?.id
       await apiFetch(`/api/admin/books/${bookId}/copies/${copy.id}`, { method: 'DELETE' })
-      setSuccess('Usunieto egzemplarz')
+      setSuccess('Usunięto egzemplarz')
       loadCopies(bookId)
     } catch (err) {
-      setError(err.message || 'Nie udalo sie usunac egzemplarza')
+      setError(err.message || 'Nie udało się usunąć egzemplarza')
     }
   }
 
   async function handleCreateLoan(e) {
     e.preventDefault()
     if (!loanForm.userId || !loanForm.bookId || !loanForm.copyId) {
-      setError('Wybierz uzytkownika, ksiazke i egzemplarz')
+      setError('Wybierz użytkownika, książkę i egzemplarz')
       return
     }
     setLoading(true)
@@ -409,7 +634,7 @@ export default function LibrarianPanel() {
         })
       })
 
-      setSuccess('Wypozyczenie zostalo utworzone')
+      setSuccess('Wypożyczenie zostało utworzone')
       setLoanForm({ userId: '', bookId: '', copyId: '', dueDate: '' })
       setLoanUserQuery('')
       setLoanUserResults([])
@@ -417,7 +642,7 @@ export default function LibrarianPanel() {
       setLoanBookResults([])
       loadLoans()
     } catch (err) {
-      setError(err.message || 'Nie udalo sie utworzyc wypozyczenia')
+      setError(err.message || 'Nie udało się utworzyć wypożyczenia')
     } finally {
       setLoading(false)
     }
@@ -456,11 +681,11 @@ export default function LibrarianPanel() {
       if (fine) {
         setSuccess(`Zwrot po terminie. Kara: ${fine.amount.toFixed(2)} PLN za ${fine.days} dni.`)
       } else {
-        setSuccess('Ksiazka zostala zwrocona')
+        setSuccess('Książka została zwrócona')
       }
       loadLoans()
     } catch (err) {
-      setError(err.message || 'Nie udalo sie zwrocic ksiazki')
+      setError(err.message || 'Nie udało się zwrócić książki')
     } finally {
       setLoading(false)
     }
@@ -543,7 +768,7 @@ export default function LibrarianPanel() {
     <div className="page librarian-panel">
       <PageHeader
         title="Panel bibliotekarza"
-        subtitle="Obsluga wypozyczen i zarzadzanie biblioteka"
+        subtitle="Obsługa wypożyczeń i zarządzanie biblioteką"
       />
 
       {error && <FeedbackCard variant="error">{error}</FeedbackCard>}
@@ -554,19 +779,19 @@ export default function LibrarianPanel() {
           Dashboard
         </button>
         <button className={`tab ${activeTab === 'stats' ? 'tab--active' : ''}`} onClick={() => setActiveTab('stats')}>
-          Statystyki
+          Ustawienia
         </button>
         <button className={`tab ${activeTab === 'loans' ? 'tab--active' : ''}`} onClick={() => setActiveTab('loans')}>
-          Wypozyczenia
+          Wypożyczenia
         </button>
         <button className={`tab ${activeTab === 'create' ? 'tab--active' : ''}`} onClick={() => setActiveTab('create')}>
-          Nowe wypozyczenie
+          Nowe wypożyczenie
         </button>
         <button className={`tab ${activeTab === 'reservations' ? 'tab--active' : ''}`} onClick={() => setActiveTab('reservations')}>
           Rezerwacje
         </button>
         <button className={`tab ${activeTab === 'fines' ? 'tab--active' : ''}`} onClick={() => setActiveTab('fines')}>
-          Oplaty
+          Opłaty
         </button>
         <button className={`tab ${activeTab === 'inventory' ? 'tab--active' : ''}`} onClick={() => setActiveTab('inventory')}>
           Egzemplarze
@@ -583,16 +808,16 @@ export default function LibrarianPanel() {
           <div className="modal-content" onClick={e => e.stopPropagation()}>
             <h3>Potwierdzenie zwrotu</h3>
             <div className="modal-body">
-              <p><strong>Ksiazka:</strong> {returnModal.loan?.book?.title || 'N/A'}</p>
-              <p><strong>Uzytkownik:</strong> {returnModal.loan?.user?.name || returnModal.loan?.user?.email || 'N/A'}</p>
-              <p><strong>Data wypozyczenia:</strong> {new Date(returnModal.loan?.borrowedAt).toLocaleDateString()}</p>
+              <p><strong>Książka:</strong> {returnModal.loan?.book?.title || 'N/A'}</p>
+              <p><strong>Użytkownik:</strong> {returnModal.loan?.user?.name || returnModal.loan?.user?.email || 'N/A'}</p>
+              <p><strong>Data wypożyczenia:</strong> {new Date(returnModal.loan?.borrowedAt).toLocaleDateString()}</p>
               <p><strong>Termin zwrotu:</strong> {new Date(returnModal.loan?.dueAt).toLocaleDateString()}</p>
               {returnModal.fine ? (
                 <div className="fine-warning">
                   <h4 style={{ color: '#d32f2f', marginTop: '1rem' }}>Zwrot po terminie</h4>
-                  <p><strong>Dni opoznienia:</strong> {returnModal.fine.days}</p>
-                  <p><strong>Kara do zaplaty:</strong> {returnModal.fine.amount.toFixed(2)} PLN</p>
-                  <p style={{ fontSize: '0.9rem', color: '#666' }}>(0.50 PLN za kazdy dzien opoznienia)</p>
+                  <p><strong>Dni opóźnienia:</strong> {returnModal.fine.days}</p>
+                  <p><strong>Kara do zapłaty:</strong> {returnModal.fine.amount.toFixed(2)} PLN</p>
+                  <p style={{ fontSize: '0.9rem', color: '#666' }}>(0.50 PLN za każdy dzień opóźnienia)</p>
                 </div>
               ) : (
                 <p style={{ color: '#2e7d32', marginTop: '1rem' }}>Zwrot w terminie - brak kary</p>
@@ -624,55 +849,86 @@ export default function LibrarianPanel() {
                 <input value={loanSearchTitle} onChange={e => setLoanSearchTitle(e.target.value)} placeholder="np. Lalka" />
               </div>
             </div>
+            <div className="form-field" style={{ maxWidth: '240px' }}>
+              <label>Status</label>
+              <select value={loanStatusFilter} onChange={e => setLoanStatusFilter(e.target.value)}>
+                <option value="all">Wszystkie</option>
+                <option value="overdue">Przeterminowane</option>
+              </select>
+            </div>
           </div>
 
-          <h2>Aktywne wypozyczenia</h2>
-          {loading && <p>Ladowanie...</p>}
+          <h2>Aktywne wypożyczenia</h2>
+          {loading && <p>Ładowanie...</p>}
           {!loading && filteredLoans.length === 0 && (
-            <p>{hasLoanFilters ? 'Brak wynikow wyszukiwania.' : 'Brak aktywnych wypozyczen.'}</p>
+            <p>{hasLoanFilters ? 'Brak wyników wyszukiwania.' : 'Brak aktywnych wypożyczeń.'}</p>
           )}
           {!loading && filteredLoans.length > 0 && (
-            <div className="table-container">
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Uzytkownik</th>
-                    <th>Ksiazka</th>
-                    <th>Data wypozyczenia</th>
-                    <th>Termin zwrotu</th>
-                    <th>Status</th>
-                    <th>Akcje</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredLoans.map(loan => (
-                    <tr key={loan.id}>
-                      <td>{loan.id}</td>
-                      <td>{loan.user?.name || loan.user?.email || 'N/A'}</td>
-                      <td>{loan.book?.title || 'N/A'}</td>
-                      <td>{new Date(loan.borrowedAt).toLocaleDateString()}</td>
-                      <td>{new Date(loan.dueAt).toLocaleDateString()}</td>
-                      <td>
-                        {loan.returnedAt ? (
-                          <span className="badge badge-success">Zwracono</span>
-                        ) : new Date(loan.dueAt) < new Date() ? (
-                          <span className="badge badge-danger">Przeterminowane</span>
-                        ) : (
-                          <span className="badge badge-info">Aktywne</span>
-                        )}
-                      </td>
-                      <td>
+            <div className="compact-list">
+              {filteredLoans.map(loan => {
+                const isExpanded = expandedLoanId === loan.id
+                const userLabel = loan.user?.name || loan.user?.email || 'N/A'
+                const bookLabel = loan.book?.title || 'N/A'
+                const dueLabel = loan.dueAt ? new Date(loan.dueAt).toLocaleDateString() : '-'
+                const borrowedLabel = loan.borrowedAt ? new Date(loan.borrowedAt).toLocaleDateString() : '-'
+                const isOverdue = !loan.returnedAt && loan.dueAt && new Date(loan.dueAt) < new Date()
+                const statusLabel = loan.returnedAt
+                  ? 'Zwracono'
+                  : isOverdue
+                    ? 'Przeterminowane'
+                    : 'Aktywne'
+                const detailsId = `loan-details-${loan.id}`
+
+                return (
+                  <div key={loan.id} className="compact-card">
+                    <button
+                      type="button"
+                      className="compact-card__header"
+                      onClick={() => setExpandedLoanId(isExpanded ? null : loan.id)}
+                      aria-expanded={isExpanded}
+                      aria-controls={detailsId}
+                      aria-label={`${isExpanded ? 'Zwiń' : 'Rozwiń'} wypożyczenie ${bookLabel}`}
+                    >
+                      <div>
+                        <div className="compact-card__title">{bookLabel}</div>
+                        <div className="compact-card__subtitle">{userLabel}</div>
+                      </div>
+                      <div className="compact-card__summary">
+                        <span className="compact-card__amount">{dueLabel}</span>
+                        <span className={`compact-card__toggle ${isExpanded ? 'is-open' : ''}`} aria-hidden>{isExpanded ? 'v' : '>'}</span>
+                      </div>
+                    </button>
+
+                    {isExpanded && (
+                      <div id={detailsId} className="compact-card__details">
+                        <div className="compact-card__row">
+                          <span className="label">ID</span>
+                          <span className="value">{loan.id}</span>
+                        </div>
+                        <div className="compact-card__row">
+                          <span className="label">Status</span>
+                          <span className="value">{statusLabel}</span>
+                        </div>
+                        <div className="compact-card__row">
+                          <span className="label">Data wypożyczenia</span>
+                          <span className="value">{borrowedLabel}</span>
+                        </div>
+                        <div className="compact-card__row">
+                          <span className="label">Termin zwrotu</span>
+                          <span className="value">{dueLabel}</span>
+                        </div>
                         {!loan.returnedAt && (
-                          <button className="btn btn-sm btn-primary" onClick={() => handleReturnLoan(loan)} disabled={loading}>
-                            Zwroc
-                          </button>
+                          <div className="compact-card__actions">
+                            <button className="btn btn-sm btn-primary" onClick={() => handleReturnLoan(loan)} disabled={loading}>
+                              Zwróć
+                            </button>
+                          </div>
                         )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
             </div>
           )}
         </div>
@@ -822,55 +1078,14 @@ export default function LibrarianPanel() {
       )}
 
       {activeTab === 'stats' && (
-        <div className="grid two-columns">
-          <div className="surface-card">
-            <h2>Statystyki wypozyczen</h2>
-            {loading && <p>Ladowanie...</p>}
-            {!loading && (
-              <div className="stats-grid">
-                <div className="stat">
-                  <span className="stat__label">Aktywne wypozyczenia</span>
-                  <span className="stat__value">{stats.activeLoans}</span>
-                </div>
-                <div className="stat">
-                  <span className="stat__label">Przeterminowane</span>
-                  <span className="stat__value">{stats.overdueLoans}</span>
-                </div>
-                <div className="stat">
-                  <span className="stat__label">Aktywni uzytkownicy</span>
-                  <span className="stat__value">{stats.totalUsers}</span>
-                </div>
-                <div className="stat">
-                  <span className="stat__label">Dostepne egzemplarze</span>
-                  <span className="stat__value">{stats.availableCopies}</span>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="surface-card">
-            <h2>Szybkie akcje</h2>
-            <div className="action-buttons">
-              <button className="btn btn-secondary" onClick={loadStats}>
-                Odswiez statystyki
-              </button>
-              <button className="btn btn-secondary" onClick={() => setActiveTab('create')}>
-                Nowe wypozyczenie
-              </button>
-              <button className="btn btn-secondary" onClick={() => setActiveTab('loans')}>
-                Zobacz wypozyczenia
-              </button>
-            </div>
-          </div>
-
-          <div className="surface-card">
+        <div className="surface-card">
             <h2>Ustawienia biblioteki</h2>
-            {librarySettingsLoading && <p>Ladowanie...</p>}
+            {librarySettingsLoading && <p>Ładowanie...</p>}
             {!librarySettingsLoading && (
               <form className="form" onSubmit={updateLibrarySettings}>
                 <div className="form-row form-row--two">
                   <div className="form-field">
-                    <label>Limit wypozyczen na uzytkownika</label>
+                    <label>Limit wypożyczeń na użytkownika</label>
                     <input
                       type="number"
                       min="1"
@@ -881,7 +1096,7 @@ export default function LibrarianPanel() {
                     />
                   </div>
                   <div className="form-field">
-                    <label>Dlugosc wypozyczenia (dni)</label>
+                    <label>Długość wypożyczenia (dni)</label>
                     <input
                       type="number"
                       min="7"
@@ -908,7 +1123,6 @@ export default function LibrarianPanel() {
                 </div>
               </form>
             )}
-          </div>
         </div>
       )}
 
@@ -916,49 +1130,106 @@ export default function LibrarianPanel() {
         <div className="surface-card">
           <div className="section-header">
             <h2>Rezerwacje</h2>
-            <button className="btn btn-secondary" onClick={loadReservations}>Odswiez</button>
+            <div className="fines-toolbar">
+              <label className="sr-only" htmlFor="reservation-search">Filtruj po imieniu i nazwisku</label>
+              <input
+                id="reservation-search"
+                type="search"
+                value={reservationSearch}
+                onChange={event => setReservationSearch(event.target.value)}
+                placeholder="Filtruj po imieniu i nazwisku"
+              />
+              <label className="sr-only" htmlFor="reservation-status-filter">Status</label>
+              <select
+                id="reservation-status-filter"
+                value={reservationStatusFilter}
+                onChange={e => setReservationStatusFilter(e.target.value)}
+              >
+                <option value="ALL">Wszystkie</option>
+                <option value="ACTIVE">Aktywne</option>
+                <option value="PREPARED">Przygotowane</option>
+                <option value="EXPIRED">Przedawnione</option>
+                <option value="FULFILLED">Zrealizowane</option>
+                <option value="CANCELLED">Anulowane</option>
+              </select>
+              <button className="btn btn-secondary" onClick={loadReservations}>Odswiez</button>
+            </div>
           </div>
           {loading && <p>Ladowanie...</p>}
-          {!loading && reservations.length === 0 && <p>Brak aktywnych rezerwacji.</p>}
-          {!loading && reservations.length > 0 && (
-            <div className="table-container">
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Uzytkownik</th>
-                    <th>Ksiazka</th>
-                    <th>Status</th>
-                    <th>Wygasa</th>
-                    <th>Akcje</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {reservations.map(reservation => (
-                    <tr key={reservation.id}>
-                      <td>{reservation.id}</td>
-                      <td>{reservation.user?.email || reservation.userEmail || 'N/A'}</td>
-                      <td>{reservation.book?.title || reservation.bookTitle || 'N/A'}</td>
-                      <td>{reservation.status || 'nieznany'}</td>
-                      <td>{reservation.expiresAt ? new Date(reservation.expiresAt).toLocaleString() : '-'}</td>
-                      <td>
-                        {reservation.status === 'ACTIVE' && (
-                          <>
-                            <button className="btn btn-sm btn-primary" onClick={() => fulfillReservation(reservation.id)} disabled={loading}>
-                              Zrealizuj
-                            </button>
-                            {' '}
-                            <button className="btn btn-sm" onClick={() => cancelReservation(reservation.id)} disabled={loading}>
-                              Anuluj
-                            </button>
-                          </>
-                        )}
-                        {reservation.status === 'CANCELLED' && <span className="support-copy">Anulowana</span>}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          {!loading && filteredReservations.length === 0 && <p>Brak rezerwacji dla wybranego filtra.</p>}
+          {!loading && filteredReservations.length > 0 && (
+            <div className="compact-list">
+              {filteredReservations.map(reservation => {
+                const isExpanded = expandedReservationId === reservation.id
+                const userLabel = reservation.user?.name || reservation.user?.email || reservation.userEmail || 'N/A'
+                const bookLabel = reservation.book?.title || reservation.bookTitle || 'N/A'
+                const statusLabel = reservation.status || 'nieznany'
+                const expiryLabel = reservation.expiresAt ? new Date(reservation.expiresAt).toLocaleString() : '-'
+                const detailsId = `reservation-details-${reservation.id}`
+                return (
+                  <div key={reservation.id} className="compact-card">
+                    <button
+                      type="button"
+                      className="compact-card__header"
+                      onClick={() => setExpandedReservationId(isExpanded ? null : reservation.id)}
+                      aria-expanded={isExpanded}
+                      aria-controls={detailsId}
+                      aria-label={`${isExpanded ? 'Zwin' : 'Rozwin'} rezerwacje ${bookLabel}`}
+                    >
+                      <div>
+                        <div className="compact-card__title">{bookLabel}</div>
+                        <div className="compact-card__subtitle">{userLabel}</div>
+                      </div>
+                      <div className="compact-card__summary">
+                        <span className="compact-card__amount">{statusLabel}</span>
+                        <span className={`compact-card__toggle ${isExpanded ? 'is-open' : ''}`} aria-hidden>{isExpanded ? 'v' : '>'}</span>
+                      </div>
+                    </button>
+
+                    {isExpanded && (
+                      <div id={detailsId} className="compact-card__details">
+                        <div className="compact-card__row">
+                          <span className="label">ID</span>
+                          <span className="value">{reservation.id}</span>
+                        </div>
+                        <div className="compact-card__row">
+                          <span className="label">Status</span>
+                          <span className="value">{statusLabel}</span>
+                        </div>
+                        <div className="compact-card__row">
+                          <span className="label">Wygasa</span>
+                          <span className="value">{expiryLabel}</span>
+                        </div>
+                        <div className="compact-card__actions">
+                          {reservation.status === 'ACTIVE' && (
+                            <>
+                              <button className="btn btn-sm btn-primary" onClick={() => prepareReservation(reservation.id)} disabled={loading}>
+                                Oznacz jako przygotowaną
+                              </button>
+                              <button className="btn btn-sm" onClick={() => cancelReservation(reservation.id)} disabled={loading}>
+                                Anuluj
+                              </button>
+                            </>
+                          )}
+                          {reservation.status === 'PREPARED' && (
+                            <>
+                              <button className="btn btn-sm btn-primary" onClick={() => fulfillReservation(reservation.id)} disabled={loading}>
+                                Wydaj (utwórz wypożyczenie)
+                              </button>
+                              <button className="btn btn-sm" onClick={() => cancelReservation(reservation.id)} disabled={loading}>
+                                Anuluj
+                              </button>
+                            </>
+                          )}
+                          {reservation.status === 'CANCELLED' && <span className="support-copy">Anulowana</span>}
+                          {reservation.status === 'FULFILLED' && <span className="support-copy">Zrealizowana</span>}
+                          {reservation.status === 'EXPIRED' && <span className="support-copy">Wygasła</span>}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
             </div>
           )}
         </div>
@@ -968,52 +1239,191 @@ export default function LibrarianPanel() {
         <div className="surface-card">
           <div className="section-header">
             <h2>Oplaty i kary</h2>
-            <button className="btn btn-secondary" onClick={loadFines}>Odswiez</button>
+            <div className="fines-toolbar">
+              <label className="sr-only" htmlFor="fine-search">Filtruj po imieniu i nazwisku</label>
+              <input
+                id="fine-search"
+                type="search"
+                value={fineSearch}
+                onChange={event => setFineSearch(event.target.value)}
+                placeholder="Filtruj po imieniu i nazwisku"
+              />
+              <button className="btn btn-secondary" onClick={loadFines}>Odswiez</button>
+            </div>
+          </div>
+          <div className="surface-card" style={{ marginBottom: 'var(--space-3)' }}>
+            <h3>Dodaj nowa oplata</h3>
+            <form className="form" onSubmit={createFine}>
+              <div className="form-row form-row--two">
+                <div className="form-field" style={{ position: 'relative' }}>
+                  <label>Uzytkownik</label>
+                  <input
+                    value={fineUserQuery}
+                    onChange={e => {
+                      const value = e.target.value
+                      setFineUserQuery(value)
+                      setFineForm(prev => ({ ...prev, userId: '', loanId: '' }))
+                      setFineUserLoans([])
+                      searchFineUser(value)
+                    }}
+                    placeholder="Wpisz imie i nazwisko..."
+                    required
+                  />
+                  {fineUserResults.length > 0 && (
+                    <div className="dropdown-list">
+                      {fineUserResults.map(u => (
+                        <div
+                          key={u.id}
+                          className="dropdown-list__item"
+                          onClick={() => {
+                            setFineForm(prev => ({ ...prev, userId: String(u.id), loanId: '' }))
+                            setFineUserQuery(u.name || u.email || `Uzytkownik #${u.id}`)
+                            setFineUserResults([])
+                            loadLoansForUser(u.id)
+                          }}
+                        >
+                          <strong>{u.name || u.email || `Uzytkownik #${u.id}`}</strong>
+                          {u.email && u.name && <div className="support-copy">{u.email}</div>}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div className="form-field">
+                  <label>Wypozyczenie</label>
+                  <select
+                    value={fineForm.loanId}
+                    onChange={e => setFineForm(prev => ({ ...prev, loanId: e.target.value }))}
+                    required
+                    disabled={fineUserLoans.length === 0}
+                  >
+                    <option value="">Wybierz wypozyczenie</option>
+                    {fineUserLoans.map(loan => (
+                      <option key={loan.id} value={loan.id}>
+                        {loan.book?.title || 'Ksiazka'} (ID: {loan.id})
+                      </option>
+                    ))}
+                  </select>
+                  {fineUserQuery && fineUserLoans.length === 0 && (
+                    <small className="support-copy">Brak aktywnych wypozyczen dla wybranego uzytkownika.</small>
+                  )}
+                </div>
+              </div>
+              <div className="form-row form-row--two">
+                <div className="form-field">
+                  <label>Kwota</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={fineForm.amount}
+                    onChange={e => setFineForm(prev => ({ ...prev, amount: e.target.value }))}
+                    required
+                  />
+                </div>
+                <div className="form-field">
+                  <label>Waluta</label>
+                  <select
+                    value={fineForm.currency}
+                    onChange={e => setFineForm(prev => ({ ...prev, currency: e.target.value }))}
+                  >
+                    <option value="PLN">PLN</option>
+                    <option value="EUR">EUR</option>
+                    <option value="USD">USD</option>
+                  </select>
+                </div>
+              </div>
+              <div className="form-field">
+                <label>Powod</label>
+                <input
+                  value={fineForm.reason}
+                  onChange={e => setFineForm(prev => ({ ...prev, reason: e.target.value }))}
+                  placeholder="Np. przetrzymanie"
+                  required
+                />
+              </div>
+              <div className="form-actions">
+                <button type="submit" className="btn btn-primary" disabled={loading}>
+                  Dodaj oplate
+                </button>
+              </div>
+            </form>
           </div>
           {loading && <p>Ladowanie...</p>}
-          {!loading && fines.length === 0 && <p>Brak aktywnych oplat.</p>}
-          {!loading && fines.length > 0 && (
-            <div className="table-container">
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Uzytkownik</th>
-                    <th>Kwota</th>
-                    <th>Status</th>
-                    <th>Powod</th>
-                    <th>Akcje</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {fines.map(fine => (
-                    <tr key={fine.id}>
-                      <td>{fine.id}</td>
-                      <td>{fine.user?.email || fine.userEmail || 'N/A'}</td>
-                      <td>{fine.amount} {fine.currency || 'PLN'}</td>
-                      <td>{fine.status || (fine.paidAt ? 'oplacono' : 'nalezna')}</td>
-                      <td>{fine.reason}</td>
-                      <td>
+          {!loading && filteredFines.length === 0 && <p>Brak aktywnych oplat.</p>}
+          {!loading && filteredFines.length > 0 && (
+            <div className="compact-list">
+              {filteredFines.map(fine => {
+                const isExpanded = expandedFineId === fine.id
+                const userLabel = fine.user?.name || fine.userName || fine.user?.email || fine.userEmail || 'N/A'
+                const amountLabel = `${fine.amount} ${fine.currency || 'PLN'}`
+                const statusLabel = fine.status || (fine.paidAt ? 'oplacono' : 'nalezna')
+                const detailsId = `fine-details-${fine.id}`
+                return (
+                  <div key={fine.id} className="compact-card">
+                    <button
+                      type="button"
+                      className="compact-card__header"
+                      onClick={() => setExpandedFineId(isExpanded ? null : fine.id)}
+                      aria-expanded={isExpanded}
+                      aria-controls={detailsId}
+                      aria-label={`${isExpanded ? 'Zwin' : 'Rozwin'} oplaty dla ${userLabel}`}
+                    >
+                      <div>
+                        <div className="compact-card__title">{userLabel}</div>
+                        <div className="compact-card__subtitle">{fine.reason || 'Oplata biblioteczna'}</div>
+                      </div>
+                      <div className="compact-card__summary">
+                        <span className="compact-card__amount">{amountLabel}</span>
+                        <span className={`compact-card__toggle ${isExpanded ? 'is-open' : ''}`} aria-hidden>{isExpanded ? 'v' : '>'}</span>
+                      </div>
+                    </button>
+
+                    {isExpanded && (
+                      <div id={detailsId} className="compact-card__details">
+                        <div className="compact-card__row">
+                          <span className="label">ID</span>
+                          <span className="value">{fine.id}</span>
+                        </div>
+                        <div className="compact-card__row">
+                          <span className="label">Status</span>
+                          <span className="value">{statusLabel}</span>
+                        </div>
+                        {fine.createdAt && (
+                          <div className="compact-card__row">
+                            <span className="label">Utworzono</span>
+                            <span className="value">{new Date(fine.createdAt).toLocaleDateString('pl-PL')}</span>
+                          </div>
+                        )}
+                        {fine.paidAt && (
+                          <div className="compact-card__row">
+                            <span className="label">Oplacono</span>
+                            <span className="value">{new Date(fine.paidAt).toLocaleDateString('pl-PL')}</span>
+                          </div>
+                        )}
+                        {fine.reason && (
+                          <div className="compact-card__row">
+                            <span className="label">Powod</span>
+                            <span className="value">{fine.reason}</span>
+                          </div>
+                        )}
                         {!fine.paidAt && (
-                          <>
+                          <div className="compact-card__actions">
                             <button className="btn btn-sm btn-primary" onClick={() => payFine(fine.id)} disabled={loading}>
                               Oznacz jako oplacone
                             </button>
                             {isAdmin && (
-                              <>
-                                {' '}
-                                <button className="btn btn-sm" onClick={() => cancelFine(fine.id)} disabled={loading}>
-                                  Anuluj
-                                </button>
-                              </>
+                              <button className="btn btn-sm" onClick={() => cancelFine(fine.id)} disabled={loading}>
+                                Anuluj
+                              </button>
                             )}
-                          </>
+                          </div>
                         )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
             </div>
           )}
         </div>
@@ -1022,9 +1432,23 @@ export default function LibrarianPanel() {
       {activeTab === 'inventory' && (
         <div className="grid two-columns">
           <div className="surface-card">
-            <h2>Egzemplarze ksiazki</h2>
+            <div className="section-header">
+              <div>
+                <h2>Egzemplarze ksiazek</h2>
+                <p className="support-copy">Wybierz ksiazke, aby zobaczyc jej egzemplarze.</p>
+              </div>
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={() => setInventorySortOpen(prev => !prev)}
+                aria-expanded={inventorySortOpen}
+                aria-controls="inventory-sort-panel"
+              >
+                {inventorySortOpen ? 'Ukryj sortowanie' : 'Pokaz sortowanie'}
+              </button>
+            </div>
             <div className="form-field" style={{ position: 'relative' }}>
-              <label>Wyszukaj ksiazke po nazwie</label>
+              <label>Wybierz ksiazke do dodania egzemplarza</label>
               <input
                 type="text"
                 value={bookSearchQuery}
@@ -1054,6 +1478,7 @@ export default function LibrarianPanel() {
                       key={book.id}
                       onClick={() => {
                         setInventoryBookId(book.id)
+                        setSelectedBook(book)
                         setBookSearchQuery(book.title)
                         setAvailableBooks([])
                         loadCopies(book.id)
@@ -1073,23 +1498,76 @@ export default function LibrarianPanel() {
                 </div>
               )}
             </div>
-            {loading && <p>Ladowanie...</p>}
-            {!loading && copies.length > 0 && (
-              <ul className="list">
-                {copies.map(copy => (
-                  <li key={copy.id}>
-                    <strong>{copy.inventoryCode || `Egzemplarz #${copy.id}`}</strong>
-                    <div className="support-copy">{copy.status || copy.state} - {copy.accessType}</div>
-                    {copy.location && <div className="support-copy">Lokalizacja: {copy.location}</div>}
-                    <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
-                      <button className="btn btn-outline btn-sm" type="button" onClick={() => updateCopy(copy)}>Edytuj</button>
-                      <button className="btn btn-danger btn-sm" type="button" onClick={() => deleteCopy(copy)}>Usun</button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+            {inventorySortOpen && (
+              <div id="inventory-sort-panel" className="inventory-toolbar">
+                <div className="form-field">
+                  <label>Sortuj</label>
+                  <select value={inventorySort} onChange={e => setInventorySort(e.target.value)}>
+                    <option value="bookTitle">Tytul</option>
+                    <option value="bookAuthor">Autor</option>
+                    <option value="totalCopies">Liczba egzemplarzy</option>
+                    <option value="inventoryCode">Kod</option>
+                    <option value="status">Status</option>
+                    <option value="accessType">Dostep</option>
+                    <option value="location">Lokalizacja</option>
+                  </select>
+                </div>
+                <div className="form-field">
+                  <label>Kierunek</label>
+                  <select value={inventorySortDir} onChange={e => setInventorySortDir(e.target.value)}>
+                    <option value="asc">Rosnaco</option>
+                    <option value="desc">Malejaco</option>
+                  </select>
+                </div>
+              </div>
             )}
-            {!loading && copies.length === 0 && inventoryBookId && <p>Brak egzemplarzy dla podanej ksiazki.</p>}
+            {loading && <p>Ladowanie...</p>}
+            {!loading && sortedInventoryRows.length > 0 && (
+              <div className="table-container">
+                <table className="data-table inventory-table">
+                  <thead>
+                    <tr>
+                      <th>Tytul</th>
+                      <th>Autor</th>
+                      <th>Egzemplarze</th>
+                      <th>Kod</th>
+                      <th>Status</th>
+                      <th>Dostep</th>
+                      <th>Lokalizacja</th>
+                      <th>Stan</th>
+                      <th>Akcje</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sortedInventoryRows.map(row => {
+                      const copy = inventoryCopyById.get(row.id)
+                      return (
+                      <tr key={row.id}>
+                        <td>{row.bookTitle}</td>
+                        <td>{row.bookAuthor}</td>
+                        <td>{row.totalCopies}</td>
+                        <td>{row.inventoryCode}</td>
+                        <td>{row.status}</td>
+                        <td>{row.accessType}</td>
+                        <td>{row.location || '-'}</td>
+                        <td>{row.condition || '-'}</td>
+                        <td>
+                          <div className="table-actions">
+                            <button className="btn btn-outline btn-sm" type="button" onClick={() => updateCopy(copy)}>Edytuj</button>
+                            <button className="btn btn-danger btn-sm" type="button" onClick={() => deleteCopy(copy)}>Usun</button>
+                          </div>
+                        </td>
+                      </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+            {!loading && sortedInventoryRows.length === 0 && inventoryBookId && <p>Brak egzemplarzy dla podanej ksiazki.</p>}
+            {!loading && sortedInventoryRows.length === 0 && !inventoryBookId && (
+              <p>Wybierz ksiazke, aby zobaczyc liste egzemplarzy.</p>
+            )}
           </div>
 
           <div className="surface-card">
@@ -1133,8 +1611,22 @@ export default function LibrarianPanel() {
 
       {activeTab === 'collections' && (
         <div className="surface-card">
-          <h2>Kolekcje ksiazek</h2>
-          <p className="support-copy">Tworz i zarzadzaj kolekcjami ksiazek dla czytelnikow</p>
+          <div className="section-header">
+            <div>
+              <h2>Kolekcje ksiazek</h2>
+              <p className="support-copy">Tworz i zarzadzaj kolekcjami ksiazek dla czytelnikow</p>
+            </div>
+            <div className="fines-toolbar">
+              <label className="sr-only" htmlFor="collection-search">Filtruj kolekcje</label>
+              <input
+                id="collection-search"
+                type="search"
+                value={collectionSearch}
+                onChange={event => setCollectionSearch(event.target.value)}
+                placeholder="Filtruj kolekcje"
+              />
+            </div>
+          </div>
 
           <div className="collection-form">
             <h3>{editingCollection ? 'Edytuj kolekcje' : 'Nowa kolekcja'}</h3>
@@ -1238,58 +1730,85 @@ export default function LibrarianPanel() {
             </div>
           </div>
 
-          <div className="collections-grid">
-            {collections.map(collection => (
-              <div key={collection.id} className={`collection-card ${collection.featured ? 'collection-card--featured' : ''}`}>
-                <div className="collection-header">
-                  <div>
-                    <div className="collection-title">{collection.name}</div>
-                    <div className="collection-meta">
-                      <span>Ksiazek: {collection.bookCount}</span>
-                      <span>Kurator: {collection.curatedBy}</span>
-                      {collection.featured && <span>Wyrozniona</span>}
+          <div className="compact-list">
+            {filteredCollections.map(collection => {
+              const isExpanded = expandedCollectionId === collection.id
+              const detailsId = `collection-details-${collection.id}`
+              return (
+                <div key={collection.id} className={`compact-card ${collection.featured ? 'collection-card--featured' : ''}`}>
+                  <button
+                    type="button"
+                    className="compact-card__header"
+                    onClick={() => setExpandedCollectionId(isExpanded ? null : collection.id)}
+                    aria-expanded={isExpanded}
+                    aria-controls={detailsId}
+                    aria-label={`${isExpanded ? 'Zwin' : 'Rozwin'} kolekcje ${collection.name}`}
+                  >
+                    <div>
+                      <div className="compact-card__title">{collection.name}</div>
+                      <div className="compact-card__subtitle">
+                        {collection.curatedBy ? `Kurator: ${collection.curatedBy}` : 'Brak kuratora'}
+                      </div>
                     </div>
-                  </div>
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <button
-                      className="btn btn-sm btn-secondary"
-                      onClick={() => {
-                        setEditingCollection(collection.id)
-                        setCollectionForm({
-                          name: collection.name,
-                          description: collection.description,
-                          featured: collection.featured,
-                          displayOrder: collection.displayOrder,
-                          bookIds: collection.books?.map(b => b.id) || []
-                        })
-                      }}
-                    >
-                      Edytuj
-                    </button>
-                    <button className="btn btn-sm btn-danger" onClick={() => deleteCollection(collection.id)}>
-                      Usun
-                    </button>
-                  </div>
-                </div>
-
-                {collection.description && (
-                  <p className="support-copy">{collection.description}</p>
-                )}
-
-                <div className="collection-books-preview">
-                  {collection.books?.slice(0, 5).map(book => (
-                    <div key={book.id} className="collection-book-mini" title={book.title}>
-                      K
+                    <div className="compact-card__summary">
+                      <span className="compact-card__amount">Ksiazek: {collection.bookCount}</span>
+                      <span className={`compact-card__toggle ${isExpanded ? 'is-open' : ''}`} aria-hidden>{isExpanded ? 'v' : '>'}</span>
                     </div>
-                  ))}
-                  {collection.books?.length > 5 && (
-                    <div className="collection-book-mini">+{collection.books.length - 5}</div>
+                  </button>
+
+                  {isExpanded && (
+                    <div id={detailsId} className="compact-card__details">
+                      <div className="compact-card__row">
+                        <span className="label">Status</span>
+                        <span className="value">{collection.featured ? 'Wyrozniona' : 'Standardowa'}</span>
+                      </div>
+                      {collection.description && (
+                        <div className="compact-card__row">
+                          <span className="label">Opis</span>
+                          <span className="value">{collection.description}</span>
+                        </div>
+                      )}
+                      <div className="compact-card__row">
+                        <span className="label">Ksiazki</span>
+                        <span className="value">{collection.bookCount}</span>
+                      </div>
+                      <div className="collection-books-preview">
+                        {collection.books?.slice(0, 5).map(book => (
+                          <div key={book.id} className="collection-book-mini" title={book.title}>
+                            K
+                          </div>
+                        ))}
+                        {collection.books?.length > 5 && (
+                          <div className="collection-book-mini">+{collection.books.length - 5}</div>
+                        )}
+                      </div>
+                      <div className="compact-card__actions">
+                        <button
+                          className="btn btn-sm btn-secondary"
+                          onClick={() => {
+                            setEditingCollection(collection.id)
+                            setCollectionForm({
+                              name: collection.name,
+                              description: collection.description,
+                              featured: collection.featured,
+                              displayOrder: collection.displayOrder,
+                              bookIds: collection.books?.map(b => b.id) || []
+                            })
+                          }}
+                        >
+                          Edytuj
+                        </button>
+                        <button className="btn btn-sm btn-danger" onClick={() => deleteCollection(collection.id)}>
+                          Usun
+                        </button>
+                      </div>
+                    </div>
                   )}
                 </div>
-              </div>
-            ))}
+              )
+            })}
 
-            {collections.length === 0 && !loading && (
+            {filteredCollections.length === 0 && !loading && (
               <div className="empty-state">
                 Brak kolekcji. Utworz pierwsza kolekcje uzywajac formularza powyzej.
               </div>

@@ -4,6 +4,7 @@ namespace App\Controller;
 use App\Application\Command\Reservation\CancelReservationCommand;
 use App\Application\Command\Reservation\CreateReservationCommand;
 use App\Application\Command\Reservation\FulfillReservationWorkflowCommand;
+use App\Application\Command\Reservation\PrepareReservationCommand;
 use App\Application\Query\Reservation\ListReservationsQuery;
 use App\Controller\Traits\ExceptionHandlingTrait;
 use App\Controller\Traits\ValidationTrait;
@@ -294,6 +295,53 @@ class ReservationController extends AbstractController
             );
 
             return $this->json(['message' => 'Reservation fulfilled, loan created'], 200);
+        } catch (\Throwable $e) {
+            if ($e instanceof HandlerFailedException) {
+                $e = $e->getPrevious() ?? $e;
+            }
+
+            $statusCode = ($e instanceof HttpExceptionInterface)
+                ? $e->getStatusCode()
+                : 500;
+
+            return $this->json(['message' => $e->getMessage()], $statusCode);
+        }
+    }
+
+    #[OA\Post(
+        path: '/api/reservations/{id}/prepare',
+        summary: 'Mark reservation as prepared',
+        tags: ['Reservations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/MessageResponse')),
+            new OA\Response(response: 400, description: 'Invalid id', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'Reservation not found', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
+    public function prepare(string $id, Request $request): JsonResponse
+    {
+        if (!ctype_digit($id) || (int)$id <= 0) {
+            return $this->json(['message' => 'Invalid reservation id'], 400);
+        }
+
+        $isLibrarian = $this->security->hasRole($request, 'ROLE_LIBRARIAN');
+        if (!$isLibrarian) {
+            return $this->json(['message' => 'Only librarians can prepare reservations'], 403);
+        }
+
+        try {
+            $this->commandBus->dispatch(
+                new PrepareReservationCommand(
+                    reservationId: (int) $id,
+                    actingUserId: $this->security->getCurrentUserId($request) ?? 0
+                )
+            );
+
+            return $this->json(['message' => 'Reservation marked as prepared, notification sent'], 200);
         } catch (\Throwable $e) {
             if ($e instanceof HandlerFailedException) {
                 $e = $e->getPrevious() ?? $e;
