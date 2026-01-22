@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext'
 import { useResourceCache } from '../context/ResourceCacheContext'
 import { RatingDisplay } from './StarRating'
 
-export default function BookItem({ book, onBorrowed }) {
+export default function BookItem({ book, onBorrowed, compact = false, expanded = false, onToggleExpand }) {
   const [loading, setLoading] = useState(false)
   const [reserveLoading, setReserveLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -120,46 +120,53 @@ export default function BookItem({ book, onBorrowed }) {
       setFavoriteLoading(false)
     }
   }
-
-  return (
-    <article className="surface-card book-card">
-      <div className="book-card__header">
-        <div>
-          <Link to={`/books/${book.id}`} className="book-card__title">{book.title}</Link>
-          <div className="book-card__meta">
-            <span>{book.author?.name ?? 'Autor nieznany'}</span>
-            {publicationYear && <span>Rok wydania {publicationYear}</span>}
-            {resourceType && <span>{resourceType}</span>}
-            {book.isbn && <span>ISBN {book.isbn}</span>}
-            {ageGroupLabel && <span>Wiek: {ageGroupLabel}</span>}
-          </div>
-          {(publisher || signature) && (
-            <div className="book-card__meta">
-              {publisher && <span>Wydawca: {publisher}</span>}
-              {signature && <span>Sygnatura: {signature}</span>}
-            </div>
-          )}
-          {(storageAvailable !== null || openStackAvailable !== null) && (
-            <div className="book-card__meta">
-              <span>Magazyn: {storageAvailable}</span>
-              <span>Wolny dostęp: {openStackAvailable}</span>
-            </div>
-          )}
+  // Compact mode for mobile
+  if (compact && !expanded) {
+    return (
+      <article className="book-item-compact" onClick={onToggleExpand}>
+        <h3 className="book-item-compact__title">{book.title}</h3>
+        <p className="book-item-compact__author">{book.author?.name ?? 'Autor nieznany'}</p>
+        <div className="book-item-compact__actions">
+          <button className="btn-expand" onClick={(e) => { e.stopPropagation(); onToggleExpand(); }}>
+            ▼ Rozwiń
+          </button>
+          <span className={`status-pill status-pill--compact ${availabilityStatus.className}`}>
+            {available > 0 ? `${available}/${total}` : '0'}
+          </span>
         </div>
+      </article>
+    )
+  }
+  return (
+    <article className={`surface-card book-card ${compact ? 'book-card--expanded' : ''}`}>
+      <div className="book-card__header">
+        <Link to={`/books/${book.id}`} className="book-card__title">{book.title}</Link>
+      </div>
+
+      <div className="book-card__rating-row">
+        <RatingDisplay averageRating={book.averageRating || 0} ratingCount={book.ratingCount || 0} />
         <span className={`status-pill ${availabilityStatus.className}`}>
           {availabilityStatus.label}
         </span>
       </div>
 
-      <div style={{ marginTop: '0.75rem' }}>
-        <RatingDisplay averageRating={book.averageRating || 0} ratingCount={book.ratingCount || 0} />
+      <div className="book-card__meta-wrap">
+        <span>{book.author?.name ?? 'Autor nieznany'}</span>
+        {publicationYear && <span>Rok wydania {publicationYear}</span>}
+        {resourceType && <span>{resourceType}</span>}
+        {book.isbn && <span>ISBN {book.isbn}</span>}
+        {ageGroupLabel && <span>Wiek: {ageGroupLabel}</span>}
+        {publisher && <span>Wydawca: {publisher}</span>}
+        {signature && <span>Sygnatura: {signature}</span>}
+        {storageAvailable !== null && <span>Magazyn: {storageAvailable}</span>}
+        {openStackAvailable !== null && <span>Wolny dostęp: {openStackAvailable}</span>}
       </div>
 
       {book.description && (
         <p className="support-copy">{book.description}</p>
       )}
 
-      <div className="resource-item__actions">
+      <div className="book-card__actions-grid">
         {isLoggedIn ? (
           <>
             <button
@@ -169,15 +176,14 @@ export default function BookItem({ book, onBorrowed }) {
             >
               {loading ? 'Wysyłanie...' : 'Wypożycz egzemplarz'}
             </button>
-            {!isAvailable && (
-              <button
-                className="btn btn-outline"
-                disabled={reserveLoading || reserved}
-                onClick={reserve}
-              >
-                {reserveLoading ? 'Przetwarzanie...' : reserved ? 'Zarezerwowano' : 'Dołącz do kolejki'}
-              </button>
-            )}
+            <button
+              className="btn btn-outline"
+              disabled={!isAvailable ? (reserveLoading || reserved) : true}
+              onClick={reserve}
+              style={{ visibility: !isAvailable ? 'visible' : 'hidden' }}
+            >
+              {reserveLoading ? 'Przetwarzanie...' : reserved ? 'Zarezerwowano' : 'Dołącz do kolejki'}
+            </button>
             <button
               className="btn btn-ghost"
               disabled={favoriteLoading}
@@ -197,6 +203,12 @@ export default function BookItem({ book, onBorrowed }) {
 
       {error && <div className="error">{error}</div>}
       {success && <div className="success">{success}</div>}
+      
+      {compact && (
+        <button className="btn-collapse" onClick={onToggleExpand}>
+          ▲ Zwiń
+        </button>
+      )}
     </article>
   )
 }

@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 
 export default function UserManagement({ 
   users, 
@@ -14,6 +14,8 @@ export default function UserManagement({
   editingUser,
   updateUserData
 }) {
+  const [expandedUserId, setExpandedUserId] = useState(null)
+  
   return (
     <div className="surface-card" role="region" aria-labelledby="users-title">
       <div className="section-header">
@@ -51,33 +53,44 @@ export default function UserManagement({
       {!loading && users.length === 0 && <p>Brak użytkowników.</p>}
 
       {!loading && users.length > 0 && (
-        <div className="table-responsive">
-          <table className="table" role="table" aria-label="Lista użytkowników">
-            <thead>
-              <tr>
-                <th scope="col">Użytkownik</th>
-                <th scope="col">Email</th>
-                <th scope="col">Role</th>
-                <th scope="col">Status</th>
-                <th scope="col">Akcje</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map(user => (
-                <tr key={user.id}>
-                  <td>{user.name || 'Brak nazwy'}</td>
-                  <td>{user.email}</td>
-                  <td>{Array.isArray(user.roles) ? user.roles.join(', ') : '-'}</td>
-                  <td>
-                    <span 
-                      className={user.blocked ? 'badge badge-danger' : 'badge badge-success'}
-                      aria-label={user.blocked ? 'Użytkownik zablokowany' : 'Użytkownik aktywny'}
-                    >
-                      {user.blocked ? 'Zablokowany' : 'Aktywny'}
-                    </span>
-                  </td>
-                  <td>
-                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }} role="group" aria-label="Akcje dla użytkownika">
+        <div className="users-list-compact">
+          {users.map(user => {
+            const isExpanded = expandedUserId === user.id
+            return (
+              <div key={user.id} className="user-card-compact">
+                <div 
+                  className="user-card-header"
+                  onClick={() => setExpandedUserId(isExpanded ? null : user.id)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <h3>{user.name || 'Brak nazwy'}</h3>
+                  <span className="expand-icon">{isExpanded ? '▼' : '▶'}</span>
+                </div>
+                
+                {isExpanded && (
+                  <div className="user-card-details">
+                    <div className="user-info-field">
+                      <span className="label">Email</span>
+                      <span className="value">{user.email}</span>
+                    </div>
+                    
+                    <div className="user-info-row">
+                      <div className="user-info-field">
+                        <span className="label">Role</span>
+                        <span className="value">{Array.isArray(user.roles) ? user.roles.join(', ') : '-'}</span>
+                      </div>
+                      <div className="user-info-field">
+                        <span className="label">Status</span>
+                        <span 
+                          className={user.blocked ? 'badge badge-danger' : 'badge badge-success'}
+                          aria-label={user.blocked ? 'Użytkownik zablokowany' : 'Użytkownik aktywny'}
+                        >
+                          {user.blocked ? 'Zablokowany' : 'Aktywny'}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div className="user-card-actions">
                       <button 
                         className="btn btn-sm" 
                         onClick={() => setEditingUser(user)}
@@ -107,11 +120,11 @@ export default function UserManagement({
                         Usuń
                       </button>
                     </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  </div>
+                )}
+              </div>
+            )
+          })}
         </div>
       )}
 
@@ -145,90 +158,97 @@ function UserEditModal({ user, onClose, onSave }) {
       <div 
         className="modal-content" 
         onClick={e => e.stopPropagation()} 
-        style={{ maxWidth: '600px' }}
         role="dialog"
         aria-modal="true"
         aria-labelledby="edit-user-title"
       >
-        <h3 id="edit-user-title">Edycja użytkownika: {user.name}</h3>
+        <h3 id="edit-user-title">Edycja użytkownika</h3>
         <form onSubmit={handleSubmit}>
-          <div className="form-field">
-            <label htmlFor="edit-name">Imię i nazwisko</label>
-            <input 
-              id="edit-name" 
-              type="text" 
-              name="name" 
-              defaultValue={user.name} 
-              required 
-              aria-required="true"
-            />
-          </div>
-          <div className="form-field">
-            <label htmlFor="edit-email">Email</label>
-            <input 
-              id="edit-email" 
-              type="email" 
-              name="email" 
-              defaultValue={user.email} 
-              required 
-              aria-required="true"
-            />
-          </div>
-          <div className="form-field">
-            <label htmlFor="edit-card">Numer karty bibliotecznej</label>
-            <input 
-              id="edit-card" 
-              type="text" 
-              name="cardNumber" 
-              defaultValue={user.cardNumber || ''} 
-            />
-          </div>
-          <div className="form-field">
-            <label htmlFor="edit-status">Status konta</label>
-            <select 
-              id="edit-status" 
-              name="accountStatus" 
-              defaultValue={user.accountStatus || 'Aktywne'}
-            >
-              <option value="Aktywne">Aktywne</option>
-              <option value="Zawieszone">Zawieszone</option>
-              <option value="Wygasłe">Wygasłe</option>
-            </select>
-          </div>
-          <fieldset className="form-field">
-            <legend>Role użytkownika</legend>
-            <div className="checkbox-field">
-              <input
-                type="checkbox"
-                id="role_user"
-                name="roles"
-                value="ROLE_USER"
-                defaultChecked={user.roles?.includes('ROLE_USER')}
-              />
-              <label htmlFor="role_user">Użytkownik (ROLE_USER)</label>
+          <div className="user-info-compact">
+            <div className="user-info-row">
+              <div className="form-field">
+                <label htmlFor="edit-name">Użytkownik</label>
+                <input 
+                  id="edit-name" 
+                  type="text" 
+                  name="name" 
+                  defaultValue={user.name} 
+                  required 
+                  aria-required="true"
+                />
+              </div>
+              <div className="form-field">
+                <label htmlFor="edit-card">Karta</label>
+                <input 
+                  id="edit-card" 
+                  type="text" 
+                  name="cardNumber" 
+                  defaultValue={user.cardNumber || ''} 
+                />
+              </div>
             </div>
-            <div className="checkbox-field">
-              <input
-                type="checkbox"
-                id="role_librarian"
-                name="roles"
-                value="ROLE_LIBRARIAN"
-                defaultChecked={user.roles?.includes('ROLE_LIBRARIAN')}
+            <div className="form-field">
+              <label htmlFor="edit-email">Email</label>
+              <input 
+                id="edit-email" 
+                type="email" 
+                name="email" 
+                defaultValue={user.email} 
+                required 
+                aria-required="true"
               />
-              <label htmlFor="role_librarian">Bibliotekarz (ROLE_LIBRARIAN)</label>
             </div>
-            <div className="checkbox-field">
-              <input
-                type="checkbox"
-                id="role_admin"
-                name="roles"
-                value="ROLE_ADMIN"
-                defaultChecked={user.roles?.includes('ROLE_ADMIN')}
-              />
-              <label htmlFor="role_admin">Administrator (ROLE_ADMIN)</label>
+            <div className="user-info-row">
+              <div className="form-field">
+                <label htmlFor="edit-status">Status</label>
+                <select 
+                  id="edit-status" 
+                  name="accountStatus" 
+                  defaultValue={user.accountStatus || 'Aktywne'}
+                >
+                  <option value="Aktywne">Aktywne</option>
+                  <option value="Zawieszone">Zawieszone</option>
+                  <option value="Wygasłe">Wygasłe</option>
+                </select>
+              </div>
+              <fieldset className="form-field">
+                <legend>Role</legend>
+                <div className="roles-compact">
+                  <div className="checkbox-field">
+                    <input
+                      type="checkbox"
+                      id="role_user"
+                      name="roles"
+                      value="ROLE_USER"
+                      defaultChecked={user.roles?.includes('ROLE_USER')}
+                    />
+                    <label htmlFor="role_user">User</label>
+                  </div>
+                  <div className="checkbox-field">
+                    <input
+                      type="checkbox"
+                      id="role_librarian"
+                      name="roles"
+                      value="ROLE_LIBRARIAN"
+                      defaultChecked={user.roles?.includes('ROLE_LIBRARIAN')}
+                    />
+                    <label htmlFor="role_librarian">Librarian</label>
+                  </div>
+                  <div className="checkbox-field">
+                    <input
+                      type="checkbox"
+                      id="role_admin"
+                      name="roles"
+                      value="ROLE_ADMIN"
+                      defaultChecked={user.roles?.includes('ROLE_ADMIN')}
+                    />
+                    <label htmlFor="role_admin">Admin</label>
+                  </div>
+                </div>
+              </fieldset>
             </div>
-          </fieldset>
-          <div className="modal-actions">
+          </div>
+          <div className="modal-actions" style={{ marginTop: '1rem' }}>
             <button type="button" className="btn btn-secondary" onClick={onClose}>
               Anuluj
             </button>

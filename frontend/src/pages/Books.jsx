@@ -51,6 +51,8 @@ export default function Books() {
   const [totalPages, setTotalPages] = useState(1)
   const [totalItems, setTotalItems] = useState(0)
   const [limit, setLimit] = useState(DEFAULT_LIMIT)
+  const [expandedBookId, setExpandedBookId] = useState(null)
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
   const filtersRef = useRef(filters)
   const lastCacheKeyRef = useRef(null)
   const { getCachedResource, setCachedResource, invalidateResource } = useResourceCache()
@@ -60,6 +62,14 @@ export default function Books() {
   useEffect(() => {
     filtersRef.current = filters
   }, [filters])
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768)
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   async function load(searchTerm, providedFilters = filtersRef.current, options = {}) {
     const rawTerm = typeof searchTerm === 'string' ? searchTerm : query
@@ -532,7 +542,14 @@ export default function Books() {
         <>
           <div className="books-grid">
             {books.map(book => (
-              <BookItem key={book.id} book={book} onBorrowed={onBorrowed} />
+              <BookItem 
+                key={book.id} 
+                book={book} 
+                onBorrowed={onBorrowed}
+                compact={isMobile}
+                expanded={expandedBookId === book.id}
+                onToggleExpand={() => setExpandedBookId(expandedBookId === book.id ? null : book.id)}
+              />
             ))}
           </div>
           <Pagination currentPage={page} totalPages={totalPages} onPageChange={handlePageChange} />

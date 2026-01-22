@@ -75,6 +75,7 @@ export default function Announcements() {
   const [formError, setFormError] = useState(null)
   const [formSuccess, setFormSuccess] = useState(null)
   const [formLoading, setFormLoading] = useState(false)
+  const [showForm, setShowForm] = useState(false)
 
   const isAdmin = user?.roles?.includes('ROLE_ADMIN')
   const isLibrarian = user?.roles?.includes('ROLE_LIBRARIAN')
@@ -344,13 +345,13 @@ export default function Announcements() {
         title="Ogłoszenia"
         subtitle="Aktualne informacje, komunikaty i wydarzenia."
         actions={canManage ? (
-          <button className="btn btn-primary" onClick={() => document.getElementById('announcement-form')?.scrollIntoView({ behavior: 'smooth' })}>
-            <FaPlus /> Nowe ogłoszenie
+          <button className="btn btn-primary" onClick={() => setShowForm(!showForm)}>
+            <FaPlus /> {showForm ? 'Ukryj formularz' : 'Nowe ogłoszenie'}
           </button>
         ) : null}
       />
 
-      {canManage && (
+      {canManage && showForm && (
         <SectionCard title="Dodaj ogłoszenie lub wydarzenie" subtitle="Wydarzenia wymagają przyszłej daty i godziny.">
           <form id="announcement-form" onSubmit={handleCreate} className="form-grid">
             <div className="form-field">

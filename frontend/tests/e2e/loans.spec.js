@@ -25,7 +25,7 @@ const extendedLoan = {
 }
 
 function stubLoans(page) {
-  page.route(`${API_PREFIX}/loans`, route => {
+  page.route(`${API_PREFIX}/me/loans`, route => {
     route.fulfill({
       status: 200,
       contentType: 'application/json',

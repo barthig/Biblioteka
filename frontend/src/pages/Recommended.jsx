@@ -20,6 +20,8 @@ export default function Recommended() {
   const [actionError, setActionError] = useState(null)
   const [dismissedBooks, setDismissedBooks] = useState(new Set())
   const [lastDismissedId, setLastDismissedId] = useState(null)
+  const [expandedBookId, setExpandedBookId] = useState(null)
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
   const { getCachedResource, setCachedResource, invalidateResource } = useResourceCache()
   const { token, user } = useAuth()
   const cacheKey = `recommended:${user?.id ?? 'anon'}:/api/books/recommended`
@@ -62,6 +64,14 @@ export default function Recommended() {
       logger.error('Failed to undo dismiss:', err)
     }
   }
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768)
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   useEffect(() => {
     let active = true
@@ -186,7 +196,12 @@ export default function Recommended() {
                             &times;
                           </button>
                         )}
-                        <BookItem book={book} />
+                        <BookItem 
+                          book={book}
+                          compact={isMobile}
+                          expanded={expandedBookId === book.id}
+                          onToggleExpand={() => setExpandedBookId(expandedBookId === book.id ? null : book.id)}
+                        />
                       </div>
                     ))
                   }

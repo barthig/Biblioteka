@@ -10,7 +10,7 @@ test('loans and reservations pages', async ({ page }) => {
   const token = makeToken({ sub: 1, email: 'user@example.com', name: 'User', roles: ['ROLE_USER'], exp: Math.floor(Date.now() / 1000) + 3600 })
   await page.addInitScript((value) => localStorage.setItem('token', value), token)
 
-  await page.route('**/api/loans', async (route) => {
+  await page.route('**/api/me/loans', async (route) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',

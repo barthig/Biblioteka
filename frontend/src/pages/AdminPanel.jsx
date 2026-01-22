@@ -26,6 +26,7 @@ export default function AdminPanel() {
   const [success, setSuccess] = useState(null)
   const [libraryStats, setLibraryStats] = useState(null)
   const [libraryStatsLoading, setLibraryStatsLoading] = useState(false)
+  const [showStats, setShowStats] = useState(false)
 
   // User management
   const [users, setUsers] = useState([])
@@ -498,27 +499,42 @@ export default function AdminPanel() {
         subtitle="Zarządzaj konfiguracją systemu, uprawnieniami i użytkownikami."
       />
 
-      <StatGrid>
-        <StatCard title="Użytkownicy" value={users.length} subtitle="W systemie" />
-        <StatCard title="Role" value={roles.length} subtitle="Uprawnienia" />
-        <StatCard title="Audyt" value={auditLogs.length} subtitle="Ostatnie wpisy" />
-      </StatGrid>
-
       <section className="surface-card">
         <div className="section-header">
-          <h2>Statystyki biblioteki</h2>
-          {!libraryStatsLoading && <button className="btn btn-secondary" onClick={loadLibraryStats}>Odśwież</button>}
+          <h2>Statystyki</h2>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button 
+              className="btn btn-secondary" 
+              onClick={() => setShowStats(!showStats)}
+            >
+              {showStats ? 'Ukryj' : 'Pokaż'}
+            </button>
+            {showStats && !libraryStatsLoading && (
+              <button className="btn btn-secondary" onClick={loadLibraryStats}>Odśwież</button>
+            )}
+          </div>
         </div>
-        {libraryStatsLoading && <p>Ładowanie...</p>}
-        {!libraryStatsLoading && (
-          <StatGrid>
-            <StatCard title="Książki" value={libraryStats?.booksCount ?? '—'} subtitle="W katalogu" />
-            <StatCard title="Czytelnicy" value={libraryStats?.usersCount ?? '—'} subtitle="Konta aktywne" />
-            <StatCard title="Wypożyczenia" value={libraryStats?.loansCount ?? '—'} subtitle="Aktywne" />
-            <StatCard title="Rezerwacje" value={libraryStats?.reservationsQueue ?? '—'} subtitle="W kolejce" />
-            <StatCard title="Transakcje dziś" value={libraryStats?.transactionsToday ?? '—'} subtitle="Nowe wypożyczenia" />
-            <StatCard title="Aktywni dziś" value={libraryStats?.activeUsers ?? '—'} subtitle="Szacunek" />
-          </StatGrid>
+        {showStats && (
+          <>
+            {libraryStatsLoading && <p>Ładowanie...</p>}
+            {!libraryStatsLoading && (
+              <>
+                <StatGrid>
+                  <StatCard title="Książki" value={libraryStats?.booksCount ?? '—'} subtitle="W katalogu" />
+                  <StatCard title="Czytelnicy" value={libraryStats?.usersCount ?? '—'} subtitle="Konta aktywne" />
+                  <StatCard title="Wypożyczenia" value={libraryStats?.loansCount ?? '—'} subtitle="Aktywne" />
+                  <StatCard title="Rezerwacje" value={libraryStats?.reservationsQueue ?? '—'} subtitle="W kolejce" />
+                  <StatCard title="Transakcje dziś" value={libraryStats?.transactionsToday ?? '—'} subtitle="Nowe wypożyczenia" />
+                  <StatCard title="Aktywni dziś" value={libraryStats?.activeUsers ?? '—'} subtitle="Szacunek" />
+                </StatGrid>
+                <StatGrid style={{ marginTop: '1rem' }}>
+                  <StatCard title="Użytkownicy" value={users.length} subtitle="W systemie" />
+                  <StatCard title="Role" value={roles.length} subtitle="Uprawnienia" />
+                  <StatCard title="Audyt" value={auditLogs.length} subtitle="Ostatnie wpisy" />
+                </StatGrid>
+              </>
+            )}
+          </>
         )}
       </section>
 

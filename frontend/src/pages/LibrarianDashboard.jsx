@@ -108,7 +108,7 @@ export default function LibrarianDashboard() {
         />
       </StatGrid>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginTop: '24px' }}>
+      <div className="grid grid-2" style={{ marginTop: '24px' }}>
         <SectionCard title="Popularne książki">
           {stats.popularBooks && stats.popularBooks.length > 0 ? (
             <div className="table-responsive">

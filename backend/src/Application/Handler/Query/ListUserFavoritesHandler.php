@@ -20,7 +20,7 @@ class ListUserFavoritesHandler
         $favorites = $this->favoriteRepository->createQueryBuilder('f')
             ->leftJoin('f.user', 'u')->addSelect('u')
             ->leftJoin('f.book', 'b')->addSelect('b')
-            ->where('f.user = :userId')
+            ->where('u.id = :userId')
             ->setParameter('userId', $query->userId)
             ->orderBy('f.createdAt', 'DESC')
             ->getQuery()

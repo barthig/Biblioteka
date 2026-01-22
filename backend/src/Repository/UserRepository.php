@@ -41,12 +41,18 @@ class UserRepository extends ServiceEntityRepository
      */
     public function searchUsers(string $query, int $limit = 20): array
     {
+        $normalized = preg_replace('/\s+/', ' ', trim($query));
+        if ($normalized === '' || strlen($normalized) < 2) {
+            return [];
+        }
+
+        $needle = '%' . mb_strtolower($normalized, 'UTF-8') . '%';
         $qb = $this->createQueryBuilder('u')
-            ->where('u.name LIKE :query')
-            ->orWhere('u.email LIKE :query')
-            ->orWhere('u.pesel LIKE :query')
-            ->orWhere('u.cardNumber LIKE :query')
-            ->setParameter('query', '%' . $query . '%')
+            ->where('LOWER(u.name) LIKE :query')
+            ->orWhere('LOWER(u.email) LIKE :query')
+            ->orWhere('LOWER(u.pesel) LIKE :query')
+            ->orWhere('LOWER(u.cardNumber) LIKE :query')
+            ->setParameter('query', $needle)
             ->setMaxResults($limit)
             ->orderBy('u.name', 'ASC');
 
