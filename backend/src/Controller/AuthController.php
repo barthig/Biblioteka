@@ -242,7 +242,7 @@ class AuthController extends AbstractController
             $newRefreshToken = $this->refreshTokenService->createRefreshToken($user, $request);
             $newRefreshTokenString = $newRefreshToken->getToken();
         } catch (\Throwable $e) {
-            return $this->json(['message' => 'Failed to rotate refresh token'], 500);
+            return $this->jsonError(ApiError::internalError('Failed to rotate refresh token'));
         }
 
         $token = JwtService::createToken([
@@ -313,13 +313,13 @@ class AuthController extends AbstractController
     {
         $payload = $request->attributes->get('jwt_payload');
         if (!$payload) {
-            return $this->json(['message' => 'Unauthorized'], 401);
+            return $this->jsonError(ApiError::unauthorized());
         }
 
         $envelope = $queryBus->dispatch(new GetUserByIdQuery($payload['sub']));
         $user = $envelope->last(HandledStamp::class)?->getResult();
         if (!$user) {
-            return $this->json(['message' => 'User not found'], 404);
+            return $this->jsonError(ApiError::notFound('User'));
         }
 
         $count = $this->refreshTokenService->revokeAllUserTokens($user);

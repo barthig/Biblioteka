@@ -3,10 +3,8 @@ namespace App\Controller;
 
 use App\Controller\Traits\ExceptionHandlingTrait;
 use App\Dto\ApiError;
-use App\Repository\FineRepository;
-use App\Repository\UserRepository;
+use App\Service\FeeService;
 use App\Service\SecurityService;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -19,9 +17,7 @@ class UserFeeController extends AbstractController
 
     public function __construct(
         private readonly SecurityService $security,
-        private readonly UserRepository $users,
-        private readonly FineRepository $fines,
-        private readonly EntityManagerInterface $em
+        private readonly FeeService $feeService
     ) {
     }
 
@@ -55,12 +51,11 @@ class UserFeeController extends AbstractController
             return $this->jsonError(ApiError::unauthorized());
         }
 
-        $user = $this->users->find($userId);
-        if (!$user) {
+        try {
+            $fees = $this->feeService->listOutstandingFees($userId);
+        } catch (\RuntimeException $e) {
             return $this->jsonError(ApiError::notFound('User'));
         }
-
-        $fees = $this->fines->findOutstandingByUser($user);
 
         return $this->json([
             'data' => $fees,
@@ -95,22 +90,20 @@ class UserFeeController extends AbstractController
             return $this->jsonError(ApiError::unauthorized());
         }
 
-        $user = $this->users->find($userId);
-        if (!$user) {
-            return $this->jsonError(ApiError::notFound('User'));
+        try {
+            $fee = $this->feeService->markFeePaid($userId, (int) $feeId);
+        } catch (\InvalidArgumentException $e) {
+            return $this->jsonError(ApiError::badRequest($e->getMessage()));
+        } catch (\RuntimeException $e) {
+            $message = $e->getMessage();
+            if ($message === 'User not found') {
+                return $this->jsonError(ApiError::notFound('User'));
+            }
+            if ($message === 'Fee not found') {
+                return $this->jsonError(ApiError::notFound('Fee'));
+            }
+            return $this->jsonError(ApiError::internalError('Internal error'));
         }
-
-        $fee = $this->fines->findOneByIdAndUser((int) $feeId, $user);
-        if (!$fee) {
-            return $this->jsonError(ApiError::notFound('Fee'));
-        }
-
-        if ($fee->isPaid()) {
-            return $this->jsonError(ApiError::badRequest('Fee already paid'));
-        }
-
-        $fee->markAsPaid();
-        $this->em->flush();
 
         return $this->json($fee, 200, [], [
             'groups' => ['fine:read', 'loan:read'],

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
 import { apiFetch } from '../api';
 import './UserDetails.css';
 import { logger } from '../utils/logger';
@@ -8,7 +7,6 @@ import { logger } from '../utils/logger';
 const UserDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { token } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [userDetails, setUserDetails] = useState(null);

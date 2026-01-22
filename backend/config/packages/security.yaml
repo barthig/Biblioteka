@@ -22,3 +22,5 @@ security:
       stateless: true
       provider: app_user_provider
       lazy: true
+
+  # Authorization is enforced via ApiAuthSubscriber + per-controller checks.

@@ -26,6 +26,7 @@ const initialFilters = {
 }
 
 const DEFAULT_LIMIT = 20
+const API_BASE = (import.meta.env?.VITE_API_URL || '').replace(/\/$/, '')
 
 export default function Books() {
   const auth = useAuth() || {}
@@ -292,7 +293,8 @@ export default function Books() {
   async function handleExportCSV() {
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch('http://localhost:8000/api/books/export', {
+      const exportUrl = API_BASE ? `${API_BASE}/api/books/export` : '/api/books/export'
+      const response = await fetch(exportUrl, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

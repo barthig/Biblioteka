@@ -193,17 +193,11 @@ Edytuj `backend/.env` i ustaw:
 ```env
 DATABASE_URL="postgresql://app:app@localhost:5432/biblioteka"
 MESSENGER_TRANSPORT_DSN=amqp://guest:guest@localhost:5672/%2f/messages
-JWT_SECRET_KEY=%kernel.project_dir%/config/jwt/private.pem
-JWT_PUBLIC_KEY=%kernel.project_dir%/config/jwt/public.pem
-JWT_PASSPHRASE=your-secret-passphrase
+JWT_SECRET=change_me_jwt
+JWT_SECRETS=change_me_jwt1,change_me_jwt2,change_me_jwt3
 ```
 
-3. **Wygeneruj klucze JWT:**
-```powershell
-php bin/console lexik:jwt:generate-keypair
-```
-
-4. **Utwórz bazę danych:**
+3. **Utwórz bazę danych:**
 ```powershell
 # Połącz się z PostgreSQL
 psql -U postgres
@@ -291,7 +285,7 @@ Content-Type: application/json
 ```json
 {
   "token": "eyJ0eXAiOiJKV1QiLCJhbGc...",
-  "refresh_token": "def502004a1b2c3d..."
+  "refreshToken": "def502004a1b2c3d..."
 }
 ```
 
@@ -301,7 +295,7 @@ POST /api/auth/refresh
 Content-Type: application/json
 
 {
-  "refresh_token": "def502004a1b2c3d..."
+  "refreshToken": "def502004a1b2c3d..."
 }
 ```
 
@@ -394,10 +388,14 @@ API zwraca standardowe kody HTTP:
 **Przykład błędu walidacji:**
 ```json
 {
-  "error": "Validation failed",
-  "details": {
-    "email": ["Email jest wymagany"],
-    "password": ["Hasło musi mieć min. 8 znaków"]
+  "error": {
+    "code": "VALIDATION_FAILED",
+    "message": "Validation failed",
+    "statusCode": 400,
+    "details": {
+      "email": ["Email jest wymagany"],
+      "password": ["Hasło musi mieć min. 8 znaków"]
+    }
   }
 }
 ```
@@ -625,16 +623,12 @@ docker compose up -d
 
 ### Błędy JWT
 
-**Błąd:** "Unable to load key" lub "Invalid JWT"
+**Błąd:** "JWT secret is not configured" lub "Invalid JWT"
 
 ```powershell
-# Wygeneruj nowe klucze JWT
+# Upewnij się, że ustawiono JWT_SECRET lub JWT_SECRETS
 cd backend
-php bin/console lexik:jwt:generate-keypair --overwrite
-
-# Sprawdź uprawnienia do plików
-# Windows: klucze powinny być readable
-# Linux/Mac: chmod 644 config/jwt/public.pem, chmod 600 config/jwt/private.pem
+Get-Content .env | Select-String "JWT_"
 ```
 
 ### Frontend nie łączy się z backendem

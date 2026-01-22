@@ -14,21 +14,21 @@
 .user-details-header h1 {
   margin: 0;
   font-size: 28px;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .btn-back {
   padding: 10px 20px;
-  background-color: #6c757d;
-  color: white;
-  border: none;
-  border-radius: 4px;
+  background-color: var(--card-bg-alt);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
   cursor: pointer;
   font-size: 14px;
 }
 
 .btn-back:hover {
-  background-color: #5a6268;
+  background-color: var(--card-bg);
 }
 
 .user-info-card,
@@ -36,9 +36,9 @@
 .fines-card,
 .history-card,
 .paid-fines-card {
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background: var(--card-bg);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-sm);
   padding: 24px;
   margin-bottom: 24px;
 }
@@ -49,13 +49,13 @@
   align-items: center;
   margin-bottom: 20px;
   padding-bottom: 15px;
-  border-bottom: 2px solid #e9ecef;
+  border-bottom: 2px solid var(--border-color);
 }
 
 .card-header h2 {
   margin: 0;
   font-size: 20px;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .btn-edit,
@@ -70,30 +70,30 @@
 }
 
 .btn-edit {
-  background-color: #007bff;
-  color: white;
+  background-color: var(--primary-color);
+  color: var(--text-primary);
 }
 
 .btn-edit:hover {
-  background-color: #0056b3;
+  background-color: var(--primary-dark);
 }
 
 .btn-save {
-  background-color: #28a745;
-  color: white;
+  background-color: var(--success-color);
+  color: var(--text-primary);
 }
 
 .btn-save:hover {
-  background-color: #218838;
+  filter: brightness(0.95);
 }
 
 .btn-cancel {
-  background-color: #dc3545;
-  color: white;
+  background-color: var(--error-color);
+  color: var(--text-primary);
 }
 
 .btn-cancel:hover {
-  background-color: #c82333;
+  filter: brightness(0.95);
 }
 
 .edit-actions {
@@ -113,26 +113,28 @@
 
 .info-item label {
   font-weight: 600;
-  color: #555;
+  color: var(--text-secondary);
   margin-bottom: 5px;
   font-size: 14px;
 }
 
 .info-item span {
-  color: #333;
+  color: var(--text-primary);
   font-size: 16px;
 }
 
 .info-item input {
   padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  border: 1px solid var(--input-border);
+  border-radius: var(--border-radius);
   font-size: 14px;
+  background: var(--input-bg);
+  color: var(--input-text);
 }
 
 .info-item input:focus {
   outline: none;
-  border-color: #007bff;
+  border-color: var(--primary-color);
 }
 
 .roles-checkboxes {
@@ -156,16 +158,16 @@
 }
 
 .role-checkbox span {
-  color: #333;
+  color: var(--text-primary);
 }
 
 .status-active {
-  color: #28a745;
+  color: var(--success-color);
   font-weight: 600;
 }
 
 .status-blocked {
-  color: #dc3545;
+  color: var(--error-color);
   font-weight: 600;
 }
 
@@ -177,25 +179,25 @@
 }
 
 .stat-card {
-  background: #fff;
-  border: 1px solid #e9ecef;
-  border-radius: 8px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
   padding: 24px;
   text-align: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-sm);
 }
 
 .stat-card h3 {
   margin: 0 0 12px 0;
   font-size: 14px;
   font-weight: 500;
-  color: #6c757d;
+  color: var(--text-muted);
 }
 
 .stat-card .stat-value {
   font-size: 36px;
   font-weight: 700;
-  color: #667eea;
+  color: var(--primary-color);
 }
 
 .data-table {
@@ -205,22 +207,22 @@
 }
 
 .data-table th {
-  background-color: #f8f9fa;
+  background-color: var(--card-bg-alt);
   padding: 12px;
   text-align: left;
   font-weight: 600;
-  color: #555;
-  border-bottom: 2px solid #dee2e6;
+  color: var(--text-secondary);
+  border-bottom: 2px solid var(--border-color);
 }
 
 .data-table td {
   padding: 12px;
-  border-bottom: 1px solid #e9ecef;
-  color: #333;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-primary);
 }
 
 .data-table tr:hover {
-  background-color: #f8f9fa;
+  background-color: var(--card-bg-alt);
 }
 
 .data-table tr.overdue {
@@ -232,23 +234,23 @@
 }
 
 .status-overdue {
-  color: #dc3545;
+  color: var(--error-color);
   font-weight: 600;
 }
 
 .status-returned {
-  color: #28a745;
+  color: var(--success-color);
   font-weight: 600;
 }
 
 .status-late {
-  color: #fd7e14;
+  color: var(--warning-color);
   font-weight: 600;
 }
 
 .no-data {
   text-align: center;
-  color: #6c757d;
+  color: var(--text-muted);
   font-style: italic;
   padding: 20px;
 }
@@ -257,7 +259,7 @@
   text-align: center;
   padding: 60px 20px;
   font-size: 18px;
-  color: #6c757d;
+  color: var(--text-muted);
 }
 
 .user-details-error {
@@ -265,33 +267,33 @@
   margin: 60px auto;
   padding: 40px;
   text-align: center;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background: var(--card-bg);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-sm);
 }
 
 .user-details-error h2 {
-  color: #dc3545;
+  color: var(--error-color);
   margin-bottom: 15px;
 }
 
 .user-details-error p {
-  color: #6c757d;
+  color: var(--text-muted);
   margin-bottom: 25px;
 }
 
 .user-details-error button {
   padding: 10px 24px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
+  background-color: var(--primary-color);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
   cursor: pointer;
   font-size: 14px;
 }
 
 .user-details-error button:hover {
-  background-color: #0056b3;
+  background-color: var(--primary-dark);
 }
 
 @media (max-width: 768px) {
