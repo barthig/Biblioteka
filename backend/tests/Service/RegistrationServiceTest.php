@@ -36,8 +36,11 @@ class RegistrationServiceTest extends TestCase
         $users->method('findOneBy')->willReturn(null);
         $embedding->expects($this->once())->method('getVector')->willReturn([0.1, 0.2]);
 
-        $entityManager->expects($this->exactly(2))->method('persist')->with($this->isInstanceOf(User::class));
-        $entityManager->expects($this->once())->method('persist')->with($this->isInstanceOf(RegistrationToken::class));
+        $entityManager->expects($this->exactly(2))->method('persist')->with($this->callback(
+            function ($entity) {
+                return $entity instanceof User || $entity instanceof RegistrationToken;
+            }
+        ));
         $entityManager->expects($this->once())->method('flush');
 
         $service = new RegistrationService($entityManager, $users, $tokens, $embedding);
