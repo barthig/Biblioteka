@@ -785,7 +785,6 @@ class BookRepository extends ServiceEntityRepository
         return $this->createQueryBuilder('b')
             ->addSelect('(b.totalCopies - b.copies) AS HIDDEN borrowedCount')
             ->orderBy('borrowedCount', 'DESC')
-            ->addOrderBy('b.averageRating', 'DESC')
             ->setMaxResults(max(1, $limit))
             ->getQuery()
             ->getResult();

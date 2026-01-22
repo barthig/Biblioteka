@@ -7,10 +7,10 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint src --max-warnings=0",
-    "test": "vitest",
-    "test:ui": "vitest --ui",
-    "test:run": "vitest run",
-    "test:coverage": "vitest run --coverage",
+    "test": "node scripts/vitest-run.mjs",
+    "test:ui": "node scripts/vitest-run.mjs --ui",
+    "test:run": "node scripts/vitest-run.mjs run",
+    "test:coverage": "node scripts/vitest-run.mjs run --coverage",
     "test:e2e": "playwright test"
   },
   "dependencies": {

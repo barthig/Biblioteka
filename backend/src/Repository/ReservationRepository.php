@@ -152,7 +152,7 @@ class ReservationRepository extends ServiceEntityRepository
         return (int) $this->createQueryBuilder('r')
             ->select('COUNT(r.id)')
             ->andWhere('r.status = :status')
-            ->setParameter('status', Reservation::STATUS_QUEUED)
+            ->setParameter('status', Reservation::STATUS_ACTIVE)
             ->getQuery()
             ->getSingleScalarResult();
     }

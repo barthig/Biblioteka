@@ -9,6 +9,7 @@ export default function SearchBar({ placeholder = 'Szukaj książek...', onResul
   const [suggestions, setSuggestions] = useState([])
   const [loading, setLoading] = useState(false)
   const [showSuggestions, setShowSuggestions] = useState(false)
+  const [resultsCount, setResultsCount] = useState(null)
   const navigate = useNavigate()
   const wrapperRef = useRef(null)
   const timeoutRef = useRef(null)
@@ -34,6 +35,7 @@ export default function SearchBar({ placeholder = 'Szukaj książek...', onResul
     if (trimmedQuery.length < 2) {
       setSuggestions([])
       setShowSuggestions(false)
+      setResultsCount(null)
       if (onResults) {
         onResults([])
       }
@@ -57,11 +59,13 @@ export default function SearchBar({ placeholder = 'Szukaj książek...', onResul
 
         if (onResults) {
           const total = typeof results?.total === 'number' ? results.total : items.length
+          setResultsCount(total)
           onResults(items, total)
         }
       } catch (error) {
         logger.error('Search error:', error)
         setSuggestions([])
+        setResultsCount(null)
         if (onResults) {
           onResults([])
         }
@@ -98,6 +102,10 @@ export default function SearchBar({ placeholder = 'Szukaj książek...', onResul
     setQuery('')
     setSuggestions([])
     setShowSuggestions(false)
+    setResultsCount(null)
+    if (onResults) {
+      onResults([])
+    }
   }
 
   function handleSuggestionClick(book) {
@@ -148,6 +156,10 @@ export default function SearchBar({ placeholder = 'Szukaj książek...', onResul
         <div className="search-suggestions">
           <div className="search-suggestion-item">Wyszukiwanie...</div>
         </div>
+      )}
+
+      {typeof resultsCount === 'number' && query.trim().length >= 2 && (
+        <div className="search-results-count">Wyniki: {resultsCount}</div>
       )}
     </div>
   )

@@ -145,7 +145,7 @@ describe('SearchBar', () => {
     })
   })
 
-  it.skip('should display search results count', async () => {
+  it('should display search results count', async () => {
     const mockResults = {
       items: [
         { id: 1, title: 'Book 1' },
@@ -161,11 +161,11 @@ describe('SearchBar', () => {
     await userEvent.type(input, 'test')
 
     await waitFor(() => {
-      expect(screen.getByText(/2/)).toBeInTheDocument()
+      expect(screen.getByText(/Wyniki:\s*2/)).toBeInTheDocument()
     })
   })
 
-  it.skip('should clear search results', async () => {
+  it('should clear search results', async () => {
     renderWithRouter(<SearchBar onResults={mockOnResults} />)
     
     const input = screen.getByPlaceholderText(/Szukaj/i)
