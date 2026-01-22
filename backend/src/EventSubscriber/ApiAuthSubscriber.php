@@ -2,16 +2,22 @@
 namespace App\EventSubscriber;
 
 use App\Repository\UserRepository;
+use App\Security\ApiSecretUser;
 use App\Service\JwtService;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
+use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
 
 class ApiAuthSubscriber implements EventSubscriberInterface
 {
-    public function __construct(private UserRepository $users)
+    public function __construct(
+        private UserRepository $users,
+        private TokenStorageInterface $tokenStorage
+    )
     {
     }
 
@@ -75,15 +81,27 @@ class ApiAuthSubscriber implements EventSubscriberInterface
                 return;
             }
 
+            $this->attachSecurityToken($user);
             return;
         }
 
         if ($apiSecretStatus === true) {
+            $this->attachSecurityToken(new ApiSecretUser());
             return;
         }
 
         // JWT or API secret required
         $event->setResponse(new JsonResponse(['message' => 'Unauthorized'], 401));
+    }
+
+    private function attachSecurityToken(\Symfony\Component\Security\Core\User\UserInterface $user): void
+    {
+        if ($this->tokenStorage->getToken() !== null) {
+            return;
+        }
+
+        $token = new UsernamePasswordToken($user, 'main', $user->getRoles());
+        $this->tokenStorage->setToken($token);
     }
 
     private function attachJwtPayload(Request $request): ?bool

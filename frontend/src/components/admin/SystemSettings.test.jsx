@@ -36,8 +36,18 @@ describe('SystemSettings', () => {
   })
 
   it('submits integration form', async () => {
-    render(<SystemSettings {...baseProps} />)
+    const props = {
+      ...baseProps,
+      integrationForm: {
+        name: 'Test',
+        provider: 'http',
+        endpoint: 'https://example.test',
+        apiKey: '',
+        enabled: true
+      }
+    }
+    render(<SystemSettings {...props} />)
     await userEvent.click(screen.getByRole('button', { name: /Zapisz/i }))
-    expect(baseProps.createIntegration).toHaveBeenCalled()
+    expect(props.createIntegration).toHaveBeenCalled()
   })
 })

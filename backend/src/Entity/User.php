@@ -2,13 +2,15 @@
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Annotation\Ignore;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'app_user')]
 #[ORM\HasLifecycleCallbacks]
-class User
+class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     public const GROUP_STANDARD = 'standard';
     public const GROUP_STUDENT = 'student';
@@ -178,6 +180,7 @@ class User
     public function getId(): ?int { return $this->id; }
     public function getEmail(): string { return $this->email; }
     public function setEmail(string $e): self { $this->email = $e; return $this; }
+    public function getUserIdentifier(): string { return $this->email; }
     public function getName(): string { return $this->name; }
     public function setName(string $n): self { $this->name = $n; return $this; }
     public function getRoles(): array { return $this->roles; }
@@ -185,6 +188,7 @@ class User
 
     public function getPassword(): string { return $this->password; }
     public function setPassword(string $hashed): self { $this->password = $hashed; return $this; }
+    public function eraseCredentials(): void { }
 
     public function getPhoneNumber(): ?string { return $this->phoneNumber; }
     public function setPhoneNumber(?string $phone): self { $this->phoneNumber = $phone; return $this; }

@@ -108,6 +108,31 @@ class LoanControllerTest extends ApiTestCase
         $this->assertResponseStatusCodeSame(403);
     }
 
+    public function testExtendLoanRequiresAuthentication(): void
+    {
+        $user = $this->createUser('borrower@example.com');
+        $book = $this->createBook();
+        $loan = $this->createLoan($user, $book);
+
+        $client = $this->createClientWithoutSecret();
+        $this->sendRequest($client, 'PUT', '/api/loans/' . $loan->getId() . '/extend');
+
+        $this->assertResponseStatusCodeSame(401);
+    }
+
+    public function testExtendLoanForbiddenForAnotherUser(): void
+    {
+        $owner = $this->createUser('owner@example.com');
+        $other = $this->createUser('other@example.com');
+        $book = $this->createBook();
+        $loan = $this->createLoan($owner, $book);
+
+        $client = $this->createAuthenticatedClient($other);
+        $this->sendRequest($client, 'PUT', '/api/loans/' . $loan->getId() . '/extend');
+
+        $this->assertResponseStatusCodeSame(403);
+    }
+
     public function testLibrarianCanListAllLoans(): void
     {
         $librarian = $this->createUser('librarian@example.com', ['ROLE_LIBRARIAN']);

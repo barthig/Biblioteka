@@ -30,7 +30,20 @@ class UserFeeController extends AbstractController
         summary: 'List current user fees',
         tags: ['Fees'],
         responses: [
-            new OA\Response(response: 200, description: 'OK', content: new OA\JsonContent(type: 'array')),
+            new OA\Response(
+                response: 200,
+                description: 'OK',
+                content: new OA\JsonContent(
+                    type: 'object',
+                    properties: [
+                        new OA\Property(
+                            property: 'data',
+                            type: 'array',
+                            items: new OA\Items(ref: '#/components/schemas/Fine')
+                        )
+                    ]
+                )
+            ),
             new OA\Response(response: 401, description: 'Unauthorized', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
             new OA\Response(response: 404, description: 'User not found', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
         ]

@@ -30,9 +30,13 @@ describe('RolesAndAudit', () => {
   })
 
   it('submits create role form', async () => {
-    render(<RolesAndAudit {...baseProps} />)
+    const props = {
+      ...baseProps,
+      roleForm: { name: 'Reporter', roleKey: 'ROLE_REPORTER', modules: 'reports', description: '' }
+    }
+    render(<RolesAndAudit {...props} />)
     await userEvent.click(screen.getByRole('button', { name: /Dodaj ro/i }))
-    expect(baseProps.createRole).toHaveBeenCalled()
+    expect(props.createRole).toHaveBeenCalled()
   })
 
   it('triggers update role for list item', async () => {

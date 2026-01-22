@@ -71,7 +71,7 @@ describe('AdminPanel page', () => {
 
     render(<AdminPanel />)
 
-    await userEvent.click(screen.getByRole('button', { name: /System i integracje/i }))
+    await userEvent.click(screen.getByRole('tab', { name: /System i integracje/i }))
     expect(await screen.findByText('site_name')).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: /Edytuj/i }))
     expect(apiFetch).toHaveBeenCalledWith('/api/admin/system/settings/site_name', expect.objectContaining({ method: 'PUT' }))
@@ -97,7 +97,7 @@ describe('AdminPanel page', () => {
     })
 
     render(<AdminPanel />)
-    await userEvent.click(screen.getByRole('button', { name: /Audyt i role/i }))
+    await userEvent.click(screen.getByRole('tab', { name: /Audyt i role/i }))
 
     const roleForm = screen.getByRole('button', { name: /Dodaj rol/i }).closest('form')
     const roleInputs = roleForm.querySelectorAll('input')
@@ -133,7 +133,7 @@ describe('AdminPanel page', () => {
     })
 
     render(<AdminPanel />)
-    await userEvent.click(screen.getByRole('button', { name: /Audyt i role/i }))
+    await userEvent.click(screen.getByRole('tab', { name: /Audyt i role/i }))
     const assignForm = screen.getByRole('button', { name: /Przypisz rol/i }).closest('form')
     const selects = within(assignForm).getAllByRole('combobox')
     await userEvent.selectOptions(selects[1], '5')

@@ -65,6 +65,7 @@ export default function BookDetails() {
   const [reviewActionError, setReviewActionError] = useState(null)
   const [reviewActionSuccess, setReviewActionSuccess] = useState(null)
   const [ratingData, setRatingData] = useState({ average: 0, count: 0, userRating: null })
+  const [ratingsError, setRatingsError] = useState(null)
   const { getCachedResource, setCachedResource, invalidateResource } = useResourceCache()
   const REVIEWS_CACHE_TTL = 60000
   const RESERVATIONS_CACHE_TTL = 45000
@@ -145,6 +146,7 @@ export default function BookDetails() {
     if (!id) return
     
     async function loadRatings() {
+      setRatingsError(null)
       try {
         const data = await apiFetch(`/api/books/${id}/ratings`)
         setRatingData({
@@ -153,6 +155,7 @@ export default function BookDetails() {
           userRating: data.userRating || null
         })
       } catch (err) {
+        setRatingsError(err.message || 'Nie udaĹ‚o siÄ™ pobraÄ‡ ocen')
         logger.error('Failed to load ratings:', err)
       }
     }
@@ -540,6 +543,7 @@ export default function BookDetails() {
       </SectionCard>
 
       <SectionCard title="Oceny i opinie">
+        {ratingsError && <p className="error">{ratingsError}</p>}
         {reviewsError && <p className="error">{reviewsError}</p>}
         <div className="review-summary">
           <div>

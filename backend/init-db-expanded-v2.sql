@@ -1442,7 +1442,141 @@ INSERT INTO acquisition_expense (id, amount, currency, description, type, posted
 INSERT INTO weeding_record (id, book_id, book_copy_id, processed_by_id, reason, action, condition_state, notes, removed_at) VALUES
 (1, 1, 1, 1, 'Outdated', 'DISCARD', 'Dobry', NULL, NOW() - INTERVAL '10 days'),
 (2, 1, 2, 2, 'Duplicate', 'DONATE', 'Dobry', NULL, NOW() - INTERVAL '20 days'),
-(3, 2, 3, 3, 'Damaged', 'DISCARD', 'Zly', NULL, NOW() - INTERVAL '5 days');
+    (3, 2, 3, 3, 'Damaged', 'DISCARD', 'Zly', NULL, NOW() - INTERVAL '5 days');
+
+-- Supplemental seed data to reach 30 records per table
+INSERT INTO age_range (code, label, min_age, max_age, description)
+SELECT
+  format('range_%02s', gs),
+  format('Range %s', gs),
+  gs,
+  gs + 1,
+  'Synthetic range'
+FROM generate_series(5, 30) gs;
+
+INSERT INTO system_setting (id, setting_key, setting_value, value_type, description, created_at, updated_at)
+SELECT
+  gs,
+  format('setting_%02s', gs),
+  format('value_%02s', gs),
+  'string',
+  'Seeded setting',
+  NOW() - (gs || ' days')::interval,
+  NOW()
+FROM generate_series(4, 30) gs;
+
+INSERT INTO staff_role (id, name, role_key, modules, description, created_at, updated_at)
+SELECT
+  gs,
+  format('Role %02s', gs),
+  format('ROLE_CUSTOM_%02s', gs),
+  format('["module_%02s"]', gs)::json,
+  'Seeded role',
+  NOW() - (gs || ' days')::interval,
+  NOW()
+FROM generate_series(3, 30) gs;
+
+INSERT INTO supplier (id, name, contact_email, contact_phone, address_line, city, country, tax_identifier, notes, active, created_at, updated_at)
+SELECT
+  gs,
+  format('Supplier %02s', gs),
+  format('supplier%02s@example.com', gs),
+  format('+48-100-100-%02s', gs),
+  format('Street %02s', gs),
+  'Poznan',
+  'PL',
+  format('TAX-%02s', gs),
+  'Seeded supplier',
+  true,
+  NOW() - (gs || ' days')::interval,
+  NOW()
+FROM generate_series(4, 30) gs;
+
+INSERT INTO acquisition_budget (id, name, fiscal_year, allocated_amount, spent_amount, currency, created_at, updated_at)
+SELECT
+  gs,
+  format('Budget 2026 - %02s', gs),
+  '2026',
+  100000.00 + (gs * 1000),
+  5000.00 + (gs * 100),
+  'PLN',
+  NOW() - (gs || ' days')::interval,
+  NOW()
+FROM generate_series(4, 30) gs;
+
+INSERT INTO acquisition_order (
+  id, reference_number, title, description, items, total_amount, currency, status,
+  created_at, updated_at, ordered_at, expected_at, received_at, cancelled_at, supplier_id, budget_id
+)
+SELECT
+  gs,
+  format('PO-2026-%04s', gs),
+  format('Order #%02s', gs),
+  format('Order desc #%02s', gs),
+  format('[{"isbn":"978-0-00-%04s","qty":1,"unit_price":25.00}]', gs),
+  25.00,
+  'PLN',
+  'ordered',
+  NOW() - (gs || ' days')::interval,
+  NOW(),
+  NOW() - (gs || ' days')::interval,
+  NOW() + INTERVAL '10 days',
+  NULL,
+  NULL,
+  ((gs - 1) % 30) + 1,
+  ((gs - 1) % 30) + 1
+FROM generate_series(4, 30) gs;
+
+INSERT INTO acquisition_expense (id, amount, currency, description, type, posted_at, budget_id, order_id)
+SELECT
+  gs,
+  50.00 + (gs * 5),
+  'PLN',
+  format('Expense %02s', gs),
+  'purchase',
+  NOW() - (gs || ' days')::interval,
+  ((gs - 1) % 30) + 1,
+  ((gs - 1) % 30) + 1
+FROM generate_series(4, 30) gs;
+
+INSERT INTO integration_config (id, name, provider, enabled, settings, last_status, last_tested_at, created_at, updated_at)
+SELECT
+  gs,
+  format('Integration %02s', gs),
+  'http',
+  true,
+  '{}'::json,
+  'unknown',
+  NULL,
+  NOW() - (gs || ' days')::interval,
+  NOW()
+FROM generate_series(4, 30) gs;
+
+INSERT INTO notification_log (id, type, channel, fingerprint, payload, status, error_message, sent_at, user_id)
+SELECT
+  gs,
+  'email',
+  'email',
+  format('seed-%02s', gs),
+  '{}'::json,
+  'sent',
+  NULL,
+  NOW() - (gs || ' days')::interval,
+  ((gs - 1) % 30) + 1
+FROM generate_series(4, 30) gs;
+
+INSERT INTO weeding_record (id, book_id, book_copy_id, processed_by_id, reason, action, condition_state, notes, removed_at)
+SELECT
+  gs,
+  ((gs - 1) % 30) + 1,
+  ((gs - 1) % 30) + 1,
+  ((gs - 1) % 30) + 1,
+  'Seeded reason',
+  'removed',
+  'good',
+  NULL,
+  NOW() - (gs || ' days')::interval
+FROM generate_series(4, 30) gs;
 
 -- Resetowanie sekwencji
 SELECT setval('app_user_id_seq', (SELECT MAX(id) FROM app_user));

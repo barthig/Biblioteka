@@ -31,6 +31,6 @@ describe('LibrarianDashboard page', () => {
     render(<LibrarianDashboard />)
 
     expect(await screen.findByText('Dashboard')).toBeInTheDocument()
-    expect(screen.getByText('3')).toBeInTheDocument()
+    expect(await screen.findByText('3')).toBeInTheDocument()
   })
 })

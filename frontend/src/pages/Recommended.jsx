@@ -17,6 +17,7 @@ export default function Recommended() {
   const [groups, setGroups] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [actionError, setActionError] = useState(null)
   const [dismissedBooks, setDismissedBooks] = useState(new Set())
   const [lastDismissedId, setLastDismissedId] = useState(null)
   const { getCachedResource, setCachedResource, invalidateResource } = useResourceCache()
@@ -28,6 +29,7 @@ export default function Recommended() {
     if (!token) return
 
     try {
+      setActionError(null)
       await apiFetch('/api/recommendations/feedback', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -38,6 +40,7 @@ export default function Recommended() {
       setLastDismissedId(bookId)
       invalidateResource(cacheKey)
     } catch (err) {
+      setActionError(err.message || 'Nie udało się ukryć rekomendacji')
       logger.error('Failed to dismiss book:', err)
     }
   }
@@ -45,6 +48,7 @@ export default function Recommended() {
   async function undoDismiss(bookId) {
     if (!token) return
     try {
+      setActionError(null)
       await apiFetch(`/api/recommendations/feedback/${bookId}`, { method: 'DELETE' })
       setDismissedBooks(prev => {
         const next = new Set(prev)
@@ -54,6 +58,7 @@ export default function Recommended() {
       setLastDismissedId(null)
       invalidateResource(cacheKey)
     } catch (err) {
+      setActionError(err.message || 'Nie udało się cofnąć ukrycia')
       logger.error('Failed to undo dismiss:', err)
     }
   }
@@ -142,6 +147,7 @@ export default function Recommended() {
       )}
 
       {!loading && error && <FeedbackCard variant="error">{error}</FeedbackCard>}
+      {!loading && actionError && <FeedbackCard variant="error">{actionError}</FeedbackCard>}
 
       {!loading && !error && (!Array.isArray(groups) || groups.length === 0) && (
         <SectionCard className="empty-state">
