@@ -43,6 +43,21 @@ export default function Dashboard() {
     navigate(`/books?search=${encodeURIComponent(title)}`)
   }
 
+  // Normalize author/author(s) fields to a displayable string
+  const formatAuthor = (item) => {
+    const a = item?.author
+    if (typeof a === 'string') return a
+    if (a && typeof a === 'object' && typeof a.name === 'string') return a.name
+    const authors = item?.authors
+    if (Array.isArray(authors)) {
+      const names = authors
+        .map(x => (typeof x === 'string' ? x : (x && typeof x.name === 'string' ? x.name : null)))
+        .filter(Boolean)
+      return names.join(', ')
+    }
+    return ''
+  }
+
   // Public latest announcements derived from API (non-event)
   const publicLatestAnnouncements = useMemo(() => {
     return publicAnnouncements
@@ -349,7 +364,7 @@ export default function Dashboard() {
                   <div className="book-card__cover" aria-hidden="true" />
                   <div className="book-card__body">
                     <h3>{item.title}</h3>
-                    <p>{item.author || (Array.isArray(item.authors) ? item.authors.join(', ') : '')}</p>
+                    <p>{formatAuthor(item)}</p>
                     <button
                       type="button"
                       className="btn btn-ghost"

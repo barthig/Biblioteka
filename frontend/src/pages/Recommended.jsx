@@ -81,11 +81,12 @@ export default function Recommended() {
         setLoading(true)
         setError(null)
         try {
-          const response = await apiFetch('/api/books/recommended?public=true')
-          // Oczekujemy tablicy książek, opakuj w jedną grupę
-          const normalized = Array.isArray(response)
-            ? [{ key: 'public', label: 'Popularne książki', books: response }]
-            : []
+          const response = await apiFetch('/api/books/recommended')
+          const normalized = Array.isArray(response?.groups)
+            ? response.groups.filter(g => Array.isArray(g.books))
+            : (Array.isArray(response)
+              ? [{ key: 'public', label: 'Popularne książki', books: response }]
+              : [])
           if (active) {
             setGroups(normalized)
           }
@@ -136,16 +137,20 @@ export default function Recommended() {
 
     load()
 
-    const interval = setInterval(() => {
-      const cached = getCachedResource(cacheKey, CACHE_TTL)
-      if (!cached) {
-        load()
-      }
-    }, 2000)
+    // Refresh periodically only for authenticated users (guests shouldn't auto-refresh)
+    let interval = null
+    if (token) {
+      interval = setInterval(() => {
+        const cached = getCachedResource(cacheKey, CACHE_TTL)
+        if (!cached) {
+          load()
+        }
+      }, 2000)
+    }
 
     return () => {
       active = false
-      clearInterval(interval)
+      if (interval) clearInterval(interval)
     }
   }, [getCachedResource, setCachedResource, cacheKey, token])
 
