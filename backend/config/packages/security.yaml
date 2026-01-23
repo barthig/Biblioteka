@@ -50,5 +50,3 @@ security:
 
     # Default API access
     - { path: ^/api, roles: ROLE_USER }
-
-  # Authorization is enforced via ApiAuthSubscriber + per-controller checks.

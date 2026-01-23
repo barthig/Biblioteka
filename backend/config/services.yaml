@@ -43,12 +43,6 @@ services:
     arguments:
       $projectDir: '%kernel.project_dir%'
     tags: ['messenger.message_handler']
-
-  App\EventSubscriber\ApiAuthSubscriber:
-    arguments:
-      $users: '@App\Repository\UserRepository'
-      $tokenStorage: '@security.token_storage'
-    tags: ['kernel.event_subscriber']
   
   # Named Rate Limiters
   App\Controller\AuthController:
