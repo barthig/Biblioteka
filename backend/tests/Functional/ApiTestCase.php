@@ -59,15 +59,6 @@ abstract class ApiTestCase extends WebTestCase
         $this->seedDefaultUsers();
     }
 
-    protected static function getContainer(): ContainerInterface
-    {
-        if (!static::$booted) {
-            static::bootKernel();
-        }
-
-        return static::$kernel->getContainer();
-    }
-
     protected function tearDown(): void
     {
         if (isset($this->entityManager) && $this->entityManager->isOpen()) {

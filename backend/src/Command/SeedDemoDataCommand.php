@@ -77,7 +77,7 @@ class SeedDemoDataCommand extends Command
             $user->setEmail($userData['email']);
             $user->setName($userData['name']);
             $user->setRoles($userData['roles']);
-            $user->setPhone($userData['phone']);
+            $user->setPhoneNumber($userData['phone']);
             
             $hashedPassword = $this->passwordHasher->hashPassword($user, $userData['password']);
             $user->setPassword($hashedPassword);

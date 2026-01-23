@@ -1,0 +1,245 @@
+@startuml Biblioteka_ERD
+
+!theme plain
+skinparam linetype ortho
+skinparam monochrome true
+skinparam packageStyle rectangle
+
+title Diagram ERD - System Zarządzania Biblioteką v2.1.0
+
+' ==========================================
+' MODUŁ: KATALOG I ZBIORY
+' ==========================================
+package "Katalog i Zbiory" {
+    entity "book" {
+        * id : INT <<PK>>
+        --
+        title : VARCHAR(255)
+        isbn : VARCHAR(20)
+        copies : INT
+        author_id : INT <<FK>>
+        target_age_group : VARCHAR(24) <<FK>>
+    }
+
+    entity "author" {
+        * id : INT <<PK>>
+        --
+        name : VARCHAR(255)
+    }
+
+    entity "category" {
+        * id : INT <<PK>>
+        --
+        name : VARCHAR(120)
+    }
+
+    entity "book_category" {
+        * book_id : INT <<PK, FK>>
+        * category_id : INT <<PK, FK>>
+    }
+
+    entity "book_copy" {
+        * id : INT <<PK>>
+        --
+        * book_id : INT <<FK>>
+        inventory_code : VARCHAR(60)
+        status : VARCHAR(20)
+        location : VARCHAR(120)
+    }
+
+    entity "book_digital_asset" {
+        * id : INT <<PK>>
+        --
+        * book_id : INT <<FK>>
+        original_filename : VARCHAR(255)
+        mime_type : VARCHAR(100)
+    }
+
+    entity "age_range" {
+        * code : VARCHAR(24) <<PK>>
+        --
+        label : VARCHAR(80)
+        min_age : SMALLINT
+    }
+}
+
+' ==========================================
+' MODUŁ: UŻYTKOWNICY I SPOŁECZNOŚĆ
+' ==========================================
+package "Użytkownicy i Społeczność" {
+    entity "app_user" {
+        * id : INT <<PK>>
+        --
+        email : VARCHAR(180)
+        password : VARCHAR(255)
+        roles : JSON
+        age_range_code : VARCHAR(24) <<FK>>
+    }
+
+    entity "rating" {
+        * id : INT <<PK>>
+        --
+        * user_id : INT <<FK>>
+        * book_id : INT <<FK>>
+        rating : SMALLINT
+        review : TEXT
+    }
+
+    entity "favorite" {
+        * id : INT <<PK>>
+        --
+        * user_id : INT <<FK>>
+        * book_id : INT <<FK>>
+    }
+
+    entity "book_collection" {
+        * id : INT <<PK>>
+        --
+        * curated_by_id : INT <<FK>>
+        name : VARCHAR(255)
+    }
+
+    entity "collection_books" {
+        * book_collection_id : INT <<PK, FK>>
+        * book_id : INT <<PK, FK>>
+    }
+
+    entity "user_book_interaction" {
+        * id : INT <<PK>>
+        --
+        * user_id : INT <<FK>>
+        * book_id : INT <<FK>>
+        type : VARCHAR(20)
+    }
+
+    entity "recommendation_feedback" {
+        * id : INT <<PK>>
+        --
+        * user_id : INT <<FK>>
+        * book_id : INT <<FK>>
+        feedback_type : VARCHAR(20)
+    }
+}
+
+' ==========================================
+' MODUŁ: WYPOŻYCZENIA I REZERWACJE
+' ==========================================
+package "Wypożyczenia i Rezerwacje" {
+    entity "loan" {
+        * id : INT <<PK>>
+        --
+        * book_id : INT <<FK>>
+        * user_id : INT <<FK>>
+        book_copy_id : INT <<FK>>
+        borrowed_at : TIMESTAMP
+        due_at : TIMESTAMP
+    }
+
+    entity "reservation" {
+        * id : INT <<PK>>
+        --
+        * book_id : INT <<FK>>
+        * user_id : INT <<FK>>
+        book_copy_id : INT <<FK>>
+        status : VARCHAR(20)
+    }
+
+    entity "fine" {
+        * id : INT <<PK>>
+        --
+        * loan_id : INT <<FK>>
+        amount : NUMERIC(8, 2)
+        reason : VARCHAR(255)
+    }
+}
+
+' ==========================================
+' MODUŁ: AKWIZYCJA (ZAKUPY I BUDŻET)
+' ==========================================
+package "Akwizycja" {
+    entity "supplier" {
+        * id : INT <<PK>>
+        --
+        name : VARCHAR(180)
+    }
+
+    entity "acquisition_budget" {
+        * id : INT <<PK>>
+        --
+        name : VARCHAR(160)
+        allocated_amount : NUMERIC
+    }
+
+    entity "acquisition_order" {
+        * id : INT <<PK>>
+        --
+        * supplier_id : INT <<FK>>
+        budget_id : INT <<FK>>
+        total_amount : NUMERIC
+    }
+
+    entity "acquisition_expense" {
+        * id : INT <<PK>>
+        --
+        * budget_id : INT <<FK>>
+        order_id : INT <<FK>>
+        amount : NUMERIC
+    }
+
+    entity "weeding_record" {
+        * id : INT <<PK>>
+        --
+        * book_id : INT <<FK>>
+        book_copy_id : INT <<FK>>
+        processed_by_id : INT <<FK>>
+        reason : VARCHAR(255)
+    }
+}
+
+' ==========================================
+' RELACJE (KLUCZE OBCE)
+' ==========================================
+
+' Relacje Katalogu
+author ||--o{ book
+age_range ||--o{ book
+book ||--o{ book_copy
+book ||--o{ book_digital_asset
+book ||--o{ book_category
+category ||--o{ book_category
+
+' Relacje Użytkowników
+app_user ||--o{ rating
+book ||--o{ rating
+app_user ||--o{ favorite
+book ||--o{ favorite
+app_user ||--o{ book_collection
+book_collection ||--o{ collection_books
+book ||--o{ collection_books
+app_user ||--o{ user_book_interaction
+book ||--o{ user_book_interaction
+app_user ||--o{ recommendation_feedback
+book ||--o{ recommendation_feedback
+age_range ||--o{ app_user
+
+' Relacje Wypożyczeń i Rezerwacji
+book ||--o{ loan
+app_user ||--o{ loan
+book_copy ||--o{ loan
+book ||--o{ reservation
+app_user ||--o{ reservation
+book_copy ||--o{ reservation
+loan ||--o{ fine
+
+' Relacje Akwizycji
+supplier ||--o{ acquisition_order
+acquisition_budget ||--o{ acquisition_order
+acquisition_budget ||--o{ acquisition_expense
+acquisition_order ||--o{ acquisition_expense
+
+' Relacje Weeding (Selekcja zbiorów)
+book ||--o{ weeding_record
+book_copy ||--o{ weeding_record
+app_user ||--o{ weeding_record
+
+@enduml
