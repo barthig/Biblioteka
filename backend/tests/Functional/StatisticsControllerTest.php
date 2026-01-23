@@ -6,7 +6,7 @@ class StatisticsControllerTest extends ApiTestCase
     public function testDashboardRequiresLibrarian(): void
     {
         $user = $this->createUser('reader@example.com');
-        $client = $this->createAuthenticatedClient($user);
+        $client = $this->createAuthenticatedClientWithoutApiSecret($user);
         $this->sendRequest($client, 'GET', '/api/statistics/dashboard');
 
         $this->assertResponseStatusCodeSame(403);

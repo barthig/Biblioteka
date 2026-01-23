@@ -47,7 +47,7 @@ class BookInventoryControllerTest extends ApiTestCase
         $this->jsonRequest($client, 'POST', '/api/admin/books/' . $book->getId() . '/copies', [
             'inventoryCode' => 'INV-002',
             'status' => BookCopy::STATUS_AVAILABLE,
-            'accessType' => 'storage'
+            'accessType' => 'STORAGE'
         ]);
 
         $this->assertResponseStatusCodeSame(201);

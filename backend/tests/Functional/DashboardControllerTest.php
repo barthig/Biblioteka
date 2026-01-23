@@ -25,9 +25,9 @@ class DashboardControllerTest extends ApiTestCase
         $this->assertResponseStatusCodeSame(200);
         $data = $this->getJsonResponse($client);
 
-        $this->assertSame(2, $data['booksCount']);
-        $this->assertSame(2, $data['usersCount']);
-        $this->assertSame(2, $data['loansCount']);
-        $this->assertSame(0, $data['reservationsQueue']);
+        $this->assertSame(2, $data['data']['booksCount']);
+        $this->assertSame(2, $data['data']['usersCount']);
+        $this->assertSame(2, $data['data']['loansCount']);
+        $this->assertSame(0, $data['data']['reservationsQueue']);
     }
 }

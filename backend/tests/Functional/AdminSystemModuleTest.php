@@ -53,14 +53,14 @@ class AdminSystemModuleTest extends ApiTestCase
         ]);
         $this->assertResponseStatusCodeSame(201);
         $createdRole = $this->getJsonResponse($client);
-        self::assertSame('ROLE_CONTENT_MANAGER', $createdRole['roleKey']);
+        self::assertSame('ROLE_CONTENT_MANAGER', $createdRole['data']['roleKey']);
 
         $this->jsonRequest($client, 'POST', '/api/admin/system/roles/ROLE_CONTENT_MANAGER/assign', [
             'userId' => $librarian->getId(),
         ]);
         $this->assertResponseStatusCodeSame(200);
         $assignment = $this->getJsonResponse($client);
-        self::assertContains('ROLE_CONTENT_MANAGER', $assignment['roles']);
+        self::assertContains('ROLE_CONTENT_MANAGER', $assignment['data']['roles']);
 
         /** @var EntityManagerInterface $em */
         $em = static::getContainer()->get('doctrine')->getManager();
