@@ -530,4 +530,13 @@ class Book
     {
         return isset(self::AGE_GROUP_DEFINITIONS[$ageGroup]);
     }
+
+    #[Groups(['book:read'])]
+    public function getCoverUrl(): ?string
+    {
+        if ($this->id === null) {
+            return null;
+        }
+        return '/api/books/' . $this->id . '/cover';
+    }
 }
