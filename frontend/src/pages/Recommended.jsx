@@ -78,10 +78,25 @@ export default function Recommended() {
 
     async function load() {
       if (!token) {
-        if (active) {
-          setGroups([])
-          setLoading(false)
-          setError(null)
+        setLoading(true)
+        setError(null)
+        try {
+          const response = await apiFetch('/api/books/recommended?public=true')
+          // Oczekujemy tablicy książek, opakuj w jedną grupę
+          const normalized = Array.isArray(response)
+            ? [{ key: 'public', label: 'Popularne książki', books: response }]
+            : []
+          if (active) {
+            setGroups(normalized)
+          }
+        } catch (err) {
+          if (active) {
+            setError(err.message || 'Nie udało się pobrać polecanych książek.')
+          }
+        } finally {
+          if (active) {
+            setLoading(false)
+          }
         }
         return
       }

@@ -13,6 +13,9 @@ class RegistrationService
 {
     private const DEFAULT_TOKEN_TTL = 172800; // 48 hours
 
+    private bool $requireApproval = false;
+    private int $tokenTtl = self::DEFAULT_TOKEN_TTL;
+
     public function __construct(
         private EntityManagerInterface $entityManager,
         private UserRepository $users,
@@ -45,8 +48,26 @@ class RegistrationService
         $password = (string) ($data['password'] ?? '');
         $this->assertPasswordStrength($password);
 
+
+        // Email musi być unikalny
         if ($this->users->findOneBy(['email' => $email])) {
-            throw RegistrationException::validation('Konto z takim adresem e-mail juz istnieje.', 409);
+            throw RegistrationException::validation('Konto z takim adresem e-mail już istnieje.', 409);
+        }
+
+        // Numer telefonu musi być unikalny (jeśli podany)
+        if (isset($data['phoneNumber']) && $data['phoneNumber'] !== '') {
+            $phone = trim((string) $data['phoneNumber']);
+            if ($phone !== '' && $this->users->findOneBy(['phoneNumber' => $phone])) {
+                throw RegistrationException::validation('Konto z takim numerem telefonu już istnieje.', 409);
+            }
+        }
+
+        // PESEL musi być unikalny (jeśli podany)
+        if (isset($data['pesel']) && $data['pesel'] !== '') {
+            $pesel = trim((string) $data['pesel']);
+            if ($pesel !== '' && $this->users->findOneBy(['pesel' => $pesel])) {
+                throw RegistrationException::validation('Konto z takim numerem PESEL już istnieje.', 409);
+            }
         }
 
         $consentValue = $data['privacyConsent'] ?? null;

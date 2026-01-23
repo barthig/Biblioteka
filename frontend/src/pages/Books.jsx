@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { apiFetch } from '../api'
 import BookItem from '../components/BookItem'
@@ -56,6 +57,8 @@ export default function Books() {
   const filtersRef = useRef(filters)
   const lastCacheKeyRef = useRef(null)
   const { getCachedResource, setCachedResource, invalidateResource } = useResourceCache()
+  const location = useLocation()
+  const navigate = useNavigate()
   const LIST_CACHE_TTL = 60000
   const FACETS_CACHE_TTL = 300000
 
@@ -70,6 +73,18 @@ export default function Books() {
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
   }, [])
+
+  // Run search automatically when arriving with ?search= in URL
+  useEffect(() => {
+    const params = new URLSearchParams(location.search)
+    const initial = params.get('search') || params.get('q') || ''
+    if (initial && initial !== query) {
+      setQuery(initial)
+      // ensure page resets and force new load
+      load(initial, undefined, { page: 1, force: true })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.search])
 
   async function load(searchTerm, providedFilters = filtersRef.current, options = {}) {
     const rawTerm = typeof searchTerm === 'string' ? searchTerm : query

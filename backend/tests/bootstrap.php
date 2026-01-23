@@ -8,6 +8,8 @@ putenv('APP_ENV=' . $testEnv);
 $_ENV['APP_ENV'] = $_SERVER['APP_ENV'] = $testEnv;
 putenv('APP_DEBUG=0');
 $_ENV['APP_DEBUG'] = $_SERVER['APP_DEBUG'] = '0';
+putenv('OPENAI_API_KEY=test-openai-key');
+$_ENV['OPENAI_API_KEY'] = $_SERVER['OPENAI_API_KEY'] = 'test-openai-key';
 
 $logDir = dirname(__DIR__) . '/var/log';
 if (!is_dir($logDir)) {

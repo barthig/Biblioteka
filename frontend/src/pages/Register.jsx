@@ -19,6 +19,10 @@ const initialForm = {
   tastePrompt: ''
 }
 
+const PASSWORD_RULE = /^(?=.*[a-ząćęłńóśźż])(?=.*[A-ZĄĆĘŁŃÓŚŹŻ])(?=.*\d).{10,}$/
+const POSTAL_CODE_RULE = /^\d{2}-\d{3}$/
+const EMAIL_RULE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
 export default function Register() {
   const auth = useAuth()
   const [form, setForm] = useState(initialForm)
@@ -37,25 +41,79 @@ export default function Register() {
     setError(null)
     setSuccess(null)
 
+    const name = form.name.trim()
+    const email = form.email.trim()
+    const password = form.password
+    const confirmPassword = form.confirmPassword
+    const postalCode = form.postalCode.trim()
+    const phoneNumber = form.phoneNumber.trim()
+    const addressLine = form.addressLine.trim()
+    const city = form.city.trim()
+    const tastePrompt = form.tastePrompt.trim()
+
+    if (name.length < 2) {
+      setError('Imię i nazwisko musi mieć co najmniej 2 znaki')
+      return
+    }
+
+    if (!EMAIL_RULE.test(email)) {
+      setError('Podaj poprawny adres e-mail')
+      return
+    }
+
     if (form.password !== form.confirmPassword) {
       setError('Hasła muszą być identyczne')
+      return
+    }
+
+    if (!PASSWORD_RULE.test(password)) {
+      setError('Hasło musi mieć min. 10 znaków, małą i dużą literę (także polską) oraz cyfrę')
+      return
+    }
+
+    if (postalCode && !POSTAL_CODE_RULE.test(postalCode)) {
+      setError('Kod pocztowy musi być w formacie 00-000')
+      return
+    }
+
+    if (phoneNumber.length > 30) {
+      setError('Numer telefonu nie może przekraczać 30 znaków')
+      return
+    }
+
+    if (addressLine.length > 255) {
+      setError('Adres nie może przekraczać 255 znaków')
+      return
+    }
+
+    if (city.length > 100) {
+      setError('Miasto nie może przekraczać 100 znaków')
+      return
+    }
+
+    if (tastePrompt.length > 500) {
+      setError('Opis preferencji nie może przekraczać 500 znaków')
+      return
+    }
+
+    if (!form.privacyConsent) {
+      setError('Musisz wyrazić zgodę na przetwarzanie danych osobowych')
       return
     }
 
     setLoading(true)
     try {
       const payload = {
-        name: form.name.trim(),
-        email: form.email.trim(),
-        password: form.password,
-        phoneNumber: form.phoneNumber.trim() || undefined,
-        addressLine: form.addressLine.trim() || undefined,
-        city: form.city.trim() || undefined,
-        postalCode: form.postalCode.trim() || undefined,
+        name,
+        email,
+        password,
+        phoneNumber: phoneNumber || undefined,
+        addressLine: addressLine || undefined,
+        city: city || undefined,
+        postalCode: postalCode || undefined,
         privacyConsent: form.privacyConsent
       }
 
-      const tastePrompt = form.tastePrompt.trim()
       if (tastePrompt) {
         payload.tastePrompt = tastePrompt
       }
@@ -74,20 +132,14 @@ export default function Register() {
       const verifyResult = await apiFetch(`/api/auth/verify/${verificationToken}`)
       if (verifyResult?.pendingApproval) {
         setSuccess('Konto zostało utworzone i zweryfikowane. Oczekuje na akceptację bibliotekarza.')
-        return
-      }
-
-      const loginResult = await apiFetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: payload.email, password: payload.password })
-      })
-
-      if (loginResult?.token) {
-        auth.login(loginResult.token, loginResult.refreshToken)
       } else {
-        setSuccess('Konto zostało zweryfikowane, ale logowanie nie powiodło się. Spróbuj ponownie.')
+        setSuccess('Konto zostało utworzone i zweryfikowane. Możesz się teraz zalogować.')
       }
+
+      // Przekieruj po 2 sekundach na stronę logowania
+      setTimeout(() => {
+        window.location.href = '/login'
+      }, 2000)
     } catch (err) {
       setError(err.message || 'Rejestracja nie powiodła się')
     } finally {
@@ -141,10 +193,12 @@ export default function Register() {
               placeholder="••••••••"
               value={form.password}
               onChange={handleChange}
-              minLength={8}
+              minLength={10}
+              pattern="(?=.*[a-ząćęłńóśźż])(?=.*[A-ZĄĆĘŁŃÓŚŹŻ])(?=.*\d).{10,}"
+              title="Minimum 10 znaków, mała i duża litera (także z polskimi znakami) oraz cyfra"
               required
             />
-            <p className="field-hint">Minimum 8 znaków</p>
+            <p className="field-hint">Minimum 10 znaków, mała i duża litera (także z polskimi znakami) oraz cyfra</p>
           </div>
           <div className="form-field">
             <label htmlFor="register-confirm">Powtórz hasło</label>
@@ -156,12 +210,14 @@ export default function Register() {
               placeholder="••••••••"
               value={form.confirmPassword}
               onChange={handleChange}
-              minLength={8}
+              minLength={10}
+              pattern="(?=.*[a-ząćęłńóśźż])(?=.*[A-ZĄĆĘŁŃÓŚŹŻ])(?=.*\d).{10,}"
+              title="Minimum 10 znaków, mała i duża litera (także z polskimi znakami) oraz cyfra"
               required
             />
           </div>
           <div className="form-field">
-            <label htmlFor="register-phone">Telefon (opcjonalnie)</label>
+            <label htmlFor="register-phone">Telefon</label>
             <input
               id="register-phone"
               name="phoneNumber"
@@ -171,7 +227,7 @@ export default function Register() {
             />
           </div>
           <div className="form-field">
-            <label htmlFor="register-address">Adres (opcjonalnie)</label>
+            <label htmlFor="register-address">Adres</label>
             <input
               id="register-address"
               name="addressLine"
@@ -181,7 +237,7 @@ export default function Register() {
             />
           </div>
           <div className="form-field">
-            <label htmlFor="register-city">Miasto (opcjonalnie)</label>
+            <label htmlFor="register-city">Miasto</label>
             <input
               id="register-city"
               name="city"
@@ -191,17 +247,27 @@ export default function Register() {
             />
           </div>
           <div className="form-field">
-            <label htmlFor="register-postal">Kod pocztowy (opcjonalnie)</label>
+            <label htmlFor="register-postal">Kod pocztowy</label>
             <input
               id="register-postal"
               name="postalCode"
+              type="text"
+              inputMode="numeric"
+              maxLength={6}
               placeholder="00-000"
               value={form.postalCode}
-              onChange={handleChange}
+              onChange={e => {
+                // automatycznie formatuje: dwie cyfry, myślnik, trzy cyfry
+                let v = e.target.value.replace(/[^\d]/g, '')
+                if (v.length > 2) v = v.slice(0,2) + '-' + v.slice(2,5)
+                if (v.length > 6) v = v.slice(0,6)
+                setForm(prev => ({ ...prev, postalCode: v }))
+              }}
+              required
             />
           </div>
           <div className="form-field form-field--full">
-            <label htmlFor="register-taste">Co lubisz czytać? (opcjonalnie)</label>
+            <label htmlFor="register-taste">Co lubisz czytać?</label>
             <textarea
               id="register-taste"
               name="tastePrompt"

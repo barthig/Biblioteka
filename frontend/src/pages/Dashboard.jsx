@@ -6,6 +6,7 @@ import { useResourceCache } from '../context/ResourceCacheContext'
 import OnboardingModal from '../components/OnboardingModal'
 import UserRecommendations from '../components/UserRecommendations'
 import SectionCard from '../components/ui/SectionCard'
+import { bookService } from '../services/bookService'
 
 export default function Dashboard() {
   const [stats, setStats] = useState(null)
@@ -28,59 +29,27 @@ export default function Dashboard() {
   const DASHBOARD_CACHE_TTL = 30000
   const PUBLIC_ANNOUNCEMENTS_TTL = 30000
 
-  const publicNewArrivals = useMemo(() => ([
-    { title: 'Cisza nad jeziorem', author: 'Maria Nowicka' },
-    { title: 'Miasto bez mapy', author: 'Paweł Zieliński' },
-    { title: 'Opowieści z północy', author: 'Agnieszka Kowal' },
-    { title: 'Atlas wspomnień', author: 'Tomasz Wieczorek' },
-  ]), [])
+  const [publicNewArrivals, setPublicNewArrivals] = useState([])
+  const [publicNewArrivalsLoading, setPublicNewArrivalsLoading] = useState(false)
+  const [publicNewArrivalsError, setPublicNewArrivalsError] = useState(null)
 
-  const fallbackPublicEvents = useMemo(() => ([
-    {
-      date: '12 MAJ',
-      title: 'Spotkanie autorskie',
-      description: 'Rozmowa z twórcami literatury popularnonaukowej oraz sesja pytań i odpowiedzi.',
-    },
-    {
-      date: '21 MAJ',
-      title: 'Klub dyskusyjny',
-      description: 'Wspólne omówienie książki miesiąca z bibliotekarzem prowadzącym.',
-    },
-  ]), [])
+  function handleCheckAvailabilityPublic(item) {
+    if (item?.id) {
+      navigate(`/books/${item.id}`)
+      return
+    }
+    const title = item?.title || ''
+    if (!title) return
+    navigate(`/books?search=${encodeURIComponent(title)}`)
+  }
 
-  const publicHighlights = useMemo(() => ({
-    facility: {
-      name: 'Biblioteka Miejska w Poznaniu',
-      description: 'Od ponad 30 lat wspieramy mieszkańców w odkrywaniu literatury i rozwijaniu pasji czytelniczych. Oferujemy wygodne strefy pracy, bogatą kolekcję książek oraz cykliczne warsztaty dla różnych grup wiekowych.',
-      services: [
-        '11 czytelni tematycznych i strefa coworkingowa',
-        'Program "Pierwsza książka" dla najmłodszych czytelników',
-        'Wsparcie bibliotekarzy w doborze lektur i pracy badawczej',
-      ],
-    },
-    featuredTitles: [
-      'Lalka - Bolesław Prus',
-      'Cień wiatru - Carlos Ruiz Zafón',
-      'Ziemia obiecana - Władysław Reymont',
-      'Sapiens. Od zwierząt do bogów - Yuval Noah Harari',
-      'Laboratorium przyszłości - polskie reportaże naukowe',
-    ],
-    announcements: [
-      'Warsztaty kreatywnego pisania w każdą sobotę o 11:00 (obowiązują zapisy).',
-      'Wieczór gier planszowych - ostatni piątek miesiąca, wstęp wolny.',
-      'Pilotażowa wypożyczalnia e-booków startuje od 1 grudnia 2025 r.',
-    ],
-    policies: [
-      'Standardowy okres wypożyczenia: 21 dni z możliwością jednokrotnego przedłużenia online.',
-      'Rezerwacje wygasają po 48 godzinach od powiadomienia o dostępności egzemplarza.',
-      'Opłata za przetrzymanie wynosi 1,50 zł za każdy rozpoczęty dzień - wpływy przeznaczamy na zakup nowych tytułów.',
-    ],
-    snapshot: {
-      readers: 'Ponad 6 200 stałych czytelników korzysta z zasobów placówki.',
-      collection: 'Ponad 48 000 woluminów rozlokowanych w filiach i magazynach.',
-      events: 'Ponad 40 wydarzeń rocznie - spotkania autorskie, kluby dyskusyjne, warsztaty technologiczne.',
-    },
-  }), [])
+  // Public latest announcements derived from API (non-event)
+  const publicLatestAnnouncements = useMemo(() => {
+    return publicAnnouncements
+      .filter(item => !item?.eventAt)
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .slice(0, 3)
+  }, [publicAnnouncements])
 
   const upcomingEvents = useMemo(() => {
     const now = Date.now()
@@ -227,6 +196,19 @@ export default function Dashboard() {
     }
   }, [isAuthenticated])
 
+  // Fetch newest books for guests
+  useEffect(() => {
+    if (isAuthenticated) return
+    let active = true
+    setPublicNewArrivalsLoading(true)
+    setPublicNewArrivalsError(null)
+    bookService.getNewest(4)
+      .then(items => { if (active) setPublicNewArrivals(items) })
+      .catch(err => { if (active) setPublicNewArrivalsError(err.message || 'Nie udało się pobrać nowości') })
+      .finally(() => { if (active) setPublicNewArrivalsLoading(false) })
+    return () => { active = false }
+  }, [isAuthenticated])
+
   useEffect(() => {
     if (!isAuthenticated) {
       setStats(null)
@@ -291,16 +273,6 @@ export default function Dashboard() {
   }, [isAuthenticated, user])
 
   if (!isAuthenticated) {
-    const publicEventCards = publicUpcomingEvents.length > 0
-      ? publicUpcomingEvents.map(event => ({
-        id: event.id,
-        date: formatPublicEventDate(event.eventAt),
-        time: formatPublicEventTime(event.eventAt),
-        title: event.title || 'Wydarzenie',
-        description: event.content || event.description || ''
-      }))
-      : fallbackPublicEvents.map(event => ({ ...event, time: event.time || '' }))
-
     return (
       <div className="landing-page public-home">
         <main>
@@ -366,13 +338,24 @@ export default function Dashboard() {
               <Link to="/books" className="section-link">Zobacz cały katalog</Link>
             </div>
             <div className="books-grid">
-              {publicNewArrivals.map(item => (
-                <article key={item.title} className="book-card">
+              {publicNewArrivalsLoading && (
+                <article className="book-card skeleton" aria-hidden="true" />
+              )}
+              {publicNewArrivalsError && !publicNewArrivalsLoading && (
+                <div className="empty-state">{publicNewArrivalsError}</div>
+              )}
+              {!publicNewArrivalsLoading && !publicNewArrivalsError && publicNewArrivals.map(item => (
+                <article key={item.id || item.title} className="book-card">
                   <div className="book-card__cover" aria-hidden="true" />
                   <div className="book-card__body">
                     <h3>{item.title}</h3>
-                    <p>{item.author}</p>
-                    <button type="button" className="btn btn-ghost" aria-label={`Sprawdź dostępność: ${item.title}`}>
+                    <p>{item.author || (Array.isArray(item.authors) ? item.authors.join(', ') : '')}</p>
+                    <button
+                      type="button"
+                      className="btn btn-ghost"
+                      aria-label={`Sprawdź dostępność: ${item.title}`}
+                      onClick={() => handleCheckAvailabilityPublic(item)}
+                    >
                       Sprawdź dostępność
                     </button>
                   </div>
@@ -387,18 +370,37 @@ export default function Dashboard() {
               <Link to="/announcements" className="section-link">Pełny kalendarz</Link>
             </div>
             <div className="events-list">
-              {publicEventCards.map(event => (
-                <article key={event.id || event.title} className="event-card">
-                  <div className="event-card__date">
-                    <span>{event.date}</span>
-                  </div>
-                  <div className="event-card__content">
-                    <h3>{event.title}</h3>
-                    {event.time && <p className="support-copy">{event.time}</p>}
-                    <p>{event.description}</p>
-                  </div>
-                </article>
-              ))}
+              {publicUpcomingEvents.length === 0 ? (
+                <div className="empty-state">Brak nadchodzących wydarzeń.</div>
+              ) : (
+                publicUpcomingEvents.map(event => (
+                  <article key={event.id || event.title} className="event-card">
+                    <div className="event-card__date">
+                      <span>{formatPublicEventDate(event.eventAt)}</span>
+                    </div>
+                    <div className="event-card__content">
+                      <h3>{event.title || 'Wydarzenie'}</h3>
+                      <p className="support-copy">{formatPublicEventTime(event.eventAt)}</p>
+                      <p>{event.content || event.description || ''}</p>
+                    </div>
+                  </article>
+                ))
+              )}
+            </div>
+          </section>
+
+          <section id="public-announcements" className="section-block" aria-labelledby="public-announcements-title">
+            <div className="section-heading">
+              <h2 id="public-announcements-title">Ogłoszenia</h2>
+              <Link to="/announcements" className="section-link">Zobacz wszystkie</Link>
+            </div>
+            <div className="surface-card" style={{ padding: 'var(--space-3)' }}>
+              {renderAnnouncementsList(
+                publicLatestAnnouncements,
+                'Brak nowych ogłoszeń.',
+                formatDate,
+                (item) => item.createdAt
+              )}
             </div>
           </section>
         </main>

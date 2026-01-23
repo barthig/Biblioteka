@@ -68,4 +68,12 @@ export const bookService = {
   async getAvailability(bookId) {
     return await apiFetch(`/api/books/${bookId}/availability`)
   }
+  ,
+  /**
+   * Get newest books (recently added)
+   */
+  async getNewest(limit = 4) {
+    const data = await apiFetch(`/api/books/newest?limit=${encodeURIComponent(limit)}`)
+    return Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : [])
+  }
 }
