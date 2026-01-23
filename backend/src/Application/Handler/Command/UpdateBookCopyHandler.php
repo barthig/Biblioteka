@@ -38,6 +38,23 @@ class UpdateBookCopyHandler
             }
         }
 
+        if ($command->inventoryCode !== null) {
+            $inventoryCode = strtoupper(trim($command->inventoryCode));
+            if ($inventoryCode === '') {
+                throw new \RuntimeException('Inventory code cannot be empty');
+            }
+            if (!preg_match('/^[A-Z0-9\\-_.]+$/', $inventoryCode)) {
+                throw new \RuntimeException('Invalid inventoryCode format');
+            }
+            if ($copy->getInventoryCode() !== $inventoryCode) {
+                $existing = $this->bookCopyRepository->findOneByInventoryCode($inventoryCode);
+                if ($existing && $existing->getId() !== $copy->getId()) {
+                    throw new \RuntimeException('Inventory code already exists');
+                }
+                $copy->setInventoryCode($inventoryCode);
+            }
+        }
+
         if ($command->accessType !== null) {
             try {
                 $copy->setAccessType($this->normalizeAccessType($command->accessType));

@@ -2464,6 +2464,14 @@ select option {
 	background: rgba(65, 84, 241, 0.03);
 }
 
+.inventory-row {
+	cursor: pointer;
+}
+
+.inventory-row.is-selected {
+	background: rgba(124, 157, 209, 0.15);
+}
+
 .data-table td {
 	color: var(--color-text);
         overflow-wrap: anywhere;

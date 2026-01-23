@@ -151,6 +151,7 @@ class BookInventoryController extends AbstractController
             required: false,
             content: new OA\JsonContent(
                 properties: [
+                    new OA\Property(property: 'inventoryCode', type: 'string', nullable: true),
                     new OA\Property(property: 'status', type: 'string', nullable: true),
                     new OA\Property(property: 'accessType', type: 'string', nullable: true),
                     new OA\Property(property: 'location', type: 'string', nullable: true),
@@ -188,6 +189,7 @@ class BookInventoryController extends AbstractController
             $command = new UpdateBookCopyCommand(
                 $id,
                 $copyId,
+                $data['inventoryCode'] ?? null,
                 $data['status'] ?? null,
                 $data['accessType'] ?? null,
                 $data['location'] ?? null,
@@ -203,7 +205,13 @@ class BookInventoryController extends AbstractController
             if ($response = $this->jsonFromHttpException($e)) {
                 return $response;
             }
-            return $this->jsonError(ApiError::notFound($e->getMessage()));
+            if (str_contains($e->getMessage(), 'already exists')) {
+                return $this->jsonError(ApiError::conflict($e->getMessage()));
+            }
+            if (str_contains($e->getMessage(), 'not found')) {
+                return $this->jsonError(ApiError::notFound($e->getMessage()));
+            }
+            return $this->jsonError(ApiError::badRequest($e->getMessage()));
         }
     }
 

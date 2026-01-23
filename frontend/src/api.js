@@ -23,6 +23,7 @@ export async function apiFetch(path, opts = {}) {
     let body = ''
     try { body = await res.text() } catch (e) { /* noop */ }
     let message = body || res.statusText
+    let details
     if (body) {
       try {
         const parsed = JSON.parse(body)
@@ -30,12 +31,15 @@ export async function apiFetch(path, opts = {}) {
           // Handle new standardized error response format
           if (parsed.error && typeof parsed.error === 'object') {
             message = parsed.error.message || parsed.error.code || body
+            if (parsed.error.details) {
+              details = parsed.error.details
+            }
           }
-          // Handle legacy 'message' field
-          else if (typeof parsed.message === 'string' && parsed.message.trim() !== '') {
-            message = parsed.message
-          }
-          // Handle legacy 'error' string field
+            // Handle legacy 'message' field
+            else if (typeof parsed.message === 'string' && parsed.message.trim() !== '') {
+              message = parsed.message
+            }
+            // Handle legacy 'error' string field
           else if (typeof parsed.error === 'string' && parsed.error.trim() !== '') {
             message = parsed.error
           }
@@ -45,6 +49,9 @@ export async function apiFetch(path, opts = {}) {
       }
     }
     const err = new Error(message)
+    if (details) {
+      err.details = details
+    }
     err.status = res.status
     throw err
   }

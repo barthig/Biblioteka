@@ -5,27 +5,24 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 class UpdateBookCopyRequest
 {
+    #[Assert\Length(min: 1, max: 60)]
+    public ?string $inventoryCode = null;
+
     #[Assert\Choice(
         choices: ['AVAILABLE', 'BORROWED', 'RESERVED', 'WITHDRAWN', 'MAINTENANCE'],
-        message: 'Nieprawidłowy status egzemplarza'
+        message: 'Nieprawidlowy status egzemplarza'
     )]
     public ?string $status = null;
 
-    #[Assert\Choice(
-        choices: ['magazyn', 'wypożyczalnia', 'czytelnia', 'archiwum'],
-        message: 'Nieprawidłowa lokalizacja'
-    )]
+    #[Assert\Length(max: 120, maxMessage: 'Lokalizacja moze miec maksymalnie 120 znakow')]
     public ?string $location = null;
 
     #[Assert\Choice(
-        choices: ['wolny_dostęp', 'magazyn', 'czytelnia', 'zakaz_wypożyczenia'],
-        message: 'Nieprawidłowy typ dostępu'
+        choices: ['STORAGE', 'OPEN_STACK', 'REFERENCE'],
+        message: 'Nieprawidlowy typ dostepu'
     )]
     public ?string $accessType = null;
 
-    #[Assert\Choice(
-        choices: ['nowy', 'dobry', 'zużyty', 'uszkodzony', 'wymaga_naprawy'],
-        message: 'Nieprawidłowy stan'
-    )]
-    public ?string $conditionState = null;
+    #[Assert\Length(max: 120, maxMessage: 'Stan moze miec maksymalnie 120 znakow')]
+    public ?string $condition = null;
 }

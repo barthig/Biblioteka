@@ -200,7 +200,7 @@ class AccountController extends AbstractController
         }
         
         if ($e instanceof HttpExceptionInterface) {
-            return $this->json(['message' => $e->getMessage()], $e->getStatusCode());
+            return $this->jsonError(ApiError::fromException($e));
         }
         
         $statusCode = match (true) {
@@ -212,7 +212,12 @@ class AccountController extends AbstractController
             default => 500
         };
         
-        return $this->json(['message' => $e->getMessage()], $statusCode);
+        return match ($statusCode) {
+            404 => $this->jsonError(new ApiError('NOT_FOUND', $e->getMessage(), 404)),
+            409 => $this->jsonError(ApiError::conflict($e->getMessage())),
+            400 => $this->jsonError(ApiError::badRequest($e->getMessage())),
+            default => $this->jsonError(ApiError::internalError($e->getMessage()))
+        };
     }
 
     #[OA\Put(
@@ -375,7 +380,10 @@ class AccountController extends AbstractController
                 newPin: (string) $data['newPin']
             ));
         } catch (\RuntimeException|HttpExceptionInterface $e) {
-            return $this->json(['message' => $e->getMessage()], $e->getStatusCode());
+            if ($e instanceof HttpExceptionInterface) {
+                return $this->jsonError(ApiError::fromException($e));
+            }
+            return $this->jsonError(ApiError::badRequest($e->getMessage()));
         }
 
         return $this->json(['message' => 'PIN updated']);
@@ -439,4 +447,5 @@ class AccountController extends AbstractController
         ]);
     }
 }
+
 

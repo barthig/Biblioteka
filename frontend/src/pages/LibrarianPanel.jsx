@@ -91,6 +91,16 @@ export default function LibrarianPanel() {
     location: '',
     condition: ''
   })
+  const [addCopyErrors, setAddCopyErrors] = useState({})
+  const [editingCopy, setEditingCopy] = useState(null)
+  const [editCopyForm, setEditCopyForm] = useState({
+    inventoryCode: '',
+    status: 'AVAILABLE',
+    accessType: 'STORAGE',
+    location: '',
+    condition: ''
+  })
+  const [editErrors, setEditErrors] = useState({})
 
   const [returnModal, setReturnModal] = useState({ show: false, loan: null, fine: null })
 
@@ -531,6 +541,7 @@ export default function LibrarianPanel() {
 
   async function loadCopies(bookId) {
     if (!bookId) return
+    cancelEditCopy()
     setLoading(true)
     setError(null)
     try {
@@ -550,11 +561,95 @@ export default function LibrarianPanel() {
     }
   }
 
+  function startEditCopy(copy) {
+    setEditingCopy(copy)
+    setEditErrors({})
+    setEditCopyForm({
+      inventoryCode: copy.inventoryCode || '',
+      status: (copy.status || copy.state || 'AVAILABLE').toUpperCase(),
+      accessType: (copy.accessType || 'STORAGE').toUpperCase(),
+      location: copy.location || '',
+      condition: copy.conditionState || copy.condition || ''
+    })
+  }
+
+  function cancelEditCopy() {
+    setEditingCopy(null)
+    setEditErrors({})
+    setEditCopyForm({
+      inventoryCode: '',
+      status: 'AVAILABLE',
+      accessType: 'STORAGE',
+      location: '',
+      condition: ''
+    })
+  }
+
+  function validateEditCopy(form) {
+    const errors = {}
+    const normalizedCode = form.inventoryCode.trim().toUpperCase()
+    if (!normalizedCode) {
+      errors.inventoryCode = 'Kod inwentarzowy jest wymagany'
+    } else if (normalizedCode.length > 60) {
+      errors.inventoryCode = 'Kod inwentarzowy moze miec maksymalnie 60 znakow'
+    } else if (!/^[A-Z0-9\\-_.]+$/.test(normalizedCode)) {
+      errors.inventoryCode = 'Kod moze zawierac tylko litery, cyfry, -, _ oraz kropke'
+    }
+    if (!form.status) {
+      errors.status = 'Wybierz status'
+    }
+    if (!form.accessType) {
+      errors.accessType = 'Wybierz typ dostepu'
+    }
+    if (form.location && form.location.length > 120) {
+      errors.location = 'Lokalizacja moze miec maksymalnie 120 znakow'
+    }
+    if (form.condition && form.condition.length > 120) {
+      errors.condition = 'Stan moze miec maksymalnie 120 znakow'
+    }
+    return errors
+  }
+
+  function validateAddCopy(form) {
+    const errors = {}
+    const normalizedCode = form.inventoryCode.trim().toUpperCase()
+    if (!normalizedCode) {
+      errors.inventoryCode = 'Kod inwentarzowy jest wymagany'
+    } else if (normalizedCode.length > 60) {
+      errors.inventoryCode = 'Kod inwentarzowy moze miec maksymalnie 60 znakow'
+    } else if (!/^[A-Z0-9\\-_.]+$/.test(normalizedCode)) {
+      errors.inventoryCode = 'Kod moze zawierac tylko litery, cyfry, -, _ oraz kropke'
+    }
+    if (!form.status) {
+      errors.status = 'Wybierz status'
+    }
+    if (!form.accessType) {
+      errors.accessType = 'Wybierz typ dostepu'
+    }
+    if (form.location && form.location.length > 120) {
+      errors.location = 'Lokalizacja moze miec maksymalnie 120 znakow'
+    }
+    if (form.condition && form.condition.length > 120) {
+      errors.condition = 'Stan moze miec maksymalnie 120 znakow'
+    }
+    return errors
+  }
+
+  function formatFieldError(value) {
+    if (!value) return null
+    return Array.isArray(value) ? value.join(', ') : value
+  }
+
 
   async function addCopy(e) {
     e.preventDefault()
     if (!inventoryBookId) {
-      setError('Podaj ID książki, do której dodajesz egzemplarz')
+      setError('Podaj ID ksiazki, do ktorej dodajesz egzemplarz')
+      return
+    }
+    const validationErrors = validateAddCopy(copyForm)
+    if (Object.keys(validationErrors).length > 0) {
+      setAddCopyErrors(validationErrors)
       return
     }
     setLoading(true)
@@ -566,37 +661,55 @@ export default function LibrarianPanel() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(copyForm)
       })
-      setSuccess('Egzemplarz został dodany')
+      setSuccess('Egzemplarz zostal dodany')
       setCopyForm({ inventoryCode: '', status: 'AVAILABLE', accessType: 'STORAGE', location: '', condition: '' })
+      setAddCopyErrors({})
       loadCopies(inventoryBookId)
     } catch (err) {
-      setError(err.message || 'Nie udało się dodać egzemplarza')
+      if (err.details && typeof err.details === 'object') {
+        setAddCopyErrors(err.details)
+      }
+      setError(err.message || 'Nie udalo sie dodac egzemplarza')
     } finally {
       setLoading(false)
     }
   }
 
-  async function updateCopy(copy) {
-    const status = prompt('Status', copy.status || copy.state || 'AVAILABLE')
-    if (status === null) return
-    const accessType = prompt('Access type', copy.accessType || 'STORAGE')
-    if (accessType === null) return
-    const location = prompt('Location', copy.location || '')
-    if (location === null) return
-    const condition = prompt('Condition', copy.conditionState || copy.condition || '')
-    if (condition === null) return
-
+  async function updateCopy(e) {
+    e.preventDefault()
+    if (!editingCopy) return
+    const validationErrors = validateEditCopy(editCopyForm)
+    if (Object.keys(validationErrors).length > 0) {
+      setEditErrors(validationErrors)
+      return
+    }
+    setLoading(true)
+    setError(null)
+    setSuccess(null)
     try {
-      const bookId = inventoryBookId || copy.bookId || copy.book?.id
-      await apiFetch(`/api/admin/books/${bookId}/copies/${copy.id}`, {
+      const bookId = inventoryBookId || editingCopy.bookId || editingCopy.book?.id
+      const payload = {
+        inventoryCode: editCopyForm.inventoryCode.trim().toUpperCase(),
+        status: editCopyForm.status,
+        accessType: editCopyForm.accessType,
+        location: editCopyForm.location,
+        condition: editCopyForm.condition
+      }
+      const updated = await apiFetch(`/api/admin/books/${bookId}/copies/${editingCopy.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status, accessType, location, conditionState: condition })
+        body: JSON.stringify(payload)
       })
+      setCopies(prev => prev.map(copy => (copy.id === editingCopy.id ? { ...copy, ...updated } : copy)))
       setSuccess('Zaktualizowano egzemplarz')
-      loadCopies(bookId)
+      cancelEditCopy()
     } catch (err) {
-      setError(err.message || 'Nie udało się zaktualizować egzemplarza')
+      if (err.details && typeof err.details === 'object') {
+        setEditErrors(err.details)
+      }
+      setError(err.message || 'Nie udalo sie zaktualizowac egzemplarza')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -1541,8 +1654,13 @@ export default function LibrarianPanel() {
                   <tbody>
                     {sortedInventoryRows.map(row => {
                       const copy = inventoryCopyById.get(row.id)
+                      const isSelected = editingCopy?.id === row.id
                       return (
-                      <tr key={row.id}>
+                      <tr
+                        key={row.id}
+                        className={isSelected ? 'inventory-row is-selected' : 'inventory-row'}
+                        onClick={() => startEditCopy(copy)}
+                      >
                         <td>{row.bookTitle}</td>
                         <td>{row.bookAuthor}</td>
                         <td>{row.totalCopies}</td>
@@ -1553,8 +1671,26 @@ export default function LibrarianPanel() {
                         <td>{row.condition || '-'}</td>
                         <td>
                           <div className="table-actions">
-                            <button className="btn btn-outline btn-sm" type="button" onClick={() => updateCopy(copy)}>Edytuj</button>
-                            <button className="btn btn-danger btn-sm" type="button" onClick={() => deleteCopy(copy)}>Usun</button>
+                            <button
+                              className="btn btn-outline btn-sm"
+                              type="button"
+                              onClick={event => {
+                                event.stopPropagation()
+                                startEditCopy(copy)
+                              }}
+                            >
+                              Edytuj
+                            </button>
+                            <button
+                              className="btn btn-danger btn-sm"
+                              type="button"
+                              onClick={event => {
+                                event.stopPropagation()
+                                deleteCopy(copy)
+                              }}
+                            >
+                              Usun
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -1571,40 +1707,129 @@ export default function LibrarianPanel() {
           </div>
 
           <div className="surface-card">
-            <h2>Dodaj egzemplarz</h2>
-            <form className="form" onSubmit={addCopy}>
-              <div className="form-field">
-                <label>Kod inwentarzowy</label>
-                <input value={copyForm.inventoryCode} onChange={e => setCopyForm({ ...copyForm, inventoryCode: e.target.value })} required />
-              </div>
-              <div className="form-field">
-                <label>Status</label>
-                <select value={copyForm.status} onChange={e => setCopyForm({ ...copyForm, status: e.target.value })}>
-                  <option value="AVAILABLE">Dostepny</option>
-                  <option value="RESERVED">Zarezerwowany</option>
-                  <option value="BORROWED">Wypozyczony</option>
-                  <option value="MAINTENANCE">Niedostepny</option>
-                  <option value="WITHDRAWN">Wycofany</option>
-                </select>
-              </div>
-              <div className="form-field">
-                <label>Tryb dostepu</label>
-                <select value={copyForm.accessType} onChange={e => setCopyForm({ ...copyForm, accessType: e.target.value })}>
-                  <option value="STORAGE">Magazyn</option>
-                  <option value="OPEN_STACK">Wypozyczalnia</option>
-                  <option value="REFERENCE">Czytelnia/Odwolawcze</option>
-                </select>
-              </div>
-              <div className="form-field">
-                <label>Lokalizacja</label>
-                <input value={copyForm.location} onChange={e => setCopyForm({ ...copyForm, location: e.target.value })} />
-              </div>
-              <div className="form-field">
-                <label>Stan</label>
-                <input value={copyForm.condition} onChange={e => setCopyForm({ ...copyForm, condition: e.target.value })} />
-              </div>
-              <button type="submit" className="btn btn-primary" disabled={!inventoryBookId || loading}>Dodaj egzemplarz</button>
-            </form>
+            {editingCopy ? (
+              <>
+                <h2>Edytuj egzemplarz</h2>
+                <p className="support-copy">Edytujesz egzemplarz: {editingCopy.inventoryCode || `#${editingCopy.id}`}</p>
+                <form className="form" onSubmit={updateCopy}>
+                  <div className="form-field">
+                    <label>Kod inwentarzowy</label>
+                    <input
+                      value={editCopyForm.inventoryCode}
+                      onChange={e => setEditCopyForm({ ...editCopyForm, inventoryCode: e.target.value })}
+                      required
+                    />
+                    {formatFieldError(editErrors.inventoryCode) && (
+                      <div className="error">{formatFieldError(editErrors.inventoryCode)}</div>
+                    )}
+                  </div>
+                  <div className="form-field">
+                    <label>Status</label>
+                    <select value={editCopyForm.status} onChange={e => setEditCopyForm({ ...editCopyForm, status: e.target.value })}>
+                      <option value="AVAILABLE">Dostepny</option>
+                      <option value="RESERVED">Zarezerwowany</option>
+                      <option value="BORROWED">Wypozyczony</option>
+                      <option value="MAINTENANCE">Niedostepny</option>
+                      <option value="WITHDRAWN">Wycofany</option>
+                    </select>
+                    {formatFieldError(editErrors.status) && (
+                      <div className="error">{formatFieldError(editErrors.status)}</div>
+                    )}
+                  </div>
+                  <div className="form-field">
+                    <label>Tryb dostepu</label>
+                    <select value={editCopyForm.accessType} onChange={e => setEditCopyForm({ ...editCopyForm, accessType: e.target.value })}>
+                      <option value="STORAGE">Magazyn</option>
+                      <option value="OPEN_STACK">Wypozyczalnia</option>
+                      <option value="REFERENCE">Czytelnia/Odwolawcze</option>
+                    </select>
+                    {formatFieldError(editErrors.accessType) && (
+                      <div className="error">{formatFieldError(editErrors.accessType)}</div>
+                    )}
+                  </div>
+                  <div className="form-field">
+                    <label>Lokalizacja</label>
+                    <input
+                      value={editCopyForm.location}
+                      onChange={e => setEditCopyForm({ ...editCopyForm, location: e.target.value })}
+                    />
+                    {formatFieldError(editErrors.location) && (
+                      <div className="error">{formatFieldError(editErrors.location)}</div>
+                    )}
+                  </div>
+                  <div className="form-field">
+                    <label>Stan</label>
+                    <input
+                      value={editCopyForm.condition}
+                      onChange={e => setEditCopyForm({ ...editCopyForm, condition: e.target.value })}
+                    />
+                    {formatFieldError(editErrors.condition) && (
+                      <div className="error">{formatFieldError(editErrors.condition)}</div>
+                    )}
+                  </div>
+                  <div className="form-actions">
+                    <button type="button" className="btn btn-secondary" onClick={cancelEditCopy} disabled={loading}>
+                      Anuluj
+                    </button>
+                    <button type="submit" className="btn btn-primary" disabled={loading}>
+                      Aktualizuj
+                    </button>
+                  </div>
+                </form>
+              </>
+            ) : (
+              <>
+                <h2>Dodaj egzemplarz</h2>
+                <form className="form" onSubmit={addCopy}>
+                  <div className="form-field">
+                    <label>Kod inwentarzowy</label>
+                    <input value={copyForm.inventoryCode} onChange={e => setCopyForm({ ...copyForm, inventoryCode: e.target.value })} required />
+                    {formatFieldError(addCopyErrors.inventoryCode) && (
+                      <div className="error">{formatFieldError(addCopyErrors.inventoryCode)}</div>
+                    )}
+                  </div>
+                  <div className="form-field">
+                    <label>Status</label>
+                    <select value={copyForm.status} onChange={e => setCopyForm({ ...copyForm, status: e.target.value })}>
+                      <option value="AVAILABLE">Dostepny</option>
+                      <option value="RESERVED">Zarezerwowany</option>
+                      <option value="BORROWED">Wypozyczony</option>
+                      <option value="MAINTENANCE">Niedostepny</option>
+                      <option value="WITHDRAWN">Wycofany</option>
+                    </select>
+                    {formatFieldError(addCopyErrors.status) && (
+                      <div className="error">{formatFieldError(addCopyErrors.status)}</div>
+                    )}
+                  </div>
+                  <div className="form-field">
+                    <label>Tryb dostepu</label>
+                    <select value={copyForm.accessType} onChange={e => setCopyForm({ ...copyForm, accessType: e.target.value })}>
+                      <option value="STORAGE">Magazyn</option>
+                      <option value="OPEN_STACK">Wypozyczalnia</option>
+                      <option value="REFERENCE">Czytelnia/Odwolawcze</option>
+                    </select>
+                    {formatFieldError(addCopyErrors.accessType) && (
+                      <div className="error">{formatFieldError(addCopyErrors.accessType)}</div>
+                    )}
+                  </div>
+                  <div className="form-field">
+                    <label>Lokalizacja</label>
+                    <input value={copyForm.location} onChange={e => setCopyForm({ ...copyForm, location: e.target.value })} />
+                    {formatFieldError(addCopyErrors.location) && (
+                      <div className="error">{formatFieldError(addCopyErrors.location)}</div>
+                    )}
+                  </div>
+                  <div className="form-field">
+                    <label>Stan</label>
+                    <input value={copyForm.condition} onChange={e => setCopyForm({ ...copyForm, condition: e.target.value })} />
+                    {formatFieldError(addCopyErrors.condition) && (
+                      <div className="error">{formatFieldError(addCopyErrors.condition)}</div>
+                    )}
+                  </div>
+                  <button type="submit" className="btn btn-primary" disabled={!inventoryBookId || loading}>Dodaj egzemplarz</button>
+                </form>
+              </>
+            )}
           </div>
         </div>
       )}
@@ -1819,3 +2044,5 @@ export default function LibrarianPanel() {
     </div>
   )
 }
+
+
