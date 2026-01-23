@@ -15,6 +15,8 @@ use OpenApi\Attributes as OA;
 #[OA\Tag(name: 'Dashboard')]
 class DashboardController extends AbstractController
 {
+    use ExceptionHandlingTrait;
+
     public function __construct(
         private readonly SecurityService $security,
         private readonly MessageBusInterface $queryBus
@@ -34,12 +36,12 @@ class DashboardController extends AbstractController
     {
         $userId = $this->security->getCurrentUserId($request);
         if ($userId === null) {
-            return $this->json(['message' => 'Unauthorized'], 401);
+            return $this->jsonErrorMessage(401, 'Unauthorized');
         }
 
         $envelope = $this->queryBus->dispatch(new DashboardOverviewQuery($userId));
         $stats = $envelope->last(HandledStamp::class)?->getResult();
 
-        return $this->json($stats, 200);
+        return $this->jsonSuccess($stats);
     }
 }

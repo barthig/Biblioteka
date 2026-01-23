@@ -99,7 +99,7 @@ class BookInventoryController extends AbstractController
         ValidatorInterface $validator
     ): JsonResponse {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['message' => 'Forbidden'], 403);
+            return $this->jsonErrorMessage(403, 'Forbidden');
         }
 
         $data = json_decode($request->getContent(), true) ?? [];

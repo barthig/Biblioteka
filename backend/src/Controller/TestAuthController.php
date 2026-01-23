@@ -15,6 +15,8 @@ use OpenApi\Attributes as OA;
 #[OA\Tag(name: 'TestAuth')]
 class TestAuthController extends AbstractController
 {
+    use ExceptionHandlingTrait;
+    
     public function __construct(
         private RefreshTokenService $refreshTokenService
     ) {
@@ -46,7 +48,7 @@ class TestAuthController extends AbstractController
     {
         $env = getenv('APP_ENV') ?: ($_ENV['APP_ENV'] ?? 'prod');
         if (!in_array($env, ['dev', 'test'], true)) {
-            return $this->json(['message' => 'Not found'], 404);
+            return $this->jsonErrorMessage(404, 'Not found');
         }
 
         try {
@@ -55,12 +57,12 @@ class TestAuthController extends AbstractController
             $password = $data['password'] ?? '';
 
             if (!$email || !$password) {
-                return $this->json(['message' => 'Email i hasło są wymagane'], 400);
+                return $this->jsonErrorMessage(400, 'Email i hasło są wymagane');
             }
 
             $user = $repo->findOneBy(['email' => $email]);
             if (!$user) {
-                return $this->json(['message' => 'Użytkownik nie znaleziony', 'email' => $email], 404);
+                return $this->jsonErrorMessage(404, 'Użytkownik nie znaleziony');
             }
 
             if (!password_verify($password, $user->getPassword())) {

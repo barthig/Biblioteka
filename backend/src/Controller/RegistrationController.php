@@ -17,6 +17,7 @@ use OpenApi\Attributes as OA;
 #[OA\Tag(name: 'Registration')]
 class RegistrationController extends AbstractController
 {
+    use ExceptionHandlingTrait;
     use ValidationTrait;
 
     public function __construct(
@@ -113,9 +114,9 @@ class RegistrationController extends AbstractController
                 $status = 400;
             }
 
-            return $this->json(['message' => $exception->getMessage()], $status);
+            return $this->jsonErrorMessage($status, $exception->getMessage());
         } catch (\Throwable $error) {
-            return $this->json(['message' => 'Nie udało się utworzyć konta.'], 500);
+            return $this->jsonErrorMessage(500, 'Nie udało się utworzyć konta.');
         }
 
         return $this->json([
@@ -160,9 +161,9 @@ class RegistrationController extends AbstractController
                 $status = 400;
             }
 
-            return $this->json(['message' => $exception->getMessage()], $status);
+            return $this->jsonErrorMessage($status, $exception->getMessage());
         } catch (\Throwable $error) {
-            return $this->json(['message' => 'Nie udało się zweryfikować konta.'], 500);
+            return $this->jsonErrorMessage(500, 'Nie udało się zweryfikować konta.');
         }
 
         $response = [

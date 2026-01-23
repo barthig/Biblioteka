@@ -18,6 +18,8 @@ use OpenApi\Attributes as OA;
 #[OA\Tag(name: 'Recommendation')]
 class RecommendationController extends AbstractController
 {
+    use ExceptionHandlingTrait;
+    
     public function __construct(
         private readonly OpenAIEmbeddingService $embeddingService,
         private readonly MessageBusInterface $queryBus,
@@ -50,7 +52,7 @@ class RecommendationController extends AbstractController
         $query = is_array($payload) ? trim((string) ($payload['query'] ?? '')) : '';
 
         if ($query === '') {
-            return $this->json(['message' => 'Query is required.'], 400);
+            return $this->jsonErrorMessage(400, 'Query is required.');
         }
 
         $vector = $this->embeddingService->getVector($query);
@@ -76,13 +78,13 @@ class RecommendationController extends AbstractController
     {
         $userId = $this->security->getCurrentUserId($request);
         if ($userId === null) {
-            return $this->json(['message' => 'Unauthorized'], 401);
+            return $this->jsonErrorMessage(401, 'Unauthorized');
         }
 
         $envelope = $this->queryBus->dispatch(new GetUserByIdQuery($userId));
         $user = $envelope->last(HandledStamp::class)?->getResult();
         if (!$user) {
-            return $this->json(['message' => 'User not found'], 404);
+            return $this->jsonErrorMessage(404, 'User not found');
         }
 
         $result = $this->recommendationService->getPersonalizedRecommendations($user, 10);

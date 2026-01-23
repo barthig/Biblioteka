@@ -16,6 +16,8 @@ use OpenApi\Attributes as OA;
 #[OA\Tag(name: 'RecommendationFeedback')]
 class RecommendationFeedbackController extends AbstractController
 {
+    use ExceptionHandlingTrait;
+    
     public function __construct(
         private readonly SecurityService $security,
         private readonly MessageBusInterface $commandBus
@@ -46,7 +48,7 @@ class RecommendationFeedbackController extends AbstractController
     {
         $userId = $this->security->getCurrentUserId($request);
         if (!$userId) {
-            return $this->json(['message' => 'Unauthorized'], 401);
+            return $this->jsonErrorMessage(401, 'Unauthorized');
         }
 
         $data = json_decode($request->getContent(), true);
@@ -54,11 +56,11 @@ class RecommendationFeedbackController extends AbstractController
         $feedbackType = $data['feedbackType'] ?? null;
 
         if (!$bookId || !$feedbackType) {
-            return $this->json(['message' => 'bookId and feedbackType are required'], 400);
+            return $this->jsonErrorMessage(400, 'bookId and feedbackType are required');
         }
 
         if (!in_array($feedbackType, [RecommendationFeedback::TYPE_DISMISS, RecommendationFeedback::TYPE_INTERESTED])) {
-            return $this->json(['message' => 'Invalid feedbackType'], 400);
+            return $this->jsonErrorMessage(400, 'Invalid feedbackType');
         }
 
         $this->commandBus->dispatch(new UpsertRecommendationFeedbackCommand(
@@ -92,7 +94,7 @@ class RecommendationFeedbackController extends AbstractController
     {
         $userId = $this->security->getCurrentUserId($request);
         if (!$userId) {
-            return $this->json(['message' => 'Unauthorized'], 401);
+            return $this->jsonErrorMessage(401, 'Unauthorized');
         }
 
         $this->commandBus->dispatch(new RemoveRecommendationFeedbackCommand($userId, $bookId));

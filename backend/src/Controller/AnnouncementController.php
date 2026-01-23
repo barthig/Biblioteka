@@ -80,7 +80,7 @@ class AnnouncementController extends AbstractController
             if ($response = $this->jsonFromHttpException($e)) {
                 return $response;
             }
-            return $this->json(['message' => 'Internal error: ' . $e->getMessage()], 500);
+            return $this->jsonErrorMessage(500, 'Internal error: ' . $e->getMessage());
         }
     }
 
@@ -123,7 +123,7 @@ class AnnouncementController extends AbstractController
             if ($response = $this->jsonFromHttpException($e)) {
                 return $response;
             }
-            return $this->json(['message' => $e->getMessage()], 404);
+            return $this->jsonErrorMessage(404, $e->getMessage());
         }
     }
 
@@ -156,23 +156,23 @@ class AnnouncementController extends AbstractController
     {
         $payload = $security->getJwtPayload($request);
         if (!$payload || !isset($payload['sub'])) {
-            return $this->json(['message' => 'Unauthorized'], 401);
+            return $this->jsonErrorMessage(401, 'Unauthorized');
         }
 
         $envelope = $this->queryBus->dispatch(new GetUserByIdQuery((int) $payload['sub']));
         $user = $envelope->last(HandledStamp::class)?->getResult();
         if (!$user) {
-            return $this->json(['message' => 'User not found'], 404);
+            return $this->jsonErrorMessage(404, 'User not found');
         }
 
         if (!in_array('ROLE_LIBRARIAN', $user->getRoles()) && !in_array('ROLE_ADMIN', $user->getRoles())) {
-            return $this->json(['message' => 'Access denied'], 403);
+            return $this->jsonErrorMessage(403, 'Access denied');
         }
 
         $data = json_decode($request->getContent(), true);
 
         if (empty($data['title']) || empty($data['content'])) {
-            return $this->json(['message' => 'Title and content are required'], 400);
+            return $this->jsonErrorMessage(400, 'Title and content are required');
         }
 
         try {
@@ -198,7 +198,7 @@ class AnnouncementController extends AbstractController
             if ($response = $this->jsonFromHttpException($e)) {
                 return $response;
             }
-            return $this->json(['message' => $e->getMessage()], 400);
+            return $this->jsonErrorMessage(400, $e->getMessage());
         }
     }
 
@@ -217,13 +217,13 @@ class AnnouncementController extends AbstractController
     {
         $payload = $security->getJwtPayload($request);
         if (!$payload || !isset($payload['sub'])) {
-            return $this->json(['message' => 'Unauthorized'], 401);
+            return $this->jsonErrorMessage(401, 'Unauthorized');
         }
 
         $envelope = $this->queryBus->dispatch(new GetUserByIdQuery((int) $payload['sub']));
         $user = $envelope->last(HandledStamp::class)?->getResult();
         if (!$user || (!in_array('ROLE_LIBRARIAN', $user->getRoles()) && !in_array('ROLE_ADMIN', $user->getRoles()))) {
-            return $this->json(['message' => 'Access denied'], 403);
+            return $this->jsonErrorMessage(403, 'Access denied');
         }
 
         $data = json_decode($request->getContent(), true);
@@ -251,7 +251,7 @@ class AnnouncementController extends AbstractController
             if ($response = $this->jsonFromHttpException($e)) {
                 return $response;
             }
-            return $this->json(['message' => $e->getMessage()], 404);
+            return $this->jsonErrorMessage(404, $e->getMessage());
         }
     }
 
@@ -269,13 +269,13 @@ class AnnouncementController extends AbstractController
     {
         $payload = $security->getJwtPayload($request);
         if (!$payload || !isset($payload['sub'])) {
-            return $this->json(['message' => 'Unauthorized'], 401);
+            return $this->jsonErrorMessage(401, 'Unauthorized');
         }
 
         $envelope = $this->queryBus->dispatch(new GetUserByIdQuery((int) $payload['sub']));
         $user = $envelope->last(HandledStamp::class)?->getResult();
         if (!$user || (!in_array('ROLE_LIBRARIAN', $user->getRoles()) && !in_array('ROLE_ADMIN', $user->getRoles()))) {
-            return $this->json(['message' => 'Access denied'], 403);
+            return $this->jsonErrorMessage(403, 'Access denied');
         }
 
         try {
@@ -288,7 +288,7 @@ class AnnouncementController extends AbstractController
             if ($response = $this->jsonFromHttpException($e)) {
                 return $response;
             }
-            return $this->json(['message' => $e->getMessage()], 404);
+            return $this->jsonErrorMessage(404, $e->getMessage());
         }
     }
 
@@ -306,13 +306,13 @@ class AnnouncementController extends AbstractController
     {
         $payload = $security->getJwtPayload($request);
         if (!$payload || !isset($payload['sub'])) {
-            return $this->json(['message' => 'Unauthorized'], 401);
+            return $this->jsonErrorMessage(401, 'Unauthorized');
         }
 
         $envelope = $this->queryBus->dispatch(new GetUserByIdQuery((int) $payload['sub']));
         $user = $envelope->last(HandledStamp::class)?->getResult();
         if (!$user || (!in_array('ROLE_LIBRARIAN', $user->getRoles()) && !in_array('ROLE_ADMIN', $user->getRoles()))) {
-            return $this->json(['message' => 'Access denied'], 403);
+            return $this->jsonErrorMessage(403, 'Access denied');
         }
 
         try {
@@ -325,7 +325,7 @@ class AnnouncementController extends AbstractController
             if ($response = $this->jsonFromHttpException($e)) {
                 return $response;
             }
-            return $this->json(['message' => $e->getMessage()], 404);
+            return $this->jsonErrorMessage(404, $e->getMessage());
         }
     }
 
@@ -343,13 +343,13 @@ class AnnouncementController extends AbstractController
     {
         $payload = $security->getJwtPayload($request);
         if (!$payload || !isset($payload['sub'])) {
-            return $this->json(['message' => 'Unauthorized'], 401);
+            return $this->jsonErrorMessage(401, 'Unauthorized');
         }
 
         $envelope = $this->queryBus->dispatch(new GetUserByIdQuery((int) $payload['sub']));
         $user = $envelope->last(HandledStamp::class)?->getResult();
         if (!$user || (!in_array('ROLE_LIBRARIAN', $user->getRoles()) && !in_array('ROLE_ADMIN', $user->getRoles()))) {
-            return $this->json(['message' => 'Access denied'], 403);
+            return $this->jsonErrorMessage(403, 'Access denied');
         }
 
         try {
@@ -360,7 +360,7 @@ class AnnouncementController extends AbstractController
             if ($response = $this->jsonFromHttpException($e)) {
                 return $response;
             }
-            return $this->json(['message' => $e->getMessage()], 404);
+            return $this->jsonErrorMessage(404, $e->getMessage());
         }
     }
 }

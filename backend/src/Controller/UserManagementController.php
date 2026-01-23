@@ -235,7 +235,7 @@ public function create(Request $request, ValidatorInterface $validator): JsonRes
             if ($response = $this->jsonFromHttpException($e)) {
                 return $response;
             }
-            return $this->json(['message' => $e->getMessage()], 404);
+            return $this->jsonErrorMessage(404, $e->getMessage());
         }
     }
 
@@ -412,7 +412,7 @@ public function create(Request $request, ValidatorInterface $validator): JsonRes
             if ($response = $this->jsonFromHttpException($e)) {
                 return $response;
             }
-            return $this->json(['message' => $e->getMessage()], 404);
+            return $this->jsonErrorMessage(404, $e->getMessage());
         }
     }
 

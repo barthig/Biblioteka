@@ -1,6 +1,7 @@
 <?php
 namespace App\Controller\Admin;
 
+use App\Controller\Traits\ExceptionHandlingTrait;
 use App\Repository\BackupRecordRepository;
 use App\Service\BackupService;
 use App\Service\SecurityService;
@@ -12,6 +13,8 @@ use OpenApi\Attributes as OA;
 
 class SecurityAdminController extends AbstractController
 {
+    use ExceptionHandlingTrait;
+    
     #[OA\Tag(name: 'Admin/SecurityAdmin')]
     public function __construct(private BackupService $backupService, private BackupRecordRepository $backups)
     {
@@ -29,7 +32,7 @@ class SecurityAdminController extends AbstractController
     public function createBackup(Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_ADMIN')) {
-            return $this->json(['message' => 'Forbidden'], 403);
+            return $this->jsonErrorMessage(403, 'Forbidden');
         }
 
         $payload = $security->getJwtPayload($request);
@@ -57,7 +60,7 @@ class SecurityAdminController extends AbstractController
     public function listBackups(Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_ADMIN')) {
-            return $this->json(['message' => 'Forbidden'], 403);
+            return $this->jsonErrorMessage(403, 'Forbidden');
         }
 
         $records = array_map(static function ($record): array {
@@ -85,7 +88,7 @@ class SecurityAdminController extends AbstractController
     public function viewLogs(Request $request, SecurityService $security, KernelInterface $kernel): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_ADMIN')) {
-            return $this->json(['message' => 'Forbidden'], 403);
+            return $this->jsonErrorMessage(403, 'Forbidden');
         }
 
     $limit = max(1, min(200, $request->query->getInt('limit', 50)));

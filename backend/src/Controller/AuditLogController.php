@@ -79,7 +79,7 @@ class AuditLogController extends AbstractController
     public function list(Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['message' => 'Forbidden'], 403);
+            return $this->jsonErrorMessage(403, 'Forbidden');
         }
 
         $page = max(1, $request->query->getInt('page', 1));
@@ -119,7 +119,7 @@ class AuditLogController extends AbstractController
     public function entityHistory(string $entityType, int $entityId, SecurityService $security, Request $request): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['message' => 'Forbidden'], 403);
+            return $this->jsonErrorMessage(403, 'Forbidden');
         }
 
         $envelope = $this->queryBus->dispatch(new GetEntityHistoryQuery($entityType, $entityId));

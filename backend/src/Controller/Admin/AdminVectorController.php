@@ -36,7 +36,7 @@ class AdminVectorController extends AbstractController
     public function reindexAll(Request $request): JsonResponse
     {
         if (!$this->security->hasRole($request, 'ROLE_ADMIN')) {
-            return $this->json(['message' => 'Forbidden'], 403);
+            return $this->jsonErrorMessage(403, 'Forbidden');
         }
 
         $qb = $this->books->createQueryBuilder('b')->select('b.id');
@@ -67,7 +67,7 @@ class AdminVectorController extends AbstractController
     public function stats(Request $request): JsonResponse
     {
         if (!$this->security->hasRole($request, 'ROLE_ADMIN')) {
-            return $this->json(['message' => 'Forbidden'], 403);
+            return $this->jsonErrorMessage(403, 'Forbidden');
         }
 
         $total = (int) $this->books->createQueryBuilder('b')

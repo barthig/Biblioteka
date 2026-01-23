@@ -19,6 +19,8 @@ use OpenApi\Attributes as OA;
 
 class AuthorController extends AbstractController
 {
+    use ExceptionHandlingTrait;
+    
     #[OA\Tag(name: 'Author')]
     public function __construct(
         private readonly MessageBusInterface $bus
@@ -79,7 +81,7 @@ class AuthorController extends AbstractController
 
             return $this->json($author, Response::HTTP_OK, [], ['groups' => ['book:read']]);
         } catch (\Symfony\Component\HttpKernel\Exception\NotFoundHttpException $e) {
-            return $this->json(['message' => $e->getMessage()], Response::HTTP_NOT_FOUND);
+            return $this->jsonErrorMessage(Response::HTTP_NOT_FOUND, $e->getMessage());
         }
     }
 
@@ -109,7 +111,7 @@ class AuthorController extends AbstractController
         $data = json_decode($request->getContent(), true);
 
         if (empty($data['name'])) {
-            return $this->json(['message' => 'Name is required'], Response::HTTP_BAD_REQUEST);
+            return $this->jsonErrorMessage(400, 'Name is required');
         }
 
         $command = new CreateAuthorCommand(name: $data['name']);
@@ -157,7 +159,7 @@ class AuthorController extends AbstractController
 
             return $this->json($author, Response::HTTP_OK, [], ['groups' => ['book:read']]);
         } catch (\Symfony\Component\HttpKernel\Exception\NotFoundHttpException $e) {
-            return $this->json(['message' => $e->getMessage()], Response::HTTP_NOT_FOUND);
+            return $this->jsonErrorMessage(Response::HTTP_NOT_FOUND, $e->getMessage());
         }
     }
 
@@ -184,7 +186,7 @@ class AuthorController extends AbstractController
 
             return $this->json(null, Response::HTTP_NO_CONTENT);
         } catch (\Symfony\Component\HttpKernel\Exception\NotFoundHttpException $e) {
-            return $this->json(['message' => $e->getMessage()], Response::HTTP_NOT_FOUND);
+            return $this->jsonErrorMessage(Response::HTTP_NOT_FOUND, $e->getMessage());
         }
     }
 }

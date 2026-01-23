@@ -294,7 +294,7 @@ class ReservationController extends AbstractController
                 )
             );
 
-            return $this->json(['message' => 'Reservation fulfilled, loan created'], 200);
+            return $this->jsonSuccess(['message' => 'Reservation fulfilled, loan created']);
         } catch (\Throwable $e) {
             if ($e instanceof HandlerFailedException) {
                 $e = $e->getPrevious() ?? $e;
@@ -341,7 +341,7 @@ class ReservationController extends AbstractController
                 )
             );
 
-            return $this->json(['message' => 'Reservation marked as prepared, notification sent'], 200);
+            return $this->jsonSuccess(['message' => 'Reservation marked as prepared, notification sent']);
         } catch (\Throwable $e) {
             if ($e instanceof HandlerFailedException) {
                 $e = $e->getPrevious() ?? $e;

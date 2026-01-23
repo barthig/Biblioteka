@@ -1,16 +1,20 @@
 <?php
 namespace App\Controller;
 
+use App\Application\Query\User\GetUserByIdQuery;
 use App\Repository\UserRepository;
 use App\Request\LoginRequest;
 use App\Service\JwtService;
 use App\Service\RefreshTokenService;
+use App\Service\SecurityService;
 use App\Controller\Traits\ExceptionHandlingTrait;
 use App\Dto\ApiError;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Messenger\MessageBusInterface;
+use Symfony\Component\Messenger\Stamp\HandledStamp;
 use Symfony\Component\RateLimiter\RateLimiterFactory;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use OpenApi\Attributes as OA;

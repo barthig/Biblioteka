@@ -5,6 +5,7 @@ use App\Application\Command\IntegrationConfig\CreateIntegrationConfigCommand;
 use App\Application\Command\IntegrationConfig\UpdateIntegrationConfigCommand;
 use App\Application\Query\IntegrationConfig\GetIntegrationConfigQuery;
 use App\Application\Query\IntegrationConfig\ListIntegrationConfigsQuery;
+use App\Controller\Traits\ExceptionHandlingTrait;
 use App\Entity\IntegrationConfig;
 use App\Service\SecurityService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -17,6 +18,7 @@ use OpenApi\Attributes as OA;
 #[OA\Tag(name: 'Admin/IntegrationAdmin')]
 class IntegrationAdminController extends AbstractController
 {
+    use ExceptionHandlingTrait;
     public function __construct(
         private MessageBusInterface $commandBus,
         private MessageBusInterface $queryBus
@@ -34,7 +36,7 @@ class IntegrationAdminController extends AbstractController
     public function list(Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_ADMIN')) {
-            return $this->json(['message' => 'Forbidden'], 403);
+            return $this->jsonErrorMessage(403, 'Forbidden');
         }
 
         $envelope = $this->queryBus->dispatch(new ListIntegrationConfigsQuery(page: 1, limit: 200));
@@ -81,7 +83,7 @@ class IntegrationAdminController extends AbstractController
     public function create(Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_ADMIN')) {
-            return $this->json(['message' => 'Forbidden'], 403);
+            return $this->jsonErrorMessage(403, 'Forbidden');
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
@@ -91,7 +93,7 @@ class IntegrationAdminController extends AbstractController
         $enabled = isset($data['enabled']) ? (bool) $data['enabled'] : true;
 
         if ($name === '' || $provider === '') {
-            return $this->json(['message' => 'name and provider are required'], 400);
+            return $this->jsonErrorMessage(400, 'name and provider are required');
         }
 
         $command = new CreateIntegrationConfigCommand(
@@ -127,7 +129,7 @@ class IntegrationAdminController extends AbstractController
     public function update(int $id, Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_ADMIN')) {
-            return $this->json(['message' => 'Forbidden'], 403);
+            return $this->jsonErrorMessage(403, 'Forbidden');
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
@@ -166,7 +168,7 @@ class IntegrationAdminController extends AbstractController
     public function testConnection(int $id, Request $request, SecurityService $security): JsonResponse
     {
         if (!$security->hasRole($request, 'ROLE_ADMIN')) {
-            return $this->json(['message' => 'Forbidden'], 403);
+            return $this->jsonErrorMessage(403, 'Forbidden');
         }
 
         $configEnvelope = $this->queryBus->dispatch(new GetIntegrationConfigQuery(configId: $id));

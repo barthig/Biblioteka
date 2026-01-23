@@ -95,7 +95,7 @@ class CollectionController extends AbstractController
     {
         $collection = $this->collectionRepo->find($id);
         if (!$collection) {
-            return $this->json(['message' => 'Collection not found'], 404);
+            return $this->jsonErrorMessage(404, 'Collection not found');
         }
 
         return $this->json([
@@ -124,7 +124,7 @@ class CollectionController extends AbstractController
     {
         $userId = $this->security->getCurrentUserId($request);
         if (!$userId || !$this->security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['message' => 'Forbidden'], 403);
+            return $this->jsonErrorMessage(403, 'Forbidden');
         }
 
         $data = json_decode($request->getContent(), true);
@@ -174,7 +174,7 @@ class CollectionController extends AbstractController
     {
         $userId = $this->security->getCurrentUserId($request);
         if (!$userId || !$this->security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->json(['message' => 'Forbidden'], 403);
+            return $this->jsonErrorMessage(403, 'Forbidden');
         }
 
         $data = json_decode($request->getContent(), true);
@@ -187,7 +187,7 @@ class CollectionController extends AbstractController
             bookIds: isset($data['bookIds']) && is_array($data['bookIds']) ? $data['bookIds'] : null
         ));
 
-        return $this->json(['success' => true, 'message' => 'Collection updated']);
+        return $this->jsonSuccess(['message' => 'Collection updated']);
     }
     #[OA\Delete(
         path: '/api/collections/{id}',
@@ -205,7 +205,7 @@ class CollectionController extends AbstractController
     {
         $userId = $this->security->getCurrentUserId($request);
         if (!$userId || !$this->security->hasRole($request, 'ROLE_ADMIN')) {
-            return $this->json(['message' => 'Forbidden'], 403);
+            return $this->jsonErrorMessage(403, 'Forbidden');
         }
 
         $this->commandBus->dispatch(new DeleteCollectionCommand($id));
