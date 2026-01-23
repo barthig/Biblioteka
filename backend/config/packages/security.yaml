@@ -22,5 +22,33 @@ security:
       stateless: true
       provider: app_user_provider
       lazy: true
+      custom_authenticators:
+        - App\Security\JwtAuthenticator
+
+  access_control:
+    # Public endpoints
+    - { path: ^/api/auth/login, roles: PUBLIC_ACCESS }
+    - { path: ^/api/auth/register, roles: PUBLIC_ACCESS }
+    - { path: ^/api/auth/refresh, roles: PUBLIC_ACCESS }
+    - { path: ^/api/health, roles: PUBLIC_ACCESS }
+    - { path: ^/health, roles: PUBLIC_ACCESS }
+    - { path: ^/api/docs, roles: PUBLIC_ACCESS }
+    - { path: ^/api/docs\.json, roles: PUBLIC_ACCESS }
+    - { path: ^/api/books, roles: PUBLIC_ACCESS, methods: [GET] }
+    - { path: ^/api/books/\d+, roles: PUBLIC_ACCESS, methods: [GET] }
+    - { path: ^/api/books/\d+/availability, roles: PUBLIC_ACCESS, methods: [GET] }
+    - { path: ^/api/books/\d+/ratings, roles: PUBLIC_ACCESS, methods: [GET] }
+    - { path: ^/api/collections, roles: PUBLIC_ACCESS, methods: [GET] }
+    - { path: ^/api/collections/\d+, roles: PUBLIC_ACCESS, methods: [GET] }
+    - { path: ^/api/announcements, roles: PUBLIC_ACCESS, methods: [GET] }
+    - { path: ^/api/announcements/\d+, roles: PUBLIC_ACCESS, methods: [GET] }
+    - { path: ^/api/library/hours, roles: PUBLIC_ACCESS, methods: [GET] }
+
+    # Admin / restricted
+    - { path: ^/api/admin, roles: ROLE_ADMIN }
+    - { path: ^/admin, roles: ROLE_ADMIN }
+
+    # Default API access
+    - { path: ^/api, roles: ROLE_USER }
 
   # Authorization is enforced via ApiAuthSubscriber + per-controller checks.

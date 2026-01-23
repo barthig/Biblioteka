@@ -14,6 +14,8 @@ use OpenApi\Attributes as OA;
 #[OA\Tag(name: 'Notification')]
 class NotificationController extends AbstractController
 {
+    use ExceptionHandlingTrait;
+
     public function __construct(
         private readonly SecurityService $security,
         private readonly NotificationLogRepository $notificationLogs,
@@ -183,3 +185,4 @@ class NotificationController extends AbstractController
         return $created;
     }
 }
+

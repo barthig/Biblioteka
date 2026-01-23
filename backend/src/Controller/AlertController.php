@@ -14,6 +14,8 @@ use OpenApi\Attributes as OA;
 
 class AlertController extends AbstractController
 {
+    use ExceptionHandlingTrait;
+
     #[OA\Tag(name: 'Alert')]
     public function __construct(
         private readonly SecurityService $security,
@@ -68,3 +70,4 @@ class AlertController extends AbstractController
         return $this->json($hours);
     }
 }
+

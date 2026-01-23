@@ -884,6 +884,7 @@ export default function LibrarianPanel() {
         subtitle="Obsługa wypożyczeń i zarządzanie biblioteką"
       />
 
+      {loading && <FeedbackCard variant="info">Trwa ładowanie danych...</FeedbackCard>}
       {error && <FeedbackCard variant="error">{error}</FeedbackCard>}
       {success && <FeedbackCard variant="success">{success}</FeedbackCard>}
 

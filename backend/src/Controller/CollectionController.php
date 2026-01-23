@@ -19,6 +19,8 @@ use OpenApi\Attributes as OA;
 #[OA\Tag(name: 'Collection')]
 class CollectionController extends AbstractController
 {
+    use ExceptionHandlingTrait;
+
     public function __construct(
         private readonly SecurityService $security,
         private readonly CollectionRepository $collectionRepo,

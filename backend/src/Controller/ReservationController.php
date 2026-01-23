@@ -142,7 +142,7 @@ class ReservationController extends AbstractController
     {
         $payload = $this->security->getJwtPayload($request);
         if (!$payload || !isset($payload['sub'])) {
-            return $this->json(['message' => 'Unauthorized'], 401);
+            return $this->jsonError(ApiError::unauthorized());
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
@@ -170,11 +170,11 @@ class ReservationController extends AbstractController
             }
 
             if ($e instanceof HttpExceptionInterface) {
-                return $this->json(['message' => $e->getMessage()], $e->getStatusCode());
+                return $this->jsonErrorMessage($e->getStatusCode(), $e->getMessage());
             }
 
             if ($e instanceof \InvalidArgumentException) {
-                return $this->json(['message' => $e->getMessage()], 400);
+                return $this->jsonErrorMessage(400, $e->getMessage());
             }
             
             if ($e instanceof \RuntimeException) {
@@ -184,10 +184,10 @@ class ReservationController extends AbstractController
                     'Masz już aktywną rezerwację na tę książkę' => 409,
                     default => 500
                 };
-                return $this->json(['message' => $e->getMessage()], $statusCode);
+                return $this->jsonErrorMessage($statusCode, $e->getMessage());
             }
             
-            return $this->json(['message' => 'Internal error: ' . $e->getMessage()], 500);
+            return $this->jsonErrorMessage(500, 'Internal error: ' . $e->getMessage());
         }
     }
 
@@ -209,14 +209,14 @@ class ReservationController extends AbstractController
     public function cancel(string $id, Request $request): JsonResponse
     {
         if (!ctype_digit($id) || (int)$id <= 0) {
-            return $this->json(['message' => 'Invalid reservation id'], 400);
+            return $this->jsonError(ApiError::badRequest('Invalid reservation id'));
         }
 
         $payload = $this->security->getJwtPayload($request);
         $isLibrarian = $this->security->hasRole($request, 'ROLE_LIBRARIAN');
 
         if (!$payload || !isset($payload['sub'])) {
-            return $this->json(['message' => 'Unauthorized'], 401);
+            return $this->jsonError(ApiError::unauthorized());
         }
 
         $userId = (int)$payload['sub'];
@@ -236,7 +236,7 @@ class ReservationController extends AbstractController
             }
 
             if ($e instanceof HttpExceptionInterface) {
-                return $this->json(['message' => $e->getMessage()], $e->getStatusCode());
+                return $this->jsonErrorMessage($e->getStatusCode(), $e->getMessage());
             }
             
             if ($e instanceof \RuntimeException) {
@@ -254,10 +254,10 @@ class ReservationController extends AbstractController
                 if ($statusCode === 500 && str_contains($e->getMessage(), 'Cannot release copy')) {
                     $statusCode = 400;
                 }
-                return $this->json(['message' => $e->getMessage()], $statusCode);
+                return $this->jsonErrorMessage($statusCode, $e->getMessage());
             }
             
-            return $this->json(['message' => 'Internal error'], 500);
+            return $this->jsonErrorMessage(500, 'Internal error');
         }
     }
 
@@ -278,12 +278,12 @@ class ReservationController extends AbstractController
     public function fulfill(string $id, Request $request): JsonResponse
     {
         if (!ctype_digit($id) || (int)$id <= 0) {
-            return $this->json(['message' => 'Invalid reservation id'], 400);
+            return $this->jsonError(ApiError::badRequest('Invalid reservation id'));
         }
 
         $isLibrarian = $this->security->hasRole($request, 'ROLE_LIBRARIAN');
         if (!$isLibrarian) {
-            return $this->json(['message' => 'Only librarians can fulfill reservations'], 403);
+            return $this->jsonError(ApiError::forbidden());
         }
 
         try {
@@ -304,7 +304,7 @@ class ReservationController extends AbstractController
                 ? $e->getStatusCode()
                 : 500;
 
-            return $this->json(['message' => $e->getMessage()], $statusCode);
+            return $this->jsonErrorMessage($statusCode, $e->getMessage());
         }
     }
 
@@ -325,12 +325,12 @@ class ReservationController extends AbstractController
     public function prepare(string $id, Request $request): JsonResponse
     {
         if (!ctype_digit($id) || (int)$id <= 0) {
-            return $this->json(['message' => 'Invalid reservation id'], 400);
+            return $this->jsonError(ApiError::badRequest('Invalid reservation id'));
         }
 
         $isLibrarian = $this->security->hasRole($request, 'ROLE_LIBRARIAN');
         if (!$isLibrarian) {
-            return $this->json(['message' => 'Only librarians can prepare reservations'], 403);
+            return $this->jsonError(ApiError::forbidden());
         }
 
         try {
@@ -351,8 +351,13 @@ class ReservationController extends AbstractController
                 ? $e->getStatusCode()
                 : 500;
 
-            return $this->json(['message' => $e->getMessage()], $statusCode);
+            return $this->jsonErrorMessage($statusCode, $e->getMessage());
         }
     }
 }
+
+
+
+
+
 

@@ -3,6 +3,8 @@ namespace App\Controller\Admin;
 
 use App\Message\UpdateBookEmbeddingMessage;
 use App\Repository\BookRepository;
+use App\Controller\Traits\ExceptionHandlingTrait;
+use App\Dto\ApiError;
 use App\Service\SecurityService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -13,6 +15,8 @@ use OpenApi\Attributes as OA;
 #[OA\Tag(name: 'Admin/Vector')]
 class AdminVectorController extends AbstractController
 {
+    use ExceptionHandlingTrait;
+
     public function __construct(
         private readonly BookRepository $books,
         private readonly MessageBusInterface $bus,
@@ -84,3 +88,4 @@ class AdminVectorController extends AbstractController
         ]);
     }
 }
+

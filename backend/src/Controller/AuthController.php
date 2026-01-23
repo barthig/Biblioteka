@@ -286,7 +286,7 @@ class AuthController extends AbstractController
             $this->refreshTokenService->revokeRefreshToken($refreshTokenString);
         }
 
-        return $this->json(['message' => 'Logged out successfully'], 200);
+        return $this->jsonSuccess(['message' => 'Logged out successfully']);
     }
 
     #[OA\Post(

@@ -50,7 +50,7 @@ class AccountController extends AbstractController
     {
         $userId = $this->security->getCurrentUserId($request);
         if ($userId === null) {
-            return $this->json(['message' => 'Unauthorized'], 401);
+            return $this->jsonError(ApiError::unauthorized());
         }
 
         $envelope = $this->queryBus->dispatch(new GetAccountDetailsQuery($userId));
@@ -89,7 +89,7 @@ class AccountController extends AbstractController
     {
         $userId = $this->security->getCurrentUserId($request);
         if ($userId === null) {
-            return $this->json(['message' => 'Unauthorized'], 401);
+            return $this->jsonError(ApiError::unauthorized());
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
@@ -146,7 +146,7 @@ class AccountController extends AbstractController
     {
         $userId = $this->security->getCurrentUserId($request);
         if ($userId === null) {
-            return $this->json(['message' => 'Unauthorized'], 401);
+            return $this->jsonError(ApiError::unauthorized());
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
@@ -166,7 +166,7 @@ class AccountController extends AbstractController
 
         try {
             $this->commandBus->dispatch($command);
-            return $this->json(['message' => 'Hasło zostało zaktualizowane']);
+            return $this->jsonSuccess(['message' => 'Hasło zostało zaktualizowane']);
         } catch (\Throwable $e) {
             return $this->handleCommandException($e);
         }
@@ -244,7 +244,7 @@ class AccountController extends AbstractController
     {
         $userId = $this->security->getCurrentUserId($request);
         if ($userId === null) {
-            return $this->json(['message' => 'Unauthorized'], 401);
+            return $this->jsonError(ApiError::unauthorized());
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
@@ -256,7 +256,7 @@ class AccountController extends AbstractController
             postalCode: $data['postalCode'] ?? null
         ));
 
-        return $this->json(['message' => 'Contact information updated']);
+        return $this->jsonSuccess(['message' => 'Contact information updated']);
     }
 
     #[OA\Put(
@@ -286,7 +286,7 @@ class AccountController extends AbstractController
     {
         $userId = $this->security->getCurrentUserId($request);
         if ($userId === null) {
-            return $this->json(['message' => 'Unauthorized'], 401);
+            return $this->jsonError(ApiError::unauthorized());
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
@@ -301,7 +301,7 @@ class AccountController extends AbstractController
             emailAnnouncements: isset($data['emailAnnouncements']) ? $this->normalizeBoolean($data['emailAnnouncements']) : null
         ));
 
-        return $this->json(['message' => 'Preferences updated']);
+        return $this->jsonSuccess(['message' => 'Preferences updated']);
     }
 
     #[OA\Put(
@@ -327,7 +327,7 @@ class AccountController extends AbstractController
     {
         $userId = $this->security->getCurrentUserId($request);
         if ($userId === null) {
-            return $this->json(['message' => 'Unauthorized'], 401);
+            return $this->jsonError(ApiError::unauthorized());
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
@@ -338,7 +338,7 @@ class AccountController extends AbstractController
             language: $data['language'] ?? null
         ));
 
-        return $this->json(['message' => 'UI preferences updated']);
+        return $this->jsonSuccess(['message' => 'UI preferences updated']);
     }
 
     #[OA\Put(
@@ -365,13 +365,13 @@ class AccountController extends AbstractController
     {
         $userId = $this->security->getCurrentUserId($request);
         if ($userId === null) {
-            return $this->json(['message' => 'Unauthorized'], 401);
+            return $this->jsonError(ApiError::unauthorized());
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
 
         if (!isset($data['currentPin']) || !isset($data['newPin'])) {
-            return $this->json(['message' => 'Current PIN and new PIN are required'], 400);
+            return $this->jsonError(ApiError::badRequest('Current PIN and new PIN are required'));
         }
         try {
             $this->commandBus->dispatch(new UpdateAccountPinCommand(
@@ -386,7 +386,7 @@ class AccountController extends AbstractController
             return $this->jsonError(ApiError::badRequest($e->getMessage()));
         }
 
-        return $this->json(['message' => 'PIN updated']);
+        return $this->jsonSuccess(['message' => 'PIN updated']);
     }
 
     #[OA\Post(
@@ -429,7 +429,7 @@ class AccountController extends AbstractController
     {
         $userId = $this->security->getCurrentUserId($request);
         if ($userId === null) {
-            return $this->json(['message' => 'Unauthorized'], 401);
+            return $this->jsonError(ApiError::unauthorized());
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
@@ -447,5 +447,8 @@ class AccountController extends AbstractController
         ]);
     }
 }
+
+
+
 
 

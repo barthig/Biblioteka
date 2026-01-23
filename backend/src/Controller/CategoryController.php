@@ -20,6 +20,8 @@ use OpenApi\Attributes as OA;
 #[OA\Tag(name: 'Category')]
 class CategoryController extends AbstractController
 {
+    use ExceptionHandlingTrait;
+
     public function __construct(
         private readonly MessageBusInterface $bus
     ) {

@@ -50,6 +50,31 @@ trait ExceptionHandlingTrait
     }
 
     /**
+     * Build standardized error response from status code + message.
+     */
+    protected function jsonErrorMessage(int $statusCode, string $message, mixed $details = null): JsonResponse
+    {
+        return $this->jsonError($this->apiErrorFromStatus($statusCode, $message, $details));
+    }
+
+    protected function apiErrorFromStatus(int $statusCode, string $message, mixed $details = null): ApiError
+    {
+        return match (true) {
+            $statusCode === 401 => ApiError::unauthorized($details),
+            $statusCode === 403 => ApiError::forbidden($details),
+            $statusCode === 404 => new ApiError('NOT_FOUND', $message, 404, $details),
+            $statusCode === 409 => ApiError::conflict($message, $details),
+            $statusCode === 410 => ApiError::gone($message, $details),
+            $statusCode === 422 => ApiError::unprocessable($message, $details),
+            $statusCode === 423 => ApiError::locked($message, $details),
+            $statusCode === 429 => ApiError::tooManyRequests($message, $details),
+            $statusCode === 503 => ApiError::serviceUnavailable($message, $details),
+            $statusCode >= 500 => ApiError::internalError($message, $details),
+            default => ApiError::badRequest($message, $details),
+        };
+    }
+
+    /**
      * Return success response with unified format
      */
     protected function jsonSuccess(mixed $data = null, int $statusCode = 200, array $context = []): JsonResponse

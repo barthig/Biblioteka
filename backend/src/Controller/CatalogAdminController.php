@@ -16,6 +16,8 @@ use OpenApi\Attributes as OA;
 #[OA\Tag(name: 'CatalogAdmin')]
 class CatalogAdminController extends AbstractController
 {
+    use ExceptionHandlingTrait;
+
     public function __construct(
         private readonly MessageBusInterface $queryBus,
         private readonly MessageBusInterface $commandBus
@@ -83,3 +85,4 @@ class CatalogAdminController extends AbstractController
         return $this->json($result);
     }
 }
+

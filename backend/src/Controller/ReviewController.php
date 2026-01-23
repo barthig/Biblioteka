@@ -124,7 +124,7 @@ class ReviewController extends AbstractController
                 'User or book not found' => 404,
                 default => 500
             };
-            return $this->json(['message' => $e->getMessage()], $statusCode);
+            return $this->jsonErrorMessage($statusCode, $e->getMessage());
         }
     }
 
@@ -146,7 +146,7 @@ class ReviewController extends AbstractController
     {
         $payload = $this->security->getJwtPayload($request);
         if (!$payload || !isset($payload['sub'])) {
-            return $this->json(['message' => 'Unauthorized'], 401);
+            return $this->jsonError(ApiError::unauthorized());
         }
 
         $isLibrarian = $this->security->hasRole($request, 'ROLE_LIBRARIAN');
@@ -169,7 +169,9 @@ class ReviewController extends AbstractController
                 'Review not found' => 404,
                 default => str_contains($e->getMessage(), 'Forbidden') ? 403 : 500
             };
-            return $this->json(['message' => $e->getMessage()], $statusCode);
+            return $this->jsonErrorMessage($statusCode, $e->getMessage());
         }
     }
 }
+
+

@@ -23,6 +23,11 @@ class ApiAuthSubscriber implements EventSubscriberInterface
 
     public static function getSubscribedEvents(): array
     {
+        $legacy = getenv('LEGACY_AUTH_SUBSCRIBER') ?: ($_ENV['LEGACY_AUTH_SUBSCRIBER'] ?? null);
+        if ($legacy !== '1') {
+            return [];
+        }
+
         return [
             KernelEvents::REQUEST => 'onKernelRequest',
         ];

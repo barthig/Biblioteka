@@ -16,6 +16,8 @@ use OpenApi\Attributes as OA;
 
 class AdminUserController extends AbstractController
 {
+    use ExceptionHandlingTrait;
+
     #[OA\Tag(name: 'AdminUser')]
     public function __construct(
         private readonly SecurityService $security,
@@ -162,3 +164,4 @@ class AdminUserController extends AbstractController
         return new JsonResponse(null, 204);
     }
 }
+

@@ -16,6 +16,8 @@ use OpenApi\Attributes as OA;
 #[OA\Tag(name: 'AuditLog')]
 class AuditLogController extends AbstractController
 {
+    use ExceptionHandlingTrait;
+
     public function __construct(
         private readonly MessageBusInterface $queryBus
     ) {
@@ -126,3 +128,4 @@ class AuditLogController extends AbstractController
         return $this->json($logs, 200, [], ['groups' => ['audit:read']]);
     }
 }
+
