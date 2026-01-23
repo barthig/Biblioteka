@@ -95,6 +95,8 @@ services:
           echo 'Running migrations...';
           php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration || echo 'Migrations skipped';
         fi &&
+        php bin/console doctrine:query:sql \"SELECT setval('reservation_id_seq', COALESCE((SELECT MAX(id) FROM reservation), 1), true);\" &&
+        php bin/console doctrine:query:sql \"SELECT setval('loan_id_seq', COALESCE((SELECT MAX(id) FROM loan), 1), true);\" &&
         php bin/console cache:warmup --env=prod &&
         chown -R www-data:www-data /app/var &&
         chmod -R 775 /app/var &&

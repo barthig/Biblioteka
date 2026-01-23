@@ -1063,6 +1063,8 @@ INSERT INTO reservation (id, status, reserved_at, expires_at, fulfilled_at, canc
 (29, 'FULFILLED', NOW() - INTERVAL '29 days', NOW() - INTERVAL '2 days', NOW() - INTERVAL '10 days', NULL, NULL, 25, NULL, 8),
 (30, 'CANCELLED', NOW() - INTERVAL '26 days', NOW() - INTERVAL '2 days', NULL, NOW() - INTERVAL '5 days', NULL, 1, NULL, 13);
 
+SELECT setval('reservation_id_seq', (SELECT MAX(id) FROM reservation));
+
 -- Kary / grzywny (30)
 INSERT INTO fine (id, amount, currency, reason, created_at, paid_at, loan_id) VALUES
 (1, 11.61, 'PLN', 'Opłata administracyjna', NOW() - INTERVAL '43 days', NULL, 1),
@@ -1506,26 +1508,26 @@ SELECT
 FROM generate_series(4, 30) gs;
 
 INSERT INTO acquisition_order (
-  id, reference_number, title, description, items, total_amount, currency, status,
-  created_at, updated_at, ordered_at, expected_at, received_at, cancelled_at, supplier_id, budget_id
+    id, reference_number, title, description, items, total_amount, currency, status,
+    created_at, updated_at, ordered_at, expected_at, received_at, cancelled_at, supplier_id, budget_id
 )
 SELECT
-  gs,
-  format('PO-2026-%04s', gs),
-  format('Order #%02s', gs),
-  format('Order desc #%02s', gs),
-  format('[{"isbn":"978-0-00-%04s","qty":1,"unit_price":25.00}]', gs),
-  25.00,
-  'PLN',
-  'ordered',
-  NOW() - (gs || ' days')::interval,
-  NOW(),
-  NOW() - (gs || ' days')::interval,
-  NOW() + INTERVAL '10 days',
-  NULL,
-  NULL,
-  ((gs - 1) % 30) + 1,
-  ((gs - 1) % 30) + 1
+    gs,
+    format('PO-2026-%04s', gs),
+    format('Order #%02s', gs),
+    format('Order desc #%02s', gs),
+    format('[{"isbn":"978-0-00-%04s","qty":1,"unit_price":25.00}]', gs)::json,
+    25.00,
+    'PLN',
+    'ordered',
+    NOW() - (gs || ' days')::interval,
+    NOW(),
+    NOW() - (gs || ' days')::interval,
+    NOW() + INTERVAL '10 days',
+    NULL,
+    NULL,
+    ((gs - 1) % 30) + 1,
+    ((gs - 1) % 30) + 1
 FROM generate_series(4, 30) gs;
 
 INSERT INTO acquisition_expense (id, amount, currency, description, type, posted_at, budget_id, order_id)

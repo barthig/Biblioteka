@@ -6,8 +6,13 @@ use App\Application\Command\Announcement\PublishAnnouncementCommand;
 use App\Application\Handler\Command\PublishAnnouncementHandler;
 use App\Entity\Announcement;
 use App\Repository\AnnouncementRepository;
+use App\Service\NotificationService;
+use App\Service\Notification\NotificationSender;
+use App\Repository\UserRepository;
+use App\Repository\NotificationLogRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 
 class PublishAnnouncementHandlerTest extends TestCase
 {
@@ -23,8 +28,15 @@ class PublishAnnouncementHandlerTest extends TestCase
 
         $entityManager = $this->createMock(EntityManagerInterface::class);
         $entityManager->expects($this->once())->method('flush');
+        $notificationService = new NotificationService(
+            $this->createMock(NotificationSender::class),
+            $this->createMock(LoggerInterface::class),
+            $this->createMock(UserRepository::class),
+            $this->createMock(NotificationLogRepository::class),
+            $entityManager
+        );
 
-        $handler = new PublishAnnouncementHandler($entityManager, $repository);
+        $handler = new PublishAnnouncementHandler($entityManager, $repository, $notificationService);
         $command = new PublishAnnouncementCommand(1);
 
         $result = ($handler)($command);
@@ -39,7 +51,14 @@ class PublishAnnouncementHandlerTest extends TestCase
         $repository->expects($this->once())->method('find')->with(999)->willReturn(null);
 
         $entityManager = $this->createMock(EntityManagerInterface::class);
-        $handler = new PublishAnnouncementHandler($entityManager, $repository);
+        $notificationService = new NotificationService(
+            $this->createMock(NotificationSender::class),
+            $this->createMock(LoggerInterface::class),
+            $this->createMock(UserRepository::class),
+            $this->createMock(NotificationLogRepository::class),
+            $entityManager
+        );
+        $handler = new PublishAnnouncementHandler($entityManager, $repository, $notificationService);
 
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Announcement not found');
@@ -60,8 +79,15 @@ class PublishAnnouncementHandlerTest extends TestCase
 
         $entityManager = $this->createMock(EntityManagerInterface::class);
         $entityManager->expects($this->once())->method('flush');
+        $notificationService = new NotificationService(
+            $this->createMock(NotificationSender::class),
+            $this->createMock(LoggerInterface::class),
+            $this->createMock(UserRepository::class),
+            $this->createMock(NotificationLogRepository::class),
+            $entityManager
+        );
 
-        $handler = new PublishAnnouncementHandler($entityManager, $repository);
+        $handler = new PublishAnnouncementHandler($entityManager, $repository, $notificationService);
         $command = new PublishAnnouncementCommand(1);
 
         $result = ($handler)($command);

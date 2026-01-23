@@ -6,6 +6,7 @@ use App\Entity\Book;
 use App\Entity\BookCopy;
 use App\Repository\AuthorRepository;
 use App\Repository\CategoryRepository;
+use App\Service\NotificationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -17,7 +18,8 @@ class CreateBookHandler
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
         private readonly AuthorRepository $authorRepository,
-        private readonly CategoryRepository $categoryRepository
+        private readonly CategoryRepository $categoryRepository,
+        private readonly NotificationService $notificationService
     ) {
     }
 
@@ -88,6 +90,8 @@ class CreateBookHandler
 
         $book->recalculateInventoryCounters();
         $this->entityManager->flush();
+
+        $this->notificationService->notifyNewBookAvailable($book);
 
         return $book;
     }

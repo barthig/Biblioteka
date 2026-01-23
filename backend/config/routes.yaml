@@ -785,6 +785,13 @@ api_reservations_fulfill:
   requirements:
     id: '[0-9]+'
 
+api_reservations_prepare:
+  path: /api/reservations/{id}/prepare
+  controller: App\Controller\ReservationController::prepare
+  methods: [POST]
+  requirements:
+    id: '[0-9]+'
+
 # Fines
 api_fines_list:
   path: /api/fines

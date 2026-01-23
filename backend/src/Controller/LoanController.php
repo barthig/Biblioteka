@@ -40,16 +40,20 @@ class LoanController extends AbstractController
     private function handleException(\Throwable $e): JsonResponse
     {
         $e = $this->unwrapThrowable($e);
+        error_log(sprintf('LoanController exception: %s: %s', $e::class, $e->getMessage()));
 
         if ($e instanceof \RuntimeException) {
             $statusCode = match ($e->getMessage()) {
                 'User not found', 'Book not found', 'Loan not found', 'Egzemplarz nie znaleziony' => 404,
                 'Konto czytelnika jest zablokowane' => 423,
                 'Forbidden' => 403,
-                'Limit wypożyczeń został osiągnięty', 
-                'Egzemplarz jest już wypożyczony',
+                'Limit wypoĹĽyczeĹ„ zostaĹ‚ osiÄ…gniÄ™ty', 
+                'Egzemplarz jest juĹĽ wypoĹĽyczony',
                 'Book reserved by another reader',
-                'No copies available' => 409,
+                'No copies available',
+                'Cannot extend returned loan',
+                'WypoĹĽyczenie zostaĹ‚o juĹĽ przedĹ‚uĹĽone',
+                'Loan already extended' => 409,
                 default => 500
             };
 
@@ -642,3 +646,6 @@ class LoanController extends AbstractController
         }
     }
 }
+
+
+

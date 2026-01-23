@@ -184,6 +184,12 @@ services:
       $queryBus: '@query.bus'
       $security: '@App\Service\SecurityService'
 
+  App\Controller\NotificationController:
+    arguments:
+      $security: '@App\Service\SecurityService'
+      $notificationLogs: '@App\Repository\NotificationLogRepository'
+      $entityManager: '@doctrine.orm.entity_manager'
+
   App\Controller\Admin\RoleAdminController:
     arguments:
       $commandBus: '@command.bus'

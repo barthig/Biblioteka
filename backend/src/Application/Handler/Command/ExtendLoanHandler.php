@@ -39,8 +39,10 @@ class ExtendLoanHandler
 
         // Check if book is reserved by someone else
         $reservations = $this->reservationRepository->findActiveByBook($loan->getBook());
-        if (!empty($reservations)) {
-            throw new \RuntimeException('Nie można przedłużyć - książka jest zarezerwowana');
+        foreach ($reservations as $reservation) {
+            if ($reservation->getUser()->getId() !== $loan->getUser()->getId()) {
+                throw new \RuntimeException('Book reserved by another reader');
+            }
         }
 
         $loanDurationDays = $this->settingsService->getLoanDurationDays();
@@ -60,3 +62,4 @@ class ExtendLoanHandler
         return $loan;
     }
 }
+

@@ -5,6 +5,8 @@ use App\Application\Command\Loan\ExtendLoanCommand;
 use App\Application\Handler\Command\ExtendLoanHandler;
 use App\Entity\Book;
 use App\Entity\Loan;
+use App\Entity\Reservation;
+use App\Entity\User;
 use App\Repository\LoanRepository;
 use App\Repository\ReservationRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -109,9 +111,13 @@ class ExtendLoanHandlerTest extends TestCase
     public function testThrowsExceptionWhenBookIsReserved(): void
     {
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Nie można przedłużyć - książka jest zarezerwowana');
+        $this->expectExceptionMessage('Book reserved by another reader');
 
         $book = $this->createMock(Book::class);
+        $otherUser = $this->createMock(User::class);
+        $otherUser->method('getId')->willReturn(999);
+        $reservation = $this->createMock(Reservation::class);
+        $reservation->method('getUser')->willReturn($otherUser);
         
         $loan = $this->createMock(Loan::class);
         $loan->method('getReturnedAt')->willReturn(null);
@@ -119,10 +125,11 @@ class ExtendLoanHandlerTest extends TestCase
         $loan->method('getBook')->willReturn($book);
 
         $this->loanRepository->method('find')->with(1)->willReturn($loan);
-        $this->reservationRepository->method('findActiveByBook')->with($book)->willReturn(['reservation1']);
+        $this->reservationRepository->method('findActiveByBook')->with($book)->willReturn([$reservation]);
         $this->settingsService->method('getLoanDurationDays')->willReturn(14);
 
         $command = new ExtendLoanCommand(loanId: 1, userId: 1);
         ($this->handler)($command);
     }
 }
+

@@ -71,7 +71,7 @@ class FulfillReservationHandlerTest extends TestCase
     public function testCannotFulfillNonActiveReservation(): void
     {
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Reservation is not active');
+        $this->expectExceptionMessage('Reservation must be active or prepared to fulfill');
 
         $reservation = $this->createMock(Reservation::class);
         $reservation->method('getStatus')->willReturn(Reservation::STATUS_CANCELLED);

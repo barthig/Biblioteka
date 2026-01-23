@@ -80,9 +80,7 @@ abstract class ApiTestCase extends WebTestCase
         static::ensureKernelShutdown();
 
         $server = [];
-        if ($token === null) {
-            $server['HTTP_X_API_SECRET'] = self::API_SECRET;
-        }
+        $server['HTTP_X_API_SECRET'] = self::API_SECRET;
 
         if ($token) {
             $server['HTTP_AUTHORIZATION'] = 'Bearer ' . $token;
@@ -167,6 +165,20 @@ abstract class ApiTestCase extends WebTestCase
 
     protected function createUser(string $email, array $roles = ['ROLE_USER'], string $password = 'StrongPass1', ?string $name = null): User
     {
+        $existing = $this->entityManager
+            ->getRepository(User::class)
+            ->findOneBy(['email' => $email]);
+        if ($existing instanceof User) {
+            if ($roles !== []) {
+                $existing->setRoles($roles);
+            }
+            if ($name !== null) {
+                $existing->setName($name);
+            }
+            $this->entityManager->flush();
+            return $existing;
+        }
+
         $user = new User();
         $user->setEmail($email)
             ->setName($name ?? ucfirst(strstr($email, '@', true) ?: 'User'))

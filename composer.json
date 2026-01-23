@@ -1,0 +1,7 @@
+{
+    "require": {
+        "nelmio/api-doc-bundle": "^5.9",
+        "nelmio/cors-bundle": "^2.6",
+        "symfony/monolog-bundle": "^4.0"
+    }
+}

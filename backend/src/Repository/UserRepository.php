@@ -59,6 +59,25 @@ class UserRepository extends ServiceEntityRepository
         return $qb->getQuery()->getResult();
     }
 
+    /**
+     * @return User[]
+     */
+    public function findAnnouncementRecipients(int $limit = 0): array
+    {
+        $qb = $this->createQueryBuilder('u')
+            ->andWhere('u.emailAnnouncements = true')
+            ->andWhere('u.blocked = false')
+            ->andWhere('u.verified = true')
+            ->andWhere('u.email IS NOT NULL')
+            ->orderBy('u.updatedAt', 'DESC');
+
+        if ($limit > 0) {
+            $qb->setMaxResults($limit);
+        }
+
+        return $qb->getQuery()->getResult();
+    }
+
     public function save(User $user, bool $flush = false): void
     {
         $this->getEntityManager()->persist($user);

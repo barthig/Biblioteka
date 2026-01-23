@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+﻿import React, { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { apiFetch } from '../api'
 import { useAuth } from '../context/AuthContext'
@@ -23,6 +23,7 @@ export default function Reservations() {
   const { getCachedResource, setCachedResource, invalidateResource } = useResourceCache()
   const CACHE_KEY = '/api/reservations?history=true'
   const CACHE_TTL = 60000
+  const ACTIVE_STATUSES = ['ACTIVE', 'PREPARED']
 
   useEffect(() => {
     let active = true
@@ -81,14 +82,39 @@ export default function Reservations() {
     }
   }, [getCachedResource, invalidateResource, setCachedResource, user?.id, CACHE_KEY, CACHE_TTL])
 
+  const statusMeta = (status) => {
+    switch (status) {
+      case 'ACTIVE':
+        return { label: 'Aktywna', className: '' }
+      case 'PREPARED':
+        return { label: 'Przygotowana do odbioru', className: 'is-warning' }
+      case 'FULFILLED':
+        return { label: 'Zrealizowana', className: 'is-returned' }
+      case 'CANCELLED':
+        return { label: 'Anulowana', className: 'is-danger' }
+      case 'EXPIRED':
+        return { label: 'Wygasła', className: 'is-danger' }
+      default:
+        return { label: 'Nieznany', className: 'is-danger' }
+    }
+  }
+
   const activeReservations = useMemo(() => {
     const reservationsArray = Array.isArray(reservations) ? reservations : []
-    return reservationsArray.filter(reservation => reservation.status === 'ACTIVE')
+    return reservationsArray.filter(reservation => ACTIVE_STATUSES.includes(reservation.status))
   }, [reservations])
   
+  const activeOnlyReservations = useMemo(() => {
+    return activeReservations.filter(reservation => reservation.status === 'ACTIVE')
+  }, [activeReservations])
+
+  const preparedReservations = useMemo(() => {
+    return activeReservations.filter(reservation => reservation.status === 'PREPARED')
+  }, [activeReservations])
+
   const historicalReservations = useMemo(() => {
     const reservationsArray = Array.isArray(reservations) ? reservations : []
-    return reservationsArray.filter(reservation => reservation.status !== 'ACTIVE')
+    return reservationsArray.filter(reservation => !ACTIVE_STATUSES.includes(reservation.status))
   }, [reservations])
 
   const nextExpiry = useMemo(() => {
@@ -125,7 +151,7 @@ export default function Reservations() {
     return (
       <div className="page page--centered">
         <div className="surface-card empty-state">
-          Aby zarządzać rezerwacjami, <Link to="/login">zaloguj się</Link> lub <Link to="/register">utwórz konto</Link>.
+          Aby zarządzać rezerwacjami, <Link to="/login">zaloguj się</Link> lub <Link to="/register">utwĂłrz konto</Link>.
         </div>
       </div>
     )
@@ -147,9 +173,10 @@ export default function Reservations() {
       />
 
       <StatGrid>
-        <StatCard title="Aktywne rezerwacje" value={activeReservations.length} subtitle="Do odbioru" />
+        <StatCard title="Aktywne rezerwacje" value={activeOnlyReservations.length} subtitle="W trakcie realizacji" />
+        <StatCard title="Przygotowane" value={preparedReservations.length} subtitle="Do odbioru" />
         <StatCard title="Zrealizowane" value={historicalReservations.length} subtitle="Historia" />
-        <StatCard title="Najbliższy termin" value={nextExpiry ? formatDate(nextExpiry) : '-'} valueClassName="stat-card__value--sm" />
+        <StatCard title="Najblizszy termin" value={nextExpiry ? formatDate(nextExpiry) : '-'} valueClassName="stat-card__value--sm" />
       </StatGrid>
 
       {error && <FeedbackCard variant="error">{error}</FeedbackCard>}
@@ -176,7 +203,14 @@ export default function Reservations() {
                     )}
                   </div>
                   <div className="resource-item__actions">
-                    <span className="status-pill">Aktywna</span>
+                    {(() => {
+                      const meta = statusMeta(reservation.status)
+                      return (
+                        <span className={`status-pill ${meta.className}`.trim()}>
+                          {meta.label}
+                        </span>
+                      )
+                    })()}
                     <button
                       type="button"
                       className="btn btn-outline"
@@ -206,9 +240,14 @@ export default function Reservations() {
                       {reservation.cancelledAt && <span>Anulowano: {formatDate(reservation.cancelledAt)}</span>}
                     </div>
                   </div>
-                  <span className={`status-pill ${reservation.status === 'FULFILLED' ? 'is-returned' : 'is-danger'}`}>
-                    {reservation.status === 'FULFILLED' ? 'Zrealizowana' : (reservation.status === 'CANCELLED' ? 'Anulowana' : 'Wygasła')}
-                  </span>
+                  {(() => {
+                    const meta = statusMeta(reservation.status)
+                    return (
+                      <span className={`status-pill ${meta.className}`.trim()}>
+                        {meta.label}
+                      </span>
+                    )
+                  })()}
                 </li>
               ))}
             </ul>
@@ -218,3 +257,7 @@ export default function Reservations() {
     </div>
   )
 }
+
+
+
+

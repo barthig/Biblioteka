@@ -8,8 +8,13 @@ use App\Entity\Book;
 use App\Entity\Category;
 use App\Repository\AuthorRepository;
 use App\Repository\CategoryRepository;
+use App\Service\NotificationService;
+use App\Service\Notification\NotificationSender;
+use App\Repository\UserRepository;
+use App\Repository\NotificationLogRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -18,6 +23,7 @@ class CreateBookHandlerTest extends TestCase
     private EntityManagerInterface $em;
     private AuthorRepository $authorRepository;
     private CategoryRepository $categoryRepository;
+    private NotificationService $notificationService;
     private CreateBookHandler $handler;
 
     protected function setUp(): void
@@ -25,11 +31,23 @@ class CreateBookHandlerTest extends TestCase
         $this->em = $this->createMock(EntityManagerInterface::class);
         $this->authorRepository = $this->createMock(AuthorRepository::class);
         $this->categoryRepository = $this->createMock(CategoryRepository::class);
+        $sender = $this->createMock(NotificationSender::class);
+        $logger = $this->createMock(LoggerInterface::class);
+        $userRepository = $this->createMock(UserRepository::class);
+        $notificationLogs = $this->createMock(NotificationLogRepository::class);
+        $this->notificationService = new NotificationService(
+            $sender,
+            $logger,
+            $userRepository,
+            $notificationLogs,
+            $this->em
+        );
 
         $this->handler = new CreateBookHandler(
             $this->em,
             $this->authorRepository,
-            $this->categoryRepository
+            $this->categoryRepository,
+            $this->notificationService
         );
     }
 

@@ -30,8 +30,11 @@ class ListReservationsHandler
                 ->setParameter('userId', $query->userId);
             
             if (!$query->includeHistory) {
-                $qb->andWhere('r.status = :status')
-                    ->setParameter('status', Reservation::STATUS_ACTIVE);
+                $qb->andWhere('r.status IN (:statuses)')
+                    ->setParameter('statuses', [
+                        Reservation::STATUS_ACTIVE,
+                        Reservation::STATUS_PREPARED,
+                    ]);
             }
         }
 
@@ -63,8 +66,11 @@ class ListReservationsHandler
                 ->setParameter('userId', $query->userId);
             
             if (!$query->includeHistory) {
-                $countQb->andWhere('r.status = :status')
-                    ->setParameter('status', Reservation::STATUS_ACTIVE);
+                $countQb->andWhere('r.status IN (:statuses)')
+                    ->setParameter('statuses', [
+                        Reservation::STATUS_ACTIVE,
+                        Reservation::STATUS_PREPARED,
+                    ]);
             }
         }
 

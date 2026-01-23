@@ -154,7 +154,7 @@ export default function Navbar() {
             </>
           ) : (
             <>
-              <NavLink to="/login" className="btn btn-primary" onClick={closeMenu}>Zaloguj si?</NavLink>
+              <NavLink to="/login" className="btn btn-primary" onClick={closeMenu}>Zaloguj się</NavLink>
               <NavLink to="/register" className="btn btn-outline" onClick={closeMenu}>Zarejestruj</NavLink>
             </>
           )}
