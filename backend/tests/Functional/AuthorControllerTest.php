@@ -25,7 +25,7 @@ class AuthorControllerTest extends ApiTestCase
 
     public function testCreateAuthorRequiresLibrarian(): void
     {
-        $client = $this->createAuthenticatedClient($this->createUser('reader@example.com'));
+        $client = $this->createAuthenticatedClientWithoutApiSecret($this->createUser('reader@example.com'));
         $this->jsonRequest($client, 'POST', '/api/authors', ['name' => 'New Author']);
 
         $this->assertResponseStatusCodeSame(403);
@@ -45,7 +45,7 @@ class AuthorControllerTest extends ApiTestCase
     public function testUpdateAuthorRequiresLibrarian(): void
     {
         $author = $this->createAuthor('Old Author');
-        $client = $this->createAuthenticatedClient($this->createUser('reader@example.com'));
+        $client = $this->createAuthenticatedClientWithoutApiSecret($this->createUser('reader@example.com'));
         $this->jsonRequest($client, 'PUT', '/api/authors/' . $author->getId(), ['name' => 'Updated Author']);
 
         $this->assertResponseStatusCodeSame(403);
@@ -66,7 +66,7 @@ class AuthorControllerTest extends ApiTestCase
     public function testDeleteAuthorRequiresLibrarian(): void
     {
         $author = $this->createAuthor('To Delete');
-        $client = $this->createAuthenticatedClient($this->createUser('reader@example.com'));
+        $client = $this->createAuthenticatedClientWithoutApiSecret($this->createUser('reader@example.com'));
         $this->sendRequest($client, 'DELETE', '/api/authors/' . $author->getId());
 
         $this->assertResponseStatusCodeSame(403);

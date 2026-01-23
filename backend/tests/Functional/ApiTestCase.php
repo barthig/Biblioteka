@@ -36,6 +36,8 @@ abstract class ApiTestCase extends WebTestCase
         $_ENV['API_SECRET'] = self::API_SECRET;
         putenv('JWT_SECRET=' . self::JWT_SECRET);
         $_ENV['JWT_SECRET'] = self::JWT_SECRET;
+        putenv('LEGACY_AUTH_SUBSCRIBER=1');
+        $_ENV['LEGACY_AUTH_SUBSCRIBER'] = '1';
         putenv('MESSENGER_TRANSPORT_DSN=sync://');
         $_ENV['MESSENGER_TRANSPORT_DSN'] = 'sync://';
 
@@ -85,6 +87,22 @@ abstract class ApiTestCase extends WebTestCase
         if ($token) {
             $server['HTTP_AUTHORIZATION'] = 'Bearer ' . $token;
         }
+
+        return static::createClient([], $server);
+    }
+    
+    /**
+     * Create authenticated client WITHOUT API_SECRET header.
+     * Use this to test proper role-based access control.
+     * API_SECRET grants ROLE_ADMIN and bypasses access control checks.
+     */
+    protected function createAuthenticatedClientWithoutApiSecret(User $user, array $extraClaims = []): HttpKernelBrowser
+    {
+        static::ensureKernelShutdown();
+        
+        $token = $this->generateTokenForUser($user, $extraClaims);
+        $server = [];
+        $server['HTTP_AUTHORIZATION'] = 'Bearer ' . $token;
 
         return static::createClient([], $server);
     }

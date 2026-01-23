@@ -7,7 +7,7 @@ class IntegrationConfigControllerTest extends ApiTestCase
 {
     public function testListRequiresAdmin(): void
     {
-        $client = $this->createAuthenticatedClient($this->createUser('reader@example.com'));
+        $client = $this->createAuthenticatedClientWithoutApiSecret($this->createUser('reader@example.com'));
         $this->sendRequest($client, 'GET', '/api/integration-configs');
 
         $this->assertResponseStatusCodeSame(403);

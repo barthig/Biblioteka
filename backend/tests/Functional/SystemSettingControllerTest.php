@@ -7,7 +7,7 @@ class SystemSettingControllerTest extends ApiTestCase
 {
     public function testListRequiresAdmin(): void
     {
-        $client = $this->createAuthenticatedClient($this->createUser('reader@example.com'));
+        $client = $this->createAuthenticatedClientWithoutApiSecret($this->createUser('reader@example.com'));
         $this->sendRequest($client, 'GET', '/api/system-settings');
 
         $this->assertResponseStatusCodeSame(403);

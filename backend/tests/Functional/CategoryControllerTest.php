@@ -25,7 +25,7 @@ class CategoryControllerTest extends ApiTestCase
 
     public function testCreateCategoryRequiresLibrarian(): void
     {
-        $client = $this->createAuthenticatedClient($this->createUser('reader@example.com'));
+        $client = $this->createAuthenticatedClientWithoutApiSecret($this->createUser('reader@example.com'));
         $this->jsonRequest($client, 'POST', '/api/categories', ['name' => 'New']);
 
         $this->assertResponseStatusCodeSame(403);
@@ -45,7 +45,7 @@ class CategoryControllerTest extends ApiTestCase
     public function testUpdateCategoryRequiresLibrarian(): void
     {
         $category = $this->createCategory('Old Name');
-        $client = $this->createAuthenticatedClient($this->createUser('reader@example.com'));
+        $client = $this->createAuthenticatedClientWithoutApiSecret($this->createUser('reader@example.com'));
         $this->jsonRequest($client, 'PUT', '/api/categories/' . $category->getId(), ['name' => 'Updated']);
 
         $this->assertResponseStatusCodeSame(403);
@@ -66,7 +66,7 @@ class CategoryControllerTest extends ApiTestCase
     public function testDeleteCategoryRequiresLibrarian(): void
     {
         $category = $this->createCategory('To Delete');
-        $client = $this->createAuthenticatedClient($this->createUser('reader@example.com'));
+        $client = $this->createAuthenticatedClientWithoutApiSecret($this->createUser('reader@example.com'));
         $this->sendRequest($client, 'DELETE', '/api/categories/' . $category->getId());
 
         $this->assertResponseStatusCodeSame(403);

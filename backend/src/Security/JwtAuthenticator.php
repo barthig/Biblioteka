@@ -120,6 +120,11 @@ class JwtAuthenticator extends AbstractAuthenticator
             '/api/docs.json' => ['GET'],
         ];
 
+        // Check for /api/auth/verify/{token}
+        if (preg_match('#^/api/auth/verify/.+$#', $path) && $method === 'POST') {
+            return true;
+        }
+
         if (isset($publicRoutes[$path]) && in_array($method, $publicRoutes[$path], true)) {
             return true;
         }

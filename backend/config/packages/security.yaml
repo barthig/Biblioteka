@@ -29,6 +29,7 @@ security:
     # Public endpoints
     - { path: ^/api/auth/login, roles: PUBLIC_ACCESS }
     - { path: ^/api/auth/register, roles: PUBLIC_ACCESS }
+    - { path: ^/api/auth/verify, roles: PUBLIC_ACCESS }
     - { path: ^/api/auth/refresh, roles: PUBLIC_ACCESS }
     - { path: ^/api/health, roles: PUBLIC_ACCESS }
     - { path: ^/health, roles: PUBLIC_ACCESS }
@@ -45,6 +46,7 @@ security:
     - { path: ^/api/library/hours, roles: PUBLIC_ACCESS, methods: [GET] }
 
     # Admin / restricted
+    - { path: ^/api/admin/books/\d+/copies, roles: ROLE_LIBRARIAN }
     - { path: ^/api/admin, roles: ROLE_ADMIN }
     - { path: ^/admin, roles: ROLE_ADMIN }
 
