@@ -257,7 +257,7 @@ export default function Dashboard() {
         ])
 
         if (mounted) {
-          setStats(dashboardData)
+          setStats(dashboardData?.data ?? dashboardData)
           setAlerts(Array.isArray(alertsData) ? alertsData : [])
           setLibraryHours(hoursData)
           setDashboardAnnouncements(Array.isArray(announcementsData?.data) ? announcementsData.data : [])
