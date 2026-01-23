@@ -4,6 +4,7 @@ namespace App\Controller;
 use App\Application\Command\Book\CreateBookCommand;
 use App\Application\Command\Book\DeleteBookCommand;
 use App\Application\Command\Book\UpdateBookCommand;
+use App\Application\Command\BookAsset\UploadBookAssetCommand;
 use App\Application\Query\Book\GetBookQuery;
 use App\Application\Query\Book\ListBooksQuery;
 use App\Application\Query\User\GetUserByIdQuery;
@@ -230,7 +231,18 @@ class BookController extends AbstractController
                     new OA\Property(property: 'signature', type: 'string'),
                     new OA\Property(property: 'targetAgeGroup', type: 'string'),
                     new OA\Property(property: 'totalCopies', type: 'integer'),
-                    new OA\Property(property: 'copies', type: 'integer')
+                    new OA\Property(property: 'copies', type: 'integer'),
+                    new OA\Property(
+                        property: 'cover',
+                        properties: [
+                            new OA\Property(property: 'label', type: 'string', nullable: true),
+                            new OA\Property(property: 'filename', type: 'string', nullable: true),
+                            new OA\Property(property: 'mimeType', type: 'string', nullable: true),
+                            new OA\Property(property: 'content', type: 'string', description: 'Base64 image')
+                        ],
+                        type: 'object',
+                        nullable: true
+                    )
                 ]
             )
         ),
@@ -277,13 +289,33 @@ class BookController extends AbstractController
         try {
             $envelope = $this->commandBus->dispatch($command);
             $book = $envelope->last(HandledStamp::class)?->getResult();
+
+            $bookId = null;
+            if (is_array($book)) {
+                $bookId = $book['id'] ?? null;
+            } elseif ($book instanceof \App\Entity\Book) {
+                $bookId = $book->getId();
+            }
+
+            $payload = json_decode($request->getContent(), true) ?? [];
+            $cover = $payload['cover'] ?? null;
+            if ($bookId && is_array($cover) && isset($cover['content']) && is_string($cover['content'])) {
+                $label = isset($cover['label']) && is_string($cover['label']) ? trim($cover['label']) : 'Okładka';
+                $filename = isset($cover['filename']) && is_string($cover['filename']) ? trim($cover['filename']) : 'cover.jpg';
+                $mime = isset($cover['mimeType']) && is_string($cover['mimeType']) ? trim($cover['mimeType']) : 'image/jpeg';
+                try {
+                    $this->commandBus->dispatch(new UploadBookAssetCommand($bookId, $label, $filename, $mime, $cover['content']));
+                } catch (\Throwable $ignored) {
+                }
+            }
+
             return $this->json($book, 201, [], ['groups' => ['book:read']]);
         } catch (\Throwable $e) {
             if ($e instanceof HandlerFailedException) {
                 $e = $e->getPrevious() ?? $e;
             }
-            if ($e instanceof HttpExceptionInterface) {
-                return $this->jsonError(ApiError::fromException($e));
+            if ($response = $this->jsonFromHttpException($e)) {
+                return $response;
             }
             $statusCode = match (true) {
                 str_contains($e->getMessage(), 'Author not found') => 404,
@@ -319,7 +351,18 @@ class BookController extends AbstractController
                     new OA\Property(property: 'publicationYear', type: 'integer'),
                     new OA\Property(property: 'resourceType', type: 'string'),
                     new OA\Property(property: 'signature', type: 'string'),
-                    new OA\Property(property: 'targetAgeGroup', type: 'string')
+                    new OA\Property(property: 'targetAgeGroup', type: 'string'),
+                    new OA\Property(
+                        property: 'cover',
+                        properties: [
+                            new OA\Property(property: 'label', type: 'string', nullable: true),
+                            new OA\Property(property: 'filename', type: 'string', nullable: true),
+                            new OA\Property(property: 'mimeType', type: 'string', nullable: true),
+                            new OA\Property(property: 'content', type: 'string', description: 'Base64 image')
+                        ],
+                        type: 'object',
+                        nullable: true
+                    )
                 ]
             )
         ),
@@ -366,13 +409,33 @@ class BookController extends AbstractController
         try {
             $envelope = $this->commandBus->dispatch($command);
             $book = $envelope->last(HandledStamp::class)?->getResult();
+
+            $bookId = null;
+            if (is_array($book)) {
+                $bookId = $book['id'] ?? null;
+            } elseif ($book instanceof \App\Entity\Book) {
+                $bookId = $book->getId();
+            }
+
+            $payload = json_decode($request->getContent(), true) ?? [];
+            $cover = $payload['cover'] ?? null;
+            if ($bookId && is_array($cover) && isset($cover['content']) && is_string($cover['content'])) {
+                $label = isset($cover['label']) && is_string($cover['label']) ? trim($cover['label']) : 'Okładka';
+                $filename = isset($cover['filename']) && is_string($cover['filename']) ? trim($cover['filename']) : 'cover.jpg';
+                $mime = isset($cover['mimeType']) && is_string($cover['mimeType']) ? trim($cover['mimeType']) : 'image/jpeg';
+                try {
+                    $this->commandBus->dispatch(new UploadBookAssetCommand($bookId, $label, $filename, $mime, $cover['content']));
+                } catch (\Throwable $ignored) {
+                }
+            }
+
             return $this->json($book, 200, [], ['groups' => ['book:read']]);
         } catch (\Throwable $e) {
             if ($e instanceof HandlerFailedException) {
                 $e = $e->getPrevious() ?? $e;
             }
-            if ($e instanceof HttpExceptionInterface) {
-                return $this->jsonError(ApiError::fromException($e));
+            if ($response = $this->jsonFromHttpException($e)) {
+                return $response;
             }
             $statusCode = match (true) {
                 str_contains($e->getMessage(), 'Book not found') => 404,

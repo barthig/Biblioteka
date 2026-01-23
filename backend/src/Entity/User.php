@@ -4,8 +4,8 @@ namespace App\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
-use Symfony\Component\Serializer\Annotation\Groups;
-use Symfony\Component\Serializer\Annotation\Ignore;
+use Symfony\Component\Serializer\Attribute\Groups;
+use Symfony\Component\Serializer\Attribute\Ignore;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'app_user')]
@@ -153,6 +153,15 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column(type: 'string', length: 4, nullable: true)]
     private ?string $pin = null;
+
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    private ?string $avatarStorageName = null;
+
+    #[ORM\Column(type: 'string', length: 100, nullable: true)]
+    private ?string $avatarMimeType = null;
+
+    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
+    private ?\DateTimeImmutable $avatarUpdatedAt = null;
 
     public function __construct()
     {
@@ -402,4 +411,22 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function getPin(): ?string { return $this->pin; }
     public function setPin(?string $pin): self { $this->pin = $pin; return $this; }
+
+    #[Groups(['user:read'])]
+    public function getAvatarUrl(): ?string
+    {
+        if ($this->id === null || $this->avatarStorageName === null) {
+            return null;
+        }
+        return '/api/users/' . $this->id . '/avatar';
+    }
+
+    public function getAvatarStorageName(): ?string { return $this->avatarStorageName; }
+    public function setAvatarStorageName(?string $name): self { $this->avatarStorageName = $name; return $this; }
+
+    public function getAvatarMimeType(): ?string { return $this->avatarMimeType; }
+    public function setAvatarMimeType(?string $mime): self { $this->avatarMimeType = $mime; return $this; }
+
+    public function getAvatarUpdatedAt(): ?\DateTimeImmutable { return $this->avatarUpdatedAt; }
+    public function setAvatarUpdatedAt(?\DateTimeImmutable $at): self { $this->avatarUpdatedAt = $at; return $this; }
 }

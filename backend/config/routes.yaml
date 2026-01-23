@@ -272,6 +272,19 @@ api_books_cover:
   requirements:
     id: '[0-9]+'
 
+# User avatars
+api_me_avatar_upload:
+  path: /api/me/avatar
+  controller: App\Controller\UserAvatarController::upload
+  methods: [POST]
+
+api_users_avatar_get:
+  path: /api/users/{id}/avatar
+  controller: App\Controller\UserAvatarController::getAvatar
+  methods: [GET]
+  requirements:
+    id: '[0-9]+'
+
 # Book ratings
 api_books_ratings_list:
   path: /api/books/{id}/ratings
