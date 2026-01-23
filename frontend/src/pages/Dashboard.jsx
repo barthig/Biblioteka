@@ -361,7 +361,19 @@ export default function Dashboard() {
               )}
               {!publicNewArrivalsLoading && !publicNewArrivalsError && publicNewArrivals.map(item => (
                 <article key={item.id || item.title} className="book-card">
-                  <div className="book-card__cover" aria-hidden="true" />
+                  <div className="book-card__cover">
+                    {(item.coverUrl || item.cover || item.imageUrl) ? (
+                      <img
+                        src={item.coverUrl || item.cover || item.imageUrl}
+                        alt={`Okładka: ${item.title}`}
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="book-cover-placeholder" aria-hidden="true">
+                        {(item.title || '?').slice(0, 1)}
+                      </div>
+                    )}
+                  </div>
                   <div className="book-card__body">
                     <h3>{item.title}</h3>
                     <p>{formatAuthor(item)}</p>

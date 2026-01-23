@@ -424,6 +424,24 @@ export default function BookDetails() {
         subtitle="Sprawdź dostępność, dołącz do kolejki rezerwacji i przeczytaj opinie czytelników."
       />
 
+      <SectionCard>
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+          <div className="book-cover-large">
+            {(book.coverUrl || book.cover || book.imageUrl) ? (
+              <img
+                src={book.coverUrl || book.cover || book.imageUrl}
+                alt={`Okładka: ${book.title}`}
+                loading="lazy"
+              />
+            ) : (
+              <div className="book-cover-placeholder" aria-hidden="true" style={{ fontSize: '3rem' }}>
+                {(book.title || '?').slice(0, 1)}
+              </div>
+            )}
+          </div>
+        </div>
+      </SectionCard>
+
       <StatGrid>
         <StatCard valueClassName="stat-card__value--sm" title="Dostępność" value={anyAvailable ? 'Dostępne' : 'Brak'} subtitle={`${book.copies ?? 0} z ${book.totalCopies ?? book.copies ?? 0}`} />
         <StatCard valueClassName="stat-card__value--sm" title="Oceny" value={ratingSummaryAverage ? ratingSummaryAverage.toFixed(1) : 'Brak'} />

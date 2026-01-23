@@ -139,6 +139,19 @@ export default function BookItem({ book, onBorrowed, compact = false, expanded =
   }
   return (
     <article className={`surface-card book-card ${compact ? 'book-card--expanded' : ''}`}>
+      <div className="book-card__cover">
+        {(book.coverUrl || book.cover || book.imageUrl) ? (
+          <img
+            src={book.coverUrl || book.cover || book.imageUrl}
+            alt={`Okładka: ${book.title}`}
+            loading="lazy"
+          />
+        ) : (
+          <div className="book-cover-placeholder" aria-hidden="true">
+            {(book.title || '?').slice(0, 1)}
+          </div>
+        )}
+      </div>
       <div className="book-card__header">
         <Link to={`/books/${book.id}`} className="book-card__title">{book.title}</Link>
       </div>
