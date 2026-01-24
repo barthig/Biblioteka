@@ -15,7 +15,15 @@ describe('notificationService', () => {
 
   it('sends test notification', async () => {
     apiFetch.mockResolvedValue({})
-    await notificationService.sendTest()
-    expect(apiFetch).toHaveBeenCalledWith('/api/notifications/test', { method: 'POST' })
+    await notificationService.sendTest('email', 'test@example.com', 'Test message')
+    expect(apiFetch).toHaveBeenCalledWith('/api/notifications/test', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        channel: 'email',
+        target: 'test@example.com',
+        message: 'Test message'
+      })
+    })
   })
 })

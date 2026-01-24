@@ -23,6 +23,10 @@ export default function Notifications() {
       return new Set()
     }
   })
+  const [showTestForm, setShowTestForm] = useState(false)
+  const [testChannel, setTestChannel] = useState('email')
+  const [testTarget, setTestTarget] = useState('')
+  const [testMessage, setTestMessage] = useState('')
   const STORAGE_KEY = 'notifications:read'
   const latestDate = useMemo(() => {
     const dates = items
@@ -100,9 +104,16 @@ export default function Notifications() {
   async function sendTest() {
     setError(null)
     setInfo(null)
+    if (!testTarget.trim()) {
+      setError('Podaj adres e-mail lub numer telefonu')
+      return
+    }
     try {
-      await notificationService.sendTest()
+      await notificationService.sendTest(testChannel, testTarget.trim(), testMessage.trim() || null)
       setInfo('Wysłano testowe powiadomienie.')
+      setShowTestForm(false)
+      setTestTarget('')
+      setTestMessage('')
     } catch (err) {
       setError(err.message || 'Nie udało się wysłać testowego powiadomienia')
     }
@@ -121,11 +132,68 @@ export default function Notifications() {
               </button>
             )}
             {isAdmin && (
-              <button className="btn btn-primary" onClick={sendTest}>Wyslij test</button>
+              <button className="btn btn-primary" onClick={() => setShowTestForm(!showTestForm)}>
+                {showTestForm ? 'Anuluj' : 'Wyślij test'}
+              </button>
             )}
           </div>
         ) : null}
       />
+
+      {showTestForm && (
+        <SectionCard title="Testowe powiadomienie">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+            <div>
+              <label htmlFor="test-channel" style={{ display: 'block', marginBottom: 'var(--space-1)', fontWeight: 500 }}>
+                Kanał
+              </label>
+              <select
+                id="test-channel"
+                className="input"
+                value={testChannel}
+                onChange={(e) => setTestChannel(e.target.value)}
+                style={{ width: '200px' }}
+              >
+                <option value="email">E-mail</option>
+                <option value="sms">SMS</option>
+              </select>
+            </div>
+            <div>
+              <label htmlFor="test-target" style={{ display: 'block', marginBottom: 'var(--space-1)', fontWeight: 500 }}>
+                {testChannel === 'email' ? 'Adres e-mail' : 'Numer telefonu'}
+              </label>
+              <input
+                id="test-target"
+                type={testChannel === 'email' ? 'email' : 'tel'}
+                className="input"
+                placeholder={testChannel === 'email' ? 'user@example.com' : '+48123456789'}
+                value={testTarget}
+                onChange={(e) => setTestTarget(e.target.value)}
+                style={{ width: '100%', maxWidth: '400px' }}
+              />
+            </div>
+            <div>
+              <label htmlFor="test-message" style={{ display: 'block', marginBottom: 'var(--space-1)', fontWeight: 500 }}>
+                Wiadomość (opcjonalnie)
+              </label>
+              <textarea
+                id="test-message"
+                className="input"
+                placeholder="Treść testowej wiadomości..."
+                value={testMessage}
+                onChange={(e) => setTestMessage(e.target.value)}
+                rows={3}
+                style={{ width: '100%', maxWidth: '400px', resize: 'vertical' }}
+              />
+            </div>
+            <div>
+              <button className="btn btn-primary" onClick={sendTest}>
+                Wyślij
+              </button>
+            </div>
+          </div>
+        </SectionCard>
+      )}
 
       <StatGrid>
         <StatCard title="Wszystkie" value={items.length} />

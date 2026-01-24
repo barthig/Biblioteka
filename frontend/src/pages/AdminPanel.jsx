@@ -26,7 +26,7 @@ export default function AdminPanel() {
   const [success, setSuccess] = useState(null)
   const [libraryStats, setLibraryStats] = useState(null)
   const [libraryStatsLoading, setLibraryStatsLoading] = useState(false)
-  const [showStats, setShowStats] = useState(false)
+  const [showStats, setShowStats] = useState(true)
 
   // User management
   const [users, setUsers] = useState([])

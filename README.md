@@ -76,9 +76,6 @@ Schemat bazy danych zawiera **35 tabel** pogrupowanych w moduły:
 7. **Integracje** (2 tabele) — `integration_config`, `notification_log`
 8. **Zakupy i inwentaryzacja** (5 tabel) — `supplier`, `acquisition_budget`, `acquisition_order`, `acquisition_expense`, `weeding_record`
 
-📚 **Szczegółowa dokumentacja:**
-- [ERD.md](docs/ERD.md) — pełne diagramy relacji między tabelami
-- [DATABASE_ARCHITECTURE.md](docs/DATABASE_ARCHITECTURE.md) — opis architektury bazy danych
 
 ## Stack technologiczny
 
@@ -135,7 +132,7 @@ Schemat bazy danych zawiera **35 tabel** pogrupowanych w moduły:
 #### 1. Klonowanie repozytorium
 
 ```powershell
-git clone https://github.com/your-username/biblioteka.git
+git clone https://github.com/barthig/Biblioteka.git
 cd biblioteka
 ```
 
@@ -189,9 +186,9 @@ Po inicjalizacji bazy danych dostępne są konta testowe:
 
 | Rola | Email | Hasło | Uprawnienia |
 |------|-------|-------|-------------|
-| **Administrator** | admin@biblioteka.local | admin123 | Pełny dostęp do systemu, zarządzanie użytkownikami, raporty |
-| **Bibliotekarz** | librarian@biblioteka.local | librarian123 | Zarządzanie katalogiem, obsługa wypożyczeń/zwrotów |
-| **Czytelnik** | user@biblioteka.local | user123 | Przeglądanie katalogu, wypożyczenia, rezerwacje |
+| **Administrator** | user01@example.com| password123 | Pełny dostęp do systemu, zarządzanie użytkownikami, raporty |
+| **Bibliotekarz** | user02@example.com | password123 | Zarządzanie katalogiem, obsługa wypożyczeń/zwrotów |
+| **Czytelnik** | user03@example.com | password123 | Przeglądanie katalogu, wypożyczenia, rezerwacje |
 
 ### Metoda 2: Instalacja manualna (bez Dockera)
 
@@ -412,7 +409,6 @@ biblioteka/
 │   └── playwright.config.js    # Konfiguracja Playwright
 │
 ├── docs/                        # Dokumentacja
-│   ├── ERD.md                   # Diagramy ERD (460 linii, ASCII art + opis)
 │   ├── SCHEMA_GUIDE.md          # Quick reference
 │   ├── database-diagram.puml    # PlantUML diagram
 │   └── INDEX.md                 # Indeks dokumentacji
@@ -470,10 +466,6 @@ Request → Controller → Service → Repository → Database
 - Tokeny projektowe w `styles/main.css` (kolory, spacing, typografia, shadows, transitions)
 - Komponenty UI współdzielą wspólne style dla spójności wizualnej
 - Responsywność: **mobile-first**, breakpointy: 768px (tablet), 1024px (desktop)
-
-📚 **Dokumentacja architektury:**
-
-- [ERD.md](docs/ERD.md) — diagramy ERD dla wszystkich modułów
 
 ## Baza danych
 
@@ -634,9 +626,6 @@ ALTER TABLE book ADD CONSTRAINT unique_isbn UNIQUE (isbn);
 ALTER TABLE loan ADD CONSTRAINT fk_loan_user 
   FOREIGN KEY (user_id) REFERENCES app_user(id) ON DELETE CASCADE;
 ```
-
-📚 **Dokumentacja:**
-- [ERD.md](docs/ERD.md) — szczegółowe diagramy relacji (460 linii, ASCII art + opisy)
 
 ## API - dokumentacja
 
@@ -909,9 +898,22 @@ function BooksPage() {
 - **Ulubione książki** — użytkownik może dodawać książki do ulubionych
 
 #### ✅ Powiadomienia
-- **E-mail** — przypomnienia o zbliżających się terminach, potwierdzenia działań(in progress)
+- **E-mail** — przypomnienia o zbliżających się terminach, potwierdzenia działań (in progress)
 - **SMS** — krytyczne powiadomienia (przeterminowane wypożyczenie, gotowa rezerwacja)
 - **Historia powiadomień** — tracking wysłanych wiadomości w `notification_log`
+- **Test endpoint** (ROLE_LIBRARIAN):
+  ```http
+  POST /api/notifications/test
+  Content-Type: application/json
+  Authorization: Bearer <token>
+  
+  {
+    "channel": "email",        // "email" lub "sms"
+    "target": "user@email.com", // adres e-mail lub numer telefonu
+    "message": "Test message"   // opcjonalna wiadomość
+  }
+  ```
+  **Odpowiedź (202 Accepted):** Powiadomienie zakolejkowane do wysłania
 
 #### ✅ Asynchroniczne przetwarzanie
 - **RabbitMQ + Symfony Messenger** — kolejkowanie zadań w tle (transport `async`)
