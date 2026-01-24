@@ -412,7 +412,6 @@ biblioteka/
 │   └── playwright.config.js    # Konfiguracja Playwright
 │
 ├── docs/                        # Dokumentacja
-│   ├── DATABASE_ARCHITECTURE.md # Szczegółowy opis schematu bazy (150+ linii)
 │   ├── ERD.md                   # Diagramy ERD (460 linii, ASCII art + opis)
 │   ├── SCHEMA_GUIDE.md          # Quick reference
 │   ├── database-diagram.puml    # PlantUML diagram
@@ -473,8 +472,6 @@ Request → Controller → Service → Repository → Database
 - Responsywność: **mobile-first**, breakpointy: 768px (tablet), 1024px (desktop)
 
 📚 **Dokumentacja architektury:**
-- [DATABASE_ARCHITECTURE.md](docs/DATABASE_ARCHITECTURE.md) — szczegółowy opis schematu bazy danych
-- [ERD.md](docs/ERD.md) — diagramy ERD dla wszystkich modułów
 
 - [ERD.md](docs/ERD.md) — diagramy ERD dla wszystkich modułów
 
@@ -544,8 +541,8 @@ fine                   -- Kary za przetrzymanie lub zniszczenie
 ```sql
 rating                 -- Oceny książek (1-5 gwiazdek)
 review                 -- Recenzje tekstowe
-recommendation_feedback -- Feedback użytkownika na rekomendacje AI
-user_book_interaction  -- Historia interakcji (wyszukiwania, kliknięcia) dla ML
+recommendation_feedback -- Feedback użytkownika na rekomendacje AI(in progress)
+user_book_interaction  -- Historia interakcji (wyszukiwania, kliknięcia) dla ML(in progress)
 ```
 
 #### 5. **Kolekcje** (3 tabele)
@@ -572,7 +569,7 @@ integration_config     -- Konfiguracja API zewnętrznych (OpenAI, SMS gateway)
 notification_log       -- Historia wysłanych powiadomień (e-mail, SMS)
 ```
 
-#### 8. **Zakupy i inwentaryzacja** (5 tabel)
+#### 8. **Zakupy i inwentaryzacja** (5 tabel)(in progress)
 
 ```sql
 supplier               -- Dostawcy książek
@@ -640,8 +637,6 @@ ALTER TABLE loan ADD CONSTRAINT fk_loan_user
 
 📚 **Dokumentacja:**
 - [ERD.md](docs/ERD.md) — szczegółowe diagramy relacji (460 linii, ASCII art + opisy)
-- [DATABASE_ARCHITECTURE.md](docs/DATABASE_ARCHITECTURE.md) — architektura bazy danych
-- [SCHEMA_GUIDE.md](docs/SCHEMA_GUIDE.md) — quick reference SQL
 
 ## API - dokumentacja
 
@@ -870,7 +865,7 @@ function BooksPage() {
 - **CRUD książek** — pełna obsługa dodawania, edycji, usuwania książek z walidacją
 - **Zarządzanie autorami i kategoriami** — przypisywanie wielu kategorii do książki (M:N)
 - **Egzemplarze fizyczne** — śledzenie statusu każdego egzemplarza (available, loaned, damaged, lost)
-- **Zasoby cyfrowe** — przechowywanie okładek, e-booków, audiobooków
+- **Zasoby cyfrowe** — przechowywanie okładek
 - **Wyszukiwanie pełnotekstowe** — GIN index na `tsvector` dla szybkiego przeszukiwania tytułów, opisów, autorów
 - **Wyszukiwanie semantyczne (AI)** — pgvector z embeddingami OpenAI (podobieństwo kosinusowe)
 
@@ -902,11 +897,11 @@ function BooksPage() {
 - **Zwolnienie z kary** — bibliotekarz lub admin może anulować karę (np. okoliczności łagodzące)
 
 #### ✅ Panel administracyjny
-- **Dashboard ze statystykami** — wykresy wypożyczeń, top książki, aktywność użytkowników
+- **Dashboard ze statystykami** — liczby wypożyczeń, top książki, aktywność użytkowników
 - **Zarządzanie użytkownikami** — lista, edycja, blokowanie, resetowanie haseł
 - **Dziennik audytu** — rejestracja wszystkich ważnych akcji w systemie (login, CRUD, admin actions)
 - **Ogłoszenia** — publikowanie ogłoszeń dla użytkowników (np. "Biblioteka nieczynna 1.05")
-- **Raporty** — generowanie raportów Excel/CSV (wypożyczenia, finanse, statystyki)
+- **Raporty** — generowanie raportów (wypożyczenia, finanse, statystyki)
 
 #### ✅ Kolekcje tematyczne
 - **Tworzenie kolekcji** — bibliotekarz może tworzyć kolekcje (np. "Bestsellery 2025", "Nowości")
@@ -914,30 +909,32 @@ function BooksPage() {
 - **Ulubione książki** — użytkownik może dodawać książki do ulubionych
 
 #### ✅ Powiadomienia
-- **E-mail** — przypomnienia o zbliżających się terminach, potwierdzenia działań
+- **E-mail** — przypomnienia o zbliżających się terminach, potwierdzenia działań(in progress)
 - **SMS** — krytyczne powiadomienia (przeterminowane wypożyczenie, gotowa rezerwacja)
 - **Historia powiadomień** — tracking wysłanych wiadomości w `notification_log`
 
 #### ✅ Asynchroniczne przetwarzanie
-- **RabbitMQ + Symfony Messenger** — kolejkowanie zadań w tle
-- **Worker** — automatyczne uruchamianie w Docker Compose
-- **Obsługiwane zadania:**
-  - Wysyłanie powiadomień e-mail/SMS
-  - Generowanie embeddingów dla nowych książek (OpenAI API)
-  - Aktualizacja rekomendacji użytkowników
-  - Okresowe sprawdzanie przeterminowanych wypożyczeń
+- **RabbitMQ + Symfony Messenger** — kolejkowanie zadań w tle (transport `async`)
+- **Worker** — automatyczne uruchamianie w Docker Compose (`php-worker`)
+- **Obsługiwane wiadomości asynchroniczne:**
+  - `ReservationQueuedNotification` — powiadomienie o zakolejkowanej rezerwacji
+  - `ReservationReadyMessage` — powiadomienie o gotowej rezerwacji
+  - `LoanDueReminderMessage` — przypomnienie o zbliżającym się terminie zwrotu
+  - `LoanOverdueMessage` — powiadomienie o przeterminowanym wypożyczeniu
+  - `UpdateBookEmbeddingMessage` — generowanie embeddingów (OpenAI API) dla wyszukiwania semantycznego
+- **Retry strategy:** max 3 próby z exponential backoff (1s → 2s → 4s)
+- **Dead letter queue:** nieudane wiadomości zapisywane do osobnej kolejki
 
 ### W trakcie implementacji (~5%)
 
 - **Integracja płatności** — pełna integracja z Stripe/PayU (obecnie placeholder)
-- **Export raportów** — generowanie PDF raportów (obecnie CSV/Excel)
+- **Export raportów** — generowanie PDF raportów 
 - **Wersje książek** — obsługa wielu wydań tej samej książki (ISBN-10 vs ISBN-13)
 
 ### Planowane rozszerzenia (~5%)
 
-- **Aplikacja mobilna** — React Native dla iOS/Android
 - **Czytnik e-booków** — integracja z formatami EPUB/PDF
-- **API publiczne** — dostęp dla bibliotek zewnętrznych (federacja)
+- **API publiczne** — dostęp dla bibliotek zewnętrznych 
 - **Chatbot** — asystent AI dla użytkowników (wyszukiwanie, rekomendacje, FAQ)
 
 ## Uwierzytelnianie i autoryzacja
@@ -1824,15 +1821,6 @@ Projekt zawiera **ponad 100 commitów** z czytelną historią zmian.
 [optional footer]
 ```
 
-**Typy:**
-- `feat` — nowa funkcjonalność (feat(loans): add loan extension feature)
-- `fix` — naprawa błędu (fix(api): handle null reference in BookController)
-- `docs` — dokumentacja (docs(readme): update installation instructions)
-- `style` — formatowanie kodu (style: format with PHP CS Fixer)
-- `refactor` — refaktoryzacja (refactor(services): extract LoanCalculator)
-- `test` — testy (test(unit): add tests for BookService)
-- `chore` — zadania techniczne (chore(deps): update Symfony to 6.4.2)
-- `perf` — optymalizacja wydajności (perf(db): add index on loans.due_date)
 
 **Przykłady commitów:**
 
@@ -1854,16 +1842,6 @@ chore(docker): update PostgreSQL to version 16
 - `fix/*` — naprawy błędów (fix/login-validation)
 - `hotfix/*` — pilne naprawy produkcyjne
 
-### Statystyki projektu
-
-```
-📊 Commits:         100+
-👥 Kontrybutorzy:   2-3
-📁 Pliki:           250+
-📝 Linie kodu:      15,000+ (backend + frontend)
-🧪 Testy:           85+
-📚 Dokumentacja:    1,500+ linii
-```
 
 ## Rozwiązywanie problemów
 
@@ -1998,23 +1976,5 @@ MIT License — projekt open-source dostępny dla społeczności.
 
 ---
 
-**Autor:** [Twoje imię]  
-**Uczelnia:** [Nazwa uczelni]  
-**Przedmiot:** ZTPAI (Zaawansowane Technologie Programowania Aplikacji Internetowych)  
-**Rok akademicki:** 2025/2026
 
----
 
-## Kontakt i wsparcie
-
-- **Issues:** https://github.com/your-username/biblioteka/issues
-- **Discussions:** https://github.com/your-username/biblioteka/discussions
-- **Email:** your.email@example.com
-
-## Acknowledgments
-
-Specjalne podziękowania dla:
-- **Symfony Community** — za doskonały framework
-- **PostgreSQL Team** — za pgvector extension
-- **React Team** — za nowoczesny UI framework
-- **OpenAI** — za embeddingi AI dla semantic search
