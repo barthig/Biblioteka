@@ -118,6 +118,21 @@ export function AuthProvider({ children }) {
     }
   }, [refreshToken])
 
+  // Listen for unauthorized events from api.js
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      setToken(null)
+      setRefreshToken(null)
+      setUser(null)
+      if (isInitialized && window.location.pathname !== '/login') {
+        navigate('/login?expired=1')
+      }
+    }
+    
+    window.addEventListener('auth:unauthorized', handleUnauthorized)
+    return () => window.removeEventListener('auth:unauthorized', handleUnauthorized)
+  }, [navigate, isInitialized])
+
   useEffect(() => {
     if (!token) return
     let active = true

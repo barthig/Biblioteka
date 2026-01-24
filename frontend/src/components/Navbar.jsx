@@ -10,6 +10,8 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false)
   const { token, user, logout } = useAuth()
   const { prefetchResource } = useResourceCache()
+  // Check both context and localStorage for authentication status
+  const isAuthenticated = Boolean(token || localStorage.getItem('token'))
   const roles = user?.roles || []
   const isAdmin = roles.includes('ROLE_ADMIN')
   const isLibrarian = roles.includes('ROLE_LIBRARIAN')
@@ -84,7 +86,7 @@ export default function Navbar() {
             </NavLink>
           </div>
 
-          {token && (
+          {isAuthenticated && (
             <div className="top-nav__secondary">
               {isAdmin ? (
                 <>
@@ -140,13 +142,13 @@ export default function Navbar() {
         </nav>
 
         <div className="top-nav__actions">
-          {token ? (
+          {isAuthenticated ? (
             <>
               <div className="top-nav__user">
                 <div className="avatar avatar--sm">
                   {user?.name?.charAt(0).toUpperCase() || 'U'}
                 </div>
-                <span>{user?.name || 'U?ytkownik'}</span>
+                <span>{user?.name || 'Użytkownik'}</span>
               </div>
               <button className="btn btn-ghost" onClick={() => { logout(); closeMenu() }}>
                 Wyloguj

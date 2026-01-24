@@ -22,6 +22,14 @@ export default defineConfig({
         target: proxyTarget,
         changeOrigin: true,
         secure: false,
+        configure: (proxy, options) => {
+          proxy.on('proxyReq', (proxyReq, req, res) => {
+            // Forward all headers including Authorization
+            if (req.headers.authorization) {
+              proxyReq.setHeader('Authorization', req.headers.authorization)
+            }
+          })
+        }
       }
     }
   },

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { apiFetch } from '../api'
+import BookCover from './BookCover'
 
 export default function UserRecommendations() {
   const [books, setBooks] = useState([])
@@ -63,13 +64,7 @@ export default function UserRecommendations() {
           {books.map((book) => (
             <article key={book.id} className="surface-card book-cover-card">
               <Link to={`/books/${book.id}`} className="book-cover-card__image">
-                {book.coverUrl ? (
-                  <img src={book.coverUrl} alt={book.title} />
-                ) : (
-                  <div className="book-cover-card__placeholder">
-                    {(book.title || '?').slice(0, 1)}
-                  </div>
-                )}
+                <BookCover src={book.coverUrl} title={book.title} />
               </Link>
               <div className="book-cover-card__body">
                 <h3 className="book-cover-card__title">{book.title}</h3>

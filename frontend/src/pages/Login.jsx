@@ -30,6 +30,8 @@ export default function Login() {
       })
       if (data && data.token) {
         auth.login(data.token, data.refreshToken)
+        // Small delay to ensure React state is updated before navigation
+        await new Promise(resolve => setTimeout(resolve, 50))
         navigate(from, { replace: true })
       } else {
         throw new Error('Brak tokenu w odpowiedzi')

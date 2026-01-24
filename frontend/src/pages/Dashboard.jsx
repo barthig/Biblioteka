@@ -6,6 +6,7 @@ import { useResourceCache } from '../context/ResourceCacheContext'
 import OnboardingModal from '../components/OnboardingModal'
 import UserRecommendations from '../components/UserRecommendations'
 import SectionCard from '../components/ui/SectionCard'
+import BookCover from '../components/BookCover'
 import { bookService } from '../services/bookService'
 
 export default function Dashboard() {
@@ -19,7 +20,8 @@ export default function Dashboard() {
   const [showOnboarding, setShowOnboarding] = useState(false)
   const { token, user } = useAuth()
   const navigate = useNavigate()
-  const isAuthenticated = Boolean(token)
+  // Check both context and localStorage for authentication status
+  const isAuthenticated = Boolean(token || localStorage.getItem('token'))
   const isLibrarian = user?.roles?.includes('ROLE_LIBRARIAN')
   const isAdmin = user?.roles?.includes('ROLE_ADMIN')
   const { getCachedResource, setCachedResource, prefetchResource } = useResourceCache()
@@ -362,17 +364,10 @@ export default function Dashboard() {
               {!publicNewArrivalsLoading && !publicNewArrivalsError && publicNewArrivals.map(item => (
                 <article key={item.id || item.title} className="book-card">
                   <div className="book-card__cover">
-                    {(item.coverUrl || item.cover || item.imageUrl) ? (
-                      <img
-                        src={item.coverUrl || item.cover || item.imageUrl}
-                        alt={`Okładka: ${item.title}`}
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="book-cover-placeholder" aria-hidden="true">
-                        {(item.title || '?').slice(0, 1)}
-                      </div>
-                    )}
+                    <BookCover 
+                      src={item.coverUrl || item.cover || item.imageUrl} 
+                      title={item.title} 
+                    />
                   </div>
                   <div className="book-card__body">
                     <h3>{item.title}</h3>

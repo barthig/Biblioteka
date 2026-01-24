@@ -13,6 +13,7 @@ export default function BookItem({ book, onBorrowed, compact = false, expanded =
   const [reserved, setReserved] = useState(false)
   const [favorite, setFavorite] = useState(Boolean(book?.isFavorite))
   const [favoriteLoading, setFavoriteLoading] = useState(false)
+  const [coverError, setCoverError] = useState(false)
   const { user } = useAuth()
   const { invalidateResource } = useResourceCache()
   const isLoggedIn = Boolean(user?.id)
@@ -140,11 +141,12 @@ export default function BookItem({ book, onBorrowed, compact = false, expanded =
   return (
     <article className={`surface-card book-card ${compact ? 'book-card--expanded' : ''}`}>
       <div className="book-card__cover">
-        {(book.coverUrl || book.cover || book.imageUrl) ? (
+        {(book.coverUrl || book.cover || book.imageUrl) && !coverError ? (
           <img
             src={book.coverUrl || book.cover || book.imageUrl}
             alt={`Okładka: ${book.title}`}
             loading="lazy"
+            onError={() => setCoverError(true)}
           />
         ) : (
           <div className="book-cover-placeholder" aria-hidden="true">

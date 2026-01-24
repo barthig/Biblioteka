@@ -20,6 +20,15 @@ export async function apiFetch(path, opts = {}) {
   const finalOpts = { ...opts, headers }
   const res = await fetch(url, finalOpts)
   if (!res.ok) {
+    // Auto-logout on 401 Unauthorized - but only if user was actually logged in
+    // and not on the login page (to prevent logout loop)
+    if (res.status === 401 && token && !window.location.pathname.includes('/login')) {
+      localStorage.removeItem('token')
+      localStorage.removeItem('refreshToken')
+      // Trigger a custom event to notify AuthContext
+      window.dispatchEvent(new CustomEvent('auth:unauthorized'))
+    }
+    
     let body = ''
     try { body = await res.text() } catch (e) { /* noop */ }
     let message = body || res.statusText

@@ -8,6 +8,7 @@ import PageHeader from '../components/ui/PageHeader'
 import StatGrid from '../components/ui/StatGrid'
 import StatCard from '../components/ui/StatCard'
 import SectionCard from '../components/ui/SectionCard'
+import BookCover from '../components/BookCover'
 import { logger } from '../utils/logger'
 import FeedbackCard from '../components/ui/FeedbackCard'
 
@@ -427,17 +428,10 @@ export default function BookDetails() {
       <SectionCard>
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
           <div className="book-cover-large">
-            {(book.coverUrl || book.cover || book.imageUrl) ? (
-              <img
-                src={book.coverUrl || book.cover || book.imageUrl}
-                alt={`Okładka: ${book.title}`}
-                loading="lazy"
-              />
-            ) : (
-              <div className="book-cover-placeholder" aria-hidden="true" style={{ fontSize: '3rem' }}>
-                {(book.title || '?').slice(0, 1)}
-              </div>
-            )}
+            <BookCover 
+              src={book.coverUrl || book.cover || book.imageUrl} 
+              title={book.title} 
+            />
           </div>
         </div>
       </SectionCard>
