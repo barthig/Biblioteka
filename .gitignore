@@ -13,3 +13,12 @@ frontend/coverage/
 coverage/
 docks/
 docs/API_ERROR_STANDARDIZATION.md
+
+# Environment files with secrets (keep .env.example)
+backend/.env
+backend/.env.local
+backend/.env.test
+frontend/.env.local
+.env
+.env.local
+.env.test
