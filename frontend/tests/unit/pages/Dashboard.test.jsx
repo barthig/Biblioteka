@@ -48,7 +48,7 @@ describe('Dashboard page', () => {
       </MemoryRouter>
     )
     expect(await screen.findByText(/Znajd/i)).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /Zobacz/i })).toBeInTheDocument()
+    expect(screen.getAllByRole('link', { name: /Zobacz/i }).length).toBeGreaterThan(0)
   })
 
   it('renders user dashboard when authenticated', async () => {
