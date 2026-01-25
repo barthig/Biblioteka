@@ -10,3 +10,6 @@ export { default as Pagination } from './Pagination'
 export { default as RequireRole } from './RequireRole'
 export { default as SearchBar } from './SearchBar'
 export { default as SuccessMessage } from './SuccessMessage'
+
+// DataTable component
+export { DataTable } from './DataTable'

@@ -1,0 +1,243 @@
+.page-layout {
+  width: 100%;
+  padding: var(--spacing-6);
+}
+
+/* Max widths */
+.page-layout--max-sm {
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.page-layout--max-md {
+  max-width: 768px;
+  margin: 0 auto;
+}
+
+.page-layout--max-lg {
+  max-width: 1024px;
+  margin: 0 auto;
+}
+
+.page-layout--max-xl {
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.page-layout--max-2xl {
+  max-width: 1536px;
+  margin: 0 auto;
+}
+
+.page-layout--max-full {
+  max-width: 100%;
+}
+
+/* Variants */
+.page-layout--narrow {
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.page-layout--fluid {
+  padding: var(--spacing-4);
+}
+
+/* Breadcrumbs */
+.page-layout__breadcrumbs {
+  margin-bottom: var(--spacing-4);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+/* Header */
+.page-layout__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-4);
+  margin-bottom: var(--spacing-6);
+}
+
+.page-layout__header-content {
+  flex: 1;
+  min-width: 200px;
+}
+
+.page-layout__title {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.page-layout__description {
+  font-size: var(--font-size-md);
+  color: var(--color-text-muted);
+  margin: var(--spacing-2) 0 0;
+  max-width: 600px;
+}
+
+.page-layout__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+  align-items: center;
+}
+
+/* Content */
+.page-layout__content {
+  width: 100%;
+}
+
+/* Page Section */
+.page-section {
+  margin-bottom: var(--spacing-8);
+}
+
+.page-section:last-child {
+  margin-bottom: 0;
+}
+
+.page-section__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-3);
+  margin-bottom: var(--spacing-4);
+}
+
+.page-section__header-content {
+  flex: 1;
+  min-width: 150px;
+}
+
+.page-section__title {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.page-section__description {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin: var(--spacing-1) 0 0;
+}
+
+.page-section__actions {
+  display: flex;
+  gap: var(--spacing-2);
+}
+
+.page-section__content {
+  width: 100%;
+}
+
+/* Section variants */
+.page-section--card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-5);
+}
+
+.page-section--bordered {
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: var(--spacing-8);
+}
+
+/* Split Layout */
+.split-layout {
+  display: flex;
+  min-height: 100%;
+  gap: var(--spacing-6);
+}
+
+.split-layout--sidebar-right {
+  flex-direction: row-reverse;
+}
+
+.split-layout__sidebar {
+  flex-shrink: 0;
+  width: var(--sidebar-width, 280px);
+}
+
+.split-layout__main {
+  flex: 1;
+  min-width: 0;
+}
+
+@media (max-width: 768px) {
+  .split-layout {
+    flex-direction: column;
+  }
+  
+  .split-layout__sidebar {
+    width: 100%;
+  }
+}
+
+/* Card Grid */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--grid-cols-sm, 1), 1fr);
+}
+
+.card-grid--gap-sm {
+  gap: var(--spacing-3);
+}
+
+.card-grid--gap-md {
+  gap: var(--spacing-4);
+}
+
+.card-grid--gap-lg {
+  gap: var(--spacing-6);
+}
+
+@media (min-width: 640px) {
+  .card-grid {
+    grid-template-columns: repeat(var(--grid-cols-sm, 1), 1fr);
+  }
+}
+
+@media (min-width: 768px) {
+  .card-grid {
+    grid-template-columns: repeat(var(--grid-cols-md, 2), 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .card-grid {
+    grid-template-columns: repeat(var(--grid-cols-lg, 3), 1fr);
+  }
+}
+
+@media (min-width: 1280px) {
+  .card-grid {
+    grid-template-columns: repeat(var(--grid-cols-xl, 4), 1fr);
+  }
+}
+
+/* Responsive page layout */
+@media (max-width: 640px) {
+  .page-layout {
+    padding: var(--spacing-4);
+  }
+  
+  .page-layout__title {
+    font-size: var(--font-size-xl);
+  }
+  
+  .page-layout__header {
+    flex-direction: column;
+  }
+  
+  .page-layout__actions {
+    width: 100%;
+  }
+}

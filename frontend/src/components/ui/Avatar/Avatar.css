@@ -1,0 +1,158 @@
+.avatar {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+  background: var(--color-surface-secondary);
+  color: white;
+  font-weight: 500;
+  user-select: none;
+}
+
+.avatar--clickable {
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.avatar--clickable:hover {
+  transform: scale(1.05);
+  box-shadow: var(--shadow-md);
+}
+
+.avatar--clickable:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Shapes */
+.avatar--circle {
+  border-radius: 50%;
+}
+
+.avatar--rounded {
+  border-radius: var(--radius-lg);
+}
+
+.avatar--square {
+  border-radius: var(--radius-sm);
+}
+
+/* Sizes */
+.avatar--xs {
+  width: 24px;
+  height: 24px;
+  font-size: 10px;
+}
+
+.avatar--sm {
+  width: 32px;
+  height: 32px;
+  font-size: 12px;
+}
+
+.avatar--md {
+  width: 40px;
+  height: 40px;
+  font-size: 14px;
+}
+
+.avatar--lg {
+  width: 56px;
+  height: 56px;
+  font-size: 18px;
+}
+
+.avatar--xl {
+  width: 80px;
+  height: 80px;
+  font-size: 24px;
+}
+
+.avatar--2xl {
+  width: 120px;
+  height: 120px;
+  font-size: 36px;
+}
+
+/* Image */
+.avatar__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Initials */
+.avatar__initials {
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* Status indicator */
+.avatar__status {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 25%;
+  height: 25%;
+  min-width: 8px;
+  min-height: 8px;
+  max-width: 16px;
+  max-height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--color-surface);
+  background: var(--color-text-muted);
+}
+
+.avatar__status--online {
+  background: var(--color-success);
+}
+
+.avatar__status--offline {
+  background: var(--color-text-muted);
+}
+
+.avatar__status--away {
+  background: var(--color-warning);
+}
+
+.avatar__status--busy {
+  background: var(--color-error);
+}
+
+/* Avatar Group */
+.avatar-group {
+  display: flex;
+  align-items: center;
+}
+
+.avatar-group__item {
+  border: 2px solid var(--color-surface);
+  margin-left: -8px;
+}
+
+.avatar-group__item:first-child {
+  margin-left: 0;
+}
+
+.avatar-group--xs .avatar-group__item {
+  margin-left: -6px;
+}
+
+.avatar-group--sm .avatar-group__item {
+  margin-left: -8px;
+}
+
+.avatar-group--lg .avatar-group__item {
+  margin-left: -12px;
+}
+
+.avatar-group--xl .avatar-group__item {
+  margin-left: -16px;
+}
+
+.avatar-group__remaining {
+  background: var(--color-surface-secondary);
+  color: var(--color-text);
+}
