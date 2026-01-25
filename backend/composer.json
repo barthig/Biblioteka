@@ -22,7 +22,6 @@
                     "symfony/validator":  "^6.4",
                     "symfony/rate-limiter":  "^6.4",
                     "symfony/lock":  "^6.4",
-                    "sentry/sentry-symfony":  "^5.8",
                     "symfony/cache":  "^6.4",
                     "predis/predis":  "^3.3",
                     "friendsofsymfony/elastica-bundle":  "^7.0",
