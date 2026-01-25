@@ -93,7 +93,7 @@ export function RequirePermission({
   children,
   fallback = null
 }) {
-  const { can, canAny, canAll } = useRBAC()
+  const { canAny, canAll } = useRBAC()
 
   const permissionList = permission ? [permission] : permissions || []
 

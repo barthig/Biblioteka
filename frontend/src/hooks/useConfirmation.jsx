@@ -1,4 +1,4 @@
-import { useState, useCallback, createContext, useContext, useMemo } from 'react'
+import React, { useState, useCallback, createContext, useContext, useMemo } from 'react'
 import { ConfirmModal } from '../components/ui/Modal'
 
 /**
@@ -48,11 +48,13 @@ export function useConfirmation() {
   const handleConfirm = useCallback(() => {
     state.resolve?.(true)
     setState(prev => ({ ...prev, isOpen: false }))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.resolve])
 
   const handleCancel = useCallback(() => {
     state.resolve?.(false)
     setState(prev => ({ ...prev, isOpen: false }))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.resolve])
 
   // Shorthand methods

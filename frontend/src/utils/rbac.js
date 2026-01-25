@@ -121,6 +121,7 @@ export function hasPermission(userRoles, permission) {
   
   const allowedRoles = PERMISSIONS[permission]
   if (!allowedRoles) {
+    // eslint-disable-next-line no-console
     console.warn(`Unknown permission: ${permission}`)
     return false
   }

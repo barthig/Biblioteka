@@ -24,6 +24,7 @@ export function useStorage(key, initialValue, options = {}) {
       }
     } catch (error) {
       onError?.(error)
+      // eslint-disable-next-line no-console
       console.warn(`Error reading localStorage key "${key}":`, error)
     }
     return initialValue
@@ -44,6 +45,7 @@ export function useStorage(key, initialValue, options = {}) {
       }
     } catch (error) {
       onError?.(error)
+      // eslint-disable-next-line no-console
       console.warn(`Error setting localStorage key "${key}":`, error)
     }
   }, [key, storedValue, storage, serialize, onError])
@@ -55,6 +57,7 @@ export function useStorage(key, initialValue, options = {}) {
       setStoredValue(initialValue)
     } catch (error) {
       onError?.(error)
+      // eslint-disable-next-line no-console
       console.warn(`Error removing localStorage key "${key}":`, error)
     }
   }, [key, storage, initialValue, onError])

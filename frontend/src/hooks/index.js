@@ -17,3 +17,6 @@ export { useStorage, useLocalStorage, useSessionStorage, useStorageState } from 
 
 // Confirmation dialog hook
 export { useConfirmation, useConfirmationContext, ConfirmationProvider } from './useConfirmation'
+
+// RBAC hook
+export { useRBAC } from './useRBAC'

@@ -22,6 +22,7 @@ export function useFilters(initialFilters = {}, options = {}) {
           return { ...initialFilters, ...JSON.parse(stored) }
         }
       } catch (e) {
+        // eslint-disable-next-line no-console
         console.warn('Failed to load filters from storage:', e)
       }
     }
@@ -36,6 +37,7 @@ export function useFilters(initialFilters = {}, options = {}) {
       try {
         localStorage.setItem(persistKey, JSON.stringify(newFilters))
       } catch (e) {
+        // eslint-disable-next-line no-console
         console.warn('Failed to persist filters:', e)
       }
     }

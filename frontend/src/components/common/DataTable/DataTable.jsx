@@ -57,7 +57,9 @@ export default function DataTable({
   const [internalSelectedRows, setInternalSelectedRows] = useState([])
   
   const selected = selectable ? (onSelectionChange ? selectedRows : internalSelectedRows) : []
-  const setSelected = selectable ? (onSelectionChange || setInternalSelectedRows) : () => {}
+  const setSelected = useMemo(() => {
+    return selectable ? (onSelectionChange || setInternalSelectedRows) : () => {}
+  }, [selectable, onSelectionChange])
 
   // Filtering
   const filteredData = useMemo(() => {
