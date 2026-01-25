@@ -3,24 +3,27 @@ import { Routes, Route } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { AuthProvider } from './context/AuthContext'
 import { ResourceCacheProvider } from './context/ResourceCacheContext'
-import Navbar from './components/common/Navbar'
-import RequireRole from './components/RequireRole'
-import Login from './pages/auth/Login'
-import Books from './pages/books/Books'
-import Dashboard from './pages/dashboard/Dashboard'
-import BookDetails from './pages/books/BookDetails'
-import MyLoans from './pages/MyLoans'
-import Register from './pages/auth/Register'
-import Profile from './pages/Profile'
-import Reservations from './pages/Reservations'
-import Favorites from './pages/Favorites'
-import Recommended from './pages/Recommended'
-import AdminPanel from './pages/admin/AdminPanel'
-import LibrarianPanel from './pages/LibrarianPanel'
-import Announcements from './pages/Announcements'
-import UserDetails from './pages/UserDetails'
-import Notifications from './pages/Notifications'
-import Reports from './pages/Reports'
+
+// Components
+import { Navbar, RequireRole } from './components/common'
+
+// Pages - Auth
+import { Login, Register } from './pages/auth'
+
+// Pages - Books
+import { Books, BookDetails, Announcements } from './pages/books'
+
+// Pages - Dashboard
+import { Dashboard, Recommended } from './pages/dashboard'
+
+// Pages - Loans
+import { MyLoans, Reservations } from './pages/loans'
+
+// Pages - User
+import { Profile, Favorites, Notifications, UserDetails } from './pages/user'
+
+// Pages - Admin
+import { AdminPanel, LibrarianPanel, Reports } from './pages/admin'
 
 export default function App() {
   return (
@@ -102,10 +105,10 @@ export default function App() {
                 />
               </Routes>
               <footer className="footer">
-                <p>(c) 2025 Biblioteka. System zarz¹dzania bibliotek¹ i wypo¿yczeniami.</p>
+                <p>(c) 2025 Biblioteka. System zarzï¿½dzania bibliotekï¿½ i wypoï¿½yczeniami.</p>
                 <div className="footer__links">
                   <a href="#regulamin">Regulamin</a>
-                  <a href="#prywatnosc">Polityka prywatnoœci</a>
+                  <a href="#prywatnosc">Polityka prywatnoï¿½ci</a>
                   <a href="#kontakt">Kontakt</a>
                 </div>
               </footer>

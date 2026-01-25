@@ -1,0 +1,12 @@
+// Common components - barrel exports
+export { default as EmptyState } from './EmptyState'
+export { default as ErrorMessage } from './ErrorMessage'
+export { default as FilterPanel } from './FilterPanel'
+export { default as LoadingSpinner } from './LoadingSpinner'
+export { default as Modal } from './Modal'
+export { default as Navbar } from './Navbar'
+export { default as OnboardingModal } from './OnboardingModal'
+export { default as Pagination } from './Pagination'
+export { default as RequireRole } from './RequireRole'
+export { default as SearchBar } from './SearchBar'
+export { default as SuccessMessage } from './SuccessMessage'
