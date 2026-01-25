@@ -2,7 +2,7 @@
 namespace App\Tests\Service;
 
 use App\Entity\BackupRecord;
-use App\Service\BackupService;
+use App\Service\System\BackupService;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
 

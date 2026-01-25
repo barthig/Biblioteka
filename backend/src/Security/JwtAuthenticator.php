@@ -2,7 +2,7 @@
 namespace App\Security;
 
 use App\Repository\UserRepository;
-use App\Service\JwtService;
+use App\Service\Auth\JwtService;
 use App\Security\ApiSecretUser;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;

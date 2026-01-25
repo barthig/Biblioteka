@@ -8,7 +8,7 @@ use App\Application\Query\SystemSetting\ListSystemSettingsQuery;
 use App\Controller\Traits\ExceptionHandlingTrait;
 use App\Entity\SystemSetting;
 use App\Repository\SystemSettingRepository;
-use App\Service\SecurityService;
+use App\Service\Auth\SecurityService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;

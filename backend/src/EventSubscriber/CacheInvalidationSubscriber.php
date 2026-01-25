@@ -2,8 +2,8 @@
 
 namespace App\EventSubscriber;
 
-use App\Service\BookCacheService;
-use App\Service\StatisticsCacheService;
+use App\Service\Book\BookCacheService;
+use App\Service\System\StatisticsCacheService;
 use Doctrine\Common\EventSubscriber;
 use Doctrine\ORM\Events;
 use Doctrine\Persistence\Event\LifecycleEventArgs;

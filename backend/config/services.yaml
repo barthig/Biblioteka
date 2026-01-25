@@ -14,10 +14,29 @@ services:
       - '../src/Entity/'
       - '../src/Kernel.php'
 
-  # Service aliases
+  # Service aliases (mapping legacy App\Service\X to actual subfolder locations)
   App\Service\SecurityService: '@App\Service\Auth\SecurityService'
+  App\Service\JwtService: '@App\Service\Auth\JwtService'
+  App\Service\RefreshTokenService: '@App\Service\Auth\RefreshTokenService'
+  App\Service\RegistrationService: '@App\Service\Auth\RegistrationService'
   App\Service\NotificationService: '@App\Service\User\NotificationService'
   App\Service\BookService: '@App\Service\Book\BookService'
+  App\Service\BookCacheService: '@App\Service\Book\BookCacheService'
+  App\Service\OpenAIEmbeddingService: '@App\Service\Book\OpenAIEmbeddingService'
+  App\Service\PersonalizedRecommendationService: '@App\Service\Book\PersonalizedRecommendationService'
+  App\Service\RecommendationService: '@App\Service\Book\RecommendationService'
+  App\Service\SystemSettingsService: '@App\Service\System\SystemSettingsService'
+  App\Service\AuditService: '@App\Service\System\AuditService'
+  App\Service\BackupService: '@App\Service\System\BackupService'
+  App\Service\ElasticsearchService: '@App\Service\System\ElasticsearchService'
+  App\Service\StatisticsCacheService: '@App\Service\System\StatisticsCacheService'
+  App\Service\FeeService: '@App\Service\Loan\FeeService'
+  App\Service\ReservationService: '@App\Service\Loan\ReservationService'
+  App\Service\IsbnImportService: '@App\Service\Maintenance\IsbnImportService'
+  App\Service\PatronAnonymizer: '@App\Service\Maintenance\PatronAnonymizer'
+  App\Service\WeedingAnalyticsService: '@App\Service\Maintenance\WeedingAnalyticsService'
+  App\Service\NewsletterComposer: '@App\Service\Notification\NewsletterComposer'
+  App\Service\NotificationSender: '@App\Service\Notification\NotificationSender'
 
   # Force handler namespaces onto dedicated buses
   App\Application\Handler\Command\:

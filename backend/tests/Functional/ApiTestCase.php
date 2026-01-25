@@ -12,7 +12,7 @@ use App\Entity\Fine;
 use App\Entity\User;
 use App\Entity\Supplier;
 use App\Entity\AcquisitionBudget;
-use App\Service\JwtService;
+use App\Service\Auth\JwtService;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;

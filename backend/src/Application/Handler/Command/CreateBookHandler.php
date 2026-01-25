@@ -6,7 +6,7 @@ use App\Entity\Book;
 use App\Entity\BookCopy;
 use App\Repository\AuthorRepository;
 use App\Repository\CategoryRepository;
-use App\Service\NotificationService;
+use App\Service\User\NotificationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;

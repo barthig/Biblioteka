@@ -8,7 +8,7 @@ use App\Entity\BookCopy;
 use App\Entity\Loan;
 use App\Repository\LoanRepository;
 use App\Repository\ReservationRepository;
-use App\Service\BookService;
+use App\Service\Book\BookService;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Messenger\MessageBusInterface;

@@ -7,7 +7,7 @@ use App\Entity\BookCopy;
 use App\Repository\BookCopyRepository;
 use App\Repository\BookRepository;
 use App\Repository\LoanRepository;
-use App\Service\BookService;
+use App\Service\Book\BookService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;

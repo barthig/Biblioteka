@@ -6,7 +6,7 @@ use App\Application\Command\Announcement\PublishAnnouncementCommand;
 use App\Application\Handler\Command\PublishAnnouncementHandler;
 use App\Entity\Announcement;
 use App\Repository\AnnouncementRepository;
-use App\Service\NotificationService;
+use App\Service\User\NotificationService;
 use App\Service\Notification\NotificationSender;
 use App\Repository\UserRepository;
 use App\Repository\NotificationLogRepository;

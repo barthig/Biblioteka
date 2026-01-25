@@ -9,7 +9,7 @@ use App\Event\BookReturnedEvent;
 use App\Message\ReservationReadyMessage;
 use App\Repository\LoanRepository;
 use App\Repository\ReservationRepository;
-use App\Service\BookService;
+use App\Service\Book\BookService;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;

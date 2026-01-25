@@ -2,7 +2,7 @@
 namespace App\Tests\Service;
 
 use App\Entity\AuditLog;
-use App\Service\AuditService;
+use App\Service\System\AuditService;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;

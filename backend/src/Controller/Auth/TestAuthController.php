@@ -6,7 +6,7 @@ use App\Controller\Traits\ExceptionHandlingTrait;
 use App\Dto\ApiError;
 use App\Repository\UserRepository;
 use App\Service\JwtService;
-use App\Service\RefreshTokenService;
+use App\Service\Auth\RefreshTokenService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;

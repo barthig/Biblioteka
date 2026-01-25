@@ -7,6 +7,7 @@ namespace App\Service\Loan;
 use App\Entity\Book;
 use App\Message\ReservationReadyMessage;
 use App\Repository\ReservationRepository;
+use App\Service\Book\BookService;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Messenger\MessageBusInterface;

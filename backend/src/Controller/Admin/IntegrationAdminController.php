@@ -7,7 +7,7 @@ use App\Application\Query\IntegrationConfig\GetIntegrationConfigQuery;
 use App\Application\Query\IntegrationConfig\ListIntegrationConfigsQuery;
 use App\Controller\Traits\ExceptionHandlingTrait;
 use App\Entity\IntegrationConfig;
-use App\Service\SecurityService;
+use App\Service\Auth\SecurityService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;

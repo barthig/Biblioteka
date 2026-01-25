@@ -1,7 +1,7 @@
 <?php
 namespace App\Tests\Unit;
 
-use App\Service\OpenAIEmbeddingService;
+use App\Service\Book\OpenAIEmbeddingService;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;

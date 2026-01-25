@@ -3,7 +3,7 @@ namespace App\MessageHandler;
 
 use App\Entity\Book;
 use App\Message\UpdateBookEmbeddingMessage;
-use App\Service\OpenAIEmbeddingService;
+use App\Service\Book\OpenAIEmbeddingService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 

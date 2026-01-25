@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\EventSubscriber;
 
 use App\Event\BookBorrowedEvent;
-use App\Service\NotificationService;
+use App\Service\User\NotificationService;
 use App\Repository\AuditLogRepository;
 use App\Entity\AuditLog;
 use Psr\Log\LoggerInterface;

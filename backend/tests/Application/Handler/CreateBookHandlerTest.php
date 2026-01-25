@@ -8,7 +8,7 @@ use App\Entity\Book;
 use App\Entity\Category;
 use App\Repository\AuthorRepository;
 use App\Repository\CategoryRepository;
-use App\Service\NotificationService;
+use App\Service\User\NotificationService;
 use App\Service\Notification\NotificationSender;
 use App\Repository\UserRepository;
 use App\Repository\NotificationLogRepository;

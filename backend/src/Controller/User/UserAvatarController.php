@@ -3,7 +3,7 @@ namespace App\Controller\User;
 
 use App\Dto\ApiError;
 use App\Repository\UserRepository;
-use App\Service\SecurityService;
+use App\Service\Auth\SecurityService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;

@@ -6,7 +6,7 @@ namespace App\Controller;
 
 use App\Application\Query\Book\ExportBooksQuery;
 use App\Entity\Book;
-use App\Service\SecurityService;
+use App\Service\Auth\SecurityService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;

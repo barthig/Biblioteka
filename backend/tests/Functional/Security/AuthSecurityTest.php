@@ -3,7 +3,7 @@
 namespace App\Tests\Functional\Security;
 
 use App\Entity\RefreshToken;
-use App\Service\RefreshTokenService;
+use App\Service\Auth\RefreshTokenService;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\HttpFoundation\Response;
 

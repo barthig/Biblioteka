@@ -2,7 +2,7 @@
 namespace App\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
-use App\Service\JwtService;
+use App\Service\Auth\JwtService;
 
 class JwtServiceTest extends TestCase
 {

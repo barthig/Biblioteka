@@ -3,7 +3,7 @@ namespace App\EventSubscriber;
 
 use App\Repository\UserRepository;
 use App\Security\ApiSecretUser;
-use App\Service\JwtService;
+use App\Service\Auth\JwtService;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;

@@ -4,7 +4,7 @@ namespace App\Application\Handler\Command;
 use App\Application\Command\Announcement\PublishAnnouncementCommand;
 use App\Entity\Announcement;
 use App\Repository\AnnouncementRepository;
-use App\Service\NotificationService;
+use App\Service\User\NotificationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 

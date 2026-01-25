@@ -12,7 +12,7 @@ use App\Entity\BookCopy;
 use App\Repository\BookCopyRepository;
 use App\Request\CreateBookCopyRequest;
 use App\Request\UpdateBookCopyRequest;
-use App\Service\SecurityService;
+use App\Service\Auth\SecurityService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;

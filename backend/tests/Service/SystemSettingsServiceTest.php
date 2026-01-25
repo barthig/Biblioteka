@@ -3,7 +3,7 @@ namespace App\Tests\Service;
 
 use App\Entity\SystemSetting;
 use App\Repository\SystemSettingRepository;
-use App\Service\SystemSettingsService;
+use App\Service\System\SystemSettingsService;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
 

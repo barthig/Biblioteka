@@ -3,8 +3,8 @@ namespace App\Controller\Admin;
 
 use App\Controller\Traits\ExceptionHandlingTrait;
 use App\Repository\BackupRecordRepository;
-use App\Service\BackupService;
-use App\Service\SecurityService;
+use App\Service\System\BackupService;
+use App\Service\Auth\SecurityService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;

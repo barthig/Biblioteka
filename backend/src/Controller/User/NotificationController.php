@@ -4,7 +4,7 @@ namespace App\Controller\User;
 use App\Controller\Traits\ExceptionHandlingTrait;
 use App\Dto\ApiError;
 use App\Repository\NotificationLogRepository;
-use App\Service\SecurityService;
+use App\Service\Auth\SecurityService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;

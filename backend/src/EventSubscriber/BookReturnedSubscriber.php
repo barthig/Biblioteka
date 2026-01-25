@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\EventSubscriber;
 
 use App\Event\BookReturnedEvent;
-use App\Service\NotificationService;
-use App\Service\ReservationService;
+use App\Service\User\NotificationService;
+use App\Service\Loan\ReservationService;
 use App\Repository\AuditLogRepository;
 use App\Entity\AuditLog;
 use Psr\Log\LoggerInterface;

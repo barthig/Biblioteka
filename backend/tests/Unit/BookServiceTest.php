@@ -6,7 +6,7 @@ use App\Entity\Author;
 use App\Entity\Book;
 use App\Entity\BookCopy;
 use App\Repository\BookCopyRepository;
-use App\Service\BookService;
+use App\Service\Book\BookService;
 use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\Persistence\ObjectManager;
 

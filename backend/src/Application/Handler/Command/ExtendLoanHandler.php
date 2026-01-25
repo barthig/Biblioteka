@@ -5,7 +5,7 @@ use App\Application\Command\Loan\ExtendLoanCommand;
 use App\Entity\Loan;
 use App\Repository\LoanRepository;
 use App\Repository\ReservationRepository;
-use App\Service\SystemSettingsService;
+use App\Service\System\SystemSettingsService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 

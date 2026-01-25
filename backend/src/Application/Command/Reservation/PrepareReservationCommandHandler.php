@@ -6,7 +6,7 @@ namespace App\Application\Command\Reservation;
 
 use App\Entity\Reservation;
 use App\Repository\ReservationRepository;
-use App\Service\NotificationService;
+use App\Service\User\NotificationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 

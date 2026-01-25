@@ -8,7 +8,7 @@ use App\Application\Query\BookAsset\ListBookAssetsQuery;
 use App\Dto\ApiError;
 use App\Entity\BookDigitalAsset;
 use App\Controller\Traits\ExceptionHandlingTrait;
-use App\Service\SecurityService;
+use App\Service\Auth\SecurityService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;

@@ -4,7 +4,7 @@ namespace App\Tests\Functional;
 use App\Entity\Author;
 use App\Entity\Book;
 use App\Repository\BookRepository;
-use App\Service\OpenAIEmbeddingService;
+use App\Service\Book\OpenAIEmbeddingService;
 use App\Service\RecommendationService;
 
 class RecommendationControllerTest extends ApiTestCase

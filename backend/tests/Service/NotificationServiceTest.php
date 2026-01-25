@@ -5,7 +5,7 @@ use App\Entity\Book;
 use App\Entity\Loan;
 use App\Entity\User;
 use App\Service\Notification\NotificationSender;
-use App\Service\NotificationService;
+use App\Service\User\NotificationService;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 

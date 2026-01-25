@@ -10,7 +10,7 @@ use App\Entity\User;
 use App\Repository\BookCopyRepository;
 use App\Repository\LoanRepository;
 use App\Repository\ReservationRepository;
-use App\Service\BookService;
+use App\Service\Book\BookService;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;

@@ -2,7 +2,7 @@
 namespace App\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
-use App\Service\SecurityService;
+use App\Service\Auth\SecurityService;
 use Symfony\Component\HttpFoundation\Request;
 
 class SecurityServiceTest extends TestCase

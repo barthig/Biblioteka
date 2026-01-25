@@ -5,7 +5,7 @@ namespace App\Tests\Service;
 use App\Entity\RefreshToken;
 use App\Entity\User;
 use App\Repository\RefreshTokenRepository;
-use App\Service\RefreshTokenService;
+use App\Service\Auth\RefreshTokenService;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;

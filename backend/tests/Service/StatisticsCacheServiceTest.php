@@ -2,7 +2,7 @@
 
 namespace App\Tests\Service;
 
-use App\Service\StatisticsCacheService;
+use App\Service\System\StatisticsCacheService;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
 

@@ -6,7 +6,7 @@ use App\Controller\Traits\ExceptionHandlingTrait;
 use App\Dto\ApiError;
 use App\Entity\User;
 use App\Repository\UserRepository;
-use App\Service\SecurityService;
+use App\Service\Auth\SecurityService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
