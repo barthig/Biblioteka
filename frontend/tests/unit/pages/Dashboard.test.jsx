@@ -27,11 +27,11 @@ vi.mock('../../../src/context/ResourceCacheContext', () => ({
   useResourceCache: () => ({ getCachedResource, setCachedResource, prefetchResource })
 }))
 
-vi.mock('../../../src/components/OnboardingModal', () => ({
+vi.mock('../../../src/components/common/OnboardingModal', () => ({
   default: () => <div data-testid="onboarding-modal" />
 }))
 
-vi.mock('../../../src/components/UserRecommendations', () => ({
+vi.mock('../../../src/components/books/UserRecommendations', () => ({
   default: () => <div data-testid="user-recommendations" />
 }))
 

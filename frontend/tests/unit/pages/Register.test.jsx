@@ -5,10 +5,8 @@ import { MemoryRouter } from 'react-router-dom'
 import Register from '../../../src/pages/auth/Register'
 import { apiFetch } from '../../../src/api'
 
-const mockLogin = vi.fn()
-
 vi.mock('../../../src/context/AuthContext', () => ({
-  useAuth: () => ({ user: null, login: mockLogin })
+  useAuth: () => ({ user: null })
 }))
 
 vi.mock('../../../src/api', () => ({
@@ -18,6 +16,9 @@ vi.mock('../../../src/api', () => ({
 describe('Register page', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    // Mock window.location.href for redirect tests
+    delete window.location
+    window.location = { href: '' }
   })
 
   it('shows error when passwords do not match', async () => {
@@ -29,19 +30,19 @@ describe('Register page', () => {
 
     await userEvent.type(screen.getByLabelText(/Imi/i), 'Jan Kowalski')
     await userEvent.type(screen.getByLabelText(/e-?mail/i), 'jan@example.com')
-    await userEvent.type(screen.getByLabelText(/^Has/i), 'password123')
-    await userEvent.type(screen.getByLabelText(/Powt/i), 'password124')
+    await userEvent.type(screen.getByLabelText(/^Has/i), 'Password123')
+    await userEvent.type(screen.getByLabelText(/Powt/i), 'Password124')
+    await userEvent.type(screen.getByLabelText(/Kod pocztowy/i), '00-001')
     await userEvent.click(screen.getByRole('button', { name: /Utw/i }))
 
     expect(await screen.findByText(/Has.*identyczne/i)).toBeInTheDocument()
     expect(apiFetch).not.toHaveBeenCalled()
   })
 
-  it('registers, verifies, and logs in user', async () => {
+  it('registers and verifies user then shows success message', async () => {
     apiFetch
       .mockResolvedValueOnce({ verificationToken: 'token-1' })
       .mockResolvedValueOnce({ pendingApproval: false })
-      .mockResolvedValueOnce({ token: 'token-123', refreshToken: 'refresh-123' })
 
     render(
       <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
@@ -51,10 +52,15 @@ describe('Register page', () => {
 
     await userEvent.type(screen.getByLabelText(/Imi/i), 'Jan Kowalski')
     await userEvent.type(screen.getByLabelText(/e-?mail/i), 'jan@example.com')
-    await userEvent.type(screen.getByLabelText(/^Has/i), 'password123')
-    await userEvent.type(screen.getByLabelText(/Powt/i), 'password123')
+    await userEvent.type(screen.getByLabelText(/^Has/i), 'Password123')
+    await userEvent.type(screen.getByLabelText(/Powt/i), 'Password123')
+    await userEvent.type(screen.getByLabelText(/Kod pocztowy/i), '00-001')
     await userEvent.click(screen.getByRole('button', { name: /Utw/i }))
 
+    // Verify success message is shown
+    expect(await screen.findByText(/Konto zosta.*o utworzone/i)).toBeInTheDocument()
+    
+    // Verify API calls
     await waitFor(() => {
       expect(apiFetch).toHaveBeenNthCalledWith(1, '/api/auth/register', {
         method: 'POST',
@@ -62,21 +68,15 @@ describe('Register page', () => {
         body: JSON.stringify({
           name: 'Jan Kowalski',
           email: 'jan@example.com',
-          password: 'password123',
+          password: 'Password123',
           phoneNumber: undefined,
           addressLine: undefined,
           city: undefined,
-          postalCode: undefined,
+          postalCode: '00-001',
           privacyConsent: true
         })
       })
       expect(apiFetch).toHaveBeenNthCalledWith(2, '/api/auth/verify/token-1')
-      expect(apiFetch).toHaveBeenNthCalledWith(3, '/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: 'jan@example.com', password: 'password123' })
-      })
-      expect(mockLogin).toHaveBeenCalledWith('token-123', 'refresh-123')
     })
   })
 
@@ -93,12 +93,12 @@ describe('Register page', () => {
 
     await userEvent.type(screen.getByLabelText(/Imi/i), 'Jan Kowalski')
     await userEvent.type(screen.getByLabelText(/e-?mail/i), 'jan@example.com')
-    await userEvent.type(screen.getByLabelText(/^Has/i), 'password123')
-    await userEvent.type(screen.getByLabelText(/Powt/i), 'password123')
+    await userEvent.type(screen.getByLabelText(/^Has/i), 'Password123')
+    await userEvent.type(screen.getByLabelText(/Powt/i), 'Password123')
+    await userEvent.type(screen.getByLabelText(/Kod pocztowy/i), '00-001')
     await userEvent.click(screen.getByRole('button', { name: /Utw/i }))
 
     expect(await screen.findByText(/Oczekuje na akceptacj/i)).toBeInTheDocument()
-    expect(mockLogin).not.toHaveBeenCalled()
   })
 })
 

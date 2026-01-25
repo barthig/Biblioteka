@@ -15,15 +15,20 @@ describe('AdminPanel page', () => {
     window.prompt = vi.fn(() => 'new-value')
   })
 
-  it('loads and renders users table', async () => {
+  it('loads and renders users', async () => {
     apiFetch.mockResolvedValue([
-      { id: 1, name: 'Admin User', email: 'admin@example.com', roles: ['ROLE_ADMIN'] }
+      { id: 1, name: 'Admin User', email: 'admin@example.com', roles: ['ROLE_ADMIN'], blocked: false }
     ])
 
     render(<AdminPanel />)
 
-    expect(await screen.findByText('Admin User')).toBeInTheDocument()
-    expect(screen.getByText('admin@example.com')).toBeInTheDocument()
+    // Wait for user to appear and click to expand
+    const userHeader = await screen.findByText('Admin User')
+    expect(userHeader).toBeInTheDocument()
+    
+    // Expand card to see email
+    await userEvent.click(userHeader)
+    expect(await screen.findByText('admin@example.com')).toBeInTheDocument()
   })
 
   it('searches users and blocks account', async () => {
@@ -45,9 +50,16 @@ describe('AdminPanel page', () => {
     const searchInput = await screen.findByPlaceholderText(/Szukaj/i)
     await userEvent.type(searchInput, 'User')
 
-    expect(await screen.findByText('User Two')).toBeInTheDocument()
-    const row = screen.getByText('User Two').closest('tr')
-    await userEvent.click(within(row).getByRole('button', { name: /Zablokuj/i }))
+    // Wait for search results
+    const userHeader = await screen.findByText('User Two')
+    expect(userHeader).toBeInTheDocument()
+    
+    // Expand the user card to see actions
+    await userEvent.click(userHeader)
+    
+    // Find and click the block button
+    const blockButton = await screen.findByRole('button', { name: /Zablokuj/i })
+    await userEvent.click(blockButton)
 
     expect(apiFetch).toHaveBeenCalledWith('/api/users/2/block', expect.objectContaining({ method: 'POST' }))
   })

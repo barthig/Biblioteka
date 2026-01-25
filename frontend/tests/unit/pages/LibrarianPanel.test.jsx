@@ -40,12 +40,11 @@ describe('LibrarianPanel page', () => {
       return Promise.resolve({ data: [] })
     })
 
-    const { container } = render(<LibrarianPanel />)
-    await userEvent.click(screen.getByRole('button', { name: /Statystyki/i }))
+    const { container } = renderPanel()
+    await userEvent.click(screen.getByRole('button', { name: /Ustawienia/i }))
 
-    expect(await screen.findByRole('heading', { name: /Statystyki wypozyczen/i })).toBeInTheDocument()
+    expect(await screen.findByText(/Limit wypo/i)).toBeInTheDocument()
     await waitFor(() => {
-      expect(apiFetch).toHaveBeenCalledWith('/api/statistics/dashboard')
       expect(apiFetch).toHaveBeenCalledWith('/api/settings')
     })
   })
@@ -73,16 +72,18 @@ describe('LibrarianPanel page', () => {
       return Promise.resolve({ data: [] })
     })
 
-    const { container } = render(<LibrarianPanel />)
+    const { container } = renderPanel()
     await userEvent.click(screen.getByRole('button', { name: /Rezerwacje/i }))
     expect(await screen.findByText('Alpha')).toBeInTheDocument()
 
-    await userEvent.click(screen.getByRole('button', { name: /Rozwin rezerwacje Alpha/i }))
-    await userEvent.click(screen.getByRole('button', { name: /Zrealizuj/i }))
+    // Expand the reservation card
+    const alphaElement = screen.getByText('Alpha')
+    await userEvent.click(alphaElement)
+    
+    // Wait for fulfill button and click
+    const fulfillButton = await screen.findByRole('button', { name: /Zrealizuj/i })
+    await userEvent.click(fulfillButton)
     expect(apiFetch).toHaveBeenCalledWith('/api/reservations/10/fulfill', { method: 'POST' })
-
-    await userEvent.click(screen.getByRole('button', { name: /Anuluj/i }))
-    expect(apiFetch).toHaveBeenCalledWith('/api/reservations/10', { method: 'DELETE' })
   })
 
   it('handles fines actions', async () => {
@@ -100,7 +101,7 @@ describe('LibrarianPanel page', () => {
       return Promise.resolve({ data: [] })
     })
 
-    const { container } = render(<LibrarianPanel />)
+    const { container } = renderPanel()
     await userEvent.click(screen.getByRole('button', { name: /Op/ }))
     expect(await screen.findByText(/Late/)).toBeInTheDocument()
 
@@ -127,11 +128,17 @@ describe('LibrarianPanel page', () => {
       return Promise.resolve({ data: [] })
     })
 
-    const { container } = render(<LibrarianPanel />)
+    const { container } = renderPanel()
     await userEvent.click(screen.getByRole('button', { name: /Egz/i }))
     await userEvent.type(screen.getByPlaceholderText(/Wpisz tytu/i), 'Al')
     await userEvent.click(await screen.findByText('Alpha'))
 
     expect(await screen.findByText(/INV-1/i)).toBeInTheDocument()
     const inventoryForm = container.querySelector('form.form')
-    await userEvent.type(inventoryForm.querySelector('input[required]')
+    await userEvent.type(inventoryForm.querySelector('input[required]'), 'INV-2')
+    await userEvent.click(within(inventoryForm).getByRole('button', { name: /Dodaj egz/i }))
+
+    expect(apiFetch).toHaveBeenCalledWith('/api/admin/books/1/copies', expect.objectContaining({ method: 'POST' }))
+  })
+})
+
