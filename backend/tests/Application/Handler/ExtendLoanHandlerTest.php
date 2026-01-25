@@ -9,15 +9,17 @@ use App\Entity\Reservation;
 use App\Entity\User;
 use App\Repository\LoanRepository;
 use App\Repository\ReservationRepository;
+use App\Service\System\SystemSettingsService;
 use Doctrine\ORM\EntityManagerInterface;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 class ExtendLoanHandlerTest extends TestCase
 {
-    private EntityManagerInterface $em;
-    private LoanRepository $loanRepository;
-    private ReservationRepository $reservationRepository;
-    private \App\Service\SystemSettingsService $settingsService;
+    private EntityManagerInterface&MockObject $em;
+    private LoanRepository&MockObject $loanRepository;
+    private ReservationRepository&MockObject $reservationRepository;
+    private SystemSettingsService&MockObject $settingsService;
     private ExtendLoanHandler $handler;
 
     protected function setUp(): void
@@ -25,7 +27,7 @@ class ExtendLoanHandlerTest extends TestCase
         $this->em = $this->createMock(EntityManagerInterface::class);
         $this->loanRepository = $this->createMock(LoanRepository::class);
         $this->reservationRepository = $this->createMock(ReservationRepository::class);
-        $this->settingsService = $this->createMock(\App\Service\SystemSettingsService::class);
+        $this->settingsService = $this->createMock(SystemSettingsService::class);
 
         $this->handler = new ExtendLoanHandler(
             $this->em,

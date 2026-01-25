@@ -163,7 +163,7 @@ class JwtAuthenticator extends AbstractAuthenticator
         ];
 
         // Check for /api/auth/verify/{token}
-        if (preg_match('#^/api/auth/verify/.+$#', $path) && $method === 'POST') {
+        if (preg_match('#^/api/auth/verify/.+$#', $path) && $method === 'GET') {
             return true;
         }
 
