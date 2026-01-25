@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import Reports from '../../../src/pages/admin/Reports'
 import { reportService } from '../../../src/services/reportService'
 
@@ -51,6 +51,12 @@ describe('Reports page', () => {
 
     render(<Reports />)
     expect(await screen.findByRole('heading', { level: 1, name: /Raporty/i })).toBeInTheDocument()
+    
+    // Wait for loading to complete before checking for data
+    await waitFor(() => {
+      expect(screen.queryByText(/Ładowanie/)).not.toBeInTheDocument()
+    })
+    
     expect(screen.getByText(/Alpha/)).toBeInTheDocument()
     expect(screen.getByText(/Student/)).toBeInTheDocument()
   })
