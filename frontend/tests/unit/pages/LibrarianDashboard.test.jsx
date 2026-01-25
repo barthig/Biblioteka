@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
-import LibrarianDashboard from '../../../src/LibrarianDashboard'
-import { apiFetch } from '../api'
+import LibrarianDashboard from '../../../src/pages/admin/LibrarianDashboard'
+import { apiFetch } from '../../../src/api'
 
-vi.mock('../api', () => ({
+vi.mock('../../../src/api', () => ({
   apiFetch: vi.fn()
 }))
 

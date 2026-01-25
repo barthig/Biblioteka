@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import DigitalAssets from '../../../src/DigitalAssets'
-import { digitalAssetService } from '../services/digitalAssetService'
+import DigitalAssets from '../../../src/pages/books/DigitalAssets'
+import { digitalAssetService } from '../../../src/services/digitalAssetService'
 
-vi.mock('../services/digitalAssetService', () => ({
+vi.mock('../../../src/services/digitalAssetService', () => ({
   digitalAssetService: {
     list: vi.fn(),
     upload: vi.fn(),
@@ -14,7 +14,7 @@ vi.mock('../services/digitalAssetService', () => ({
 }))
 
 let mockUser = null
-vi.mock('../context/AuthContext', () => ({
+vi.mock('../../../src/context/AuthContext', () => ({
   useAuth: () => ({ user: mockUser })
 }))
 

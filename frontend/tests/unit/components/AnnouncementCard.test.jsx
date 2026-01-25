@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
-import AnnouncementCard from '../../../src/AnnouncementCard'
+import AnnouncementCard from '../../../src/components/books/AnnouncementCard'
 
 describe('AnnouncementCard', () => {
   const baseAnnouncement = {

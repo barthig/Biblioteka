@@ -2,20 +2,20 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
-import BookDetails from '../../../src/BookDetails'
-import { apiFetch } from '../api'
-import { ResourceCacheProvider } from '../context/ResourceCacheContext'
+import BookDetails from '../../../src/pages/books/BookDetails'
+import { apiFetch } from '../../../src/api'
+import { ResourceCacheProvider } from '../../../src/context/ResourceCacheContext'
 
-vi.mock('../api', () => ({
+vi.mock('../../../src/api', () => ({
   apiFetch: vi.fn()
 }))
 
 let mockAuth = { token: null, isAuthenticated: false }
-vi.mock('../context/AuthContext', () => ({
+vi.mock('../../../src/context/AuthContext', () => ({
   useAuth: () => mockAuth
 }))
 
-vi.mock('../components/StarRating', () => ({
+vi.mock('../../../src/components/StarRating', () => ({
   StarRating: () => <div data-testid="star-rating" />,
   RatingDisplay: () => <div data-testid="rating-display" />
 }))

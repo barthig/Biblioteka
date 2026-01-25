@@ -2,13 +2,13 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
-import Login from '../../../src/Login'
-import { apiFetch } from '../api'
+import Login from '../../../src/pages/auth/Login'
+import { apiFetch } from '../../../src/api'
 
 const mockLogin = vi.fn()
 const mockNavigate = vi.fn()
 
-vi.mock('../context/AuthContext', () => ({
+vi.mock('../../../src/context/AuthContext', () => ({
   useAuth: () => ({ user: null, login: mockLogin })
 }))
 
@@ -17,7 +17,7 @@ vi.mock('react-router-dom', async () => {
   return { ...actual, useNavigate: () => mockNavigate }
 })
 
-vi.mock('../api', () => ({
+vi.mock('../../../src/api', () => ({
   apiFetch: vi.fn()
 }))
 

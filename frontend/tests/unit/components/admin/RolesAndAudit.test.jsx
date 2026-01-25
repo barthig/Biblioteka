@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import RolesAndAudit from '../../../../src/RolesAndAudit'
+import RolesAndAudit from '../../../../src/components/admin/RolesAndAudit'
 
 describe('RolesAndAudit', () => {
   const baseProps = {

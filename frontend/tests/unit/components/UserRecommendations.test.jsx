@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import UserRecommendations from '../../../src/UserRecommendations'
-import { apiFetch } from '../api'
+import UserRecommendations from '../../../src/components/books/UserRecommendations'
+import { apiFetch } from '../../../src/api'
 
-vi.mock('../api', () => ({
+vi.mock('../../../src/api', () => ({
   apiFetch: vi.fn()
 }))
 

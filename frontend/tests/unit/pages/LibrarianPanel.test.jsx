@@ -1,17 +1,26 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, within, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import LibrarianPanel from '../../../src/LibrarianPanel'
-import { apiFetch } from '../api'
+import { MemoryRouter } from 'react-router-dom'
+import LibrarianPanel from '../../../src/pages/admin/LibrarianPanel'
+import { apiFetch } from '../../../src/api'
 
-vi.mock('../api', () => ({
+vi.mock('../../../src/api', () => ({
   apiFetch: vi.fn()
 }))
 
 let mockUser = null
-vi.mock('../context/AuthContext', () => ({
+vi.mock('../../../src/context/AuthContext', () => ({
   useAuth: () => ({ user: mockUser })
 }))
+
+const renderPanel = () => {
+  return render(
+    <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <LibrarianPanel />
+    </MemoryRouter>
+  )
+}
 
 describe('LibrarianPanel page', () => {
   beforeEach(() => {
@@ -125,10 +134,4 @@ describe('LibrarianPanel page', () => {
 
     expect(await screen.findByText(/INV-1/i)).toBeInTheDocument()
     const inventoryForm = container.querySelector('form.form')
-    await userEvent.type(inventoryForm.querySelector('input[required]'), 'INV-2')
-    await userEvent.click(within(inventoryForm).getByRole('button', { name: /Dodaj egz/i }))
-
-    expect(apiFetch).toHaveBeenCalledWith('/api/admin/books/1/copies', expect.objectContaining({ method: 'POST' }))
-  })
-})
-
+    await userEvent.type(inventoryForm.querySelector('input[required]')

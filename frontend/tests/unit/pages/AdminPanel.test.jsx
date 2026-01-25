@@ -1,10 +1,10 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import AdminPanel from '../../../src/AdminPanel'
-import { apiFetch } from '../api'
+import AdminPanel from '../../../src/pages/admin/AdminPanel'
+import { apiFetch } from '../../../src/api'
 
-vi.mock('../api', () => ({
+vi.mock('../../../src/api', () => ({
   apiFetch: vi.fn()
 }))
 

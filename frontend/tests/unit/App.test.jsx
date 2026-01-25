@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import App from '../../../src/App'
+import App from '../../src/App'
 
 vi.mock('./components/Navbar', () => ({
   default: () => <div>Navbar</div>

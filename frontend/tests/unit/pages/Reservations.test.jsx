@@ -2,16 +2,16 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
-import Reservations from '../../../src/Reservations'
-import { apiFetch } from '../api'
-import { ResourceCacheProvider } from '../context/ResourceCacheContext'
+import Reservations from '../../../src/pages/loans/Reservations'
+import { apiFetch } from '../../../src/api'
+import { ResourceCacheProvider } from '../../../src/context/ResourceCacheContext'
 
-vi.mock('../api', () => ({
+vi.mock('../../../src/api', () => ({
   apiFetch: vi.fn()
 }))
 
 let mockUser = null
-vi.mock('../context/AuthContext', () => ({
+vi.mock('../../../src/context/AuthContext', () => ({
   useAuth: () => ({ user: mockUser })
 }))
 

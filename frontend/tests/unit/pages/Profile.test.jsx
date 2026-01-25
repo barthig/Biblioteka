@@ -2,15 +2,15 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
-import Profile from '../../../src/Profile'
-import { apiFetch } from '../api'
-import { ratingService } from '../services/ratingService'
+import Profile from '../../../src/pages/user/Profile'
+import { apiFetch } from '../../../src/api'
+import { ratingService } from '../../../src/services/ratingService'
 
-vi.mock('../api', () => ({
+vi.mock('../../../src/api', () => ({
   apiFetch: vi.fn()
 }))
 
-vi.mock('../services/ratingService', () => ({
+vi.mock('../../../src/services/ratingService', () => ({
   ratingService: {
     getMyRatings: vi.fn(),
     deleteRating: vi.fn()
@@ -18,7 +18,7 @@ vi.mock('../services/ratingService', () => ({
 }))
 
 let mockUser = null
-vi.mock('../context/AuthContext', () => ({
+vi.mock('../../../src/context/AuthContext', () => ({
   useAuth: () => ({
     user: mockUser,
     refreshSession: vi.fn(),

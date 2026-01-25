@@ -1,7 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { AuthProvider, useAuth } from '../../../src/AuthContext'
+
+// Unmock AuthContext so we can test the real implementation
+vi.unmock('../../../src/context/AuthContext')
+
+// Re-import after unmock
+const { AuthProvider, useAuth } = await import('../../../src/context/AuthContext')
 
 const mockNavigate = vi.fn()
 const mockLogout = vi.fn().mockResolvedValue(null)
@@ -10,7 +15,7 @@ vi.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate
 }))
 
-vi.mock('../services/authService', () => ({
+vi.mock('../../../src/services/authService', () => ({
   authService: {
     logout: (...args) => mockLogout(...args),
     logoutAll: (...args) => mockLogoutAll(...args),

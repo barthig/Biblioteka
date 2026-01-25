@@ -1,11 +1,10 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
-import Notifications from '../../../src/Notifications'
 
 const mockList = vi.fn()
 const mockSendTest = vi.fn()
 
-vi.mock('../services/notificationService', () => ({
+vi.mock('../../../src/services/notificationService', () => ({
   notificationService: {
     list: () => mockList(),
     sendTest: () => mockSendTest()
@@ -13,9 +12,12 @@ vi.mock('../services/notificationService', () => ({
 }))
 
 let mockUser = null
-vi.mock('../context/AuthContext', () => ({
+vi.mock('../../../src/context/AuthContext', () => ({
   useAuth: () => ({ user: mockUser })
 }))
+
+// Import after mocks
+import Notifications from '../../../src/pages/user/Notifications'
 
 describe('Notifications page', () => {
   beforeEach(() => {

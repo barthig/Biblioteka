@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import Acquisitions from '../../../src/Acquisitions'
-import { acquisitionService } from '../services/acquisitionService'
+import Acquisitions from '../../../src/pages/books/Acquisitions'
+import { acquisitionService } from '../../../src/services/acquisitionService'
 
-vi.mock('../services/acquisitionService', () => ({
+vi.mock('../../../src/services/acquisitionService', () => ({
   acquisitionService: {
     listSuppliers: vi.fn(),
     listBudgets: vi.fn(),
@@ -20,7 +20,7 @@ vi.mock('../services/acquisitionService', () => ({
 }))
 
 let mockUser = null
-vi.mock('../context/AuthContext', () => ({
+vi.mock('../../../src/context/AuthContext', () => ({
   useAuth: () => ({ user: mockUser })
 }))
 

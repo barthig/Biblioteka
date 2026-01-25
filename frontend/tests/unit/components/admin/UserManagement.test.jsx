@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import UserManagement from '../../../../src/UserManagement'
+import UserManagement from '../../../../src/components/admin/UserManagement'
 
 describe('UserManagement', () => {
   const baseProps = {
@@ -39,6 +39,10 @@ describe('UserManagement', () => {
     }
     render(<UserManagement {...props} />)
 
+    // First expand the user card by clicking on the header
+    await userEvent.click(screen.getByText('Jan'))
+
+    // Now the action buttons should be visible
     await userEvent.click(screen.getByRole('button', { name: /Edytuj/i }))
     await userEvent.click(screen.getByRole('button', { name: /Uprawnienia/i }))
     await userEvent.click(screen.getByRole('button', { name: /Zablokuj/i }))

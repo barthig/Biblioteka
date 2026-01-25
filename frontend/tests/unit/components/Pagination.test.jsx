@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
-import Pagination from '../../../src/Pagination'
+import Pagination from '../../../src/components/common/Pagination'
 
 describe('Pagination', () => {
   it('returns null when only one page exists', () => {

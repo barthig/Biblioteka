@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
-import { StarRating, RatingDisplay } from '../../../src/StarRating'
+import { StarRating, RatingDisplay } from '../../../src/components/books/StarRating'
 
 describe('StarRating', () => {
   it('fills stars based on rating and handles click', () => {

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import FilterPanel from '../../../src/FilterPanel'
+import FilterPanel from '../../../src/components/common/FilterPanel'
 
 const baseFilters = {
   genres: ['Fantasy', 'Sci-Fi'],

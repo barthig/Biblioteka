@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
-import Reports from '../../../src/Reports'
-import { reportService } from '../services/reportService'
+import Reports from '../../../src/pages/admin/Reports'
+import { reportService } from '../../../src/services/reportService'
 
-vi.mock('../services/reportService', () => ({
+vi.mock('../../../src/services/reportService', () => ({
   reportService: {
     getUsage: vi.fn(),
     getPopularTitles: vi.fn(),
@@ -14,7 +14,7 @@ vi.mock('../services/reportService', () => ({
 }))
 
 let mockUser = null
-vi.mock('../context/AuthContext', () => ({
+vi.mock('../../../src/context/AuthContext', () => ({
   useAuth: () => ({ user: mockUser })
 }))
 

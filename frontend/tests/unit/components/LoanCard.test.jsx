@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
-import LoanCard from '../../../src/LoanCard'
+import LoanCard from '../../../src/components/loans/LoanCard'
 
 describe('LoanCard', () => {
   const mockLoan = {

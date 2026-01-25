@@ -1,20 +1,20 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import Recommended from '../../../src/Recommended'
-import { apiFetch } from '../api'
-import { ResourceCacheProvider } from '../context/ResourceCacheContext'
+import Recommended from '../../../src/pages/dashboard/Recommended'
+import { apiFetch } from '../../../src/api'
+import { ResourceCacheProvider } from '../../../src/context/ResourceCacheContext'
 
-vi.mock('../api', () => ({
+vi.mock('../../../src/api', () => ({
   apiFetch: vi.fn()
 }))
 
 let mockAuth = { token: null, user: null }
-vi.mock('../context/AuthContext', () => ({
+vi.mock('../../../src/context/AuthContext', () => ({
   useAuth: () => mockAuth
 }))
 
-vi.mock('../components/BookItem', () => ({
+vi.mock('../../../src/components/BookItem', () => ({
   default: ({ book }) => <div data-testid="book-item">{book.title}</div>
 }))
 

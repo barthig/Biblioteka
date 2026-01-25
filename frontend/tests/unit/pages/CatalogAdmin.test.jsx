@@ -1,23 +1,23 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import CatalogAdmin from '../../../src/CatalogAdmin'
-import { catalogService } from '../services/catalogService'
-import { apiFetch } from '../api'
+import CatalogAdmin from '../../../src/pages/admin/CatalogAdmin'
+import { catalogService } from '../../../src/services/catalogService'
+import { apiFetch } from '../../../src/api'
 
-vi.mock('../services/catalogService', () => ({
+vi.mock('../../../src/services/catalogService', () => ({
   catalogService: {
     importCatalog: vi.fn(),
     exportCatalog: vi.fn()
   }
 }))
 
-vi.mock('../api', () => ({
+vi.mock('../../../src/api', () => ({
   apiFetch: vi.fn()
 }))
 
 let mockUser = null
-vi.mock('../context/AuthContext', () => ({
+vi.mock('../../../src/context/AuthContext', () => ({
   useAuth: () => ({ user: mockUser })
 }))
 

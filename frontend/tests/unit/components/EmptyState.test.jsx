@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import { describe, it, expect } from 'vitest'
 import { FaBook } from 'react-icons/fa'
-import EmptyState from '../../../src/EmptyState'
+import EmptyState from '../../../src/components/common/EmptyState'
 
 describe('EmptyState', () => {
   it('renders default title and custom message', () => {

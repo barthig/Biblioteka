@@ -1,16 +1,16 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import Favorites from '../../../src/Favorites'
-import { apiFetch } from '../api'
-import { ResourceCacheProvider } from '../context/ResourceCacheContext'
+import Favorites from '../../../src/pages/user/Favorites'
+import { apiFetch } from '../../../src/api'
+import { ResourceCacheProvider } from '../../../src/context/ResourceCacheContext'
 
-vi.mock('../api', () => ({
+vi.mock('../../../src/api', () => ({
   apiFetch: vi.fn()
 }))
 
 let mockUser = null
-vi.mock('../context/AuthContext', () => ({
+vi.mock('../../../src/context/AuthContext', () => ({
   useAuth: () => ({ user: mockUser })
 }))
 

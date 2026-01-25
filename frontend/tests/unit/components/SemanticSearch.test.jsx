@@ -1,9 +1,9 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
-import SemanticSearch from '../../../src/SemanticSearch'
-import { apiFetch } from '../api'
+import SemanticSearch from '../../../src/components/books/SemanticSearch'
+import { apiFetch } from '../../../src/api'
 
-vi.mock('../api', () => ({
+vi.mock('../../../src/api', () => ({
   apiFetch: vi.fn()
 }))
 

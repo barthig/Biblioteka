@@ -1,23 +1,26 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import Books from '../../../src/Books'
-import { apiFetch } from '../api'
-import { ResourceCacheProvider } from '../context/ResourceCacheContext'
+import { MemoryRouter } from 'react-router-dom'
+import Books from '../../../src/pages/books/Books'
+import { apiFetch } from '../../../src/api'
+import { ResourceCacheProvider } from '../../../src/context/ResourceCacheContext'
 
-vi.mock('../api', () => ({
+vi.mock('../../../src/api', () => ({
   apiFetch: vi.fn()
 }))
 
-vi.mock('../components/BookItem', () => ({
+vi.mock('../../../src/components/books/BookItem', () => ({
   default: ({ book }) => <div data-testid="book-item">{book.title}</div>
 }))
 
 const renderPage = () => {
   return render(
-    <ResourceCacheProvider>
-      <Books />
-    </ResourceCacheProvider>
+    <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <ResourceCacheProvider>
+        <Books />
+      </ResourceCacheProvider>
+    </MemoryRouter>
   )
 }
 

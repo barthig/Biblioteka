@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
-import ReservationCard from '../../../src/ReservationCard'
+import ReservationCard from '../../../src/components/loans/ReservationCard'
 
 describe('ReservationCard', () => {
   it('renders pending reservation and triggers actions', () => {

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
-import SuccessMessage from '../../../src/SuccessMessage'
+import SuccessMessage from '../../../src/components/common/SuccessMessage'
 
 describe('SuccessMessage', () => {
   it('renders nothing without message', () => {

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
-import ErrorMessage from '../../../src/ErrorMessage'
+import ErrorMessage from '../../../src/components/common/ErrorMessage'
 
 describe('ErrorMessage', () => {
   it('renders nothing without error', () => {

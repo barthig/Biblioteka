@@ -2,10 +2,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { BrowserRouter } from 'react-router-dom'
 import userEvent from '@testing-library/user-event'
-import SearchBar from '../../../src/SearchBar'
-import * as bookService from '../services/bookService'
+import SearchBar from '../../../src/components/common/SearchBar'
+import * as bookService from '../../../src/services/bookService'
 
-vi.mock('../services/bookService')
+vi.mock('../../../src/services/bookService')
 
 const mockNavigate = vi.fn()
 vi.mock('react-router-dom', async () => {

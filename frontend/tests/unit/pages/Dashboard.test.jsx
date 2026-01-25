@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import Dashboard from '../../../src/Dashboard'
-import { apiFetch } from '../api'
+import Dashboard from '../../../src/pages/dashboard/Dashboard'
+import { apiFetch } from '../../../src/api'
 
 const mockNavigate = vi.fn()
 const getCachedResource = vi.fn().mockReturnValue(null)
@@ -10,7 +10,7 @@ const setCachedResource = vi.fn()
 const prefetchResource = vi.fn().mockResolvedValue({})
 let mockAuth = { token: null, user: null }
 
-vi.mock('../api', () => ({
+vi.mock('../../../src/api', () => ({
   apiFetch: vi.fn()
 }))
 
@@ -19,19 +19,19 @@ vi.mock('react-router-dom', async () => {
   return { ...actual, useNavigate: () => mockNavigate }
 })
 
-vi.mock('../context/AuthContext', () => ({
+vi.mock('../../../src/context/AuthContext', () => ({
   useAuth: () => mockAuth
 }))
 
-vi.mock('../context/ResourceCacheContext', () => ({
+vi.mock('../../../src/context/ResourceCacheContext', () => ({
   useResourceCache: () => ({ getCachedResource, setCachedResource, prefetchResource })
 }))
 
-vi.mock('../components/OnboardingModal', () => ({
+vi.mock('../../../src/components/OnboardingModal', () => ({
   default: () => <div data-testid="onboarding-modal" />
 }))
 
-vi.mock('../components/UserRecommendations', () => ({
+vi.mock('../../../src/components/UserRecommendations', () => ({
   default: () => <div data-testid="user-recommendations" />
 }))
 

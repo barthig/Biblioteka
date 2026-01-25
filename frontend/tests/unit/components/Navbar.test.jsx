@@ -1,18 +1,20 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import Navbar from '../../../src/Navbar'
 
 const prefetchResource = vi.fn().mockResolvedValue({})
 let mockAuth = { token: null, user: null, logout: vi.fn() }
 
-vi.mock('../context/AuthContext', () => ({
+vi.mock('../../../src/context/AuthContext', () => ({
   useAuth: () => mockAuth
 }))
 
-vi.mock('../context/ResourceCacheContext', () => ({
+vi.mock('../../../src/context/ResourceCacheContext', () => ({
   useResourceCache: () => ({ prefetchResource })
 }))
+
+// Import after mocks
+import Navbar from '../../../src/components/common/Navbar'
 
 describe('Navbar', () => {
   it('renders login/register when unauthenticated', () => {

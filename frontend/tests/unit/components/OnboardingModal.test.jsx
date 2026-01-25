@@ -1,10 +1,10 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import OnboardingModal from '../../../src/OnboardingModal'
-import { apiFetch } from '../api'
+import OnboardingModal from '../../../src/components/common/OnboardingModal'
+import { apiFetch } from '../../../src/api'
 
-vi.mock('../api', () => ({
+vi.mock('../../../src/api', () => ({
   apiFetch: vi.fn()
 }))
 

@@ -1,13 +1,15 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import { render, screen } from '@testing-library/react'
-import RequireRole from '../../../src/RequireRole'
 
 let mockUser = null
 
-vi.mock('../context/AuthContext', () => ({
+vi.mock('../../../src/context/AuthContext', () => ({
   useAuth: () => ({ user: mockUser })
 }))
+
+// Import after mock is set up
+import RequireRole from '../../../src/components/common/RequireRole'
 
 const renderWithRoutes = (ui, initialPath = '/secure') => {
   return render(

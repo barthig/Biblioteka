@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
-import FeedbackCard from '../../../../src/FeedbackCard'
-import StatGrid from '../../../../src/StatGrid'
-import SectionCard from '../../../../src/SectionCard'
-import PageHeader from '../../../../src/PageHeader'
-import { Skeleton, TableRowSkeleton } from '../../../../src/Skeleton'
+import FeedbackCard from '../../../../src/components/ui/FeedbackCard'
+import StatGrid from '../../../../src/components/ui/StatGrid'
+import SectionCard from '../../../../src/components/ui/SectionCard'
+import PageHeader from '../../../../src/components/ui/PageHeader'
+import { Skeleton, TableRowSkeleton } from '../../../../src/components/ui/Skeleton'
 
 describe('ui components', () => {
   it('renders FeedbackCard content', () => {

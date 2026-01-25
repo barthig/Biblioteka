@@ -1,16 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
-import SystemLogs from '../../../src/SystemLogs'
-import { systemLogService } from '../services/systemLogService'
+import SystemLogs from '../../../src/pages/admin/SystemLogs'
+import { systemLogService } from '../../../src/services/systemLogService'
 
-vi.mock('../services/systemLogService', () => ({
+vi.mock('../../../src/services/systemLogService', () => ({
   systemLogService: {
     list: vi.fn()
   }
 }))
 
 let mockUser = null
-vi.mock('../context/AuthContext', () => ({
+vi.mock('../../../src/context/AuthContext', () => ({
   useAuth: () => ({ user: mockUser })
 }))
 

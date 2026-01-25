@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import LoanManagement from '../../../../src/LoanManagement'
+import LoanManagement from '../../../../src/components/admin/LoanManagement'
 
 describe('LoanManagement', () => {
   const baseProps = {

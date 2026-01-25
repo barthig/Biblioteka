@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
-import StatCard from '../../../src/StatCard'
+import StatCard from '../../../src/components/ui/StatCard'
 
 const Icon = () => <svg data-testid="icon" />
 
