@@ -12,19 +12,20 @@ use App\Repository\LoanRepository;
 use App\Repository\ReservationRepository;
 use App\Service\Book\BookService;
 use Doctrine\ORM\EntityManagerInterface;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 class CreateLoanHandlerTest extends TestCase
 {
-    private EntityManagerInterface $em;
-    private BookService $bookService;
-    private LoanRepository $loanRepository;
-    private ReservationRepository $reservationRepository;
-    private BookCopyRepository $bookCopyRepository;
-    private \App\Service\SystemSettingsService $settingsService;
-    private EventDispatcherInterface $eventDispatcher;
+    private EntityManagerInterface&MockObject $em;
+    private BookService&MockObject $bookService;
+    private LoanRepository&MockObject $loanRepository;
+    private ReservationRepository&MockObject $reservationRepository;
+    private BookCopyRepository&MockObject $bookCopyRepository;
+    private \App\Service\System\SystemSettingsService&MockObject $settingsService;
+    private EventDispatcherInterface&MockObject $eventDispatcher;
     private CreateLoanHandler $handler;
 
     protected function setUp(): void
@@ -34,7 +35,7 @@ class CreateLoanHandlerTest extends TestCase
         $this->loanRepository = $this->createMock(LoanRepository::class);
         $this->reservationRepository = $this->createMock(ReservationRepository::class);
         $this->bookCopyRepository = $this->createMock(BookCopyRepository::class);
-        $this->settingsService = $this->createMock(\App\Service\SystemSettingsService::class);
+        $this->settingsService = $this->createMock(\App\Service\System\SystemSettingsService::class);
         $this->eventDispatcher = $this->createMock(EventDispatcherInterface::class);
 
         $this->handler = new CreateLoanHandler(

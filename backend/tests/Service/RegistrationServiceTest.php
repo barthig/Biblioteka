@@ -6,7 +6,7 @@ use App\Entity\User;
 use App\Repository\RegistrationTokenRepository;
 use App\Repository\UserRepository;
 use App\Service\Book\OpenAIEmbeddingService;
-use App\Service\RegistrationException;
+use App\Service\Auth\RegistrationException;
 use App\Service\Auth\RegistrationService;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;

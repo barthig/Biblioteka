@@ -40,8 +40,12 @@ class ReservationCreatedEvent extends Event
         return $this->reservation->getBook();
     }
 
+    /**
+     * Queue position is not tracked on Reservation entity.
+     * Returns 0 as placeholder; implement queue counting logic if needed.
+     */
     public function getQueuePosition(): int
     {
-        return $this->reservation->getQueuePosition() ?? 0;
+        return 0;
     }
 }

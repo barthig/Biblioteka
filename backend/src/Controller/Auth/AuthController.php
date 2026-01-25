@@ -4,7 +4,7 @@ namespace App\Controller\Auth;
 use App\Application\Query\User\GetUserByIdQuery;
 use App\Repository\UserRepository;
 use App\Request\LoginRequest;
-use App\Service\JwtService;
+use App\Service\Auth\JwtService;
 use App\Service\Auth\RefreshTokenService;
 use App\Service\Auth\SecurityService;
 use App\Controller\Traits\ExceptionHandlingTrait;

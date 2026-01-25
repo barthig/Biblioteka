@@ -13,17 +13,18 @@ use App\Repository\ReservationRepository;
 use App\Repository\UserRepository;
 use App\Service\Book\BookService;
 use Doctrine\ORM\EntityManagerInterface;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 class CreateWeedingRecordHandlerTest extends TestCase
 {
-    private EntityManagerInterface $entityManager;
-    private BookRepository $bookRepository;
-    private BookCopyRepository $bookCopyRepository;
-    private LoanRepository $loanRepository;
-    private ReservationRepository $reservationRepository;
-    private UserRepository $userRepository;
-    private BookService $bookService;
+    private EntityManagerInterface&MockObject $entityManager;
+    private BookRepository&MockObject $bookRepository;
+    private BookCopyRepository&MockObject $bookCopyRepository;
+    private LoanRepository&MockObject $loanRepository;
+    private ReservationRepository&MockObject $reservationRepository;
+    private UserRepository&MockObject $userRepository;
+    private BookService&MockObject $bookService;
     private CreateWeedingRecordHandler $handler;
 
     protected function setUp(): void

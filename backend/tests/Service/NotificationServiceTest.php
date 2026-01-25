@@ -4,13 +4,27 @@ namespace App\Tests\Service;
 use App\Entity\Book;
 use App\Entity\Loan;
 use App\Entity\User;
+use App\Repository\NotificationLogRepository;
+use App\Repository\UserRepository;
 use App\Service\Notification\NotificationSender;
 use App\Service\User\NotificationService;
+use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
 class NotificationServiceTest extends TestCase
 {
+    private function createService(
+        NotificationSender $sender,
+        LoggerInterface $logger
+    ): NotificationService {
+        $userRepository = $this->createMock(UserRepository::class);
+        $notificationLogs = $this->createMock(NotificationLogRepository::class);
+        $entityManager = $this->createMock(EntityManagerInterface::class);
+        
+        return new NotificationService($sender, $logger, $userRepository, $notificationLogs, $entityManager);
+    }
+
     public function testSkipsWhenUserMissing(): void
     {
         $sender = $this->createMock(NotificationSender::class);
@@ -20,7 +34,7 @@ class NotificationServiceTest extends TestCase
         $loan = $this->createMock(Loan::class);
         $loan->method('getUser')->willReturn(null);
 
-        $service = new NotificationService($sender, $logger);
+        $service = $this->createService($sender, $logger);
         $service->notifyLoanCreated($loan);
     }
 
@@ -42,7 +56,7 @@ class NotificationServiceTest extends TestCase
         $sender->expects($this->once())->method('sendEmail')->willReturn(['status' => 'sent']);
         $sender->expects($this->once())->method('sendSms')->willReturn(['status' => 'sent']);
 
-        $service = new NotificationService($sender, $logger);
+        $service = $this->createService($sender, $logger);
         $service->notifyLoanCreated($loan);
     }
 }

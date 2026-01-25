@@ -64,7 +64,7 @@ if ($authHeader && stripos($authHeader, 'Bearer ') === 0) {
         }
         
         // Validate token using JwtService
-        $payload = \App\Service\JwtService::validateToken($token);
+        $payload = \App\Service\Auth\JwtService::validateToken($token);
         $tokenValid = $payload !== null;
         
         if (!$tokenValid) {

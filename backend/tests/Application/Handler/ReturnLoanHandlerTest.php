@@ -12,18 +12,19 @@ use App\Service\Book\BookService;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 class ReturnLoanHandlerTest extends TestCase
 {
-    private EntityManagerInterface $em;
-    private BookService $bookService;
-    private LoanRepository $loanRepository;
-    private ReservationRepository $reservationRepository;
-    private MessageBusInterface $bus;
-    private LoggerInterface $logger;
-    private EventDispatcherInterface $eventDispatcher;
+    private EntityManagerInterface&MockObject $em;
+    private BookService&MockObject $bookService;
+    private LoanRepository&MockObject $loanRepository;
+    private ReservationRepository&MockObject $reservationRepository;
+    private MessageBusInterface&MockObject $bus;
+    private LoggerInterface&MockObject $logger;
+    private EventDispatcherInterface&MockObject $eventDispatcher;
     private ReturnLoanHandler $handler;
 
     protected function setUp(): void

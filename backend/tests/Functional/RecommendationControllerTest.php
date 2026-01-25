@@ -5,7 +5,7 @@ use App\Entity\Author;
 use App\Entity\Book;
 use App\Repository\BookRepository;
 use App\Service\Book\OpenAIEmbeddingService;
-use App\Service\RecommendationService;
+use App\Service\Book\RecommendationService;
 
 class RecommendationControllerTest extends ApiTestCase
 {

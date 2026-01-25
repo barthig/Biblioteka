@@ -5,6 +5,7 @@ use App\Entity\RegistrationToken;
 use App\Entity\User;
 use App\Repository\RegistrationTokenRepository;
 use App\Repository\UserRepository;
+use App\Service\Book\OpenAIEmbeddingService;
 use DateInterval;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
