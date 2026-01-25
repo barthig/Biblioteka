@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react'
-import { acquisitionService } from '../services/acquisitionService'
-import { useAuth } from '../context/AuthContext'
-import PageHeader from '../components/ui/PageHeader'
-import StatGrid from '../components/ui/StatGrid'
-import StatCard from '../components/ui/StatCard'
-import FeedbackCard from '../components/ui/FeedbackCard'
+import { acquisitionService } from '../../services/acquisitionService'
+import { useAuth } from '../../context/AuthContext'
+import PageHeader from '../../components/ui/PageHeader'
+import StatGrid from '../../components/ui/StatGrid'
+import StatCard from '../../components/ui/StatCard'
+import FeedbackCard from '../../components/ui/FeedbackCard'
 
 export default function Acquisitions() {
   const { user } = useAuth()

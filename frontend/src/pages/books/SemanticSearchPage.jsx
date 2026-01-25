@@ -1,9 +1,9 @@
 import React from 'react'
-import SemanticSearch from '../components/SemanticSearch'
-import PageHeader from '../components/ui/PageHeader'
-import StatGrid from '../components/ui/StatGrid'
-import StatCard from '../components/ui/StatCard'
-import SectionCard from '../components/ui/SectionCard'
+import SemanticSearch from '../../components/books/SemanticSearch'
+import PageHeader from '../../components/ui/PageHeader'
+import StatGrid from '../../components/ui/StatGrid'
+import StatCard from '../../components/ui/StatCard'
+import SectionCard from '../../components/ui/SectionCard'
 
 export default function SemanticSearchPage() {
   return (

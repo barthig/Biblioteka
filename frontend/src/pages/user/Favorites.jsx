@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { apiFetch } from '../api'
-import { useAuth } from '../context/AuthContext'
-import { useResourceCache } from '../context/ResourceCacheContext'
-import PageHeader from '../components/ui/PageHeader'
-import StatGrid from '../components/ui/StatGrid'
-import StatCard from '../components/ui/StatCard'
-import SectionCard from '../components/ui/SectionCard'
-import FeedbackCard from '../components/ui/FeedbackCard'
+import { apiFetch } from '../../api'
+import { useAuth } from '../../context/AuthContext'
+import { useResourceCache } from '../../context/ResourceCacheContext'
+import PageHeader from '../../components/ui/PageHeader'
+import StatGrid from '../../components/ui/StatGrid'
+import StatCard from '../../components/ui/StatCard'
+import SectionCard from '../../components/ui/SectionCard'
+import FeedbackCard from '../../components/ui/FeedbackCard'
 
 export default function Favorites() {
   const { user } = useAuth()

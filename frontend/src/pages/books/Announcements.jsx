@@ -1,13 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { apiFetch } from '../api'
+import { apiFetch } from '../../api'
 import { FaBullhorn, FaPlus } from 'react-icons/fa'
-import { useAuth } from '../context/AuthContext'
-import { announcementService } from '../services/announcementService'
-import PageHeader from '../components/ui/PageHeader'
-import SectionCard from '../components/ui/SectionCard'
-import FeedbackCard from '../components/ui/FeedbackCard'
-import { logger } from '../utils/logger'
+import { useAuth } from '../../context/AuthContext'
+import { announcementService } from '../../services/announcementService'
+import PageHeader from '../../components/ui/PageHeader'
+import SectionCard from '../../components/ui/SectionCard'
+import FeedbackCard from '../../components/ui/FeedbackCard'
+import { logger } from '../../utils/logger'
 
 const EVENT_KEYWORDS = [
   'spotkanie',

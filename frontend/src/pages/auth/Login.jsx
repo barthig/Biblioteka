@@ -1,10 +1,10 @@
 import React, { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
-import { apiFetch } from '../api'
-import PageHeader from '../components/ui/PageHeader'
-import SectionCard from '../components/ui/SectionCard'
-import FeedbackCard from '../components/ui/FeedbackCard'
+import { useAuth } from '../../context/AuthContext'
+import { apiFetch } from '../../api'
+import PageHeader from '../../components/ui/PageHeader'
+import SectionCard from '../../components/ui/SectionCard'
+import FeedbackCard from '../../components/ui/FeedbackCard'
 
 export default function Login() {
   const [email, setEmail] = useState('')

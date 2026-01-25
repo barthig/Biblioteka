@@ -13,3 +13,6 @@ export { default as SuccessMessage } from './SuccessMessage'
 
 // DataTable component
 export { DataTable } from './DataTable'
+
+// Breadcrumbs component
+export { Breadcrumbs, useBreadcrumbs } from './Breadcrumbs'

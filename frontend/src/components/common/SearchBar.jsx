@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FaSearch, FaTimes } from 'react-icons/fa'
-import { bookService } from '../services/bookService'
-import { logger } from '../utils/logger'
+import { bookService } from '../../services/bookService'
+import { logger } from '../../utils/logger'
 
 export default function SearchBar({ placeholder = 'Szukaj książek...', onResults, onSearch }) {
   const [query, setQuery] = useState('')

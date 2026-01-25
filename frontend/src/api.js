@@ -9,11 +9,13 @@ export async function apiFetch(path, opts = {}) {
   const url = isAbsolute ? path : (API_BASE ? `${API_BASE}${normalizedPath}` : normalizedPath)
 
   const token = localStorage.getItem('token')
+  // eslint-disable-next-line no-console
   console.log(`[apiFetch] path=${path}, token=${token ? token.substring(0, 20) + '...' : 'NULL'}`)
   
   const headers = opts.headers ? { ...opts.headers } : {}
   if (token && !headers['Authorization']) {
     headers['Authorization'] = `Bearer ${token}`
+    // eslint-disable-next-line no-console
     console.log(`[apiFetch] Authorization header added`)
   }
   // Only use API_SECRET when there's no Bearer token (for machine-to-machine calls)
@@ -21,6 +23,7 @@ export async function apiFetch(path, opts = {}) {
     headers['X-API-SECRET'] = API_SECRET
   }
 
+  // eslint-disable-next-line no-console
   console.log(`[apiFetch] Final headers:`, headers)
   const finalOpts = { ...opts, headers }
   const res = await fetch(url, finalOpts)

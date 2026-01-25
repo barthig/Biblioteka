@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { apiFetch } from '../api'
+import { apiFetch } from '../../api'
 import BookCover from './BookCover'
 
 export default function UserRecommendations() {

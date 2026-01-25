@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react'
-import { catalogService } from '../services/catalogService'
-import { apiFetch } from '../api'
-import { useAuth } from '../context/AuthContext'
-import PageHeader from '../components/ui/PageHeader'
-import StatGrid from '../components/ui/StatGrid'
-import StatCard from '../components/ui/StatCard'
-import FeedbackCard from '../components/ui/FeedbackCard'
+import { catalogService } from '../../services/catalogService'
+import { apiFetch } from '../../api'
+import { useAuth } from '../../context/AuthContext'
+import PageHeader from '../../components/ui/PageHeader'
+import StatGrid from '../../components/ui/StatGrid'
+import StatCard from '../../components/ui/StatCard'
+import FeedbackCard from '../../components/ui/FeedbackCard'
 
 const emptyState = {
   authors: [],

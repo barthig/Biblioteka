@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { apiFetch } from '../api'
+import { apiFetch } from '../../api'
 
 export default function SemanticSearch() {
   const [query, setQuery] = useState('')

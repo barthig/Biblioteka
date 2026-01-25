@@ -2,14 +2,14 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import { apiFetch } from '../api'
-import { useAuth } from '../context/AuthContext'
+import { apiFetch } from '../../api'
+import { useAuth } from '../../context/AuthContext'
 import LibrarianDashboard from './LibrarianDashboard'
-import PageHeader from '../components/ui/PageHeader'
-import StatGrid from '../components/ui/StatGrid'
-import StatCard from '../components/ui/StatCard'
-import FeedbackCard from '../components/ui/FeedbackCard'
-import { logger } from '../utils/logger'
+import PageHeader from '../../components/ui/PageHeader'
+import StatGrid from '../../components/ui/StatGrid'
+import StatCard from '../../components/ui/StatCard'
+import FeedbackCard from '../../components/ui/FeedbackCard'
+import { logger } from '../../utils/logger'
 
 export default function LibrarianPanel() {
   const { user } = useAuth()

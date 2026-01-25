@@ -1,11 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { notificationService } from '../services/notificationService'
-import { useAuth } from '../context/AuthContext'
-import PageHeader from '../components/ui/PageHeader'
-import StatGrid from '../components/ui/StatGrid'
-import StatCard from '../components/ui/StatCard'
-import SectionCard from '../components/ui/SectionCard'
-import FeedbackCard from '../components/ui/FeedbackCard'
+import { notificationService } from '../../services/notificationService'
+import { useAuth } from '../../context/AuthContext'
+import PageHeader from '../../components/ui/PageHeader'
+import StatGrid from '../../components/ui/StatGrid'
+import StatCard from '../../components/ui/StatCard'
+import SectionCard from '../../components/ui/SectionCard'
+import FeedbackCard from '../../components/ui/FeedbackCard'
 
 export default function Notifications() {
   const { user } = useAuth()

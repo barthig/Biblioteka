@@ -45,8 +45,8 @@ export default function BookCard({
     availableCopies,
     totalCopies,
     categories,
-    description,
-    isbn
+    description
+    // isbn - reserved for future use
   } = book
 
   const authorName = typeof author === 'string' ? author : author?.name || 'Nieznany autor'

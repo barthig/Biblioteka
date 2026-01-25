@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
-import { apiFetch } from '../api'
-import { logger } from '../utils/logger'
+import { apiFetch } from '../../api'
+import { logger } from '../../utils/logger'
 
 const AVAILABLE_CATEGORIES = [
   'Kryminał', 'Fantastyka', 'Romans', 'Thriller', 'Science Fiction',

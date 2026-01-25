@@ -1,13 +1,13 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { apiFetch } from '../api'
-import { useAuth } from '../context/AuthContext'
-import { useResourceCache } from '../context/ResourceCacheContext'
-import OnboardingModal from '../components/OnboardingModal'
-import UserRecommendations from '../components/UserRecommendations'
-import SectionCard from '../components/ui/SectionCard'
-import BookCover from '../components/BookCover'
-import { bookService } from '../services/bookService'
+import { apiFetch } from '../../api'
+import { useAuth } from '../../context/AuthContext'
+import { useResourceCache } from '../../context/ResourceCacheContext'
+import OnboardingModal from '../../components/common/OnboardingModal'
+import UserRecommendations from '../../components/books/UserRecommendations'
+import SectionCard from '../../components/ui/SectionCard'
+import BookCover from '../../components/books/BookCover'
+import { bookService } from '../../services/bookService'
 
 export default function Dashboard() {
   const [stats, setStats] = useState(null)

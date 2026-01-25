@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { apiFetch } from '../api'
-import { useAuth } from '../context/AuthContext'
-import { useResourceCache } from '../context/ResourceCacheContext'
+import { apiFetch } from '../../api'
+import { useAuth } from '../../context/AuthContext'
+import { useResourceCache } from '../../context/ResourceCacheContext'
 import { RatingDisplay } from './StarRating'
 
 export default function BookItem({ book, onBorrowed, compact = false, expanded = false, onToggleExpand }) {

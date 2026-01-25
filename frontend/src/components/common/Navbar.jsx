@@ -1,8 +1,8 @@
 ﻿import React, { useCallback, useState } from 'react'
 import { NavLink } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
-import { apiFetch } from '../api'
-import { useResourceCache } from '../context/ResourceCacheContext'
+import { useAuth } from '../../context/AuthContext'
+import { apiFetch } from '../../api'
+import { useResourceCache } from '../../context/ResourceCacheContext'
 
 const navLinkClass = ({ isActive }) => isActive ? 'top-nav__link is-active' : 'top-nav__link'
 

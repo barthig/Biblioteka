@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
-import { apiFetch } from '../api'
-import { StatCardSkeleton } from '../components/ui/Skeleton'
-import PageHeader from '../components/ui/PageHeader'
-import StatGrid from '../components/ui/StatGrid'
-import StatCard from '../components/ui/StatCard'
-import SectionCard from '../components/ui/SectionCard'
-import FeedbackCard from '../components/ui/FeedbackCard'
+import { apiFetch } from '../../api'
+import { StatCardSkeleton } from '../../components/ui/Skeleton'
+import PageHeader from '../../components/ui/PageHeader'
+import StatGrid from '../../components/ui/StatGrid'
+import StatCard from '../../components/ui/StatCard'
+import SectionCard from '../../components/ui/SectionCard'
+import FeedbackCard from '../../components/ui/FeedbackCard'
 
 export default function LibrarianDashboard() {
   const [stats, setStats] = useState(null)

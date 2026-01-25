@@ -1,16 +1,16 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { apiFetch } from '../api'
-import { useAuth } from '../context/AuthContext'
-import { useResourceCache } from '../context/ResourceCacheContext'
-import { StarRating, RatingDisplay } from '../components/StarRating'
-import PageHeader from '../components/ui/PageHeader'
-import StatGrid from '../components/ui/StatGrid'
-import StatCard from '../components/ui/StatCard'
-import SectionCard from '../components/ui/SectionCard'
-import BookCover from '../components/BookCover'
-import { logger } from '../utils/logger'
-import FeedbackCard from '../components/ui/FeedbackCard'
+import { apiFetch } from '../../api'
+import { useAuth } from '../../context/AuthContext'
+import { useResourceCache } from '../../context/ResourceCacheContext'
+import { StarRating, RatingDisplay } from '../../components/books/StarRating'
+import PageHeader from '../../components/ui/PageHeader'
+import StatGrid from '../../components/ui/StatGrid'
+import StatCard from '../../components/ui/StatCard'
+import SectionCard from '../../components/ui/SectionCard'
+import BookCover from '../../components/books/BookCover'
+import { logger } from '../../utils/logger'
+import FeedbackCard from '../../components/ui/FeedbackCard'
 
 function formatDate(value, withTime = false) {
   if (!value) return '—'
@@ -607,11 +607,6 @@ export default function BookDetails() {
             />
           </div>
         )}
-          </div>
-          <div>
-            <strong>Liczba ocen:</strong> {ratingSummaryCount ?? 0}
-          </div>
-        </div>
 
         {isAuthenticated ? (
           <form onSubmit={submitReview} className="form-grid review-form">
