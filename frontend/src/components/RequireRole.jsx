@@ -6,17 +6,13 @@ export default function RequireRole({ allowed, children }) {
   const { user, token } = useAuth()
   const location = useLocation()
   
-  // Check both context and localStorage for authentication status
-  const isAuthenticated = Boolean(token || localStorage.getItem('token'))
+  // Check for valid authentication - user must be present (token validated)
+  const isAuthenticated = Boolean(user)
   const roles = user?.roles || []
   const isAllowed = roles.some(role => allowed.includes(role))
 
-  if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location }} replace />
-  }
-
-  // If authenticated but user data not yet loaded from context, wait
-  if (!user && isAuthenticated) {
+  // If token exists but user not yet loaded, show loading state
+  if (token && !user) {
     return (
       <div className="page page--centered">
         <div className="surface-card form-card">
@@ -24,6 +20,10 @@ export default function RequireRole({ allowed, children }) {
         </div>
       </div>
     )
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" state={{ from: location }} replace />
   }
 
   if (!isAllowed) {

@@ -10,8 +10,8 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false)
   const { token, user, logout } = useAuth()
   const { prefetchResource } = useResourceCache()
-  // Check both context and localStorage for authentication status
-  const isAuthenticated = Boolean(token || localStorage.getItem('token'))
+  // Check for valid authentication - user must be present (token validated)
+  const isAuthenticated = Boolean(user)
   const roles = user?.roles || []
   const isAdmin = roles.includes('ROLE_ADMIN')
   const isLibrarian = roles.includes('ROLE_LIBRARIAN')

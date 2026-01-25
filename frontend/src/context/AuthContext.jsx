@@ -46,7 +46,22 @@ function decodeJwt(token) {
 }
 
 export function AuthProvider({ children }) {
-  const [token, setToken] = useState(() => localStorage.getItem('token'))
+  // Initialize token - but validate it first to avoid race conditions
+  const [token, setToken] = useState(() => {
+    const storedToken = localStorage.getItem('token')
+    if (storedToken) {
+      // Validate token before using it
+      const decoded = decodeJwt(storedToken)
+      if (!decoded) {
+        // Token is invalid or expired - clear it immediately
+        localStorage.removeItem('token')
+        localStorage.removeItem('refreshToken')
+        return null
+      }
+      return storedToken
+    }
+    return null
+  })
   const [refreshToken, setRefreshToken] = useState(() => localStorage.getItem('refreshToken'))
   const [user, setUser] = useState(() => {
     // Initialize user immediately from token if available

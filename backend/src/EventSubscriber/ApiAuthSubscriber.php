@@ -12,6 +12,11 @@ use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
 
+/**
+ * @deprecated This subscriber is replaced by JwtAuthenticator.
+ * It's kept for reference but disabled by default.
+ * Set LEGACY_AUTH_SUBSCRIBER=1 to enable (not recommended).
+ */
 class ApiAuthSubscriber implements EventSubscriberInterface
 {
     public function __construct(
@@ -23,11 +28,14 @@ class ApiAuthSubscriber implements EventSubscriberInterface
 
     public static function getSubscribedEvents(): array
     {
+        // DEPRECATED: Use JwtAuthenticator instead
+        // This legacy subscriber is disabled by default
         $legacy = getenv('LEGACY_AUTH_SUBSCRIBER') ?: ($_ENV['LEGACY_AUTH_SUBSCRIBER'] ?? null);
         if ($legacy !== '1') {
             return [];
         }
 
+        error_log('WARNING: Using deprecated ApiAuthSubscriber. Migrate to JwtAuthenticator.');
         return [
             KernelEvents::REQUEST => 'onKernelRequest',
         ];
@@ -112,6 +120,13 @@ class ApiAuthSubscriber implements EventSubscriberInterface
     private function attachJwtPayload(Request $request): ?bool
     {
         $auth = $request->headers->get('authorization');
+        
+        // Temporary debug logging
+        $path = $request->getPathInfo();
+        if ($path === '/api/me' || $path === '/api/dashboard') {
+            error_log("DEBUG ApiAuthSubscriber: path=$path, auth_header=" . ($auth ?: 'NULL'));
+        }
+        
         if (!$auth || stripos($auth, 'bearer ') !== 0) {
             return null;
         }

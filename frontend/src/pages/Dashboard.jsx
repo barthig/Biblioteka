@@ -20,8 +20,8 @@ export default function Dashboard() {
   const [showOnboarding, setShowOnboarding] = useState(false)
   const { token, user } = useAuth()
   const navigate = useNavigate()
-  // Check both context and localStorage for authentication status
-  const isAuthenticated = Boolean(token || localStorage.getItem('token'))
+  // Check for valid authentication - user must be present (token validated)
+  const isAuthenticated = Boolean(user)
   const isLibrarian = user?.roles?.includes('ROLE_LIBRARIAN')
   const isAdmin = user?.roles?.includes('ROLE_ADMIN')
   const { getCachedResource, setCachedResource, prefetchResource } = useResourceCache()
