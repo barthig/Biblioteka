@@ -138,7 +138,7 @@ cd biblioteka
 
 #### 2. Konfiguracja środowiska (opcjonalna)
 
-Możesz użyć domyślnych wartości z `docker-compose.yml` lub skopiować przykładowe pliki:
+Możesz użyć domyślnych wartości z `config/docker-compose.yml` lub skopiować przykładowe pliki:
 
 ```powershell
 # Backend
@@ -425,11 +425,23 @@ biblioteka/
 │   └── php-worker/             # Symfony Messenger worker
 │       └── Dockerfile
 │
-├── docker-compose.yml           # Orkiestracja kontenerów (5 serwisów)
-├── docker-compose.windows.yml   # Konfiguracja dla Windows
+├── config/                      # Konfiguracja projektu
+│   ├── docker-compose.yml       # Orkiestracja kontenerów (5 serwisów)
+│   ├── docker-compose.windows.yml # Konfiguracja dla Windows
+│   ├── .env.example             # Przykładowe zmienne środowiskowe
+│   └── .dockerignore            # Ignorowane pliki Docker
+│
+├── docs/                        # Dokumentacja
+│   ├── SCHEMA_GUIDE.md          # Quick reference
+│   ├── database-diagram.puml    # PlantUML diagram
+│   ├── INDEX.md                 # Indeks dokumentacji
+│   ├── CHANGELOG.md             # Historia zmian projektu
+│   ├── CONTRIBUTING.md          # Wytyczne dla kontrybutorów
+│   ├── SECURITY.md              # Polityka bezpieczeństwa
+│   ├── AUDYT_SENIOR_DEV.md      # Audyt dla senior dewelopera
+│   └── migration-info.php       # Informacje o migracjach
+│
 ├── README.md                    # Ten plik
-├── CHANGELOG.md                 # Historia zmian projektu
-├── CONTRIBUTING.md              # Wytyczne dla kontrybutorów
 ├── LICENSE                      # Licencja MIT
 └── .gitignore                   # Ignorowane pliki
 ```
@@ -1857,7 +1869,7 @@ netstat -ano | findstr :8000
 netstat -ano | findstr :5173
 netstat -ano | findstr :5432
 
-# Zatrzymaj proces lub zmień porty w docker-compose.yml
+# Zatrzymaj proces lub zmień porty w config/docker-compose.yml
 ```
 
 ### Błędy połączenia z bazą danych

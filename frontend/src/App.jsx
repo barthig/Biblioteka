@@ -1,21 +1,21 @@
-ï»¿import React from 'react'
+import React from 'react'
 import { Routes, Route } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { AuthProvider } from './context/AuthContext'
 import { ResourceCacheProvider } from './context/ResourceCacheContext'
-import Navbar from './components/Navbar'
+import Navbar from './components/common/Navbar'
 import RequireRole from './components/RequireRole'
-import Login from './pages/Login'
-import Books from './pages/Books'
-import Dashboard from './pages/Dashboard'
-import BookDetails from './pages/BookDetails'
+import Login from './pages/auth/Login'
+import Books from './pages/books/Books'
+import Dashboard from './pages/dashboard/Dashboard'
+import BookDetails from './pages/books/BookDetails'
 import MyLoans from './pages/MyLoans'
-import Register from './pages/Register'
+import Register from './pages/auth/Register'
 import Profile from './pages/Profile'
 import Reservations from './pages/Reservations'
 import Favorites from './pages/Favorites'
 import Recommended from './pages/Recommended'
-import AdminPanel from './pages/AdminPanel'
+import AdminPanel from './pages/admin/AdminPanel'
 import LibrarianPanel from './pages/LibrarianPanel'
 import Announcements from './pages/Announcements'
 import UserDetails from './pages/UserDetails'
@@ -102,10 +102,10 @@ export default function App() {
                 />
               </Routes>
               <footer className="footer">
-                <p>(c) 2025 Biblioteka. System zarzÄ…dzania bibliotekÄ… i wypoÅ¼yczeniami.</p>
+                <p>(c) 2025 Biblioteka. System zarz¹dzania bibliotek¹ i wypo¿yczeniami.</p>
                 <div className="footer__links">
                   <a href="#regulamin">Regulamin</a>
-                  <a href="#prywatnosc">Polityka prywatnoÅ›ci</a>
+                  <a href="#prywatnosc">Polityka prywatnoœci</a>
                   <a href="#kontakt">Kontakt</a>
                 </div>
               </footer>
@@ -116,4 +116,5 @@ export default function App() {
     </AuthProvider>
   )
 }
+
 

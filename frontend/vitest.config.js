@@ -12,7 +12,8 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
-    setupFiles: './src/test/setup.js',
+    setupFiles: './tests/unit/setup.js',
+    include: ['tests/unit/**/*.{test,spec}.{js,jsx}'],
     exclude: [
       'tests/e2e/**',
       'node_modules/**'
@@ -22,6 +23,7 @@ export default defineConfig({
       reporter: ['text', 'json', 'html'],
       exclude: [
         'node_modules/',
+        'tests/',
         'src/test/',
         '**/*.config.js',
         '**/main.jsx'
