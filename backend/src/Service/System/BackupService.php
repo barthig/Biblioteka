@@ -8,10 +8,15 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 class BackupService
 {
     private string $backupDir;
+    private string $databaseUrl;
 
-    public function __construct(private EntityManagerInterface $entityManager, #[Autowire('%kernel.project_dir%')] string $projectDir)
-    {
+    public function __construct(
+        private EntityManagerInterface $entityManager,
+        #[Autowire('%kernel.project_dir%')] string $projectDir,
+        #[Autowire('%env(DATABASE_URL)%')] string $databaseUrl = ''
+    ) {
         $this->backupDir = $projectDir . DIRECTORY_SEPARATOR . 'var' . DIRECTORY_SEPARATOR . 'backups';
+        $this->databaseUrl = $databaseUrl;
     }
 
     public function createBackup(?string $initiator = null, ?string $note = null): BackupRecord
@@ -56,14 +61,22 @@ class BackupService
 
     private function createDatabaseDump(string $filePath): ?string
     {
-        $databaseUrl = $_SERVER['DATABASE_URL'] ?? getenv('DATABASE_URL') ?: '';
+        // Try injected parameter first, then fall back to env
+        $databaseUrl = $this->databaseUrl;
         if ($databaseUrl === '') {
-            return 'Missing DATABASE_URL environment variable.';
+            $databaseUrl = $_ENV['DATABASE_URL'] ?? $_SERVER['DATABASE_URL'] ?? getenv('DATABASE_URL') ?: '';
         }
+        
+        if ($databaseUrl === '' || $databaseUrl === false) {
+            return 'Missing DATABASE_URL environment variable. Injected: ' . ($this->databaseUrl ?: 'empty');
+        }
+        
+        // Remove Doctrine query parameters like ?serverVersion=15&charset=utf8
+        $databaseUrl = preg_replace('/\?.*$/', '', $databaseUrl);
 
         $config = $this->parseDatabaseUrl($databaseUrl);
         if ($config === null) {
-            return 'Unable to parse DATABASE_URL.';
+            return sprintf('Unable to parse DATABASE_URL: %s', substr($databaseUrl, 0, 50) . '...');
         }
 
         $command = sprintf(

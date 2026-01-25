@@ -2,6 +2,7 @@
 namespace App\Application\Handler\Command;
 
 use App\Application\Command\Account\ChangePasswordCommand;
+use App\Repository\RefreshTokenRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -13,7 +14,8 @@ class ChangePasswordHandler
 {
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
-        private readonly UserRepository $userRepository
+        private readonly UserRepository $userRepository,
+        private readonly RefreshTokenRepository $refreshTokenRepository
     ) {
     }
 
@@ -42,6 +44,9 @@ class ChangePasswordHandler
         }
 
         $user->setPassword(password_hash($command->newPassword, PASSWORD_BCRYPT));
+        
+        // Revoke all refresh tokens for security - force re-login on all devices
+        $this->refreshTokenRepository->revokeAllUserTokens($user);
         
         $this->entityManager->persist($user);
         $this->entityManager->flush();
