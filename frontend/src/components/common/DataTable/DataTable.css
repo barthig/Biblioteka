@@ -335,4 +335,192 @@
   .data-table td {
     padding: 0.5rem;
   }
+  
+  .data-table__search-input {
+    max-width: 100%;
+  }
+}
+
+/* Mobile card layout - for very small screens or when enabled */
+@media (max-width: 640px) {
+  .data-table--mobile-cards .data-table__container {
+    border: none;
+  }
+  
+  .data-table--mobile-cards .data-table {
+    display: block;
+  }
+  
+  .data-table--mobile-cards .data-table thead {
+    display: none;
+  }
+  
+  .data-table--mobile-cards .data-table tbody {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .data-table--mobile-cards .data-table tbody tr {
+    display: block;
+    background: white;
+    border: 1px solid var(--border-color, #e2e8f0);
+    border-radius: 8px;
+    padding: 0.75rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
+  
+  .data-table--mobile-cards .data-table tbody tr:hover {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .data-table--mobile-cards .data-table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 0.375rem 0;
+    border-bottom: 1px solid var(--border-light, #f1f5f9);
+  }
+  
+  .data-table--mobile-cards .data-table td:last-child {
+    border-bottom: none;
+  }
+  
+  .data-table--mobile-cards .data-table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: var(--text-muted, #64748b);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    flex-shrink: 0;
+    margin-right: 1rem;
+  }
+  
+  .data-table--mobile-cards .data-table__actions-cell {
+    width: 100%;
+    padding-top: 0.75rem;
+    margin-top: 0.5rem;
+    border-top: 1px solid var(--border-color, #e2e8f0);
+  }
+  
+  .data-table--mobile-cards .data-table__actions-cell::before {
+    display: none;
+  }
+  
+  .data-table--mobile-cards .data-table__actions {
+    justify-content: flex-start;
+    width: 100%;
+  }
+  
+  .data-table--mobile-cards .data-table__checkbox-cell {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    width: auto;
+    padding: 0;
+    border: none;
+  }
+  
+  .data-table--mobile-cards .data-table__checkbox-cell::before {
+    display: none;
+  }
+  
+  .data-table--mobile-cards tbody tr {
+    position: relative;
+  }
+}
+
+/* Horizontal scroll with sticky first column */
+.data-table--sticky-first-col th:first-child,
+.data-table--sticky-first-col td:first-child {
+  position: sticky;
+  left: 0;
+  background: inherit;
+  z-index: 1;
+  box-shadow: 2px 0 4px -2px rgba(0, 0, 0, 0.1);
+}
+
+.data-table--sticky-first-col tbody tr:nth-child(even) td:first-child {
+  background: var(--surface-secondary, #f8fafc);
+}
+
+.data-table--sticky-first-col tbody tr:hover td:first-child {
+  background: var(--surface-hover, #f1f5f9);
+}
+
+/* Accessibility improvements */
+.data-table:focus-within {
+  outline: 2px solid var(--primary-color, #3b82f6);
+  outline-offset: 2px;
+}
+
+.data-table tbody tr:focus {
+  outline: 2px solid var(--primary-color, #3b82f6);
+  outline-offset: -2px;
+}
+
+.data-table__action-btn:focus-visible {
+  outline: 2px solid var(--primary-color, #3b82f6);
+  outline-offset: 2px;
+}
+
+.data-table__pagination-btn:focus-visible {
+  outline: 2px solid var(--primary-color, #3b82f6);
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .data-table {
+    border: 2px solid;
+  }
+  
+  .data-table th,
+  .data-table td {
+    border: 1px solid;
+  }
+  
+  .data-table__action-btn {
+    border: 2px solid currentColor;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .data-table__spinner {
+    animation: none;
+    border-style: dotted;
+  }
+  
+  .data-table__action-btn,
+  .data-table__pagination-btn,
+  .data-table__search-input {
+    transition: none;
+  }
+}
+
+/* Print styles */
+@media print {
+  .data-table__search,
+  .data-table__pagination,
+  .data-table__actions-cell,
+  .data-table__checkbox-cell {
+    display: none !important;
+  }
+  
+  .data-table__container {
+    overflow: visible;
+    border: none;
+  }
+  
+  .data-table {
+    font-size: 10pt;
+  }
+  
+  .data-table th,
+  .data-table td {
+    border: 1px solid #000;
+    padding: 4pt 8pt;
+  }
 }

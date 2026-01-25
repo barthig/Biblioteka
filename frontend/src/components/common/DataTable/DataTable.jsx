@@ -45,10 +45,13 @@ export default function DataTable({
   hoverable = true,
   compact = false,
   stickyHeader = false,
+  stickyFirstColumn = false,
+  mobileCards = true,
   selectable = false,
   selectedRows = [],
   onSelectionChange,
   rowKey = 'id',
+  ariaLabel = 'Tabela danych',
   ...props
 }) {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' })
@@ -147,6 +150,8 @@ export default function DataTable({
     hoverable && 'data-table--hoverable',
     compact && 'data-table--compact',
     stickyHeader && 'data-table--sticky-header',
+    stickyFirstColumn && 'data-table--sticky-first-col',
+    mobileCards && 'data-table--mobile-cards',
     className
   ].filter(Boolean).join(' ')
 
@@ -183,13 +188,13 @@ export default function DataTable({
       )}
 
       {paginatedData.length === 0 ? (
-        <div className="data-table__empty">
+        <div className="data-table__empty" role="status">
           <p>{emptyMessage}</p>
         </div>
       ) : (
         <>
-          <div className="data-table__container">
-            <table className={tableClasses}>
+          <div className="data-table__container" role="region" aria-label={ariaLabel}>
+            <table className={tableClasses} role="table" aria-label={ariaLabel}>
               <thead>
                 <tr>
                   {selectable && (
@@ -248,6 +253,7 @@ export default function DataTable({
                       <td 
                         key={column.key}
                         className={column.align ? `data-table__align-${column.align}` : ''}
+                        data-label={column.label}
                       >
                         {column.render 
                           ? column.render(row, index) 
@@ -366,8 +372,11 @@ DataTable.propTypes = {
   hoverable: PropTypes.bool,
   compact: PropTypes.bool,
   stickyHeader: PropTypes.bool,
+  stickyFirstColumn: PropTypes.bool,
+  mobileCards: PropTypes.bool,
   selectable: PropTypes.bool,
   selectedRows: PropTypes.array,
   onSelectionChange: PropTypes.func,
-  rowKey: PropTypes.string
+  rowKey: PropTypes.string,
+  ariaLabel: PropTypes.string
 }

@@ -9,44 +9,44 @@ health_check:
 # Authentication
 api_auth_test:
   path: /api/test-login
-  controller: App\Controller\TestAuthController::testLogin
+  controller: App\Controller\Auth\TestAuthController::testLogin
   methods: [POST]
 
 api_auth_login:
   path: /api/auth/login
-  controller: App\Controller\AuthController::login
+  controller: App\Controller\Auth\AuthController::login
   methods: [POST]
 
 api_auth_refresh:
   path: /api/auth/refresh
-  controller: App\Controller\AuthController::refresh
+  controller: App\Controller\Auth\AuthController::refresh
   methods: [POST]
 
 api_auth_logout:
   path: /api/auth/logout
-  controller: App\Controller\AuthController::logout
+  controller: App\Controller\Auth\AuthController::logout
   methods: [POST]
 
 api_auth_logout_all:
   path: /api/auth/logout-all
-  controller: App\Controller\AuthController::logoutAll
+  controller: App\Controller\Auth\AuthController::logoutAll
   methods: [POST]
 
 api_auth_profile:
   path: /api/auth/profile
-  controller: App\Controller\AuthController::profile
+  controller: App\Controller\Auth\AuthController::profile
   methods: [GET]
 
 # @deprecated - Use /api/me instead
 api_profile:
   path: /api/profile
-  controller: App\Controller\AuthController::profile
+  controller: App\Controller\Auth\AuthController::profile
   methods: [GET]
 
 # Current user loans
 api_account_loans_list:
   path: /api/me/loans
-  controller: App\Controller\LoanController::listMe
+  controller: App\Controller\Loans\LoanController::listMe
   methods: [GET]
 
 # Dashboard overview
@@ -63,12 +63,12 @@ api_statistics_dashboard:
 # User facing queries
 api_users_list:
   path: /api/users
-  controller: App\Controller\UserController::list
+  controller: App\Controller\User\UserController::list
   methods: [GET]
 
 api_users_search:
   path: /api/users/search
-  controller: App\Controller\UserController::search
+  controller: App\Controller\User\UserController::search
   methods: [GET]
 
 api_admin_user_update:
@@ -87,14 +87,14 @@ api_admin_user_delete:
 
 api_users_get:
   path: /api/users/{id}
-  controller: App\Controller\UserController::getUserById
+  controller: App\Controller\User\UserController::getUserById
   methods: [GET]
   requirements:
     id: '[0-9]+'
 
 api_users_details:
   path: /api/users/{id}/details
-  controller: App\Controller\UserController::getUserDetails
+  controller: App\Controller\User\UserController::getUserDetails
   methods: [GET]
   requirements:
     id: '[0-9]+'
@@ -102,40 +102,40 @@ api_users_details:
 # User management (staff only)
 api_users_create:
   path: /api/users
-  controller: App\Controller\UserManagementController::create
+  controller: App\Controller\User\UserManagementController::create
   methods: [POST]
 
 api_users_update:
   path: /api/users/{id}
-  controller: App\Controller\UserManagementController::update
+  controller: App\Controller\User\UserManagementController::update
   methods: [PUT]
   requirements:
     id: '[0-9]+'
 
 api_users_delete:
   path: /api/users/{id}
-  controller: App\Controller\UserManagementController::delete
+  controller: App\Controller\User\UserManagementController::delete
   methods: [DELETE]
   requirements:
     id: '[0-9]+'
 
 api_users_block:
   path: /api/users/{id}/block
-  controller: App\Controller\UserManagementController::block
+  controller: App\Controller\User\UserManagementController::block
   methods: [POST]
   requirements:
     id: '[0-9]+'
 
 api_users_unblock:
   path: /api/users/{id}/block
-  controller: App\Controller\UserManagementController::unblock
+  controller: App\Controller\User\UserManagementController::unblock
   methods: [DELETE]
   requirements:
     id: '[0-9]+'
 
 api_users_permissions_update:
   path: /api/users/{id}/permissions
-  controller: App\Controller\UserManagementController::updatePermissions
+  controller: App\Controller\User\UserManagementController::updatePermissions
   methods: [PUT]
   requirements:
     id: '[0-9]+'
@@ -143,28 +143,28 @@ api_users_permissions_update:
 # Authentication
 api_auth_register:
   path: /api/auth/register
-  controller: App\Controller\RegistrationController::register
+  controller: App\Controller\Auth\RegistrationController::register
   methods: [POST]
 
 api_auth_verify:
   path: /api/auth/verify/{token}
-  controller: App\Controller\RegistrationController::verify
+  controller: App\Controller\Auth\RegistrationController::verify
   methods: [GET]
 
 # Books catalogue management
 api_books_list:
   path: /api/books
-  controller: App\Controller\BookController::list
+  controller: App\Controller\Books\BookController::list
   methods: [GET]
 
 api_books_filters:
   path: /api/books/filters
-  controller: App\Controller\BookController::filters
+  controller: App\Controller\Books\BookController::filters
   methods: [GET]
 
 api_books_recommended:
   path: /api/books/recommended
-  controller: App\Controller\BookController::recommended
+  controller: App\Controller\Books\BookController::recommended
   methods: [GET]
 
 api_books_export:
@@ -176,23 +176,23 @@ api_books_export:
 # Semantic recommendations
 api_recommend:
   path: /api/recommend
-  controller: App\Controller\RecommendationController::recommend
+  controller: App\Controller\Books\RecommendationController::recommend
   methods: [POST]
 
 api_recommendations_personal:
   path: /api/recommendations/personal
-  controller: App\Controller\RecommendationController::personal
+  controller: App\Controller\Books\RecommendationController::personal
   methods: [GET, POST]
 
 # Recommendation feedback
 api_recommendations_feedback_create:
   path: /api/recommendations/feedback
-  controller: App\Controller\RecommendationFeedbackController::addFeedback
+  controller: App\Controller\Books\RecommendationFeedbackController::addFeedback
   methods: [POST]
 
 api_recommendations_feedback_delete:
   path: /api/recommendations/feedback/{bookId}
-  controller: App\Controller\RecommendationFeedbackController::removeFeedback
+  controller: App\Controller\Books\RecommendationFeedbackController::removeFeedback
   methods: [DELETE]
   requirements:
     bookId: '[0-9]+'
@@ -200,13 +200,13 @@ api_recommendations_feedback_delete:
 # @deprecated - Use /api/recommendations/feedback instead
 api_recommendation_feedback_create_legacy:
   path: /api/recommendation-feedback
-  controller: App\Controller\RecommendationFeedbackController::addFeedback
+  controller: App\Controller\Books\RecommendationFeedbackController::addFeedback
   methods: [POST]
 
 # @deprecated - Use /api/recommendations/feedback/{bookId} instead
 api_recommendation_feedback_delete_legacy:
   path: /api/recommendation-feedback/{bookId}
-  controller: App\Controller\RecommendationFeedbackController::removeFeedback
+  controller: App\Controller\Books\RecommendationFeedbackController::removeFeedback
   methods: [DELETE]
   requirements:
     bookId: '[0-9]+'
@@ -214,55 +214,55 @@ api_recommendation_feedback_delete_legacy:
 # Collections
 api_collections_list:
   path: /api/collections
-  controller: App\Controller\CollectionController::list
+  controller: App\Controller\Books\CollectionController::list
   methods: [GET]
 
 api_collections_get:
   path: /api/collections/{id}
-  controller: App\Controller\CollectionController::get
+  controller: App\Controller\Books\CollectionController::get
   methods: [GET]
   requirements:
     id: '[0-9]+'
 
 api_collections_create:
   path: /api/collections
-  controller: App\Controller\CollectionController::create
+  controller: App\Controller\Books\CollectionController::create
   methods: [POST]
 
 api_collections_update:
   path: /api/collections/{id}
-  controller: App\Controller\CollectionController::update
+  controller: App\Controller\Books\CollectionController::update
   methods: [PUT]
   requirements:
     id: '[0-9]+'
 
 api_collections_delete:
   path: /api/collections/{id}
-  controller: App\Controller\CollectionController::delete
+  controller: App\Controller\Books\CollectionController::delete
   methods: [DELETE]
   requirements:
     id: '[0-9]+'
 
 api_books_popular:
   path: /api/books/popular
-  controller: App\Controller\BookController::popular
+  controller: App\Controller\Books\BookController::popular
   methods: [GET]
 
 api_books_new:
   path: /api/books/new
-  controller: App\Controller\BookController::newest
+  controller: App\Controller\Books\BookController::newest
   methods: [GET]
 
 api_books_get:
   path: /api/books/{id}
-  controller: App\Controller\BookController::getBook
+  controller: App\Controller\Books\BookController::getBook
   methods: [GET]
   requirements:
     id: '[0-9]+'
 
 api_books_availability:
   path: /api/books/{id}/availability
-  controller: App\Controller\BookController::availability
+  controller: App\Controller\Books\BookController::availability
   methods: [GET]
   requirements:
     id: '[0-9]+'
@@ -270,7 +270,7 @@ api_books_availability:
 # Public book cover (no auth)
 api_books_cover:
   path: /api/books/{id}/cover
-  controller: App\Controller\BookPublicAssetController::cover
+  controller: App\Controller\Books\BookPublicAssetController::cover
   methods: [GET]
   requirements:
     id: '[0-9]+'
@@ -278,12 +278,12 @@ api_books_cover:
 # User avatars
 api_me_avatar_upload:
   path: /api/me/avatar
-  controller: App\Controller\UserAvatarController::upload
+  controller: App\Controller\User\UserAvatarController::upload
   methods: [POST]
 
 api_users_avatar_get:
   path: /api/users/{id}/avatar
-  controller: App\Controller\UserAvatarController::getAvatar
+  controller: App\Controller\User\UserAvatarController::getAvatar
   methods: [GET]
   requirements:
     id: '[0-9]+'
@@ -291,21 +291,21 @@ api_users_avatar_get:
 # Book ratings
 api_books_ratings_list:
   path: /api/books/{id}/ratings
-  controller: App\Controller\RatingController::listRatings
+  controller: App\Controller\Books\RatingController::listRatings
   methods: [GET]
   requirements:
     id: '[0-9]+'
 
 api_books_rate:
   path: /api/books/{id}/rate
-  controller: App\Controller\RatingController::rateBook
+  controller: App\Controller\Books\RatingController::rateBook
   methods: [POST]
   requirements:
     id: '[0-9]+'
 
 api_books_ratings_delete:
   path: /api/books/{bookId}/ratings/{ratingId}
-  controller: App\Controller\RatingController::deleteRating
+  controller: App\Controller\Books\RatingController::deleteRating
   methods: [DELETE]
   requirements:
     bookId: '[0-9]+'
@@ -313,24 +313,24 @@ api_books_ratings_delete:
 
 api_users_ratings:
   path: /api/users/me/ratings
-  controller: App\Controller\RatingController::userRatings
+  controller: App\Controller\Books\RatingController::userRatings
   methods: [GET]
 
 api_books_create:
   path: /api/books
-  controller: App\Controller\BookController::create
+  controller: App\Controller\Books\BookController::create
   methods: [POST]
 
 api_books_update:
   path: /api/books/{id}
-  controller: App\Controller\BookController::update
+  controller: App\Controller\Books\BookController::update
   methods: [PUT]
   requirements:
     id: '[0-9]+'
 
 api_books_delete:
   path: /api/books/{id}
-  controller: App\Controller\BookController::delete
+  controller: App\Controller\Books\BookController::delete
   methods: [DELETE]
   requirements:
     id: '[0-9]+'
@@ -338,21 +338,21 @@ api_books_delete:
 # Book inventory management (staff)
 api_admin_book_copies_list:
   path: /api/admin/books/{id}/copies
-  controller: App\Controller\BookInventoryController::list
+  controller: App\Controller\Books\BookInventoryController::list
   methods: [GET]
   requirements:
     id: '[0-9]+'
 
 api_admin_book_copies_create:
   path: /api/admin/books/{id}/copies
-  controller: App\Controller\BookInventoryController::create
+  controller: App\Controller\Books\BookInventoryController::create
   methods: [POST]
   requirements:
     id: '[0-9]+'
 
 api_admin_book_copy_update:
   path: /api/admin/books/{id}/copies/{copyId}
-  controller: App\Controller\BookInventoryController::update
+  controller: App\Controller\Books\BookInventoryController::update
   methods: [PUT]
   requirements:
     id: '[0-9]+'
@@ -360,7 +360,7 @@ api_admin_book_copy_update:
 
 api_admin_book_copy_delete:
   path: /api/admin/books/{id}/copies/{copyId}
-  controller: App\Controller\BookInventoryController::delete
+  controller: App\Controller\Books\BookInventoryController::delete
   methods: [DELETE]
   requirements:
     id: '[0-9]+'
@@ -368,28 +368,28 @@ api_admin_book_copy_delete:
 
 api_admin_copy_by_barcode:
   path: /api/admin/copies/barcode/{barcode}
-  controller: App\Controller\BookInventoryController::findByBarcode
+  controller: App\Controller\Books\BookInventoryController::findByBarcode
   methods: [GET]
 
 
 # Digital asset management
 api_admin_book_assets_list:
   path: /api/admin/books/{id}/assets
-  controller: App\Controller\BookAssetController::list
+  controller: App\Controller\Books\BookAssetController::list
   methods: [GET]
   requirements:
     id: '[0-9]+'
 
 api_admin_book_assets_upload:
   path: /api/admin/books/{id}/assets
-  controller: App\Controller\BookAssetController::upload
+  controller: App\Controller\Books\BookAssetController::upload
   methods: [POST]
   requirements:
     id: '[0-9]+'
 
 api_admin_book_assets_download:
   path: /api/admin/books/{id}/assets/{assetId}
-  controller: App\Controller\BookAssetController::download
+  controller: App\Controller\Books\BookAssetController::download
   methods: [GET]
   requirements:
     id: '[0-9]+'
@@ -397,7 +397,7 @@ api_admin_book_assets_download:
 
 api_admin_book_assets_delete:
   path: /api/admin/books/{id}/assets/{assetId}
-  controller: App\Controller\BookAssetController::delete
+  controller: App\Controller\Books\BookAssetController::delete
   methods: [DELETE]
   requirements:
     id: '[0-9]+'
@@ -406,12 +406,12 @@ api_admin_book_assets_delete:
 # Catalog import/export
 api_admin_catalog_export:
   path: /api/admin/catalog/export
-  controller: App\Controller\CatalogAdminController::export
+  controller: App\Controller\Catalog\CatalogAdminController::export
   methods: [GET]
 
 api_admin_catalog_import:
   path: /api/admin/catalog/import
-  controller: App\Controller\CatalogAdminController::import
+  controller: App\Controller\Catalog\CatalogAdminController::import
   methods: [POST]
 
 # System administration
@@ -672,65 +672,65 @@ api_acquisitions_budgets_summary:
 # Acquisitions - weeding
 api_acquisitions_weeding_list:
   path: /api/admin/acquisitions/weeding
-  controller: App\Controller\WeedingController::list
+  controller: App\Controller\Books\WeedingController::list
   methods: [GET]
 
 api_acquisitions_weeding_create:
   path: /api/admin/acquisitions/weeding
-  controller: App\Controller\WeedingController::create
+  controller: App\Controller\Books\WeedingController::create
   methods: [POST]
 
 # Account management
 api_account_me:
   path: /api/me
-  controller: App\Controller\AccountController::me
+  controller: App\Controller\User\AccountController::me
   methods: [GET]
 
 api_account_update:
   path: /api/me
-  controller: App\Controller\AccountController::update
+  controller: App\Controller\User\AccountController::update
   methods: [PUT]
 
 api_account_password:
   path: /api/me/password
-  controller: App\Controller\AccountController::changePassword
+  controller: App\Controller\User\AccountController::changePassword
   methods: [PUT]
 
 api_account_contact:
   path: /api/me/contact
-  controller: App\Controller\AccountController::updateContact
+  controller: App\Controller\User\AccountController::updateContact
   methods: [PUT]
 
 api_account_preferences:
   path: /api/me/preferences
-  controller: App\Controller\AccountController::updatePreferences
+  controller: App\Controller\User\AccountController::updatePreferences
   methods: [PUT]
 
 api_account_ui_preferences:
   path: /api/me/ui-preferences
-  controller: App\Controller\AccountController::updateUIPreferences
+  controller: App\Controller\User\AccountController::updateUIPreferences
   methods: [PUT]
 
 api_account_fees_list:
   path: /api/me/fees
-  controller: App\Controller\UserFeeController::list
+  controller: App\Controller\User\UserFeeController::list
   methods: [GET]
 
 api_account_fees_pay:
   path: /api/me/fees/{feeId}/pay
-  controller: App\Controller\UserFeeController::pay
+  controller: App\Controller\User\UserFeeController::pay
   methods: [POST]
   requirements:
     feeId: '[0-9]+'
 
 api_account_pin:
   path: /api/me/pin
-  controller: App\Controller\AccountController::updatePin
+  controller: App\Controller\User\AccountController::updatePin
   methods: [PUT]
 
 api_account_onboarding:
   path: /api/users/me/onboarding
-  controller: App\Controller\AccountController::completeOnboarding
+  controller: App\Controller\User\AccountController::completeOnboarding
   methods: [POST]
 
 # Alerts and Library Info
@@ -753,45 +753,45 @@ api_library_hours_legacy:
 # Loan operations
 api_loans_list:
   path: /api/loans
-  controller: App\Controller\LoanController::list
+  controller: App\Controller\Loans\LoanController::list
   methods: [GET]
 
 api_loans_get:
   path: /api/loans/{id}
-  controller: App\Controller\LoanController::getLoan
+  controller: App\Controller\Loans\LoanController::getLoan
   methods: [GET]
   requirements:
     id: '[0-9]+'
 
 api_loans_create:
   path: /api/loans
-  controller: App\Controller\LoanController::create
+  controller: App\Controller\Loans\LoanController::create
   methods: [POST]
 
 api_loans_by_user:
   path: /api/loans/user/{id}
-  controller: App\Controller\LoanController::listByUser
+  controller: App\Controller\Loans\LoanController::listByUser
   methods: [GET]
   requirements:
     id: '[0-9]+'
 
 api_loans_return:
   path: /api/loans/{id}/return
-  controller: App\Controller\LoanController::returnLoan
+  controller: App\Controller\Loans\LoanController::returnLoan
   methods: [PUT]
   requirements:
     id: '[0-9]+'
 
 api_loans_extend:
   path: /api/loans/{id}/extend
-  controller: App\Controller\LoanController::extend
+  controller: App\Controller\Loans\LoanController::extend
   methods: [PUT]
   requirements:
     id: '[0-9]+'
 
 api_loans_delete:
   path: /api/loans/{id}
-  controller: App\Controller\LoanController::delete
+  controller: App\Controller\Loans\LoanController::delete
   methods: [DELETE]
   requirements:
     id: '[0-9]+'
@@ -799,31 +799,31 @@ api_loans_delete:
 # Reservations
 api_reservations_list:
   path: /api/reservations
-  controller: App\Controller\ReservationController::list
+  controller: App\Controller\Loans\ReservationController::list
   methods: [GET]
 
 api_reservations_create:
   path: /api/reservations
-  controller: App\Controller\ReservationController::create
+  controller: App\Controller\Loans\ReservationController::create
   methods: [POST]
 
 api_reservations_cancel:
   path: /api/reservations/{id}
-  controller: App\Controller\ReservationController::cancel
+  controller: App\Controller\Loans\ReservationController::cancel
   methods: [DELETE]
   requirements:
     id: '[0-9]+'
 
 api_reservations_fulfill:
   path: /api/reservations/{id}/fulfill
-  controller: App\Controller\ReservationController::fulfill
+  controller: App\Controller\Loans\ReservationController::fulfill
   methods: [POST]
   requirements:
     id: '[0-9]+'
 
 api_reservations_prepare:
   path: /api/reservations/{id}/prepare
-  controller: App\Controller\ReservationController::prepare
+  controller: App\Controller\Loans\ReservationController::prepare
   methods: [POST]
   requirements:
     id: '[0-9]+'
@@ -831,17 +831,17 @@ api_reservations_prepare:
 # Fines
 api_fines_list:
   path: /api/fines
-  controller: App\Controller\FineController::list
+  controller: App\Controller\Loans\FineController::list
   methods: [GET]
 
 api_fines_create:
   path: /api/fines
-  controller: App\Controller\FineController::create
+  controller: App\Controller\Loans\FineController::create
   methods: [POST]
 
 api_fines_cancel:
   path: /api/fines/{id}
-  controller: App\Controller\FineController::cancel
+  controller: App\Controller\Loans\FineController::cancel
   methods: [DELETE]
   requirements:
     id: '[0-9]+'
@@ -849,17 +849,17 @@ api_fines_cancel:
 # Favorites
 api_favorites_list:
   path: /api/favorites
-  controller: App\Controller\FavoriteController::list
+  controller: App\Controller\User\FavoriteController::list
   methods: [GET]
 
 api_favorites_add:
   path: /api/favorites
-  controller: App\Controller\FavoriteController::add
+  controller: App\Controller\User\FavoriteController::add
   methods: [POST]
 
 api_favorites_remove:
   path: /api/favorites/{bookId}
-  controller: App\Controller\FavoriteController::removeByBookId
+  controller: App\Controller\User\FavoriteController::removeByBookId
   methods: [DELETE]
   requirements:
     bookId: '[0-9]+'
@@ -867,28 +867,28 @@ api_favorites_remove:
 # Reviews
 api_reviews_list:
   path: /api/books/{id}/reviews
-  controller: App\Controller\ReviewController::list
+  controller: App\Controller\Books\ReviewController::list
   methods: [GET]
   requirements:
     id: '[0-9]+'
 
 api_reviews_upsert:
   path: /api/books/{id}/reviews
-  controller: App\Controller\ReviewController::upsert
+  controller: App\Controller\Books\ReviewController::upsert
   methods: [POST]
   requirements:
     id: '[0-9]+'
 
 api_reviews_delete:
   path: /api/books/{id}/reviews
-  controller: App\Controller\ReviewController::delete
+  controller: App\Controller\Books\ReviewController::delete
   methods: [DELETE]
   requirements:
     id: '[0-9]+'
 
 api_fines_pay:
   path: /api/fines/{id}/pay
-  controller: App\Controller\FineController::pay
+  controller: App\Controller\Loans\FineController::pay
   methods: [POST]
   requirements:
     id: '[0-9]+'
@@ -896,12 +896,12 @@ api_fines_pay:
 # Notifications
 api_notifications_list:
   path: /api/notifications
-  controller: App\Controller\NotificationController::list
+  controller: App\Controller\User\NotificationController::list
   methods: [GET]
 
 api_notifications_test:
   path: /api/notifications/test
-  controller: App\Controller\NotificationController::triggerTest
+  controller: App\Controller\User\NotificationController::triggerTest
   methods: [POST]
 
 # Reports
@@ -962,14 +962,14 @@ api_audit_logs_entity_history:
 # Announcements
 api_announcements_list:
   path: /api/announcements
-  controller: App\Controller\AnnouncementController::list
+  controller: App\Controller\Catalog\AnnouncementController::list
   methods: [GET]
   defaults:
     _public: true
 
 api_announcements_get:
   path: /api/announcements/{id}
-  controller: App\Controller\AnnouncementController::get
+  controller: App\Controller\Catalog\AnnouncementController::get
   methods: [GET]
   defaults:
     _public: true
@@ -978,47 +978,47 @@ api_announcements_get:
 
 api_announcements_create:
   path: /api/announcements
-  controller: App\Controller\AnnouncementController::create
+  controller: App\Controller\Catalog\AnnouncementController::create
   methods: [POST]
 
 api_announcements_update:
   path: /api/announcements/{id}
-  controller: App\Controller\AnnouncementController::update
+  controller: App\Controller\Catalog\AnnouncementController::update
   methods: [PUT]
   requirements:
     id: '[0-9]+'
 
 api_announcements_delete:
   path: /api/announcements/{id}
-  controller: App\Controller\AnnouncementController::delete
+  controller: App\Controller\Catalog\AnnouncementController::delete
   methods: [DELETE]
   requirements:
     id: '[0-9]+'
 
 api_announcements_publish:
   path: /api/announcements/{id}/publish
-  controller: App\Controller\AnnouncementController::publish
+  controller: App\Controller\Catalog\AnnouncementController::publish
   methods: [POST]
   requirements:
     id: '[0-9]+'
 
 api_announcements_archive:
   path: /api/announcements/{id}/archive
-  controller: App\Controller\AnnouncementController::archive
+  controller: App\Controller\Catalog\AnnouncementController::archive
   methods: [POST]
   requirements:
     id: '[0-9]+'
 
 api_announcements_restore:
   path: /api/announcements/{id}/restore
-  controller: App\Controller\AnnouncementController::restore
+  controller: App\Controller\Catalog\AnnouncementController::restore
   methods: [POST]
   requirements:
     id: '[0-9]+'
 
 api_announcements_acknowledge:
   path: /api/announcements/{id}/acknowledge
-  controller: App\Controller\AnnouncementController::acknowledge
+  controller: App\Controller\Catalog\AnnouncementController::acknowledge
   methods: [POST]
   requirements:
     id: '[0-9]+'
@@ -1026,31 +1026,31 @@ api_announcements_acknowledge:
 # Authors
 api_authors_list:
   path: /api/authors
-  controller: App\Controller\AuthorController::list
+  controller: App\Controller\Books\AuthorController::list
   methods: [GET]
 
 api_authors_get:
   path: /api/authors/{id}
-  controller: App\Controller\AuthorController::get
+  controller: App\Controller\Books\AuthorController::get
   methods: [GET]
   requirements:
     id: '[0-9]+'
 
 api_authors_create:
   path: /api/authors
-  controller: App\Controller\AuthorController::create
+  controller: App\Controller\Books\AuthorController::create
   methods: [POST]
 
 api_authors_update:
   path: /api/authors/{id}
-  controller: App\Controller\AuthorController::update
+  controller: App\Controller\Books\AuthorController::update
   methods: [PUT, PATCH]
   requirements:
     id: '[0-9]+'
 
 api_authors_delete:
   path: /api/authors/{id}
-  controller: App\Controller\AuthorController::delete
+  controller: App\Controller\Books\AuthorController::delete
   methods: [DELETE]
   requirements:
     id: '[0-9]+'
@@ -1058,31 +1058,31 @@ api_authors_delete:
 # Categories
 api_categories_list:
   path: /api/categories
-  controller: App\Controller\CategoryController::list
+  controller: App\Controller\Books\CategoryController::list
   methods: [GET]
 
 api_categories_get:
   path: /api/categories/{id}
-  controller: App\Controller\CategoryController::get
+  controller: App\Controller\Books\CategoryController::get
   methods: [GET]
   requirements:
     id: '[0-9]+'
 
 api_categories_create:
   path: /api/categories
-  controller: App\Controller\CategoryController::create
+  controller: App\Controller\Books\CategoryController::create
   methods: [POST]
 
 api_categories_update:
   path: /api/categories/{id}
-  controller: App\Controller\CategoryController::update
+  controller: App\Controller\Books\CategoryController::update
   methods: [PUT, PATCH]
   requirements:
     id: '[0-9]+'
 
 api_categories_delete:
   path: /api/categories/{id}
-  controller: App\Controller\CategoryController::delete
+  controller: App\Controller\Books\CategoryController::delete
   methods: [DELETE]
   requirements:
     id: '[0-9]+'

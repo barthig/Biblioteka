@@ -14,6 +14,11 @@ services:
       - '../src/Entity/'
       - '../src/Kernel.php'
 
+  # Service aliases
+  App\Service\SecurityService: '@App\Service\Auth\SecurityService'
+  App\Service\NotificationService: '@App\Service\User\NotificationService'
+  App\Service\BookService: '@App\Service\Book\BookService'
+
   # Force handler namespaces onto dedicated buses
   App\Application\Handler\Command\:
     resource: '../src/Application/Handler/Command'
@@ -51,40 +56,42 @@ services:
     tags: ['kernel.event_subscriber']
   
   # Named Rate Limiters
-  App\Controller\AuthController:
+  App\Controller\Auth\AuthController:
     arguments:
       $loginAttemptsLimiter: '@limiter.login_attempts'
   
-  App\Controller\RegistrationController:
+  App\Controller\Auth\RegistrationController:
     arguments:
       $registrationAttemptsLimiter: '@limiter.registration_attempts'
   
-  # CQRS Buses
-  App\Controller\LoanController:
+  # CQRS Buses - Loans
+  App\Controller\Loans\LoanController:
     arguments:
       $commandBus: '@command.bus'
       $queryBus: '@query.bus'
       $security: '@App\Service\SecurityService'
   
-  App\Controller\ReservationController:
+  App\Controller\Loans\ReservationController:
     arguments:
       $commandBus: '@command.bus'
       $queryBus: '@query.bus'
       $security: '@App\Service\SecurityService'
 
-  App\Controller\FineController:
+  App\Controller\Loans\FineController:
     arguments:
       $commandBus: '@command.bus'
       $queryBus: '@query.bus'
       $security: '@App\Service\SecurityService'
 
-  App\Controller\BookController:
+  # CQRS Buses - Books
+  App\Controller\Books\BookController:
     arguments:
       $commandBus: '@command.bus'
       $queryBus: '@query.bus'
       $security: '@App\Service\SecurityService'
 
-  App\Controller\UserManagementController:
+  # CQRS Buses - User
+  App\Controller\User\UserManagementController:
     arguments:
       $commandBus: '@command.bus'
       $security: '@App\Service\SecurityService'
@@ -94,19 +101,19 @@ services:
       $commandBus: '@command.bus'
       $security: '@App\Service\SecurityService'
 
-  App\Controller\AccountController:
+  App\Controller\User\AccountController:
     arguments:
       $commandBus: '@command.bus'
       $queryBus: '@query.bus'
       $security: '@App\Service\SecurityService'
 
-  App\Controller\FavoriteController:
+  App\Controller\User\FavoriteController:
     arguments:
       $commandBus: '@command.bus'
       $queryBus: '@query.bus'
       $security: '@App\Service\SecurityService'
 
-  App\Controller\ReviewController:
+  App\Controller\Books\ReviewController:
     arguments:
       $commandBus: '@command.bus'
       $queryBus: '@query.bus'
@@ -125,27 +132,27 @@ services:
     arguments:
       $queryBus: '@query.bus'
 
-  App\Controller\CatalogAdminController:
+  App\Controller\Catalog\CatalogAdminController:
     arguments:
       $queryBus: '@query.bus'
       $commandBus: '@command.bus'
 
-  App\Controller\BookInventoryController:
+  App\Controller\Books\BookInventoryController:
     arguments:
       $queryBus: '@query.bus'
       $commandBus: '@command.bus'
 
-  App\Controller\BookAssetController:
+  App\Controller\Books\BookAssetController:
     arguments:
       $queryBus: '@query.bus'
       $commandBus: '@command.bus'
 
-  App\Controller\WeedingController:
+  App\Controller\Books\WeedingController:
     arguments:
       $queryBus: '@query.bus'
       $commandBus: '@command.bus'
 
-  App\Controller\AnnouncementController:
+  App\Controller\Catalog\AnnouncementController:
     arguments:
       $queryBus: '@query.bus'
       $commandBus: '@command.bus'
@@ -165,16 +172,16 @@ services:
       $queryBus: '@query.bus'
       $commandBus: '@command.bus'
 
-  App\Controller\CollectionController:
+  App\Controller\Books\CollectionController:
     arguments:
       $commandBus: '@command.bus'
 
-  App\Controller\RatingController:
+  App\Controller\Books\RatingController:
     arguments:
       $commandBus: '@command.bus'
       $security: '@App\Service\SecurityService'
 
-  App\Controller\RecommendationFeedbackController:
+  App\Controller\Books\RecommendationFeedbackController:
     arguments:
       $commandBus: '@command.bus'
       $security: '@App\Service\SecurityService'
@@ -184,7 +191,7 @@ services:
       $queryBus: '@query.bus'
       $security: '@App\Service\SecurityService'
 
-  App\Controller\NotificationController:
+  App\Controller\User\NotificationController:
     arguments:
       $security: '@App\Service\SecurityService'
       $notificationLogs: '@App\Repository\NotificationLogRepository'

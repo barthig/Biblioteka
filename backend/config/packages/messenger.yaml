@@ -2,6 +2,9 @@ framework:
   messenger:
     default_bus: messenger.bus.default
     
+    # Dead Letter Queue - failed messages storage
+    failure_transport: failed
+    
     buses:
       messenger.bus.default:
         default_middleware: true
@@ -18,6 +21,12 @@ framework:
           max_retries: 3
           delay: 1000
           multiplier: 2
+          max_delay: 60000
+      
+      # Failed messages transport (Dead Letter Queue)
+      failed:
+        dsn: 'doctrine://default?queue_name=failed_messages'
+      
       sync: 'sync://'
     
     routing:
