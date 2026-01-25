@@ -75,5 +75,54 @@ export const bookService = {
   async getNewest(limit = 4) {
     const data = await apiFetch(`/api/books/new?limit=${encodeURIComponent(limit)}`)
     return Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : [])
+  },
+
+  /**
+   * Get book cover URL
+   */
+  getCoverUrl(bookId) {
+    return `/api/books/${bookId}/cover`
+  },
+
+  /**
+   * Rate a book
+   */
+  async rateBook(bookId, rating) {
+    return await apiFetch(`/api/books/${bookId}/rate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rating })
+    })
+  },
+
+  /**
+   * Create a new book (admin)
+   */
+  async createBook(data) {
+    return await apiFetch('/api/books', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    })
+  },
+
+  /**
+   * Update a book (admin)
+   */
+  async updateBook(id, data) {
+    return await apiFetch(`/api/books/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    })
+  },
+
+  /**
+   * Delete a book (admin)
+   */
+  async deleteBook(id) {
+    return await apiFetch(`/api/books/${id}`, {
+      method: 'DELETE'
+    })
   }
 }

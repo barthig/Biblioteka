@@ -37,6 +37,7 @@ api_auth_profile:
   controller: App\Controller\AuthController::profile
   methods: [GET]
 
+# @deprecated - Use /api/me instead
 api_profile:
   path: /api/profile
   controller: App\Controller\AuthController::profile
@@ -196,11 +197,13 @@ api_recommendations_feedback_delete:
   requirements:
     bookId: '[0-9]+'
 
+# @deprecated - Use /api/recommendations/feedback instead
 api_recommendation_feedback_create_legacy:
   path: /api/recommendation-feedback
   controller: App\Controller\RecommendationFeedbackController::addFeedback
   methods: [POST]
 
+# @deprecated - Use /api/recommendations/feedback/{bookId} instead
 api_recommendation_feedback_delete_legacy:
   path: /api/recommendation-feedback/{bookId}
   controller: App\Controller\RecommendationFeedbackController::removeFeedback
@@ -447,21 +450,25 @@ api_admin_system_roles_assign:
   controller: App\Controller\Admin\RoleAdminController::assign
   methods: [POST]
 
+# @deprecated - Use /api/admin/system/roles instead
 api_admin_roles_list_legacy:
   path: /api/admin/roles
   controller: App\Controller\Admin\RoleAdminController::list
   methods: [GET]
 
+# @deprecated - Use /api/admin/system/roles instead
 api_admin_roles_create_legacy:
   path: /api/admin/roles
   controller: App\Controller\Admin\RoleAdminController::create
   methods: [POST]
 
+# @deprecated - Use /api/admin/system/roles/{roleKey} instead
 api_admin_roles_update_legacy:
   path: /api/admin/roles/{roleKey}
   controller: App\Controller\Admin\RoleAdminController::update
   methods: [PUT]
 
+# @deprecated - Use /api/admin/system/roles/{roleKey}/assign instead
 api_admin_roles_assign_legacy:
   path: /api/admin/roles/{roleKey}/assign
   controller: App\Controller\Admin\RoleAdminController::assign
@@ -491,16 +498,19 @@ api_admin_system_integrations_test:
   requirements:
     id: '[0-9]+'
 
+# @deprecated - Use /api/admin/system/integrations instead
 api_admin_integrations_list_legacy:
   path: /api/admin/integrations
   controller: App\Controller\Admin\IntegrationAdminController::list
   methods: [GET]
 
+# @deprecated - Use /api/admin/system/integrations instead
 api_admin_integrations_create_legacy:
   path: /api/admin/integrations
   controller: App\Controller\Admin\IntegrationAdminController::create
   methods: [POST]
 
+# @deprecated - Use /api/admin/system/integrations/{id} instead
 api_admin_integrations_update_legacy:
   path: /api/admin/integrations/{id}
   controller: App\Controller\Admin\IntegrationAdminController::update
@@ -508,6 +518,7 @@ api_admin_integrations_update_legacy:
   requirements:
     id: '[0-9]+'
 
+# @deprecated - Use /api/admin/system/integrations/{id}/test instead
 api_admin_integrations_test_legacy:
   path: /api/admin/integrations/{id}/test
   controller: App\Controller\Admin\IntegrationAdminController::testConnection
@@ -525,11 +536,13 @@ api_admin_system_backups_create:
   controller: App\Controller\Admin\SecurityAdminController::createBackup
   methods: [POST]
 
+# @deprecated - Use /api/admin/system/backups instead
 api_admin_backups_list_legacy:
   path: /api/admin/backups
   controller: App\Controller\Admin\SecurityAdminController::listBackups
   methods: [GET]
 
+# @deprecated - Use /api/admin/system/backups instead
 api_admin_backups_create_legacy:
   path: /api/admin/backups
   controller: App\Controller\Admin\SecurityAdminController::createBackup
@@ -540,6 +553,7 @@ api_admin_system_logs_view:
   controller: App\Controller\Admin\SecurityAdminController::viewLogs
   methods: [GET]
 
+# @deprecated - Use /api/admin/system/logs instead
 api_admin_logs_legacy:
   path: /api/admin/logs
   controller: App\Controller\Admin\SecurityAdminController::viewLogs
@@ -730,6 +744,7 @@ api_library_hours:
   controller: App\Controller\AlertController::getLibraryHours
   methods: [GET]
 
+# @deprecated - Use /api/library/hours instead
 api_library_hours_legacy:
   path: /api/library-hours
   controller: App\Controller\AlertController::getLibraryHours

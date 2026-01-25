@@ -255,6 +255,34 @@ export default function BookDetails() {
   const canReserve = Boolean(token && book && !anyAvailable && !activeReservation)
   const canBorrow = Boolean(token && user?.id && book && anyAvailable)
 
+  /**
+   * Quick rating without review - uses /api/books/{id}/rate endpoint
+   */
+  async function handleQuickRate(rating) {
+    if (!token) {
+      setActionError('Zaloguj się, aby ocenić książkę.')
+      return
+    }
+    try {
+      await apiFetch(`/api/books/${id}/rate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rating })
+      })
+      // Refresh ratings
+      const data = await apiFetch(`/api/books/${id}/ratings`)
+      setRatingData({
+        average: data.average || 0,
+        count: data.count || 0,
+        userRating: rating
+      })
+      setReviewForm(prev => ({ ...prev, rating }))
+      setActionSuccess('Ocena została zapisana.')
+    } catch (err) {
+      setActionError(err.message || 'Nie udało się zapisać oceny.')
+    }
+  }
+
   async function handleReservation() {
     if (!token) {
       setActionError('Zaloguj się, aby dołączyć do kolejki rezerwacji.')
@@ -560,6 +588,25 @@ export default function BookDetails() {
         <div className="review-summary">
           <div>
             <strong>Średnia ocena:</strong> {ratingSummaryAverage ? ratingSummaryAverage.toFixed(1) : 'Brak ocen'}
+          </div>
+          <div>
+            <strong>Liczba ocen:</strong> {ratingSummaryCount ?? 0}
+          </div>
+        </div>
+
+        {/* Quick rating section */}
+        {isAuthenticated && (
+          <div className="quick-rating" style={{ margin: '1rem 0', padding: '1rem', background: 'var(--surface-secondary)', borderRadius: '8px' }}>
+            <p style={{ marginBottom: '0.5rem' }}>
+              <strong>Szybka ocena:</strong> {ratingData.userRating ? `Twoja ocena: ${ratingData.userRating}/5` : 'Oceń tę książkę'}
+            </p>
+            <StarRating
+              rating={ratingData.userRating || 0}
+              onRate={handleQuickRate}
+              size="large"
+            />
+          </div>
+        )}
           </div>
           <div>
             <strong>Liczba ocen:</strong> {ratingSummaryCount ?? 0}
