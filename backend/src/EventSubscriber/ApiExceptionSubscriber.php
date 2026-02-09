@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 namespace App\EventSubscriber;
 
 use App\Dto\ApiError;
@@ -11,7 +12,7 @@ use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\Messenger\Exception\HandlerFailedException;
 
-class ApiExceptionSubscriber implements EventSubscriberInterface
+final class ApiExceptionSubscriber implements EventSubscriberInterface
 {
     public static function getSubscribedEvents(): array
     {

@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 namespace App\Controller\Admin;
 
 use App\Application\Command\StaffRole\CreateStaffRoleCommand;
@@ -24,9 +25,9 @@ class RoleAdminController extends AbstractController
     use ExceptionHandlingTrait;
 
     public function __construct(
-        private StaffRoleRepository $roles,
-        private UserRepository $users,
-        private MessageBusInterface $commandBus
+        private readonly StaffRoleRepository $roles,
+        private readonly UserRepository $users,
+        private readonly MessageBusInterface $commandBus
     ) {
     }
 

@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 namespace App\Application\Handler\Query\Reservation;
 
 use App\Application\Query\Reservation\GetReservationQuery;

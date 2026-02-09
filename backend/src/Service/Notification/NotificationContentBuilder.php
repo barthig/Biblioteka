@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 namespace App\Service\Notification;
 
 use App\Entity\Loan;
@@ -12,16 +13,16 @@ class NotificationContentBuilder
         $title = $loan->getBook()->getTitle();
         $dueAt = $loan->getDueAt()->format('Y-m-d');
 
-        $subject = sprintf('Przypomnienie: zwrot "%s" do %s', $title, $dueAt);
+        $subject = sprintf('Reminder: return "%s" by %s', $title, $dueAt);
         $text = sprintf(
-            "Cześć %s!\n\nPrzypominamy o terminie zwrotu książki \"%s\". Termin mija %s. Jeśli potrzebujesz więcej czasu, sprawdź możliwość przedłużenia w panelu czytelnika.\n\nPozdrawiamy,\nTwoja Biblioteka",
+            "Hi %s!\n\nThis is a reminder that the book \"%s\" is due for return. The deadline is %s. If you need more time, check the renewal option in your reader panel.\n\nBest regards,\nYour Library",
             $user->getName(),
             $title,
             $dueAt
         );
 
         $html = sprintf(
-            '<p>Cześć %s!</p><p>Przypominamy o terminie zwrotu książki <strong>%s</strong>. Termin mija <strong>%s</strong>. Jeśli potrzebujesz więcej czasu, sprawdź możliwość przedłużenia w panelu czytelnika.</p><p>Pozdrawiamy,<br/>Twoja Biblioteka</p>',
+            '<p>Hi %s!</p><p>This is a reminder that the book <strong>%s</strong> is due for return. The deadline is <strong>%s</strong>. If you need more time, check the renewal option in your reader panel.</p><p>Best regards,<br/>Your Library</p>',
             htmlspecialchars($user->getName(), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
             htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
             $dueAt
@@ -35,9 +36,9 @@ class NotificationContentBuilder
         $title = $loan->getBook()->getTitle();
         $dueAt = $loan->getDueAt()->format('Y-m-d');
 
-        $subject = sprintf('Pilne: przeterminowane wypożyczenie "%s"', $title);
+        $subject = sprintf('Urgent: overdue loan "%s"', $title);
         $text = sprintf(
-            "Cześć %s!\n\nWypożyczona książka \"%s\" powinna zostać zwrócona %s i jest spóźniona o %d dni. Prosimy o pilny zwrot lub kontakt z biblioteką.\n\nPozdrawiamy,\nTwoja Biblioteka",
+            "Hi %s!\n\nThe borrowed book \"%s\" was due for return on %s and is %d days overdue. Please return it promptly or contact the library.\n\nBest regards,\nYour Library",
             $user->getName(),
             $title,
             $dueAt,
@@ -45,7 +46,7 @@ class NotificationContentBuilder
         );
 
         $html = sprintf(
-            '<p>Cześć %s!</p><p>Wypożyczona książka <strong>%s</strong> powinna zostać zwrócona %s i jest spóźniona o <strong>%d dni</strong>. Prosimy o pilny zwrot lub kontakt z biblioteką.</p><p>Pozdrawiamy,<br/>Twoja Biblioteka</p>',
+            '<p>Hi %s!</p><p>The borrowed book <strong>%s</strong> was due for return on %s and is <strong>%d days</strong> overdue. Please return it promptly or contact the library.</p><p>Best regards,<br/>Your Library</p>',
             htmlspecialchars($user->getName(), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
             htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
             $dueAt,
@@ -65,16 +66,16 @@ class NotificationContentBuilder
         $title = $reservation->getBook()->getTitle();
         $deadline = $reservation->getExpiresAt()->format('Y-m-d H:i');
 
-        $subject = sprintf('Rezerwacja "%s" gotowa do odbioru', $title);
+        $subject = sprintf('Reservation "%s" ready for pickup', $title);
         $text = sprintf(
-            "Cześć %s!\n\nTwoja rezerwacja książki \"%s\" jest gotowa do odbioru. Odbierz egzemplarz przed %s, w przeciwnym razie rezerwacja wygaśnie.\n\nPozdrawiamy,\nTwoja Biblioteka",
+            "Hi %s!\n\nYour reservation for \"%s\" is ready for pickup. Please collect your copy before %s, otherwise the reservation will expire.\n\nBest regards,\nYour Library",
             $user->getName(),
             $title,
             $deadline
         );
 
         $html = sprintf(
-            '<p>Cześć %s!</p><p>Twoja rezerwacja książki <strong>%s</strong> jest gotowa do odbioru. Prosimy o odbiór przed <strong>%s</strong>, w przeciwnym razie rezerwacja wygaśnie.</p><p>Pozdrawiamy,<br/>Twoja Biblioteka</p>',
+            '<p>Hi %s!</p><p>Your reservation for <strong>%s</strong> is ready for pickup. Please collect it before <strong>%s</strong>, otherwise the reservation will expire.</p><p>Best regards,<br/>Your Library</p>',
             htmlspecialchars($user->getName(), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
             htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
             $deadline

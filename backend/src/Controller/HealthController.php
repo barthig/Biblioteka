@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 namespace App\Controller;
 
 use App\Dto\ApiError;
@@ -10,7 +11,7 @@ use OpenApi\Attributes as OA;
 #[OA\Tag(name: 'Health')]
 class HealthController extends AbstractController
 {
-    public function __construct(private Connection $connection)
+    public function __construct(private readonly Connection $connection)
     {
     }
 

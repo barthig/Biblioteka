@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 namespace App\Controller\Auth;
 
 use App\Controller\Traits\ExceptionHandlingTrait;
@@ -21,7 +22,7 @@ class RegistrationController extends AbstractController
     use ValidationTrait;
 
     public function __construct(
-        private RateLimiterFactory $registrationAttemptsLimiter,
+        private readonly RateLimiterFactory $registrationAttemptsLimiter,
     ) {
     }
 

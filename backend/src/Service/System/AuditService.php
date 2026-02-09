@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 namespace App\Service\System;
 
 use App\Entity\AuditLog;
@@ -9,13 +10,13 @@ use Symfony\Component\HttpFoundation\RequestStack;
 class AuditService
 {
     public function __construct(
-        private EntityManagerInterface $em,
-        private RequestStack $requestStack
+        private readonly EntityManagerInterface $entityManager,
+        private readonly RequestStack $requestStack
     ) {
     }
 
     /**
-     * Loguje operację w systemie audit log
+     * Logs an operation in the audit log system
      */
     /**
      * @param array<string, mixed>|null $oldValues
@@ -49,12 +50,12 @@ class AuditService
             $log->setNewValues(json_encode($newValues, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
         }
 
-        $this->em->persist($log);
-        $this->em->flush();
+        $this->entityManager->persist($log);
+        $this->entityManager->flush();
     }
 
     /**
-     * Loguje utworzenie encji
+     * Logs entity creation
      */
     /**
      * @param array<string, mixed> $values
@@ -65,7 +66,7 @@ class AuditService
     }
 
     /**
-     * Loguje aktualizację encji
+     * Logs entity update
      */
     /**
      * @param array<string, mixed> $oldValues
@@ -77,7 +78,7 @@ class AuditService
     }
 
     /**
-     * Loguje usunięcie encji
+     * Logs entity deletion
      */
     /**
      * @param array<string, mixed> $oldValues
@@ -88,7 +89,7 @@ class AuditService
     }
 
     /**
-     * Loguje akcję użytkownika (np. LOGIN, LOGOUT)
+     * Logs a user action (e.g. LOGIN, LOGOUT)
      */
     public function logUserAction(string $action, ?User $user, ?string $description = null): void
     {
@@ -96,7 +97,7 @@ class AuditService
     }
 
     /**
-     * Loguje wypożyczenie książki
+     * Logs a book loan
      */
     public function logLoan(int $loanId, User $user, int $bookId, string $action = 'LOAN_CREATE'): void
     {
@@ -104,7 +105,7 @@ class AuditService
     }
 
     /**
-     * Loguje zwrot książki
+     * Logs a book return
      */
     public function logReturn(int $loanId, User $user, int $bookId): void
     {

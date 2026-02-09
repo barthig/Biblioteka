@@ -101,12 +101,12 @@ final class NotificationService
             return;
         }
 
-        $bookTitle = $reservation->getBook()?->getTitle() ?? 'ksiazka';
-        $expiresAt = $reservation->getExpiresAt()?->format('Y-m-d') ?? 'niebawem';
+        $bookTitle = $reservation->getBook()?->getTitle() ?? 'book';
+        $expiresAt = $reservation->getExpiresAt()?->format('Y-m-d') ?? 'soon';
 
-        $title = 'Rezerwacja gotowa do odbioru';
+        $title = 'Reservation ready for pickup';
         $message = sprintf(
-            'Twoja rezerwacja ksiazki "%s" jest gotowa do odbioru. Odbierz do %s.',
+            'Your reservation for "%s" is ready for pickup. Please collect it by %s.',
             $bookTitle,
             $expiresAt
         );
@@ -138,7 +138,7 @@ final class NotificationService
 
         foreach ($recipients as $user) {
             $isEvent = $announcement->getType() === 'event' || $announcement->getEventAt() !== null;
-            $title = $isEvent ? 'Nowe wydarzenie w bibliotece' : 'Nowe ogloszenie biblioteki';
+            $title = $isEvent ? 'New library event' : 'New library announcement';
             $message = $this->buildAnnouncementMessage($announcement, $isEvent);
 
             $this->storeInAppNotification(
@@ -166,7 +166,7 @@ final class NotificationService
         }
 
         foreach ($recipients as $user) {
-            $title = 'Nowa pozycja w katalogu';
+            $title = 'New item in catalog';
             $message = $this->buildNewBookMessage($book);
 
             $this->storeInAppNotification(
@@ -322,8 +322,8 @@ final class NotificationService
         $content = $this->truncate($this->normalizeWhitespace($announcement->getContent()), 320);
 
         $base = $isEvent
-            ? sprintf('Zapraszamy na wydarzenie: "%s".', $title)
-            : sprintf('Pojawilo sie nowe ogloszenie: "%s".', $title);
+            ? sprintf('Join us for the event: "%s".', $title)
+            : sprintf('A new announcement has been posted: "%s".', $title);
 
         $parts = [$base];
         if ($content !== '') {
@@ -345,14 +345,14 @@ final class NotificationService
         $available = $book->getCopies();
 
         $parts = [
-            sprintf('Do katalogu dodalismy nowa pozycje: "%s" - %s.', $title, $author),
+            sprintf('A new item has been added to the catalog: "%s" by %s.', $title, $author),
         ];
 
         if ($available > 0) {
-            $parts[] = sprintf('Dostepne egzemplarze: %d.', $available);
+            $parts[] = sprintf('Available copies: %d.', $available);
         }
 
-        $parts[] = 'Zarezerwuj lub wypozycz teraz, zanim zniknie z polki.';
+        $parts[] = 'Reserve or borrow it now before it disappears from the shelf.';
 
         return implode(' ', $parts);
     }
@@ -394,10 +394,10 @@ final class NotificationService
 
         $parts = [];
         if ($eventAt) {
-            $parts[] = sprintf('Termin: %s', $eventAt->format('Y-m-d H:i'));
+            $parts[] = sprintf('Date: %s', $eventAt->format('Y-m-d H:i'));
         }
         if ($location) {
-            $parts[] = sprintf('Miejsce: %s', $location);
+            $parts[] = sprintf('Location: %s', $location);
         }
 
         return implode(' | ', $parts);

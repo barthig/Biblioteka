@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 namespace App\Application\Handler\Command;
 
 use App\Application\Command\Account\ChangePasswordCommand;
@@ -24,23 +25,23 @@ class ChangePasswordHandler
         $user = $this->userRepository->find($command->userId);
         
         if (!$user) {
-            throw new NotFoundHttpException('Użytkownik nie istnieje');
+            throw new NotFoundHttpException('User not found');
         }
 
         if (!password_verify($command->currentPassword, $user->getPassword())) {
-            throw new BadRequestHttpException('Aktualne hasło jest niepoprawne');
+            throw new BadRequestHttpException('Current password is incorrect');
         }
 
         if (strlen($command->newPassword) < 8) {
-            throw new BadRequestHttpException('Nowe hasło musi mieć co najmniej 8 znaków');
+            throw new BadRequestHttpException('New password must be at least 8 characters');
         }
 
         if ($command->currentPassword === $command->newPassword) {
-            throw new BadRequestHttpException('Nowe hasło musi się różnić od poprzedniego');
+            throw new BadRequestHttpException('New password must differ from the current one');
         }
 
         if ($command->newPassword !== $command->confirmPassword) {
-            throw new BadRequestHttpException('Potwierdzenie hasła nie zgadza się z nowym hasłem');
+            throw new BadRequestHttpException('Password confirmation does not match');
         }
 
         $user->setPassword(password_hash($command->newPassword, PASSWORD_BCRYPT));

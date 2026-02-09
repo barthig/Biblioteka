@@ -10,7 +10,6 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
-use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use OpenApi\Attributes as OA;
 
@@ -23,7 +22,6 @@ class StatisticsController extends AbstractController
         private readonly MessageBusInterface $queryBus
     ) {}
 
-    #[Route('/api/statistics/dashboard', methods: ['GET'])]
     #[IsGranted('ROLE_LIBRARIAN')]
     #[OA\Get(
         path: '/api/statistics/dashboard',

@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 namespace App\Controller\Admin;
 
 use App\Application\Command\SystemSetting\CreateSystemSettingCommand;
@@ -21,9 +22,9 @@ class SystemConfigController extends AbstractController
 {
     use ExceptionHandlingTrait;
     public function __construct(
-        private SystemSettingRepository $settingsRepository,
-        private MessageBusInterface $commandBus,
-        private MessageBusInterface $queryBus
+        private readonly SystemSettingRepository $settingsRepository,
+        private readonly MessageBusInterface $commandBus,
+        private readonly MessageBusInterface $queryBus
     )
     {
     }

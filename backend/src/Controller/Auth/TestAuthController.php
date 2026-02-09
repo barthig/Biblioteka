@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace App\Controller\Auth;
 
@@ -18,14 +19,14 @@ class TestAuthController extends AbstractController
     use ExceptionHandlingTrait;
     
     public function __construct(
-        private RefreshTokenService $refreshTokenService
+        private readonly RefreshTokenService $refreshTokenService
     ) {
     }
 
     #[OA\Post(
         path: '/api/test-login',
-        summary: 'Test login (tylko dev/test)',
-        description: 'Endpoint testowy do logowania bez weryfikacji hasła (dostępny tylko w środowisku dev/test)',
+        summary: 'Test login (dev/test only)',
+        description: 'Test endpoint for login without password verification (available only in dev/test environment)',
         tags: ['TestAuth'],
         requestBody: new OA\RequestBody(
             required: true,
@@ -39,9 +40,9 @@ class TestAuthController extends AbstractController
         ),
         responses: [
             new OA\Response(response: 200, description: 'Login successful', content: new OA\JsonContent(type: 'object')),
-            new OA\Response(response: 400, description: 'Błąd walidacji', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
-            new OA\Response(response: 401, description: 'Nieprawidłowe hasło', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
-            new OA\Response(response: 404, description: 'Użytkownik nie znaleziony lub endpoint niedostępny', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
+            new OA\Response(response: 400, description: 'Validation error', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 401, description: 'Invalid password', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'User not found or endpoint unavailable', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
         ]
     )]
     public function testLogin(Request $request, UserRepository $repo): JsonResponse
@@ -57,17 +58,17 @@ class TestAuthController extends AbstractController
             $password = $data['password'] ?? '';
 
             if (!$email || !$password) {
-                return $this->jsonErrorMessage(400, 'Email i hasło są wymagane');
+                return $this->jsonErrorMessage(400, 'Email and password are required');
             }
 
             $user = $repo->findOneBy(['email' => $email]);
             if (!$user) {
-                return $this->jsonErrorMessage(404, 'Użytkownik nie znaleziony');
+                return $this->jsonErrorMessage(404, 'User not found');
             }
 
             if (!password_verify($password, $user->getPassword())) {
                 return $this->json([
-                    'error' => 'Nieprawidłowe hasło',
+                    'error' => 'Invalid password',
                     'hashLength' => strlen($user->getPassword()),
                     'passwordLength' => strlen($password)
                 ], 401);

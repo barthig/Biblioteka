@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 namespace App\Controller\User;
 
 use App\Application\Command\User\BlockUserCommand;
@@ -35,8 +36,8 @@ class UserManagementController extends AbstractController
 
     #[OA\Post(
         path: '/api/user-management',
-        summary: 'Utwórz użytkownika',
-        description: 'Tworzy nowego użytkownika. Wymaga roli LIBRARIAN.',
+        summary: 'Create user',
+        description: 'Creates a new user. Requires LIBRARIAN role.',
         tags: ['UserManagement'],
         requestBody: new OA\RequestBody(
             required: true,
@@ -61,9 +62,9 @@ class UserManagementController extends AbstractController
             )
         ),
         responses: [
-            new OA\Response(response: 201, description: 'Użytkownik utworzony', content: new OA\JsonContent(ref: '#/components/schemas/User')),
-            new OA\Response(response: 400, description: 'Błąd walidacji', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
-            new OA\Response(response: 403, description: 'Brak uprawnień', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
+            new OA\Response(response: 201, description: 'User created', content: new OA\JsonContent(ref: '#/components/schemas/User')),
+            new OA\Response(response: 400, description: 'Validation error', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 403, description: 'Access denied', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
         ]
     )]
 public function create(Request $request, ValidatorInterface $validator): JsonResponse
@@ -115,8 +116,8 @@ public function create(Request $request, ValidatorInterface $validator): JsonRes
 
     #[OA\Put(
         path: '/api/user-management/{id}',
-        summary: 'Aktualizuj użytkownika',
-        description: 'Aktualizuje dane użytkownika. Wymaga roli LIBRARIAN lub własności zasobu.',
+        summary: 'Update user',
+        description: 'Updates user data. Requires LIBRARIAN role or resource ownership.',
         tags: ['UserManagement'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
@@ -126,10 +127,10 @@ public function create(Request $request, ValidatorInterface $validator): JsonRes
             content: new OA\JsonContent(type: 'object')
         ),
         responses: [
-            new OA\Response(response: 200, description: 'Użytkownik zaktualizowany', content: new OA\JsonContent(ref: '#/components/schemas/User')),
-            new OA\Response(response: 400, description: 'Błąd walidacji', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
-            new OA\Response(response: 403, description: 'Brak uprawnień', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
-            new OA\Response(response: 404, description: 'Użytkownik nie znaleziony', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
+            new OA\Response(response: 200, description: 'User updated', content: new OA\JsonContent(ref: '#/components/schemas/User')),
+            new OA\Response(response: 400, description: 'Validation error', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 403, description: 'Access denied', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'User not found', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
         ]
     )]
     public function update(string $id, Request $request, ValidatorInterface $validator): JsonResponse
@@ -204,16 +205,16 @@ public function create(Request $request, ValidatorInterface $validator): JsonRes
 
     #[OA\Delete(
         path: '/api/user-management/{id}',
-        summary: 'Usuń użytkownika',
-        description: 'Usuwa użytkownika. Wymaga roli LIBRARIAN.',
+        summary: 'Delete user',
+        description: 'Deletes a user. Requires LIBRARIAN role.',
         tags: ['UserManagement'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
         ],
         responses: [
-            new OA\Response(response: 204, description: 'Użytkownik usunięty'),
-            new OA\Response(response: 403, description: 'Brak uprawnień', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
-            new OA\Response(response: 404, description: 'Użytkownik nie znaleziony', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
+            new OA\Response(response: 204, description: 'User deleted'),
+            new OA\Response(response: 403, description: 'Access denied', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'User not found', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
         ]
     )]
     public function delete(string $id, Request $request): JsonResponse
@@ -241,8 +242,8 @@ public function create(Request $request, ValidatorInterface $validator): JsonRes
 
     #[OA\Put(
         path: '/api/user-management/{id}/permissions',
-        summary: 'Aktualizuj uprawnienia użytkownika',
-        description: 'Aktualizuje role/uprawnienia użytkownika. Wymaga roli ADMIN.',
+        summary: 'Update user permissions',
+        description: 'Updates user roles/permissions. Requires ADMIN role.',
         tags: ['UserManagement'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
@@ -257,10 +258,10 @@ public function create(Request $request, ValidatorInterface $validator): JsonRes
             )
         ),
         responses: [
-            new OA\Response(response: 200, description: 'Uprawnienia zaktualizowane', content: new OA\JsonContent(ref: '#/components/schemas/User')),
-            new OA\Response(response: 400, description: 'Błąd walidacji', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
-            new OA\Response(response: 403, description: 'Brak uprawnień', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
-            new OA\Response(response: 404, description: 'Użytkownik nie znaleziony', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
+            new OA\Response(response: 200, description: 'Permissions updated', content: new OA\JsonContent(ref: '#/components/schemas/User')),
+            new OA\Response(response: 400, description: 'Validation error', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 403, description: 'Access denied', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'User not found', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
         ]
     )]
     public function updatePermissions(string $id, Request $request): JsonResponse
@@ -330,8 +331,8 @@ public function create(Request $request, ValidatorInterface $validator): JsonRes
 
     #[OA\Post(
         path: '/api/user-management/{id}/block',
-        summary: 'Zablokuj użytkownika',
-        description: 'Blokuje konto użytkownika. Wymaga roli LIBRARIAN.',
+        summary: 'Block user',
+        description: 'Blocks a user account. Requires LIBRARIAN role.',
         tags: ['UserManagement'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
@@ -345,9 +346,9 @@ public function create(Request $request, ValidatorInterface $validator): JsonRes
             )
         ),
         responses: [
-            new OA\Response(response: 200, description: 'Użytkownik zablokowany', content: new OA\JsonContent(ref: '#/components/schemas/User')),
-            new OA\Response(response: 403, description: 'Brak uprawnień', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
-            new OA\Response(response: 404, description: 'Użytkownik nie znaleziony', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
+            new OA\Response(response: 200, description: 'User blocked', content: new OA\JsonContent(ref: '#/components/schemas/User')),
+            new OA\Response(response: 403, description: 'Access denied', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'User not found', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
         ]
     )]
     public function block(string $id, Request $request): JsonResponse
@@ -380,16 +381,16 @@ public function create(Request $request, ValidatorInterface $validator): JsonRes
 
     #[OA\Post(
         path: '/api/user-management/{id}/unblock',
-        summary: 'Odblokuj użytkownika',
-        description: 'Odblokowuje konto użytkownika. Wymaga roli LIBRARIAN.',
+        summary: 'Unblock user',
+        description: 'Unblocks a user account. Requires LIBRARIAN role.',
         tags: ['UserManagement'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
         ],
         responses: [
-            new OA\Response(response: 200, description: 'Użytkownik odblokowany', content: new OA\JsonContent(ref: '#/components/schemas/User')),
-            new OA\Response(response: 403, description: 'Brak uprawnień', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
-            new OA\Response(response: 404, description: 'Użytkownik nie znaleziony', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
+            new OA\Response(response: 200, description: 'User unblocked', content: new OA\JsonContent(ref: '#/components/schemas/User')),
+            new OA\Response(response: 403, description: 'Access denied', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'User not found', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
         ]
     )]
     public function unblock(string $id, Request $request): JsonResponse

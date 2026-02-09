@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace App\EventSubscriber;
 
@@ -12,7 +13,7 @@ use Symfony\Component\HttpKernel\KernelEvents;
  * Automatically converts legacy error responses to standardized format.
  * This allows gradual migration of controllers without breaking changes.
  */
-class LegacyResponseConversionSubscriber implements EventSubscriberInterface
+final class LegacyResponseConversionSubscriber implements EventSubscriberInterface
 {
     public static function getSubscribedEvents(): array
     {

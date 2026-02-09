@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace App\EventSubscriber;
 
@@ -9,7 +10,7 @@ use Symfony\Component\HttpKernel\KernelEvents;
 /**
  * Adds rate limit headers to API responses
  */
-class RateLimitHeaderSubscriber implements EventSubscriberInterface
+final class RateLimitHeaderSubscriber implements EventSubscriberInterface
 {
     public static function getSubscribedEvents(): array
     {

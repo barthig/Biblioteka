@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 namespace App\Controller\Auth;
 
 use App\Application\Query\User\GetUserByIdQuery;
@@ -25,8 +26,8 @@ class AuthController extends AbstractController
     use ExceptionHandlingTrait;
 
     public function __construct(
-        private RateLimiterFactory $loginAttemptsLimiter,
-        private RefreshTokenService $refreshTokenService,
+        private readonly RateLimiterFactory $loginAttemptsLimiter,
+        private readonly RefreshTokenService $refreshTokenService,
     ) {
     }
 

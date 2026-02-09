@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 namespace App\Controller;
 
 use App\Controller\Traits\ValidationTrait;
@@ -20,7 +21,7 @@ class SettingsController extends AbstractController
     use ExceptionHandlingTrait;
 
     public function __construct(
-        private SystemSettingsService $settingsService
+        private readonly SystemSettingsService $settingsService
     ) {
     }
 

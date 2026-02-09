@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace App\EventSubscriber;
 
@@ -9,7 +10,7 @@ use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\RateLimiter\RateLimiterFactory;
 use Symfony\Component\HttpFoundation\Response;
 
-class RateLimiterSubscriber implements EventSubscriberInterface
+final class RateLimiterSubscriber implements EventSubscriberInterface
 {
     private RateLimiterFactory $anonymousApiLimiter;
     private RateLimiterFactory $authenticatedApiLimiter;

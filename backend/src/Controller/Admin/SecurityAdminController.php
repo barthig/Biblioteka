@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 namespace App\Controller\Admin;
 
 use App\Controller\Traits\ExceptionHandlingTrait;
@@ -16,7 +17,7 @@ class SecurityAdminController extends AbstractController
     use ExceptionHandlingTrait;
     
     #[OA\Tag(name: 'Admin/SecurityAdmin')]
-    public function __construct(private BackupService $backupService, private BackupRecordRepository $backups)
+    public function __construct(private readonly BackupService $backupService, private readonly BackupRecordRepository $backups)
     {
     }
 

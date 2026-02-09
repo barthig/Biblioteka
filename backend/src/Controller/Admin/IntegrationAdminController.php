@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 namespace App\Controller\Admin;
 
 use App\Application\Command\IntegrationConfig\CreateIntegrationConfigCommand;
@@ -20,8 +21,8 @@ class IntegrationAdminController extends AbstractController
 {
     use ExceptionHandlingTrait;
     public function __construct(
-        private MessageBusInterface $commandBus,
-        private MessageBusInterface $queryBus
+        private readonly MessageBusInterface $commandBus,
+        private readonly MessageBusInterface $queryBus
     ) {}
 
     #[OA\Get(

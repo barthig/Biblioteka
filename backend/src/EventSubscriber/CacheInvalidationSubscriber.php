@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace App\EventSubscriber;
 
@@ -14,7 +15,7 @@ use App\Entity\Reservation;
 /**
  * Automatically invalidate cache when entities are modified
  */
-class CacheInvalidationSubscriber implements EventSubscriber
+final class CacheInvalidationSubscriber implements EventSubscriber
 {
     public function __construct(
         private BookCacheService $bookCacheService,

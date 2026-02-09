@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 namespace App\Controller\Loans;
 
 use App\Application\Command\Fine\CancelFineCommand;
@@ -25,9 +26,9 @@ class FineController extends AbstractController
     use ExceptionHandlingTrait;
 
     public function __construct(
-        private MessageBusInterface $commandBus,
-        private MessageBusInterface $queryBus,
-        private SecurityService $security
+        private readonly MessageBusInterface $commandBus,
+        private readonly MessageBusInterface $queryBus,
+        private readonly SecurityService $security
     ) {
     }
 

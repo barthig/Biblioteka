@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 namespace App\Controller\User;
 
 use App\Application\Query\User\GetUserDetailsQuery;
@@ -22,8 +23,8 @@ class UserController extends AbstractController
     use ExceptionHandlingTrait;
 
     public function __construct(
-        private SecurityService $security,
-        private MessageBusInterface $messageBus
+        private readonly SecurityService $security,
+        private readonly MessageBusInterface $messageBus
     ) {
     }
 
@@ -171,185 +172,6 @@ class UserController extends AbstractController
                 return $response;
             }
             return $this->jsonError(ApiError::notFound($e->getMessage()));
-        }
-    }
-
-    #[IsGranted('ROLE_ADMIN')]
-    #[OA\Put(
-        path: '/api/users/{id}',
-        summary: 'Update user',
-        description: 'Update user data. Requires ADMIN role.',
-        tags: ['Users'],
-        parameters: [
-            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
-        ],
-        requestBody: new OA\RequestBody(
-            required: true,
-            content: new OA\JsonContent(
-                properties: [
-                    new OA\Property(property: 'name', type: 'string'),
-                    new OA\Property(property: 'email', type: 'string'),
-                    new OA\Property(property: 'roles', type: 'array', items: new OA\Items(type: 'string')),
-                    new OA\Property(property: 'active', type: 'boolean')
-                ]
-            )
-        ),
-        responses: [
-            new OA\Response(response: 200, description: 'User updated', content: new OA\JsonContent(ref: '#/components/schemas/User')),
-            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
-            new OA\Response(response: 404, description: 'User not found', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
-        ]
-    )]
-    public function update(string $id, UserRepository $repo, Request $request): JsonResponse
-    {
-        if (!$this->security->hasRole($request, 'ROLE_ADMIN')) {
-            return $this->jsonError(ApiError::forbidden());
-        }
-
-        $userId = (int)$id;
-        $user = $repo->find($userId);
-        if (!$user) {
-            return $this->jsonError(ApiError::notFound('User not found'));
-        }
-
-        $data = json_decode($request->getContent(), true) ?? [];
-        
-        if (isset($data['name'])) {
-            $user->setName($data['name']);
-        }
-        
-        if (isset($data['email'])) {
-            $user->setEmail($data['email']);
-        }
-        
-        if (isset($data['roles']) && is_array($data['roles'])) {
-            $user->setRoles($data['roles']);
-        }
-        
-        if (isset($data['active']) && is_bool($data['active'])) {
-            if ($data['active']) {
-                $user->unblock();
-            } else {
-                $user->block('Deactivated by admin');
-            }
-        }
-
-        $repo->save($user, true);
-        
-        return $this->json($user, 200, [], ['groups' => ['user:read']]);
-    }
-
-    #[IsGranted('ROLE_ADMIN')]
-    #[OA\Delete(
-        path: '/api/users/{id}',
-        summary: 'Delete user',
-        description: 'Delete a user. Requires ADMIN role. Cannot delete own account.',
-        tags: ['Users'],
-        parameters: [
-            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
-        ],
-        responses: [
-            new OA\Response(response: 204, description: 'User deleted'),
-            new OA\Response(response: 400, description: 'Cannot delete own account', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
-            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
-            new OA\Response(response: 404, description: 'User not found', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
-        ]
-    )]
-    public function delete(string $id, UserRepository $repo, Request $request): JsonResponse
-    {
-        if (!$this->security->hasRole($request, 'ROLE_ADMIN')) {
-            return $this->jsonError(ApiError::forbidden());
-        }
-
-        $userId = (int)$id;
-        $currentUserId = $this->security->getCurrentUserId($request);
-        
-        // Prevent admin from deleting themselves
-        if ($userId === $currentUserId) {
-            return $this->jsonError(ApiError::badRequest('Cannot delete your own account'));
-        }
-
-        $user = $repo->find($userId);
-        if (!$user) {
-            return $this->jsonError(ApiError::notFound('User not found'));
-        }
-
-        $repo->remove($user, true);
-
-        return new JsonResponse(null, 204);
-    }
-
-    #[OA\Put(
-        path: '/api/users/me/password',
-        summary: 'Change current user password',
-        tags: ['User'],
-        requestBody: new OA\RequestBody(
-            required: true,
-            content: new OA\JsonContent(
-                properties: [
-                    new OA\Property(property: 'oldPassword', type: 'string', example: 'oldpass123'),
-                    new OA\Property(property: 'newPassword', type: 'string', example: 'newpass123')
-                ],
-                required: ['oldPassword', 'newPassword']
-            )
-        ),
-        responses: [
-            new OA\Response(
-                response: 200,
-                description: 'Password changed successfully',
-                content: new OA\JsonContent(
-                    properties: [
-                        new OA\Property(property: 'message', type: 'string', example: 'Password changed successfully')
-                    ]
-                )
-            ),
-            new OA\Response(
-                response: 400,
-                description: 'Invalid old password or validation error',
-                content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')
-            ),
-            new OA\Response(response: 401, description: 'Unauthorized', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
-        ]
-    )]
-    #[IsGranted('ROLE_USER')]
-    public function changePassword(Request $request, UserRepository $repo): JsonResponse
-    {
-        try {
-            $data = json_decode($request->getContent(), true);
-            
-            if (!isset($data['oldPassword']) || !isset($data['newPassword'])) {
-                return $this->jsonError(ApiError::badRequest('Missing required fields: oldPassword, newPassword'));
-            }
-
-            $oldPassword = $data['oldPassword'];
-            $newPassword = $data['newPassword'];
-
-            // Validate new password
-            if (strlen($newPassword) < 6) {
-                return $this->jsonError(ApiError::badRequest('New password must be at least 6 characters long'));
-            }
-
-            $currentUserId = $this->security->getCurrentUserId($request);
-            $user = $repo->find($currentUserId);
-
-            if (!$user) {
-                return $this->jsonError(ApiError::notFound('User not found'));
-            }
-
-            // Verify old password
-            if (!password_verify($oldPassword, $user->getPassword())) {
-                return $this->jsonError(ApiError::badRequest('Invalid old password'));
-            }
-
-            // Hash and set new password
-            $hashedPassword = password_hash($newPassword, PASSWORD_BCRYPT);
-            $user->setPassword($hashedPassword);
-            $repo->save($user, true);
-
-            return $this->jsonSuccess(['message' => 'Password changed successfully']);
-
-        } catch (\Exception $e) {
-            return $this->jsonError(ApiError::internalError('Failed to change password'));
         }
     }
 }

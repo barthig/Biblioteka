@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 namespace App\EventSubscriber;
 
 use App\Dto\ApiError;
@@ -7,7 +8,7 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 
-class ApiResponseNormalizationSubscriber implements EventSubscriberInterface
+final class ApiResponseNormalizationSubscriber implements EventSubscriberInterface
 {
     public static function getSubscribedEvents(): array
     {

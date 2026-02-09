@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 namespace App\EventSubscriber;
 
 use App\Entity\Book;
@@ -9,7 +10,7 @@ use Doctrine\ORM\Event\PostUpdateEventArgs;
 use Doctrine\ORM\Events;
 use Symfony\Component\Messenger\MessageBusInterface;
 
-class BookEmbeddingSubscriber implements EventSubscriber
+final class BookEmbeddingSubscriber implements EventSubscriber
 {
     public function __construct(private MessageBusInterface $bus)
     {

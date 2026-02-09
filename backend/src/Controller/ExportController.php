@@ -12,7 +12,6 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
-use Symfony\Component\Routing\Annotation\Route;
 use OpenApi\Attributes as OA;
 
 #[OA\Tag(name: 'Export')]
@@ -23,7 +22,6 @@ class ExportController extends AbstractController
         private readonly SecurityService $security
     ) {}
 
-    #[Route('/api/books/export', methods: ['GET'])]
     #[OA\Get(
         path: '/api/books/export',
         summary: 'Export books to CSV',

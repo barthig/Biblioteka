@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 namespace App\EventSubscriber;
 
 use App\Repository\UserRepository;
@@ -17,7 +18,7 @@ use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
  * It's kept for reference but disabled by default.
  * Set LEGACY_AUTH_SUBSCRIBER=1 to enable (not recommended).
  */
-class ApiAuthSubscriber implements EventSubscriberInterface
+final class ApiAuthSubscriber implements EventSubscriberInterface
 {
     public function __construct(
         private UserRepository $users,
