@@ -9,14 +9,15 @@ Poniższa lista podsumowuje brakujące elementy wymagane do obrony tezy o archit
 - ✅ **Wydzielenie mikroserwisów**
   - ✅ Notification Service (`notification-service/`) — Python/FastAPI, własna baza, RabbitMQ consumer
   - ✅ Recommendation Service (`recommendation-service/`) — Python/FastAPI, pgvector, embeddingi AI
-  - 🔧 Catalog & Loan Service — obecny backend Symfony (dalej jako centralny serwis, ale ze zdefiniowanymi bounded contexts)
+  - ✅ Catalog & Loan Service — backend Symfony z wydzielonymi bounded contexts
 - ✅ **Database-per-service** — 3 oddzielne PostgreSQL: main (5432), notification (5433), recommendation (5434)
 - ✅ **Komunikacja międzyserwisowa**
   - ✅ Integration events via RabbitMQ topic exchange (`biblioteka.events`)
-  - ✅ IntegrationEventBridgeSubscriber — bridge domain events → RabbitMQ
+  - ✅ IntegrationEventBridgeSubscriber — bridge 14 domain events → RabbitMQ
   - ✅ REST API per serwis (backend :80, notification :8001, recommendation :8002)
-- ✅ **API Gateway** — Traefik v3 z routingiem, rate limiting, circuit breaker, retry
+- ✅ **API Gateway** — Traefik v3 z routingiem, rate limiting, circuit breaker, retry, OTLP tracing
 - ✅ **Diagram architektury rozproszonej (C4)** — Context, Container, Component (`docs/c4/`)
+- ✅ **Poprawność event pipeline** — wszystkie eventy (book.*, loan.*, reservation.*, fine.*, user.*, rating.*, favorite.*) są dispatchowane przez handlery i bridgeowane do RabbitMQ
 - ⬜ **Opis CAP i spójności danych** w pracy pisemnej (eventual consistency przez RabbitMQ)
 
 ## B. Wysoki priorytet (istotnie wzmacnia pracę)
@@ -25,7 +26,7 @@ Poniższa lista podsumowuje brakujące elementy wymagane do obrony tezy o archit
 - ✅ **Observability stack**
   - ✅ Prometheus (metryki serwisów + Traefik) — `:9090`
   - ✅ Grafana (dashboard z panelami) — `:3001`
-  - ✅ Jaeger (distributed tracing) — `:16686`
+  - ✅ Jaeger (distributed tracing via OTLP) — `:16686`
 - ✅ **Benchmarki**
   - ✅ k6: catalog-search, loan-stress, chaos-test, recommendation-benchmark (`benchmarks/`)
 - ⬜ **Testy odporności** (chaos testing — uruchom skrypt + kill serwis, opisz wyniki)
@@ -40,8 +41,8 @@ Poniższa lista podsumowuje brakujące elementy wymagane do obrony tezy o archit
 ## D. Dokumentacja i artefakty
 
 - ✅ Specyfikacja API backend (Nelmio ApiDoc / OpenAPI)
-- ⬜ Specyfikacja API notification-service (FastAPI auto-docs `:8001/docs`)
-- ⬜ Specyfikacja API recommendation-service (FastAPI auto-docs `:8002/docs`)
+- ✅ Specyfikacja API notification-service (FastAPI auto-docs `:8001/docs`)
+- ✅ Specyfikacja API recommendation-service (FastAPI auto-docs `:8002/docs`)
 - ✅ Diagramy C4 PlantUML (`docs/c4/`)
 - ⬜ Diagramy UML (use case, sekwencji dla kluczowych procesów)
 - ⬜ Opis decyzji architektonicznych (ADR)

@@ -3,6 +3,7 @@ namespace App\Application\Handler\Query;
 
 use App\Application\Query\Loan\GetLoanQuery;
 use App\Entity\Loan;
+use App\Exception\AuthorizationException;
 use App\Repository\LoanRepository;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
@@ -24,7 +25,7 @@ class GetLoanHandler
 
         // Authorization check
         if (!$query->isLibrarian && $loan->getUser()->getId() !== $query->userId) {
-            throw new \RuntimeException('Forbidden');
+            throw AuthorizationException::notOwner();
         }
 
         return $loan;

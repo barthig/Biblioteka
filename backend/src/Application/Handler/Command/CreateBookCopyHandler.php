@@ -3,6 +3,10 @@ namespace App\Application\Handler\Command;
 
 use App\Application\Command\BookInventory\CreateBookCopyCommand;
 use App\Entity\BookCopy;
+use App\Exception\BusinessLogicException;
+use App\Exception\ConflictException;
+use App\Exception\NotFoundException;
+use App\Exception\ValidationException;
 use App\Repository\BookRepository;
 use App\Repository\BookCopyRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -22,7 +26,7 @@ class CreateBookCopyHandler
     {
         $book = $this->bookRepository->find($command->bookId);
         if (!$book) {
-            throw new \RuntimeException('Book not found');
+            throw NotFoundException::forBook($command->bookId);
         }
 
         $inventoryCode = $command->inventoryCode && trim($command->inventoryCode) !== ''
@@ -30,11 +34,11 @@ class CreateBookCopyHandler
             : $this->generateInventoryCode();
 
         if (!preg_match('/^[A-Z0-9\-_.]+$/', $inventoryCode)) {
-            throw new \RuntimeException('Invalid inventoryCode format');
+            throw ValidationException::forField('inventoryCode', 'Invalid format. Only uppercase letters, digits, hyphens, dots and underscores are allowed.');
         }
 
         if ($this->bookCopyRepository->findOneBy(['inventoryCode' => $inventoryCode])) {
-            throw new \RuntimeException('Inventory code already exists');
+            throw ConflictException::duplicateEntry('inventoryCode', $inventoryCode);
         }
 
         try {
@@ -43,7 +47,7 @@ class CreateBookCopyHandler
                 ->setStatus($this->normalizeStatus($command->status))
                 ->setAccessType($this->normalizeAccessType($command->accessType));
         } catch (\InvalidArgumentException $e) {
-            throw new \RuntimeException($e->getMessage());
+            throw ValidationException::forField('status', $e->getMessage());
         }
 
         if ($command->location) {
@@ -64,7 +68,7 @@ class CreateBookCopyHandler
             $conn->commit();
         } catch (\Exception $e) {
             $conn->rollBack();
-            throw new \RuntimeException('Błąd podczas tworzenia egzemplarza');
+            throw BusinessLogicException::operationFailed('Create book copy', $e->getMessage());
         }
 
         return $copy;

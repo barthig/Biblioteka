@@ -3,6 +3,8 @@ namespace App\Application\Handler\Command;
 
 use App\Application\Command\Acquisition\CancelOrderCommand;
 use App\Entity\AcquisitionOrder;
+use App\Exception\BusinessLogicException;
+use App\Exception\NotFoundException;
 use App\Repository\AcquisitionOrderRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
@@ -20,11 +22,11 @@ class CancelOrderHandler
     {
         $order = $this->repository->find($command->id);
         if (!$order) {
-            throw new \RuntimeException('Order not found');
+            throw NotFoundException::forEntity('Order', $command->id);
         }
 
         if ($order->getStatus() === AcquisitionOrder::STATUS_RECEIVED) {
-            throw new \RuntimeException('Order already received');
+            throw BusinessLogicException::invalidState('Cannot cancel an already received order');
         }
 
         $order->cancel();

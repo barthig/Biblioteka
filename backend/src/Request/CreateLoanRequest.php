@@ -5,7 +5,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 class CreateLoanRequest
 {
-    #[Assert\NotBlank(message: 'ID książki jest wymagane')]
+    #[Assert\NotBlank(message: 'Book ID is required')]
     #[Assert\Positive]
     public ?int $bookId = null;
 

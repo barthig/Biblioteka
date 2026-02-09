@@ -5,7 +5,7 @@ use App\Entity\Book;
 use App\Entity\BookCopy;
 use App\Entity\Reservation;
 use App\Repository\BookCopyRepository;
-use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\ORM\EntityManagerInterface;
 
 /**
  * Service for managing book borrowing and returning operations.
@@ -15,11 +15,10 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class BookService
 {
-    private ManagerRegistry $doctrine;
-
-    public function __construct(ManagerRegistry $doctrine)
-    {
-        $this->doctrine = $doctrine;
+    public function __construct(
+        private readonly EntityManagerInterface $entityManager,
+        private readonly BookCopyRepository $bookCopyRepository
+    ) {
     }
 
     /**
@@ -40,9 +39,6 @@ class BookService
      */
     public function borrow(Book $book, ?Reservation $reservation = null, ?BookCopy $preferredCopy = null, bool $flush = true): ?BookCopy
     {
-        /** @var BookCopyRepository $repo */
-        $repo = $this->doctrine->getRepository(BookCopy::class);
-
         if ($preferredCopy !== null) {
             if ($preferredCopy->getBook()->getId() !== $book->getId()) {
                 return null;
@@ -55,7 +51,7 @@ class BookService
 
             $copy = $preferredCopy;
         } else {
-            $available = $repo->findAvailableCopies($book, 1);
+            $available = $this->bookCopyRepository->findAvailableCopies($book, 1);
             if (empty($available)) {
                 return null;
             }
@@ -68,15 +64,14 @@ class BookService
 
         $book->recalculateInventoryCounters();
 
-        $em = $this->doctrine->getManager();
-        $em->persist($copy);
-        $em->persist($book);
+        $this->entityManager->persist($copy);
+        $this->entityManager->persist($book);
         if ($reservation) {
-            $em->persist($reservation);
+            $this->entityManager->persist($reservation);
         }
         
         if ($flush) {
-            $em->flush();
+            $this->entityManager->flush();
         }
 
         return $copy;
@@ -95,11 +90,9 @@ class BookService
      */
     public function reserveCopy(Book $book, ?array $preferredAccessTypes = null, bool $allowFallback = false): ?BookCopy
     {
-        /** @var BookCopyRepository $repo */
-        $repo = $this->doctrine->getRepository(BookCopy::class);
-        $available = $repo->findAvailableCopies($book, 1, $preferredAccessTypes);
+        $available = $this->bookCopyRepository->findAvailableCopies($book, 1, $preferredAccessTypes);
         if (empty($available) && $allowFallback) {
-            $available = $repo->findAvailableCopies($book, 1);
+            $available = $this->bookCopyRepository->findAvailableCopies($book, 1);
         }
         if (empty($available)) {
             return null;
@@ -109,10 +102,9 @@ class BookService
         $copy->setStatus(BookCopy::STATUS_RESERVED);
         $book->recalculateInventoryCounters();
 
-        $em = $this->doctrine->getManager();
-        $em->persist($copy);
-        $em->persist($book);
-        $em->flush();
+        $this->entityManager->persist($copy);
+        $this->entityManager->persist($book);
+        $this->entityManager->flush();
 
         return $copy;
     }
@@ -128,10 +120,9 @@ class BookService
         $copy->setStatus(BookCopy::STATUS_AVAILABLE);
         $book->recalculateInventoryCounters();
 
-        $em = $this->doctrine->getManager();
-        $em->persist($copy);
-        $em->persist($book);
-        $em->flush();
+        $this->entityManager->persist($copy);
+        $this->entityManager->persist($book);
+        $this->entityManager->flush();
     }
 
     /**
@@ -146,20 +137,17 @@ class BookService
     {
         if ($copy) {
             $copy->setStatus(BookCopy::STATUS_AVAILABLE);
+            $this->entityManager->persist($copy);
         }
 
         if ($recalculate) {
             $book->recalculateInventoryCounters();
         }
 
-        $em = $this->doctrine->getManager();
-        if ($copy) {
-            $em->persist($copy);
-        }
-        $em->persist($book);
+        $this->entityManager->persist($book);
         
         if ($flush) {
-            $em->flush();
+            $this->entityManager->flush();
         }
     }
 
@@ -173,10 +161,9 @@ class BookService
         $book = $copy->getBook();
         $book->recalculateInventoryCounters();
 
-        $em = $this->doctrine->getManager();
-        $em->persist($copy);
-        $em->persist($book);
-        $em->flush();
+        $this->entityManager->persist($copy);
+        $this->entityManager->persist($book);
+        $this->entityManager->flush();
     }
 
     public function withdrawCopy(Book $book, BookCopy $copy, ?string $conditionNote = null, bool $flush = true): void
@@ -188,11 +175,10 @@ class BookService
 
         $book->recalculateInventoryCounters();
 
-        $em = $this->doctrine->getManager();
-        $em->persist($copy);
-        $em->persist($book);
+        $this->entityManager->persist($copy);
+        $this->entityManager->persist($book);
         if ($flush) {
-            $em->flush();
+            $this->entityManager->flush();
         }
     }
 }

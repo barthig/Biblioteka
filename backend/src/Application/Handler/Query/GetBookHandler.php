@@ -4,6 +4,7 @@ namespace App\Application\Handler\Query;
 use App\Application\Query\Book\GetBookQuery;
 use App\Entity\Book;
 use App\Entity\Favorite;
+use App\Exception\NotFoundException;
 use App\Repository\BookRepository;
 use App\Repository\RatingRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -24,7 +25,7 @@ class GetBookHandler
         $book = $this->bookRepository->find($query->bookId);
         
         if (!$book) {
-            throw new \RuntimeException('Book not found');
+            throw NotFoundException::forBook($query->bookId);
         }
 
         // Add rating information

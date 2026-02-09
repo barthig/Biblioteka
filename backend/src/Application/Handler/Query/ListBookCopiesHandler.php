@@ -3,6 +3,7 @@ namespace App\Application\Handler\Query;
 
 use App\Application\Query\BookInventory\ListBookCopiesQuery;
 use App\Entity\BookCopy;
+use App\Exception\NotFoundException;
 use App\Repository\BookRepository;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
@@ -18,7 +19,7 @@ class ListBookCopiesHandler
     {
         $book = $this->bookRepository->find($query->bookId);
         if (!$book) {
-            throw new \RuntimeException('Book not found');
+            throw NotFoundException::forBook($query->bookId);
         }
 
         $copies = [];

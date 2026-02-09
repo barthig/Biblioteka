@@ -305,6 +305,61 @@ def _handle_loan_returned(payload: dict):
         db.close()
 
 
+def _handle_reservation_expired(payload: dict):
+    """Handle reservation.expired event — inform user."""
+    db = SessionLocal()
+    try:
+        user_id = payload["user_id"]
+        reservation_id = payload.get("reservation_id", 0)
+        user_email = payload.get("user_email", "")
+        user_name = payload.get("user_name", "Czytelniku")
+        book_title = payload.get("book_title", "")
+
+        fingerprint = f"reservation_expired_{reservation_id}"
+        if _is_duplicate(db, fingerprint):
+            return
+
+        subject = f'Rezerwacja wygasła: "{book_title}"'
+        text = (
+            f"Cześć {user_name}!\n\n"
+            f'Twoja rezerwacja książki "{book_title}" wygasła, '
+            f"ponieważ nie została odebrana w wyznaczonym terminie.\n"
+            f"Możesz ponownie złożyć rezerwację.\n\n"
+            f"Pozdrawiamy,\nTwoja Biblioteka"
+        )
+
+        result = _send_email(user_email, subject, text)
+        _log_notification(db, user_id, "reservation_expired", "email", fingerprint, payload, result)
+    finally:
+        db.close()
+
+
+def _handle_user_blocked(payload: dict):
+    """Handle user.blocked event — notify user about account block."""
+    db = SessionLocal()
+    try:
+        user_id = payload["user_id"]
+        user_email = payload.get("user_email", "")
+        reason = payload.get("reason", "naruszenie regulaminu")
+
+        fingerprint = f"user_blocked_{user_id}"
+        if _is_duplicate(db, fingerprint):
+            return
+
+        subject = "Twoje konto zostało zablokowane"
+        text = (
+            f"Informujemy, że Twoje konto w systemie bibliotecznym zostało zablokowane.\n\n"
+            f"Powód: {reason}\n\n"
+            f"W celu wyjaśnienia prosimy o kontakt z biblioteką.\n\n"
+            f"Pozdrawiamy,\nTwoja Biblioteka"
+        )
+
+        result = _send_email(user_email, subject, text)
+        _log_notification(db, user_id, "user_blocked", "email", fingerprint, payload, result)
+    finally:
+        db.close()
+
+
 # ─── Routing table ──────────────────────────────────────────────────
 
 EVENT_HANDLERS = {
@@ -314,5 +369,7 @@ EVENT_HANDLERS = {
     "loan.due_reminder": _handle_loan_due_reminder,
     "reservation.created": _handle_reservation_created,
     "reservation.fulfilled": _handle_reservation_fulfilled,
+    "reservation.expired": _handle_reservation_expired,
     "fine.created": _handle_fine_created,
+    "user.blocked": _handle_user_blocked,
 }

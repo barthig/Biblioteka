@@ -6,6 +6,9 @@ use App\Entity\Book;
 use App\Entity\Reservation;
 use App\Entity\User;
 use App\Event\ReservationCreatedEvent;
+use App\Exception\BusinessLogicException;
+use App\Exception\NotFoundException;
+use App\Exception\ValidationException;
 use App\Message\ReservationQueuedNotification;
 use App\Repository\ReservationRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -18,7 +21,7 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 class CreateReservationHandler
 {
     public function __construct(
-        private EntityManagerInterface $em,
+        private EntityManagerInterface $entityManager,
         private ReservationRepository $reservationRepository,
         private MessageBusInterface $bus,
         private LoggerInterface $logger,
@@ -30,33 +33,36 @@ class CreateReservationHandler
     {
         // Issue #14: Validate expiresInDays
         if ($command->expiresInDays < 1 || $command->expiresInDays > 14) {
-            throw new \InvalidArgumentException('Reservation expiry must be between 1 and 14 days');
+            throw ValidationException::forField('expiresInDays', 'Reservation expiry must be between 1 and 14 days');
         }
 
-        $userRepo = $this->em->getRepository(User::class);
-        $bookRepo = $this->em->getRepository(Book::class);
+        $userRepo = $this->entityManager->getRepository(User::class);
+        $bookRepo = $this->entityManager->getRepository(Book::class);
 
         $user = $userRepo->find($command->userId);
         $book = $bookRepo->find($command->bookId);
         
-        if (!$user || !$book) {
-            throw new \RuntimeException('User or book not found');
+        if (!$user) {
+            throw NotFoundException::forUser($command->userId);
+        }
+        if (!$book) {
+            throw NotFoundException::forBook($command->bookId);
         }
 
         // Issue #22: Check user's active reservation limit (max 5)
         $activeCount = $this->reservationRepository->countActiveByUser($user);
         if ($activeCount >= 5) {
-            throw new \RuntimeException('Osiągnięto limit aktywnych rezerwacji (max 5)');
+            throw BusinessLogicException::maxReservationsReached(5);
         }
 
         // Issue #15: Check actual availability, not just copy count
         $availableCopies = $book->getCopies();
         if ($availableCopies > 0) {
-            throw new \RuntimeException('Book currently available, wypożycz zamiast rezerwować');
+            throw BusinessLogicException::invalidState('Book is currently available — borrow instead of reserving.');
         }
 
         if ($this->reservationRepository->findFirstActiveForUserAndBook($user, $book)) {
-            throw new \RuntimeException('Masz już aktywną rezerwację na tę książkę');
+            throw BusinessLogicException::bookAlreadyReserved();
         }
 
         $reservation = (new Reservation())
@@ -64,8 +70,8 @@ class CreateReservationHandler
             ->setUser($user)
             ->setExpiresAt((new \DateTimeImmutable())->modify("+{$command->expiresInDays} days"));
 
-        $this->em->persist($reservation);
-        $this->em->flush();
+        $this->entityManager->persist($reservation);
+        $this->entityManager->flush();
 
         $this->eventDispatcher->dispatch(new ReservationCreatedEvent($reservation));
 

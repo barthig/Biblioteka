@@ -6,6 +6,8 @@ use App\Entity\BookCopy;
 use App\Entity\Fine;
 use App\Entity\Loan;
 use App\Event\BookReturnedEvent;
+use App\Exception\BusinessLogicException;
+use App\Exception\NotFoundException;
 use App\Message\ReservationReadyMessage;
 use App\Repository\LoanRepository;
 use App\Repository\ReservationRepository;
@@ -20,7 +22,7 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 class ReturnLoanHandler
 {
     public function __construct(
-        private EntityManagerInterface $em,
+        private EntityManagerInterface $entityManager,
         private BookService $bookService,
         private LoanRepository $loanRepository,
         private ReservationRepository $reservationRepository,
@@ -34,14 +36,14 @@ class ReturnLoanHandler
     {
         $loan = $this->loanRepository->find($command->loanId);
         if (!$loan) {
-            throw new \RuntimeException('Loan not found');
+            throw NotFoundException::forLoan($command->loanId);
         }
 
         // Authorization check happens in controller
         // Here we just execute the business logic
 
         if ($loan->getReturnedAt() !== null) {
-            throw new \RuntimeException('Loan already returned');
+            throw BusinessLogicException::loanAlreadyReturned();
         }
 
         // Check if loan is overdue and create fine
@@ -63,7 +65,7 @@ class ReturnLoanHandler
                 $fine->setCurrency('PLN');
                 $fine->setReason("Zwrot po terminie ({$daysOverdue} dni spóźnienia)");
                 
-                $this->em->persist($fine);
+                $this->entityManager->persist($fine);
                 
                 $this->logger->info('Fine created for overdue loan', [
                     'loanId' => $loan->getId(),
@@ -89,17 +91,17 @@ class ReturnLoanHandler
             $nextReservation->setExpiresAt((new \DateTimeImmutable())->modify('+2 days'));
             $reservationForNotification = $nextReservation;
 
-            $this->em->beginTransaction();
+            $this->entityManager->beginTransaction();
             try {
                 $loan->getBook()->recalculateInventoryCounters();
-                $this->em->persist($loan);
-                $this->em->persist($nextReservation);
+                $this->entityManager->persist($loan);
+                $this->entityManager->persist($nextReservation);
                 // Fine was already persisted above
-                $this->em->flush();
-                $this->em->commit();
+                $this->entityManager->flush();
+                $this->entityManager->commit();
             } catch (\Exception $e) {
-                $this->em->rollback();
-                throw new \RuntimeException('Nie udało się zwrócić wypożyczenia: ' . $e->getMessage());
+                $this->entityManager->rollback();
+                throw BusinessLogicException::operationFailed('ReturnLoan', $e->getMessage());
             }
 
             if ($reservationForNotification) {
@@ -120,9 +122,9 @@ class ReturnLoanHandler
             }
         } else {
             $this->bookService->restore($loan->getBook(), $loan->getBookCopy());
-            $this->em->persist($loan);
+            $this->entityManager->persist($loan);
             // Fine was already persisted above
-            $this->em->flush();
+            $this->entityManager->flush();
         }
 
         // Dispatch event

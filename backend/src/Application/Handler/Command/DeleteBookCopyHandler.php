@@ -3,6 +3,8 @@ namespace App\Application\Handler\Command;
 
 use App\Application\Command\BookInventory\DeleteBookCopyCommand;
 use App\Entity\BookCopy;
+use App\Exception\BusinessLogicException;
+use App\Exception\NotFoundException;
 use App\Repository\BookRepository;
 use App\Repository\BookCopyRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -22,20 +24,20 @@ class DeleteBookCopyHandler
     {
         $book = $this->bookRepository->find($command->bookId);
         if (!$book) {
-            throw new \RuntimeException('Book not found');
+            throw NotFoundException::forBook($command->bookId);
         }
 
         $copy = $this->bookCopyRepository->find($command->copyId);
         if (!$copy || $copy->getBook()->getId() !== $book->getId()) {
-            throw new \RuntimeException('Inventory copy not found');
+            throw NotFoundException::forEntity('BookCopy', $command->copyId);
         }
 
         if ($copy->getStatus() === BookCopy::STATUS_BORROWED) {
-            throw new \RuntimeException('Cannot delete borrowed copy');
+            throw BusinessLogicException::invalidState('Cannot delete a borrowed copy');
         }
 
         if ($copy->getStatus() === BookCopy::STATUS_RESERVED) {
-            throw new \RuntimeException('Cannot delete reserved copy');
+            throw BusinessLogicException::invalidState('Cannot delete a reserved copy');
         }
 
         $this->entityManager->remove($copy);

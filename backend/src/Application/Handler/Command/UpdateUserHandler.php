@@ -3,6 +3,8 @@ namespace App\Application\Handler\Command;
 
 use App\Application\Command\User\UpdateUserCommand;
 use App\Entity\User;
+use App\Exception\NotFoundException;
+use App\Exception\ValidationException;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
@@ -21,7 +23,7 @@ class UpdateUserHandler
         $user = $this->userRepository->find($command->userId);
         
         if (!$user) {
-            throw new \RuntimeException('User not found');
+            throw NotFoundException::forUser($command->userId);
         }
 
         if ($command->name !== null) {
@@ -78,7 +80,7 @@ class UpdateUserHandler
             try {
                 $user->setMembershipGroup($command->membershipGroup);
             } catch (\InvalidArgumentException $exception) {
-                throw new \RuntimeException('Unknown membership group');
+                throw ValidationException::forField('membershipGroup', 'Unknown membership group');
             }
         }
 

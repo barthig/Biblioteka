@@ -133,18 +133,18 @@ def get_user_recommendations(
         centroid = np.mean(vectors, axis=0).tolist()
 
         # Find closest books to centroid that user hasn't seen
-        placeholders = ", ".join(str(bid) for bid in book_ids)
+        # Use parameterized ANY() instead of f-string interpolation to prevent SQL injection
         results = db.execute(
-            text(f"""
+            text("""
                 SELECT id, title, author, category,
                        1 - (embedding <=> :centroid) AS similarity
                 FROM book_embedding
-                WHERE id NOT IN ({placeholders})
+                WHERE id != ALL(:excluded_ids)
                   AND embedding IS NOT NULL
                 ORDER BY embedding <=> :centroid
                 LIMIT :limit
             """),
-            {"centroid": str(centroid), "limit": limit},
+            {"centroid": str(centroid), "excluded_ids": book_ids, "limit": limit},
         ).fetchall()
 
         return {

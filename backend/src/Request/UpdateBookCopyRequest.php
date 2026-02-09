@@ -10,19 +10,19 @@ class UpdateBookCopyRequest
 
     #[Assert\Choice(
         choices: ['AVAILABLE', 'BORROWED', 'RESERVED', 'WITHDRAWN', 'MAINTENANCE'],
-        message: 'Nieprawidlowy status egzemplarza'
+        message: 'Invalid copy status'
     )]
     public ?string $status = null;
 
-    #[Assert\Length(max: 120, maxMessage: 'Lokalizacja moze miec maksymalnie 120 znakow')]
+    #[Assert\Length(max: 120, maxMessage: 'Location cannot exceed 120 characters')]
     public ?string $location = null;
 
     #[Assert\Choice(
         choices: ['STORAGE', 'OPEN_STACK', 'REFERENCE'],
-        message: 'Nieprawidlowy typ dostepu'
+        message: 'Invalid access type'
     )]
     public ?string $accessType = null;
 
-    #[Assert\Length(max: 120, maxMessage: 'Stan moze miec maksymalnie 120 znakow')]
+    #[Assert\Length(max: 120, maxMessage: 'Condition cannot exceed 120 characters')]
     public ?string $condition = null;
 }

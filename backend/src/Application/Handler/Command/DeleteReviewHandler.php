@@ -3,6 +3,8 @@ namespace App\Application\Handler\Command;
 
 use App\Application\Command\Review\DeleteReviewCommand;
 use App\Entity\Rating;
+use App\Exception\AuthorizationException;
+use App\Exception\NotFoundException;
 use App\Repository\ReviewRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
@@ -11,7 +13,7 @@ use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 class DeleteReviewHandler
 {
     public function __construct(
-        private EntityManagerInterface $em,
+        private EntityManagerInterface $entityManager,
         private ReviewRepository $reviewRepository
     ) {
     }
@@ -21,23 +23,23 @@ class DeleteReviewHandler
         $review = $this->reviewRepository->find($command->reviewId);
         
         if (!$review) {
-            throw new \RuntimeException('Review not found');
+            throw NotFoundException::forEntity('Review', $command->reviewId);
         }
 
         // Authorization: user can delete own review, or librarian can delete any
         if (!$command->isLibrarian && $review->getUser()->getId() !== $command->userId) {
-            throw new \RuntimeException('Forbidden: You can only delete your own reviews');
+            throw AuthorizationException::notOwner();
         }
 
-        $rating = $this->em->getRepository(Rating::class)->findOneBy([
+        $rating = $this->entityManager->getRepository(Rating::class)->findOneBy([
             'user' => $review->getUser(),
             'book' => $review->getBook(),
         ]);
 
-        $this->em->remove($review);
+        $this->entityManager->remove($review);
         if ($rating) {
-            $this->em->remove($rating);
+            $this->entityManager->remove($rating);
         }
-        $this->em->flush();
+        $this->entityManager->flush();
     }
 }

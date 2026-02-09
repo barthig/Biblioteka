@@ -4,6 +4,7 @@ namespace App\Application\Handler\Command;
 use App\Application\Command\Acquisition\ReceiveOrderCommand;
 use App\Entity\AcquisitionExpense;
 use App\Entity\AcquisitionOrder;
+use App\Exception\NotFoundException;
 use App\Repository\AcquisitionExpenseRepository;
 use App\Repository\AcquisitionOrderRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -23,7 +24,7 @@ class ReceiveOrderHandler
     {
         $order = $this->orderRepository->find($command->id);
         if (!$order) {
-            throw new \RuntimeException('Order not found');
+            throw NotFoundException::forEntity('Order', $command->id);
         }
 
         $receivedAt = $command->receivedAt && strtotime($command->receivedAt)

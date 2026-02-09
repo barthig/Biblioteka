@@ -3,6 +3,9 @@ namespace App\Application\Handler\Command;
 
 use App\Application\Command\BookInventory\UpdateBookCopyCommand;
 use App\Entity\BookCopy;
+use App\Exception\ConflictException;
+use App\Exception\NotFoundException;
+use App\Exception\ValidationException;
 use App\Repository\BookRepository;
 use App\Repository\BookCopyRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -22,34 +25,34 @@ class UpdateBookCopyHandler
     {
         $book = $this->bookRepository->find($command->bookId);
         if (!$book) {
-            throw new \RuntimeException('Book not found');
+            throw NotFoundException::forBook($command->bookId);
         }
 
         $copy = $this->bookCopyRepository->find($command->copyId);
         if (!$copy || $copy->getBook()->getId() !== $book->getId()) {
-            throw new \RuntimeException('Inventory copy not found');
+            throw NotFoundException::forEntity('BookCopy', $command->copyId);
         }
 
         if ($command->status !== null) {
             try {
                 $copy->setStatus($this->normalizeStatus($command->status));
             } catch (\InvalidArgumentException $e) {
-                throw new \RuntimeException($e->getMessage());
+                throw ValidationException::forField('status', $e->getMessage());
             }
         }
 
         if ($command->inventoryCode !== null) {
             $inventoryCode = strtoupper(trim($command->inventoryCode));
             if ($inventoryCode === '') {
-                throw new \RuntimeException('Inventory code cannot be empty');
+                throw ValidationException::forRequiredField('inventoryCode');
             }
             if (!preg_match('/^[A-Z0-9\\-_.]+$/', $inventoryCode)) {
-                throw new \RuntimeException('Invalid inventoryCode format');
+                throw ValidationException::forField('inventoryCode', 'Invalid format. Only uppercase letters, digits, hyphens, dots and underscores are allowed.');
             }
             if ($copy->getInventoryCode() !== $inventoryCode) {
                 $existing = $this->bookCopyRepository->findOneByInventoryCode($inventoryCode);
                 if ($existing && $existing->getId() !== $copy->getId()) {
-                    throw new \RuntimeException('Inventory code already exists');
+                    throw ConflictException::duplicateEntry('inventoryCode', $inventoryCode);
                 }
                 $copy->setInventoryCode($inventoryCode);
             }
@@ -59,7 +62,7 @@ class UpdateBookCopyHandler
             try {
                 $copy->setAccessType($this->normalizeAccessType($command->accessType));
             } catch (\InvalidArgumentException $e) {
-                throw new \RuntimeException($e->getMessage());
+                throw ValidationException::forField('accessType', $e->getMessage());
             }
         }
 

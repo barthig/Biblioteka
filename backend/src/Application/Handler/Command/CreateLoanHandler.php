@@ -9,6 +9,8 @@ use App\Entity\Reservation;
 use App\Entity\User;
 use App\Entity\UserBookInteraction;
 use App\Event\BookBorrowedEvent;
+use App\Exception\BusinessLogicException;
+use App\Exception\NotFoundException;
 use App\Repository\BookCopyRepository;
 use App\Repository\LoanRepository;
 use App\Repository\ReservationRepository;
@@ -23,7 +25,7 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 class CreateLoanHandler
 {
     public function __construct(
-        private EntityManagerInterface $em,
+        private EntityManagerInterface $entityManager,
         private BookService $bookService,
         private LoanRepository $loanRepository,
         private ReservationRepository $reservationRepository,
@@ -36,27 +38,27 @@ class CreateLoanHandler
 
     public function __invoke(CreateLoanCommand $command): Loan
     {
-        $userRepo = $this->em->getRepository(User::class);
-        $bookRepo = $this->em->getRepository(Book::class);
+        $userRepo = $this->entityManager->getRepository(User::class);
+        $bookRepo = $this->entityManager->getRepository(Book::class);
 
         $user = $userRepo->find($command->userId);
         if (!$user) {
-            throw new \RuntimeException('User not found');
+            throw NotFoundException::forUser($command->userId);
         }
 
         if ($user->isBlocked()) {
-            throw new \RuntimeException('Konto czytelnika jest zablokowane');
+            throw BusinessLogicException::invalidState('User account is blocked.');
         }
 
         $activeLoans = $this->loanRepository->countActiveByUser($user);
         $loanLimit = $user->getLoanLimit();
         if ($loanLimit > 0 && $activeLoans >= $loanLimit) {
-            throw new \RuntimeException('Limit wypożyczeń został osiągnięty');
+            throw BusinessLogicException::maxLoansReached($loanLimit);
         }
 
         $book = $bookRepo->find($command->bookId);
         if (!$book) {
-            throw new \RuntimeException('Book not found');
+            throw NotFoundException::forBook($command->bookId);
         }
 
         $preferredCopy = null;
@@ -65,32 +67,32 @@ class CreateLoanHandler
         if ($command->bookCopyId) {
             $preferredCopy = $this->bookCopyRepository->find($command->bookCopyId);
             if (!$preferredCopy) {
-                throw new \RuntimeException('Egzemplarz nie znaleziony');
+                throw NotFoundException::forEntity('BookCopy', $command->bookCopyId);
             }
 
             if ($preferredCopy->getStatus() === BookCopy::STATUS_BORROWED) {
-                throw new \RuntimeException('Egzemplarz jest już wypożyczony');
+                throw BusinessLogicException::bookNotAvailable($command->bookCopyId);
             }
         }
 
         if ($command->reservationId) {
             $reservation = $this->reservationRepository->find($command->reservationId);
             if (!$reservation || $reservation->getUser()->getId() !== $user->getId()) {
-                throw new \RuntimeException('Nieprawidłowa rezerwacja');
+                throw NotFoundException::forReservation($command->reservationId);
             }
         } else {
             $reservation = $this->reservationRepository->findFirstActiveForUserAndBook($user, $book);
         }
 
-        $this->em->beginTransaction();
+        $this->entityManager->beginTransaction();
         try {
             $copy = $this->bookService->borrow($book, $reservation, $preferredCopy, false);
             if (!$copy) {
                 $queue = $this->reservationRepository->findActiveByBook($book);
                 if (!empty($queue)) {
-                    throw new \RuntimeException('Book reserved by another reader');
+                    throw BusinessLogicException::bookNotAvailable($book->getId());
                 }
-                throw new \RuntimeException('No copies available');
+                throw BusinessLogicException::noCopiesAvailable();
             }
 
             $loanDurationDays = $this->settingsService->getLoanDurationDays();
@@ -101,33 +103,33 @@ class CreateLoanHandler
                 ->setUser($user)
                 ->setDueAt((new \DateTimeImmutable())->modify("+{$loanDurationDays} days"));
 
-            $this->em->persist($loan);
+            $this->entityManager->persist($loan);
 
-            $interactionRepo = $this->em->getRepository(UserBookInteraction::class);
+            $interactionRepo = $this->entityManager->getRepository(UserBookInteraction::class);
             $interaction = $interactionRepo->findOneBy(['user' => $user, 'book' => $book]);
             if (!$interaction) {
                 $interaction = (new UserBookInteraction())
                     ->setUser($user)
                     ->setBook($book)
                     ->setType(UserBookInteraction::TYPE_READ);
-                $this->em->persist($interaction);
+                $this->entityManager->persist($interaction);
             }
-            $this->em->flush();
-            $this->em->commit();
+            $this->entityManager->flush();
+            $this->entityManager->commit();
             
             // Dispatch event
             $this->eventDispatcher->dispatch(new BookBorrowedEvent($loan));
             
         } catch (\Exception $e) {
-            $this->em->rollback();
+            $this->entityManager->rollback();
             $this->logger->error('CreateLoanHandler exception', [
                 'message' => $e->getMessage(),
                 'exception' => $e,
             ]);
-            if ($e instanceof \RuntimeException) {
+            if ($e instanceof \App\Exception\AppException) {
                 throw $e;
             }
-            throw new \RuntimeException('Nie udało się utworzyć wypożyczenia: ' . $e->getMessage());
+            throw BusinessLogicException::operationFailed('CreateLoan', $e->getMessage());
         }
 
         return $loan;

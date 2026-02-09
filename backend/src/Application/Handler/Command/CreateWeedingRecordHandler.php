@@ -6,6 +6,8 @@ use App\Entity\BookCopy;
 use App\Entity\Loan;
 use App\Entity\Reservation;
 use App\Entity\WeedingRecord;
+use App\Exception\BusinessLogicException;
+use App\Exception\NotFoundException;
 use App\Repository\BookCopyRepository;
 use App\Repository\BookRepository;
 use App\Repository\LoanRepository;
@@ -33,32 +35,32 @@ class CreateWeedingRecordHandler
     {
         $book = $this->bookRepository->find($command->bookId);
         if (!$book) {
-            throw new \RuntimeException('Book not found');
+            throw NotFoundException::forBook($command->bookId);
         }
 
         $copy = null;
         if ($command->copyId !== null) {
             $copy = $this->bookCopyRepository->find($command->copyId);
             if (!$copy || $copy->getBook()->getId() !== $book->getId()) {
-                throw new \RuntimeException('Copy does not belong to the book');
+                throw NotFoundException::forEntity('BookCopy', $command->copyId);
             }
             
             if ($copy->getStatus() === BookCopy::STATUS_BORROWED) {
-                throw new \RuntimeException('Copy is currently borrowed');
+                throw BusinessLogicException::invalidState('Copy is currently borrowed');
             }
             if ($copy->getStatus() === BookCopy::STATUS_RESERVED) {
-                throw new \RuntimeException('Copy is reserved');
+                throw BusinessLogicException::invalidState('Copy is reserved');
             }
             if ($copy->getStatus() === BookCopy::STATUS_WITHDRAWN) {
-                throw new \RuntimeException('Copy already withdrawn');
+                throw BusinessLogicException::invalidState('Copy is already withdrawn');
             }
 
             if ($this->loanRepository->findActiveByInventoryCode($copy->getInventoryCode()) !== null) {
-                throw new \RuntimeException('Copy has an active loan');
+                throw BusinessLogicException::invalidState('Copy has an active loan');
             }
 
             if ($this->reservationRepository->findActiveByCopy($copy) !== null) {
-                throw new \RuntimeException('Copy has an active reservation');
+                throw BusinessLogicException::invalidState('Copy has an active reservation');
             }
         }
 
@@ -102,7 +104,7 @@ class CreateWeedingRecordHandler
             $conn->commit();
         } catch (\Exception $e) {
             $conn->rollBack();
-            throw new \RuntimeException('Błąd podczas tworzenia rekordu selekcji');
+            throw BusinessLogicException::operationFailed('Create weeding record', $e->getMessage());
         }
 
         return $record;

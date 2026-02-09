@@ -3,6 +3,8 @@ namespace App\Application\Handler\Command;
 
 use App\Application\Command\Announcement\UpdateAnnouncementCommand;
 use App\Entity\Announcement;
+use App\Exception\NotFoundException;
+use App\Exception\ValidationException;
 use App\Repository\AnnouncementRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
@@ -21,7 +23,7 @@ class UpdateAnnouncementHandler
         $announcement = $this->repository->find($command->id);
         
         if (!$announcement) {
-            throw new \RuntimeException('Announcement not found');
+            throw NotFoundException::forEntity('Announcement', $command->id);
         }
 
         if ($command->title !== null) {
@@ -61,7 +63,7 @@ class UpdateAnnouncementHandler
                 $eventAt = new \DateTimeImmutable($command->eventAt);
                 $now = new \DateTimeImmutable();
                 if ($eventAt <= $now) {
-                    throw new \RuntimeException('Event date must be in the future');
+                    throw ValidationException::forField('eventAt', 'Event date must be in the future');
                 }
                 $announcement->setEventAt($eventAt);
             } else {

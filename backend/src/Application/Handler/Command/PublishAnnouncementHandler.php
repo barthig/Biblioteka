@@ -3,6 +3,7 @@ namespace App\Application\Handler\Command;
 
 use App\Application\Command\Announcement\PublishAnnouncementCommand;
 use App\Entity\Announcement;
+use App\Exception\NotFoundException;
 use App\Repository\AnnouncementRepository;
 use App\Service\User\NotificationService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -23,7 +24,7 @@ class PublishAnnouncementHandler
         $announcement = $this->repository->find($command->id);
         
         if (!$announcement) {
-            throw new \RuntimeException('Announcement not found');
+            throw NotFoundException::forEntity('Announcement', $command->id);
         }
 
         $wasPublished = $announcement->getStatus() === 'published';

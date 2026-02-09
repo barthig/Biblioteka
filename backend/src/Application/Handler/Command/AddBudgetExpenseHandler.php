@@ -3,6 +3,8 @@ namespace App\Application\Handler\Command;
 
 use App\Application\Command\Acquisition\AddBudgetExpenseCommand;
 use App\Entity\AcquisitionExpense;
+use App\Exception\NotFoundException;
+use App\Exception\ValidationException;
 use App\Repository\AcquisitionBudgetRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
@@ -20,7 +22,7 @@ class AddBudgetExpenseHandler
     {
         $budget = $this->budgetRepository->find($command->budgetId);
         if (!$budget) {
-            throw new \RuntimeException('Budget not found');
+            throw NotFoundException::forEntity('Budget', $command->budgetId);
         }
 
         $expense = (new AcquisitionExpense())
@@ -32,7 +34,7 @@ class AddBudgetExpenseHandler
         try {
             $expense->setType($command->type ?? AcquisitionExpense::TYPE_MISC);
         } catch (\InvalidArgumentException $e) {
-            throw new \RuntimeException('Invalid expense type');
+            throw ValidationException::forField('type', 'Invalid expense type');
         }
 
         if ($command->postedAt && strtotime($command->postedAt)) {

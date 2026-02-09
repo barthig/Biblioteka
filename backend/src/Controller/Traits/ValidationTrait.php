@@ -9,7 +9,8 @@ use Symfony\Component\Validator\ConstraintViolationListInterface;
 trait ValidationTrait
 {
     /**
-     * Convert validation errors to unified JSON response
+     * Convert validation errors to unified JSON response.
+     * Field errors are always arrays for consistent API contract.
      */
     protected function validationErrorResponse(ConstraintViolationListInterface $errors): JsonResponse
     {
@@ -17,16 +18,7 @@ trait ValidationTrait
         foreach ($errors as $error) {
             $property = $error->getPropertyPath();
             $message = $error->getMessage();
-            
-            if (isset($fieldErrors[$property])) {
-                if (is_array($fieldErrors[$property])) {
-                    $fieldErrors[$property][] = $message;
-                } else {
-                    $fieldErrors[$property] = [$fieldErrors[$property], $message];
-                }
-            } else {
-                $fieldErrors[$property] = $message;
-            }
+            $fieldErrors[$property][] = $message;
         }
         
         $error = ApiError::validationFailed($fieldErrors);
@@ -35,7 +27,7 @@ trait ValidationTrait
     }
 
     /**
-     * Maps array to DTO object
+     * Maps array to DTO object with automatic type coercion.
      */
     protected function mapArrayToDto(array $data, object $dto): object
     {
@@ -46,7 +38,7 @@ trait ValidationTrait
                 $property = $reflection->getProperty($key);
                 $property->setAccessible(true);
                 
-                // Konwersja typu jeśli trzeba
+                // Type coercion for scalar and DateTime types
                 $type = $property->getType();
                 if ($type instanceof \ReflectionNamedType && $value !== null) {
                     $typeName = $type->getName();
@@ -59,6 +51,8 @@ trait ValidationTrait
                         $value = (bool) $value;
                     } elseif ($typeName === 'string' && !is_string($value)) {
                         $value = (string) $value;
+                    } elseif (is_string($value) && is_a($typeName, \DateTimeInterface::class, true)) {
+                        $value = new \DateTimeImmutable($value);
                     }
                 }
                 

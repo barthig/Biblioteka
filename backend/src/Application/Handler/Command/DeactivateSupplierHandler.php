@@ -2,6 +2,7 @@
 namespace App\Application\Handler\Command;
 
 use App\Application\Command\Acquisition\DeactivateSupplierCommand;
+use App\Exception\NotFoundException;
 use App\Repository\SupplierRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
@@ -19,7 +20,7 @@ class DeactivateSupplierHandler
     {
         $supplier = $this->repository->find($command->id);
         if (!$supplier) {
-            throw new \RuntimeException('Supplier not found');
+            throw NotFoundException::forEntity('Supplier', $command->id);
         }
 
         $supplier->setActive(false);

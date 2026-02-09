@@ -5,11 +5,11 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 class CreateAcquisitionOrderRequest
 {
-    #[Assert\NotBlank(message: 'ID dostawcy jest wymagane')]
+    #[Assert\NotBlank(message: 'Supplier ID is required')]
     #[Assert\Positive]
     public ?int $supplierId = null;
 
-    #[Assert\NotBlank(message: 'Tytuł zamówienia jest wymagany')]
+    #[Assert\NotBlank(message: 'Order title is required')]
     #[Assert\Length(min: 3, max: 500)]
     public ?string $title = null;
 
@@ -19,7 +19,7 @@ class CreateAcquisitionOrderRequest
     #[Assert\Positive]
     public ?float $estimatedCost = null;
 
-    #[Assert\Choice(choices: ['PLN', 'EUR', 'USD'], message: 'Nieprawidłowa waluta')]
+    #[Assert\Choice(choices: ['PLN', 'EUR', 'USD'], message: 'Invalid currency')]
     public string $currency = 'PLN';
 
     #[Assert\Length(max: 2000)]
@@ -27,7 +27,7 @@ class CreateAcquisitionOrderRequest
 
     #[Assert\Choice(
         choices: ['planowane', 'zamówione', 'w_realizacji', 'dostarczone', 'anulowane'],
-        message: 'Nieprawidłowy status'
+        message: 'Invalid status'
     )]
     public string $status = 'planowane';
 }

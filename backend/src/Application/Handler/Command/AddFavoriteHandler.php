@@ -6,18 +6,21 @@ use App\Entity\Book;
 use App\Entity\Favorite;
 use App\Entity\User;
 use App\Entity\UserBookInteraction;
+use App\Event\FavoriteAddedEvent;
 use App\Repository\FavoriteRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 #[AsMessageHandler]
 class AddFavoriteHandler
 {
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
-        private readonly FavoriteRepository $favoriteRepository
+        private readonly FavoriteRepository $favoriteRepository,
+        private readonly EventDispatcherInterface $eventDispatcher,
     ) {
     }
 
@@ -54,6 +57,8 @@ class AddFavoriteHandler
         $interaction->setType(UserBookInteraction::TYPE_LIKED);
 
         $this->entityManager->flush();
+
+        $this->eventDispatcher->dispatch(new FavoriteAddedEvent($favorite));
 
         return $favorite;
     }

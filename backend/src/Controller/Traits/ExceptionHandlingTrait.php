@@ -88,19 +88,6 @@ trait ExceptionHandlingTrait
      */
     private function getErrorCodeFromStatusCode(int $statusCode): string
     {
-        return match ($statusCode) {
-            400 => 'BAD_REQUEST',
-            401 => 'UNAUTHORIZED',
-            403 => 'FORBIDDEN',
-            404 => 'NOT_FOUND',
-            409 => 'CONFLICT',
-            410 => 'GONE',
-            422 => 'UNPROCESSABLE_ENTITY',
-            423 => 'LOCKED',
-            429 => 'RATE_LIMIT_EXCEEDED',
-            500 => 'INTERNAL_ERROR',
-            503 => 'SERVICE_UNAVAILABLE',
-            default => 'ERROR',
-        };
+        return ApiError::errorCodeForStatus($statusCode);
     }
 }

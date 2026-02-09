@@ -3,6 +3,7 @@ namespace App\Application\Handler\Command;
 
 use App\Application\Command\Announcement\ArchiveAnnouncementCommand;
 use App\Entity\Announcement;
+use App\Exception\NotFoundException;
 use App\Repository\AnnouncementRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
@@ -21,7 +22,7 @@ class ArchiveAnnouncementHandler
         $announcement = $this->repository->find($command->id);
         
         if (!$announcement) {
-            throw new \RuntimeException('Announcement not found');
+            throw NotFoundException::forEntity('Announcement', $command->id);
         }
 
         $announcement->archive();

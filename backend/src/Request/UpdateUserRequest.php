@@ -21,12 +21,12 @@ class UpdateUserRequest
     #[Assert\Length(max: 100)]
     public ?string $city = null;
 
-    #[Assert\Regex(pattern: '/^\d{2}-\d{3}$/', message: 'Kod pocztowy musi być w formacie XX-XXX')]
+    #[Assert\Regex(pattern: '/^\d{2}-\d{3}$/', message: 'Postal code must be in XX-XXX format')]
     public ?string $postalCode = null;
 
     #[Assert\Choice(
         choices: ['standard', 'student', 'pracownik_naukowy', 'dziecko'],
-        message: 'Nieprawidłowa grupa członkowska'
+        message: 'Invalid membership group'
     )]
     public ?string $membershipGroup = null;
 

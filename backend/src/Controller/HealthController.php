@@ -1,7 +1,6 @@
 <?php
 namespace App\Controller;
 
-use App\Controller\Traits\ExceptionHandlingTrait;
 use App\Dto\ApiError;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;

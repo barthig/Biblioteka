@@ -5,10 +5,15 @@ declare(strict_types=1);
 namespace App\EventSubscriber;
 
 use App\Event\BookBorrowedEvent;
+use App\Event\BookCreatedEvent;
+use App\Event\BookDeletedEvent;
 use App\Event\BookReturnedEvent;
+use App\Event\BookUpdatedEvent;
+use App\Event\FavoriteAddedEvent;
 use App\Event\FineCreatedEvent;
 use App\Event\LoanExtendedEvent;
 use App\Event\LoanOverdueEvent;
+use App\Event\RatingCreatedEvent;
 use App\Event\ReservationCreatedEvent;
 use App\Event\ReservationExpiredEvent;
 use App\Event\ReservationFulfilledEvent;
@@ -41,6 +46,11 @@ final class IntegrationEventBridgeSubscriber implements EventSubscriberInterface
             ReservationExpiredEvent::class => 'onReservationExpired',
             FineCreatedEvent::class => 'onFineCreated',
             UserBlockedEvent::class => 'onUserBlocked',
+            BookCreatedEvent::class => 'onBookCreated',
+            BookUpdatedEvent::class => 'onBookUpdated',
+            BookDeletedEvent::class => 'onBookDeleted',
+            RatingCreatedEvent::class => 'onRatingCreated',
+            FavoriteAddedEvent::class => 'onFavoriteAdded',
         ];
     }
 
@@ -93,7 +103,10 @@ final class IntegrationEventBridgeSubscriber implements EventSubscriberInterface
         $this->publisher->publish('loan.extended', [
             'loan_id' => $loan->getId(),
             'user_id' => $loan->getUser()?->getId(),
+            'user_email' => $loan->getUser()?->getEmail(),
+            'user_name' => $loan->getUser()?->getName(),
             'book_id' => $loan->getBook()?->getId(),
+            'book_title' => $loan->getBook()?->getTitle(),
             'new_due_date' => $loan->getDueAt()?->format('Y-m-d'),
         ]);
     }
@@ -131,7 +144,10 @@ final class IntegrationEventBridgeSubscriber implements EventSubscriberInterface
         $this->publisher->publish('reservation.expired', [
             'reservation_id' => $reservation->getId(),
             'user_id' => $reservation->getUser()?->getId(),
+            'user_email' => $reservation->getUser()?->getEmail(),
+            'user_name' => $reservation->getUser()?->getName(),
             'book_id' => $reservation->getBook()?->getId(),
+            'book_title' => $reservation->getBook()?->getTitle(),
         ]);
     }
 
@@ -155,6 +171,71 @@ final class IntegrationEventBridgeSubscriber implements EventSubscriberInterface
             'user_id' => $user->getId(),
             'user_email' => $user->getEmail(),
             'reason' => $event->getReason(),
+        ]);
+    }
+
+    // ─── Book events (→ Recommendation Service) ───────────────────
+
+    public function onBookCreated(BookCreatedEvent $event): void
+    {
+        $book = $event->getBook();
+        $categories = array_map(
+            fn($c) => $c->getName(),
+            $book->getCategories()->toArray()
+        );
+
+        $this->publisher->publish('book.created', [
+            'book_id' => $book->getId(),
+            'title' => $book->getTitle(),
+            'author' => $book->getAuthor()?->getName(),
+            'category' => implode(', ', $categories),
+            'description' => $book->getDescription() ?? '',
+            'isbn' => $book->getIsbn(),
+        ]);
+    }
+
+    public function onBookUpdated(BookUpdatedEvent $event): void
+    {
+        $book = $event->getBook();
+        $categories = array_map(
+            fn($c) => $c->getName(),
+            $book->getCategories()->toArray()
+        );
+
+        $this->publisher->publish('book.updated', [
+            'book_id' => $book->getId(),
+            'title' => $book->getTitle(),
+            'author' => $book->getAuthor()?->getName(),
+            'category' => implode(', ', $categories),
+            'description' => $book->getDescription() ?? '',
+            'isbn' => $book->getIsbn(),
+        ]);
+    }
+
+    public function onBookDeleted(BookDeletedEvent $event): void
+    {
+        $this->publisher->publish('book.deleted', [
+            'book_id' => $event->getBookId(),
+            'book_title' => $event->getBookTitle(),
+        ]);
+    }
+
+    // ─── User interaction events (→ Recommendation Service) ──────
+
+    public function onRatingCreated(RatingCreatedEvent $event): void
+    {
+        $this->publisher->publish('rating.created', [
+            'user_id' => $event->getUserId(),
+            'book_id' => $event->getBookId(),
+            'rating' => $event->getRatingValue(),
+        ]);
+    }
+
+    public function onFavoriteAdded(FavoriteAddedEvent $event): void
+    {
+        $this->publisher->publish('favorite.added', [
+            'user_id' => $event->getUserId(),
+            'book_id' => $event->getBookId(),
         ]);
     }
 }

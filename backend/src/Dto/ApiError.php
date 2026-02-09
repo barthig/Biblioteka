@@ -184,7 +184,16 @@ class ApiError
     public static function fromException(\Symfony\Component\HttpKernel\Exception\HttpExceptionInterface $e): self
     {
         $status = $e->getStatusCode();
-        $code = match ($status) {
+        return new self(self::errorCodeForStatus($status), $e->getMessage(), $status);
+    }
+
+    /**
+     * Canonical mapping of HTTP status codes to machine-readable error codes.
+     * Single source of truth — used by ApiExceptionSubscriber and ExceptionHandlingTrait.
+     */
+    public static function errorCodeForStatus(int $statusCode): string
+    {
+        return match ($statusCode) {
             400 => 'BAD_REQUEST',
             401 => 'UNAUTHORIZED',
             403 => 'FORBIDDEN',
@@ -198,6 +207,5 @@ class ApiError
             503 => 'SERVICE_UNAVAILABLE',
             default => 'ERROR',
         };
-        return new self($code, $e->getMessage(), $status);
     }
 }

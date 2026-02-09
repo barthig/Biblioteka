@@ -5,10 +5,10 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 class UpdateLoanRequest
 {
-    #[Assert\DateTime(message: 'Nieprawidłowy format daty')]
+    #[Assert\DateTime(message: 'Invalid date format')]
     public ?string $dueAt = null;
 
-    #[Assert\Choice(choices: ['active', 'returned'], message: 'Nieprawidłowy status')]
+    #[Assert\Choice(choices: ['active', 'returned'], message: 'Invalid status')]
     public ?string $status = null;
 
     #[Assert\Positive]

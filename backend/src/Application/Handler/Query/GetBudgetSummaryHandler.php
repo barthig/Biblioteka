@@ -2,6 +2,7 @@
 namespace App\Application\Handler\Query;
 
 use App\Application\Query\Acquisition\GetBudgetSummaryQuery;
+use App\Exception\NotFoundException;
 use App\Repository\AcquisitionBudgetRepository;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
@@ -16,7 +17,7 @@ class GetBudgetSummaryHandler
     {
         $budget = $this->repository->find($query->id);
         if (!$budget) {
-            throw new \RuntimeException('Budget not found');
+            throw NotFoundException::forEntity('Budget', $query->id);
         }
 
         $allocated = round((float) $budget->getAllocatedAmount(), 2);

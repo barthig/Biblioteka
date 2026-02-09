@@ -3,6 +3,8 @@ namespace App\Application\Handler\Command;
 
 use App\Application\Command\User\CreateUserCommand;
 use App\Entity\User;
+use App\Exception\BusinessLogicException;
+use App\Exception\ValidationException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
@@ -25,7 +27,7 @@ class CreateUserHandler
         try {
             $user->setMembershipGroup($group);
         } catch (\InvalidArgumentException $exception) {
-            throw new \RuntimeException('Unknown membership group');
+            throw ValidationException::forField('membershipGroup', 'Unknown membership group');
         }
 
         if ($command->loanLimit !== null) {
@@ -69,7 +71,7 @@ class CreateUserHandler
             $conn->commit();
         } catch (\Exception $e) {
             $conn->rollBack();
-            throw new \RuntimeException('Błąd podczas tworzenia użytkownika');
+            throw BusinessLogicException::operationFailed('Create user', $e->getMessage());
         }
 
         return $user;

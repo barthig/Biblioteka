@@ -5,7 +5,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 class CreateSupplierRequest
 {
-    #[Assert\NotBlank(message: 'Nazwa dostawcy jest wymagana')]
+    #[Assert\NotBlank(message: 'Supplier name is required')]
     #[Assert\Length(min: 2, max: 255)]
     public ?string $name = null;
 

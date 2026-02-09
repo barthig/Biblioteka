@@ -3,6 +3,9 @@ namespace App\Application\Handler\Command;
 
 use App\Application\Command\Acquisition\UpdateOrderStatusCommand;
 use App\Entity\AcquisitionOrder;
+use App\Exception\BusinessLogicException;
+use App\Exception\NotFoundException;
+use App\Exception\ValidationException;
 use App\Repository\AcquisitionOrderRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
@@ -20,10 +23,10 @@ class UpdateOrderStatusHandler
     {
         $order = $this->repository->find($command->id);
         if (!$order) {
-            throw new \RuntimeException('Order not found');
+            throw NotFoundException::forEntity('Order', $command->id);
         }
         if ($order->getStatus() === AcquisitionOrder::STATUS_CANCELLED) {
-            throw new \RuntimeException('Cancelled orders cannot be received');
+            throw BusinessLogicException::invalidState('Cancelled orders cannot be modified');
         }
 
         $status = strtoupper(trim($command->status));
@@ -52,7 +55,7 @@ class UpdateOrderStatusHandler
                 $order->setStatus(AcquisitionOrder::STATUS_DRAFT);
                 break;
             default:
-                throw new \RuntimeException('Unsupported status transition');
+                throw ValidationException::forField('status', 'Unsupported status: ' . $status);
         }
 
         if ($command->expectedAt && strtotime($command->expectedAt)) {

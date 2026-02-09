@@ -3,6 +3,9 @@ namespace App\Application\Handler\Command;
 
 use App\Application\Command\BookAsset\UploadBookAssetCommand;
 use App\Entity\BookDigitalAsset;
+use App\Exception\BusinessLogicException;
+use App\Exception\NotFoundException;
+use App\Exception\ValidationException;
 use App\Repository\BookRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpKernel\KernelInterface;
@@ -22,18 +25,18 @@ class UploadBookAssetHandler
     {
         $book = $this->bookRepository->find($command->bookId);
         if (!$book) {
-            throw new \RuntimeException('Book not found');
+            throw NotFoundException::forBook($command->bookId);
         }
 
         $binary = base64_decode($command->content, true);
         if ($binary === false) {
-            throw new \RuntimeException('Invalid base64 payload');
+            throw ValidationException::forField('content', 'Invalid base64 payload');
         }
 
         try {
             $storageName = $this->storeBinary($binary, pathinfo($command->originalFilename, PATHINFO_EXTENSION));
         } catch (\RuntimeException $e) {
-            throw new \RuntimeException($e->getMessage());
+            throw BusinessLogicException::operationFailed('Upload book asset', $e->getMessage());
         }
 
         $asset = (new BookDigitalAsset())

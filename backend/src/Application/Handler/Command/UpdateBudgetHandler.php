@@ -3,6 +3,7 @@ namespace App\Application\Handler\Command;
 
 use App\Application\Command\Acquisition\UpdateBudgetCommand;
 use App\Entity\AcquisitionBudget;
+use App\Exception\NotFoundException;
 use App\Repository\AcquisitionBudgetRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
@@ -20,7 +21,7 @@ class UpdateBudgetHandler
     {
         $budget = $this->repository->find($command->id);
         if (!$budget) {
-            throw new \RuntimeException('Budget not found');
+            throw NotFoundException::forEntity('Budget', $command->id);
         }
 
         if ($command->name !== null) {

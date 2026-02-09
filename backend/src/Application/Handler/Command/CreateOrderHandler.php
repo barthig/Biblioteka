@@ -3,6 +3,9 @@ namespace App\Application\Handler\Command;
 
 use App\Application\Command\Acquisition\CreateOrderCommand;
 use App\Entity\AcquisitionOrder;
+use App\Exception\BusinessLogicException;
+use App\Exception\NotFoundException;
+use App\Exception\ValidationException;
 use App\Repository\AcquisitionBudgetRepository;
 use App\Repository\SupplierRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -22,20 +25,20 @@ class CreateOrderHandler
     {
         $supplier = $this->supplierRepository->find($command->supplierId);
         if (!$supplier) {
-            throw new \RuntimeException('Supplier not found');
+            throw NotFoundException::forEntity('Supplier', $command->supplierId);
         }
         if (!$supplier->isActive()) {
-            throw new \RuntimeException('Supplier is inactive');
+            throw BusinessLogicException::invalidState('Supplier is inactive');
         }
 
         $budget = null;
         if ($command->budgetId !== null) {
             $budget = $this->budgetRepository->find($command->budgetId);
             if (!$budget) {
-                throw new \RuntimeException('Budget not found');
+                throw NotFoundException::forEntity('Budget', $command->budgetId);
             }
             if ($budget->getCurrency() !== $command->currency) {
-                throw new \RuntimeException('Budget currency mismatch');
+                throw BusinessLogicException::invalidState('Budget currency does not match order currency');
             }
         }
 
@@ -66,7 +69,7 @@ class CreateOrderHandler
                     $order->setStatus($status);
                 }
             } catch (\InvalidArgumentException $e) {
-                throw new \RuntimeException('Invalid status provided');
+                throw ValidationException::forField('status', 'Invalid status provided');
             }
         }
 

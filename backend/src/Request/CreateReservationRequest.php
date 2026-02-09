@@ -5,7 +5,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 class CreateReservationRequest
 {
-    #[Assert\NotBlank(message: 'ID książki jest wymagane')]
+    #[Assert\NotBlank(message: 'Book ID is required')]
     #[Assert\Positive]
     public ?int $bookId = null;
 
@@ -13,7 +13,7 @@ class CreateReservationRequest
     #[Assert\Range(
         min: 1,
         max: 14,
-        notInRangeMessage: 'Rezerwacja może trwać od {{ min }} do {{ max }} dni'
+        notInRangeMessage: 'Reservation duration must be between {{ min }} and {{ max }} days'
     )]
     public ?int $days = 3; // Default 3 days (unified with Reservation entity)
 }

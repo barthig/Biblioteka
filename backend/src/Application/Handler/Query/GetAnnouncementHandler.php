@@ -3,6 +3,7 @@ namespace App\Application\Handler\Query;
 
 use App\Application\Query\Announcement\GetAnnouncementQuery;
 use App\Entity\Announcement;
+use App\Exception\NotFoundException;
 use App\Repository\AnnouncementRepository;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
@@ -18,11 +19,11 @@ class GetAnnouncementHandler
         $announcement = $this->repository->find($query->id);
         
         if (!$announcement) {
-            throw new \RuntimeException('Announcement not found');
+            throw NotFoundException::forEntity('Announcement', $query->id);
         }
 
         if (!$query->isLibrarian && !$announcement->isVisibleForUser($query->user)) {
-            throw new \RuntimeException('Announcement not found');
+            throw NotFoundException::forEntity('Announcement', $query->id);
         }
 
         return $announcement;

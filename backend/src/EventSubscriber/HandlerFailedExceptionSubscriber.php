@@ -1,6 +1,7 @@
 <?php
 namespace App\EventSubscriber;
 
+use App\Exception\AppException;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\ExceptionEvent;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -25,6 +26,13 @@ class HandlerFailedExceptionSubscriber implements EventSubscriberInterface
         }
 
         $previous = $throwable->getPrevious() ?? $throwable;
+
+        // AppException carries its own HTTP status code — unwrap it
+        if ($previous instanceof AppException) {
+            $event->setThrowable($previous);
+            return;
+        }
+
         if ($previous instanceof HttpExceptionInterface) {
             $event->setThrowable($previous);
             return;

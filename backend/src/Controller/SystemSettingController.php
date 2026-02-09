@@ -20,6 +20,8 @@ use OpenApi\Attributes as OA;
 #[OA\Tag(name: 'SystemSetting')]
 class SystemSettingController extends AbstractController
 {
+    use ExceptionHandlingTrait;
+
     public function __construct(
         private MessageBusInterface $messageBus
     ) {

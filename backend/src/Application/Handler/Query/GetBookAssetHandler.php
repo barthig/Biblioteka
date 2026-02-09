@@ -3,6 +3,7 @@ namespace App\Application\Handler\Query;
 
 use App\Application\Query\BookAsset\GetBookAssetQuery;
 use App\Entity\BookDigitalAsset;
+use App\Exception\NotFoundException;
 use App\Repository\BookDigitalAssetRepository;
 use App\Repository\BookRepository;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
@@ -20,12 +21,12 @@ class GetBookAssetHandler
     {
         $book = $this->bookRepository->find($query->bookId);
         if (!$book) {
-            throw new \RuntimeException('Book not found');
+            throw NotFoundException::forBook($query->bookId);
         }
 
         $asset = $this->assetRepository->find($query->assetId);
         if (!$asset || $asset->getBook()->getId() !== $book->getId()) {
-            throw new \RuntimeException('Asset not found');
+            throw NotFoundException::forEntity('BookDigitalAsset', $query->assetId);
         }
 
         return $asset;

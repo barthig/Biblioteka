@@ -3,6 +3,7 @@ namespace App\Application\Handler\Command;
 
 use App\Application\Command\Acquisition\UpdateSupplierCommand;
 use App\Entity\Supplier;
+use App\Exception\NotFoundException;
 use App\Repository\SupplierRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
@@ -20,7 +21,7 @@ class UpdateSupplierHandler
     {
         $supplier = $this->repository->find($command->id);
         if (!$supplier) {
-            throw new \RuntimeException('Supplier not found');
+            throw NotFoundException::forEntity('Supplier', $command->id);
         }
 
         if ($command->name !== null) {

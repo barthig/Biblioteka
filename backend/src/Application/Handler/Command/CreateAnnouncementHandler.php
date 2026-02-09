@@ -3,6 +3,8 @@ namespace App\Application\Handler\Command;
 
 use App\Application\Command\Announcement\CreateAnnouncementCommand;
 use App\Entity\Announcement;
+use App\Exception\NotFoundException;
+use App\Exception\ValidationException;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
@@ -20,7 +22,7 @@ class CreateAnnouncementHandler
     {
         $user = $this->userRepository->find($command->userId);
         if (!$user) {
-            throw new \RuntimeException('User not found');
+            throw NotFoundException::forUser($command->userId);
         }
 
         $announcement = new Announcement();
@@ -53,7 +55,7 @@ class CreateAnnouncementHandler
             $eventAt = new \DateTimeImmutable($command->eventAt);
             $now = new \DateTimeImmutable();
             if ($eventAt <= $now) {
-                throw new \RuntimeException('Event date must be in the future');
+                throw ValidationException::forField('eventAt', 'Event date must be in the future');
             }
             $announcement->setEventAt($eventAt);
         }

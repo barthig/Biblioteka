@@ -40,34 +40,24 @@ class LoanController extends AbstractController
     private function handleException(\Throwable $e): JsonResponse
     {
         $e = $this->unwrapThrowable($e);
-        error_log(sprintf('LoanController exception: %s: %s', $e::class, $e->getMessage()));
 
-        if ($e instanceof \RuntimeException) {
-            $statusCode = match ($e->getMessage()) {
-                'User not found', 'Book not found', 'Loan not found', 'Egzemplarz nie znaleziony' => 404,
-                'Konto czytelnika jest zablokowane' => 423,
-                'Forbidden' => 403,
-                'Limit wypoĹĽyczeĹ„ zostaĹ‚ osiÄ…gniÄ™ty', 
-                'Egzemplarz jest juĹĽ wypoĹĽyczony',
-                'Book reserved by another reader',
-                'No copies available',
-                'Cannot extend returned loan',
-                'WypoĹĽyczenie zostaĹ‚o juĹĽ przedĹ‚uĹĽone',
-                'Loan already extended' => 409,
-                default => 500
-            };
-
-            $error = match ($statusCode) {
-                404 => ApiError::notFound('Resource'),
-                423 => ApiError::locked($e->getMessage()),
-                403 => ApiError::forbidden(),
-                409 => ApiError::conflict($e->getMessage()),
-                default => ApiError::internalError($e->getMessage())
-            };
-
+        // AppException hierarchy carries its own status code and error code
+        if ($e instanceof \App\Exception\AppException) {
+            $error = new ApiError(
+                code: $e->getErrorCode() ?? 'ERROR',
+                message: $e->getMessage(),
+                statusCode: $e->getStatusCode(),
+                details: $e->getContext() ?: null,
+            );
             return $this->jsonError($error);
         }
-        
+
+        // Symfony HttpExceptions (NotFoundHttpException, BadRequestHttpException, etc.)
+        $response = $this->jsonFromHttpException($e);
+        if ($response) {
+            return $response;
+        }
+
         return $this->jsonError(ApiError::internalError('Internal error'));
     }
 

@@ -5,6 +5,8 @@ use App\Application\Command\Reservation\ExpireReservationCommand;
 use App\Entity\BookCopy;
 use App\Entity\Reservation;
 use App\Event\ReservationExpiredEvent;
+use App\Exception\BusinessLogicException;
+use App\Exception\NotFoundException;
 use App\Repository\ReservationRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
@@ -14,7 +16,7 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 class ExpireReservationHandler
 {
     public function __construct(
-        private EntityManagerInterface $em,
+        private EntityManagerInterface $entityManager,
         private ReservationRepository $reservationRepository,
         private EventDispatcherInterface $eventDispatcher,
     ) {
@@ -24,18 +26,18 @@ class ExpireReservationHandler
     {
         $reservation = $this->reservationRepository->find($command->reservationId);
         if (!$reservation) {
-            throw new \RuntimeException('Reservation not found');
+            throw NotFoundException::forReservation($command->reservationId);
         }
 
         // Only expire active or prepared reservations that have passed their expiry date
         if (!in_array($reservation->getStatus(), [Reservation::STATUS_ACTIVE, Reservation::STATUS_PREPARED], true)) {
-            throw new \RuntimeException('Cannot expire reservation with status: ' . $reservation->getStatus());
+            throw BusinessLogicException::invalidState('Cannot expire reservation with status: ' . $reservation->getStatus());
         }
 
         // Verify expiration date has passed
         $now = new \DateTimeImmutable();
         if ($reservation->getExpiresAt() > $now) {
-            throw new \RuntimeException('Reservation has not expired yet');
+            throw BusinessLogicException::invalidState('Reservation has not expired yet');
         }
 
         // Mark as expired (different from cancelled)
@@ -47,12 +49,12 @@ class ExpireReservationHandler
             $copy->setStatus(BookCopy::STATUS_AVAILABLE);
             $reservation->clearBookCopy();
             $reservation->getBook()->recalculateInventoryCounters();
-            $this->em->persist($copy);
-            $this->em->persist($reservation->getBook());
+            $this->entityManager->persist($copy);
+            $this->entityManager->persist($reservation->getBook());
         }
 
-        $this->em->persist($reservation);
-        $this->em->flush();
+        $this->entityManager->persist($reservation);
+        $this->entityManager->flush();
 
         $this->eventDispatcher->dispatch(new ReservationExpiredEvent($reservation));
     }

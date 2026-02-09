@@ -5,19 +5,19 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 class CreateFineRequest
 {
-    #[Assert\NotBlank(message: 'ID wypożyczenia jest wymagane')]
+    #[Assert\NotBlank(message: 'Loan ID is required')]
     #[Assert\Positive]
     public ?int $loanId = null;
 
-    #[Assert\NotBlank(message: 'Kwota jest wymagana')]
-    #[Assert\Positive(message: 'Kwota musi być dodatnia')]
+    #[Assert\NotBlank(message: 'Amount is required')]
+    #[Assert\Positive(message: 'Amount must be positive')]
     public ?float $amount = null;
 
-    #[Assert\NotBlank(message: 'Waluta jest wymagana')]
-    #[Assert\Choice(choices: ['PLN', 'EUR', 'USD'], message: 'Nieprawidłowa waluta')]
+    #[Assert\NotBlank(message: 'Currency is required')]
+    #[Assert\Choice(choices: ['PLN', 'EUR', 'USD'], message: 'Invalid currency')]
     public string $currency = 'PLN';
 
-    #[Assert\NotBlank(message: 'Powód jest wymagany')]
+    #[Assert\NotBlank(message: 'Reason is required')]
     #[Assert\Length(min: 3, max: 500)]
     public ?string $reason = null;
 }

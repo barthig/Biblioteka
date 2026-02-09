@@ -5,14 +5,14 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 class ChangePasswordRequest
 {
-    #[Assert\NotBlank(message: 'Obecne hasło jest wymagane')]
+    #[Assert\NotBlank(message: 'Current password is required')]
     public ?string $currentPassword = null;
 
-    #[Assert\NotBlank(message: 'Nowe hasło jest wymagane')]
-    #[Assert\Length(min: 10, minMessage: 'Hasło musi mieć co najmniej 10 znaków')]
+    #[Assert\NotBlank(message: 'New password is required')]
+    #[Assert\Length(min: 10, minMessage: 'Password must be at least 10 characters')]
     #[Assert\Regex(
         pattern: '/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/',
-        message: 'Hasło musi zawierać małe i duże litery oraz cyfrę'
+        message: 'Password must contain lowercase, uppercase letters and a digit'
     )]
     public ?string $newPassword = null;
 }

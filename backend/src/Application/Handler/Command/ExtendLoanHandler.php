@@ -4,6 +4,8 @@ namespace App\Application\Handler\Command;
 use App\Application\Command\Loan\ExtendLoanCommand;
 use App\Entity\Loan;
 use App\Event\LoanExtendedEvent;
+use App\Exception\BusinessLogicException;
+use App\Exception\NotFoundException;
 use App\Repository\LoanRepository;
 use App\Repository\ReservationRepository;
 use App\Service\System\SystemSettingsService;
@@ -15,7 +17,7 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 class ExtendLoanHandler
 {
     public function __construct(
-        private EntityManagerInterface $em,
+        private EntityManagerInterface $entityManager,
         private LoanRepository $loanRepository,
         private ReservationRepository $reservationRepository,
         private SystemSettingsService $settingsService,
@@ -27,24 +29,24 @@ class ExtendLoanHandler
     {
         $loan = $this->loanRepository->find($command->loanId);
         if (!$loan) {
-            throw new \RuntimeException('Loan not found');
+            throw NotFoundException::forLoan($command->loanId);
         }
 
         // Authorization check happens in controller
 
         if ($loan->getReturnedAt() !== null) {
-            throw new \RuntimeException('Cannot extend returned loan');
+            throw BusinessLogicException::cannotExtendLoan('loan already returned');
         }
 
         if ($loan->getExtensionsCount() > 0) {
-            throw new \RuntimeException('Wypożyczenie zostało już przedłużone');
+            throw BusinessLogicException::cannotExtendLoan('loan already extended');
         }
 
         // Check if book is reserved by someone else
         $reservations = $this->reservationRepository->findActiveByBook($loan->getBook());
         foreach ($reservations as $reservation) {
             if ($reservation->getUser()->getId() !== $loan->getUser()->getId()) {
-                throw new \RuntimeException('Book reserved by another reader');
+                throw BusinessLogicException::cannotExtendLoan('book reserved by another reader');
             }
         }
 
@@ -59,10 +61,15 @@ class ExtendLoanHandler
         $loan->incrementExtensions();
         $loan->setLastExtendedAt(new \DateTimeImmutable());
 
-        $this->em->persist($loan);
-        $this->em->flush();
+        $this->entityManager->persist($loan);
+        $this->entityManager->flush();
 
-        $this->eventDispatcher->dispatch(new LoanExtendedEvent($loan));
+        $this->eventDispatcher->dispatch(new LoanExtendedEvent(
+            $loan,
+            $dueBase,
+            $newDue,
+            $loan->getExtensionsCount(),
+        ));
 
         return $loan;
     }

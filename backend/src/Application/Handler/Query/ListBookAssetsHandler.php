@@ -3,6 +3,7 @@ namespace App\Application\Handler\Query;
 
 use App\Application\Query\BookAsset\ListBookAssetsQuery;
 use App\Entity\BookDigitalAsset;
+use App\Exception\NotFoundException;
 use App\Repository\BookDigitalAssetRepository;
 use App\Repository\BookRepository;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
@@ -20,7 +21,7 @@ class ListBookAssetsHandler
     {
         $book = $this->bookRepository->find($query->bookId);
         if (!$book) {
-            throw new \RuntimeException('Book not found');
+            throw NotFoundException::forBook($query->bookId);
         }
 
         $items = array_map(

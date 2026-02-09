@@ -4,6 +4,7 @@ namespace App\Application\Handler\Command;
 use App\Application\Command\Rating\RateBookCommand;
 use App\Entity\Rating;
 use App\Entity\UserBookInteraction;
+use App\Event\RatingCreatedEvent;
 use App\Repository\BookRepository;
 use App\Repository\RatingRepository;
 use App\Repository\UserRepository;
@@ -11,6 +12,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 #[AsMessageHandler(bus: 'command.bus')]
 class RateBookHandler
@@ -19,7 +21,8 @@ class RateBookHandler
         private RatingRepository $ratingRepository,
         private BookRepository $bookRepository,
         private UserRepository $userRepository,
-        private EntityManagerInterface $entityManager
+        private EntityManagerInterface $entityManager,
+        private EventDispatcherInterface $eventDispatcher,
     ) {
     }
 
@@ -79,6 +82,8 @@ class RateBookHandler
         $interaction->setType($interactionType);
 
         $this->entityManager->flush();
+
+        $this->eventDispatcher->dispatch(new RatingCreatedEvent($existingRating));
 
         return [
             'rating' => [

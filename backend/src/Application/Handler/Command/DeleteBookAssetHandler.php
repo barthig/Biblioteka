@@ -2,6 +2,7 @@
 namespace App\Application\Handler\Command;
 
 use App\Application\Command\BookAsset\DeleteBookAssetCommand;
+use App\Exception\NotFoundException;
 use App\Repository\BookDigitalAssetRepository;
 use App\Repository\BookRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -23,12 +24,12 @@ class DeleteBookAssetHandler
     {
         $book = $this->bookRepository->find($command->bookId);
         if (!$book) {
-            throw new \RuntimeException('Book not found');
+            throw NotFoundException::forBook($command->bookId);
         }
 
         $asset = $this->assetRepository->find($command->assetId);
         if (!$asset || $asset->getBook()->getId() !== $book->getId()) {
-            throw new \RuntimeException('Asset not found');
+            throw NotFoundException::forEntity('BookDigitalAsset', $command->assetId);
         }
 
         $path = $this->assetDirectory() . DIRECTORY_SEPARATOR . $asset->getStorageName();

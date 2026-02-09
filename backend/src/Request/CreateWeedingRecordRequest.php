@@ -5,14 +5,14 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 class CreateWeedingRecordRequest
 {
-    #[Assert\NotBlank(message: 'ID książki jest wymagane')]
+    #[Assert\NotBlank(message: 'Book ID is required')]
     #[Assert\Positive]
     public ?int $bookId = null;
 
     #[Assert\Positive]
     public ?int $copyId = null;
 
-    #[Assert\NotBlank(message: 'Powód wycofania jest wymagany')]
+    #[Assert\NotBlank(message: 'Weeding reason is required')]
     #[Assert\Length(min: 2, max: 255)]
     public ?string $reason = null;
 
