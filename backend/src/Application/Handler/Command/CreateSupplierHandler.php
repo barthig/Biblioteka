@@ -7,7 +7,7 @@ use App\Entity\Supplier;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
-#[AsMessageHandler]
+#[AsMessageHandler(bus: 'command.bus')]
 class CreateSupplierHandler
 {
     public function __construct(private readonly EntityManagerInterface $entityManager)

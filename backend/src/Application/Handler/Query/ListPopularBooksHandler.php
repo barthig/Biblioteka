@@ -6,7 +6,7 @@ use App\Application\Query\Book\ListPopularBooksQuery;
 use App\Repository\BookRepository;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
-#[AsMessageHandler]
+#[AsMessageHandler(bus: 'query.bus')]
 class ListPopularBooksHandler
 {
     public function __construct(

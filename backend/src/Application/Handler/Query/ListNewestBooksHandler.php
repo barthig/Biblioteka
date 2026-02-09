@@ -6,7 +6,7 @@ use App\Application\Query\Book\ListNewestBooksQuery;
 use App\Repository\BookRepository;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
-#[AsMessageHandler]
+#[AsMessageHandler(bus: 'query.bus')]
 class ListNewestBooksHandler
 {
     public function __construct(

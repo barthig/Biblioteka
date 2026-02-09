@@ -7,7 +7,7 @@ use App\Entity\Book;
 use App\Repository\BookRepository;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
-#[AsMessageHandler]
+#[AsMessageHandler(bus: 'query.bus')]
 class ExportCatalogHandler
 {
     public function __construct(

@@ -8,7 +8,7 @@ use App\Exception\NotFoundException;
 use App\Repository\AnnouncementRepository;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
-#[AsMessageHandler]
+#[AsMessageHandler(bus: 'query.bus')]
 class GetAnnouncementHandler
 {
     public function __construct(private readonly AnnouncementRepository $repository)

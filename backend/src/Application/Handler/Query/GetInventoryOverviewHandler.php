@@ -7,7 +7,7 @@ use App\Entity\BookCopy;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
-#[AsMessageHandler]
+#[AsMessageHandler(bus: 'query.bus')]
 class GetInventoryOverviewHandler
 {
     public function __construct(

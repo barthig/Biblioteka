@@ -9,7 +9,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
-#[AsMessageHandler]
+#[AsMessageHandler(bus: 'query.bus')]
 class ListBookReviewsHandler
 {
     public function __construct(
@@ -37,7 +37,6 @@ class ListBookReviewsHandler
             return [
                 'id' => $rating->getId(),
                 'rating' => $rating->getRating(),
-                'comment' => $rating->getReview(),
                 'user' => [
                     'id' => $user->getId(),
                     'name' => $user->getName(),

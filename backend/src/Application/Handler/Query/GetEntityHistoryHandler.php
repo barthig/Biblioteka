@@ -6,7 +6,7 @@ use App\Application\Query\AuditLog\GetEntityHistoryQuery;
 use App\Repository\AuditLogRepository;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
-#[AsMessageHandler]
+#[AsMessageHandler(bus: 'query.bus')]
 class GetEntityHistoryHandler
 {
     public function __construct(

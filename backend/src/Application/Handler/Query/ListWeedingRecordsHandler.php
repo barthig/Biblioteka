@@ -6,7 +6,7 @@ use App\Application\Query\Weeding\ListWeedingRecordsQuery;
 use App\Repository\WeedingRecordRepository;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
-#[AsMessageHandler]
+#[AsMessageHandler(bus: 'query.bus')]
 class ListWeedingRecordsHandler
 {
     public function __construct(private readonly WeedingRecordRepository $repository)

@@ -11,7 +11,7 @@ use App\Repository\AcquisitionOrderRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
-#[AsMessageHandler]
+#[AsMessageHandler(bus: 'command.bus')]
 class ReceiveOrderHandler
 {
     public function __construct(

@@ -8,6 +8,10 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity(repositoryClass: NotificationLogRepository::class)]
 #[ORM\Table(name: 'notification_log')]
 #[ORM\UniqueConstraint(name: 'uq_notification_fingerprint_channel', columns: ['fingerprint', 'channel'])]
+#[ORM\Index(columns: ['user_id'], name: 'idx_notification_user')]
+#[ORM\Index(columns: ['type'], name: 'idx_notification_type')]
+#[ORM\Index(columns: ['status'], name: 'idx_notification_status')]
+#[ORM\Index(columns: ['sent_at'], name: 'idx_notification_sent')]
 class NotificationLog
 {
     #[ORM\Id]

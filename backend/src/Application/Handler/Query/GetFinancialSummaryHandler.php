@@ -8,7 +8,7 @@ use App\Entity\Fine;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
-#[AsMessageHandler]
+#[AsMessageHandler(bus: 'query.bus')]
 class GetFinancialSummaryHandler
 {
     public function __construct(

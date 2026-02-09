@@ -6,6 +6,11 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: 'App\\Repository\\ReservationRepository')]
+#[ORM\Table(name: 'reservation')]
+#[ORM\Index(columns: ['user_id', 'status'], name: 'idx_reservation_user_status')]
+#[ORM\Index(columns: ['book_id', 'status'], name: 'idx_reservation_book_status')]
+#[ORM\Index(columns: ['expires_at'], name: 'idx_reservation_expires')]
+#[ORM\Index(columns: ['status'], name: 'idx_reservation_status')]
 class Reservation
 {
     public const STATUS_ACTIVE = 'ACTIVE';

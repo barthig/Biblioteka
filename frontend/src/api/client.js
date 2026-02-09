@@ -2,6 +2,7 @@
  * API Client with interceptors, retry logic, and error handling
  * Centralized API communication layer
  */
+import { logger } from '../utils/logger'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
@@ -88,8 +89,7 @@ const responseInterceptors = [
   async (response, url, startTime) => {
     if (config.enableLogging) {
       const duration = Date.now() - startTime
-      // eslint-disable-next-line no-console
-      console.log(`[API] ${response.status} ${url} (${duration}ms)`)
+      logger.log(`[API] ${response.status} ${url} (${duration}ms)`)
     }
     return response
   },
@@ -102,8 +102,7 @@ const errorInterceptors = [
   // Log errors
   async (error, url) => {
     if (config.enableLogging) {
-      // eslint-disable-next-line no-console
-      console.error(`[API Error] ${url}:`, error.message)
+      logger.error(`[API Error] ${url}:`, error.message)
     }
     return error
   },
@@ -275,8 +274,7 @@ export const apiClient = async (endpoint, options = {}) => {
       if (shouldRetry(error, attempt, options)) {
         const delay = config.retryDelay * Math.pow(2, attempt - 1) // Exponential backoff
         if (config.enableLogging) {
-          // eslint-disable-next-line no-console
-          console.log(`[API] Retrying ${url} in ${delay}ms (attempt ${attempt + 1}/${config.retryAttempts})`)
+          logger.log(`[API] Retrying ${url} in ${delay}ms (attempt ${attempt + 1}/${config.retryAttempts})`)
         }
         await sleep(delay)
         continue

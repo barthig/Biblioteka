@@ -8,7 +8,7 @@ use App\Repository\AnnouncementRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
-#[AsMessageHandler]
+#[AsMessageHandler(bus: 'command.bus')]
 class DeleteAnnouncementHandler
 {
     public function __construct(

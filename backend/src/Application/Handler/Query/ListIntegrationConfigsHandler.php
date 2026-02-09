@@ -6,7 +6,7 @@ use App\Application\Query\IntegrationConfig\ListIntegrationConfigsQuery;
 use App\Repository\IntegrationConfigRepository;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
-#[AsMessageHandler]
+#[AsMessageHandler(bus: 'query.bus')]
 class ListIntegrationConfigsHandler
 {
     public function __construct(

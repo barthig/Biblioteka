@@ -8,6 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity(repositoryClass: RatingRepository::class)]
 #[ORM\Table(name: 'rating')]
 #[ORM\UniqueConstraint(name: 'user_book_unique', columns: ['user_id', 'book_id'])]
+#[ORM\Index(columns: ['book_id'], name: 'idx_rating_book')]
 class Rating
 {
     #[ORM\Id]
@@ -25,9 +26,6 @@ class Rating
 
     #[ORM\Column(type: 'smallint')]
     private int $rating; // 1-5
-
-    #[ORM\Column(type: 'text', nullable: true)]
-    private ?string $review = null;
 
     #[ORM\Column(type: 'datetime_immutable')]
     private \DateTimeImmutable $createdAt;
@@ -55,14 +53,6 @@ class Rating
             throw new \InvalidArgumentException('Rating must be between 1 and 5');
         }
         $this->rating = $rating; 
-        $this->updatedAt = new \DateTimeImmutable();
-        return $this; 
-    }
-    
-    public function getReview(): ?string { return $this->review; }
-    public function setReview(?string $review): self 
-    { 
-        $this->review = $review; 
         $this->updatedAt = new \DateTimeImmutable();
         return $this; 
     }

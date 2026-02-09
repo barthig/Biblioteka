@@ -27,28 +27,18 @@ class JwtAuthenticator extends AbstractAuthenticator
 
         // Only protect API/admin paths; skip OPTIONS and public routes
         if (!str_starts_with($path, '/api') && !str_starts_with($path, '/admin')) {
-            error_log("JwtAuthenticator::supports: FALSE - not API/admin path: $path");
             return false;
         }
         if ($method === 'OPTIONS') {
-            error_log("JwtAuthenticator::supports: FALSE - OPTIONS request: $path");
             return false;
         }
         if ($this->isPublicRoute($path, $method)) {
-            error_log("JwtAuthenticator::supports: FALSE - public route: $path");
             return false;
         }
 
         // Check for credentials
         $hasBearer = $this->getBearerToken($request) !== null;
         $hasApiSecret = $request->headers->get('x-api-secret');
-
-        error_log(sprintf(
-            "JwtAuthenticator::supports: path=%s, hasBearer=%s, hasApiSecret=%s, result=TRUE",
-            $path,
-            $hasBearer ? 'YES' : 'NO',
-            $hasApiSecret ? 'YES' : 'NO'
-        ));
 
         if ($hasBearer || $hasApiSecret) {
             return true; // Yes, we should authenticate
@@ -78,20 +68,17 @@ class JwtAuthenticator extends AbstractAuthenticator
 
         $token = $this->getBearerToken($request);
         if (!$token) {
-            error_log("JwtAuthenticator: No bearer token for path=$path");
             throw new CustomUserMessageAuthenticationException('Missing bearer token');
         }
 
         $payload = JwtService::validateToken($token);
         if (!$payload) {
-            error_log("JwtAuthenticator: Invalid token for path=$path");
             throw new CustomUserMessageAuthenticationException('Invalid or expired token');
         }
 
         $userId = $payload['sub'] ?? null;
         $user = $userId ? $this->users->find($userId) : null;
         if (!$user) {
-            error_log("JwtAuthenticator: User not found for userId=$userId, path=$path");
             throw new CustomUserMessageAuthenticationException('User not found');
         }
 
@@ -110,8 +97,6 @@ class JwtAuthenticator extends AbstractAuthenticator
         // Set jwt_payload and jwt_user attributes for controllers
         $request->attributes->set('jwt_payload', $payload);
         $request->attributes->set('jwt_user', $user);
-        
-        error_log("JwtAuthenticator: SUCCESS userId=$userId, path=$path");
 
         // Roles are on the User; payload is validated already
         return new SelfValidatingPassport(new UserBadge((string) $userId, fn() => $user));
@@ -140,11 +125,6 @@ class JwtAuthenticator extends AbstractAuthenticator
     private function getBearerToken(Request $request): ?string
     {
         $auth = $request->headers->get('authorization');
-        error_log(sprintf(
-            "JwtAuthenticator::getBearerToken: path=%s, auth_header=%s",
-            $request->getPathInfo(),
-            $auth ? 'PRESENT(' . strlen($auth) . ' chars)' : 'NULL'
-        ));
         if (!$auth || stripos($auth, 'bearer ') !== 0) {
             return null;
         }

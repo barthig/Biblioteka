@@ -80,7 +80,7 @@ jobs:
         run: php bin/console doctrine:migrations:migrate --no-interaction --env=test
 
       - name: Run PHPStan (Static Analysis)
-        run: vendor/bin/phpstan analyse src --level=5 --no-progress
+        run: vendor/bin/phpstan analyse src --level=6 --no-progress
 
       - name: Run PHPUnit tests
         run: vendor/bin/phpunit --coverage-clover coverage.xml

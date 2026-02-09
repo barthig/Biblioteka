@@ -8,7 +8,7 @@ use App\Exception\NotFoundException;
 use App\Repository\BookRepository;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
-#[AsMessageHandler]
+#[AsMessageHandler(bus: 'query.bus')]
 class ListBookCopiesHandler
 {
     public function __construct(

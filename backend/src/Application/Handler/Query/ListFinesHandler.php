@@ -8,7 +8,7 @@ use App\Repository\FineRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
-#[AsMessageHandler]
+#[AsMessageHandler(bus: 'query.bus')]
 class ListFinesHandler
 {
     public function __construct(

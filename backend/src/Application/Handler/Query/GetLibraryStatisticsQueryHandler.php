@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace App\Application\QueryHandler\Statistics;
+namespace App\Application\Handler\Query;
 
 use App\Application\Query\Statistics\GetLibraryStatisticsQuery;
 use App\Repository\LoanRepository;
@@ -11,7 +11,7 @@ use App\Repository\BookRepository;
 use App\Repository\AuditLogRepository;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
-#[AsMessageHandler]
+#[AsMessageHandler(bus: 'query.bus')]
 class GetLibraryStatisticsQueryHandler
 {
     public function __construct(

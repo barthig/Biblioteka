@@ -7,6 +7,9 @@ use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Annotation\SerializedName;
 
 #[ORM\Entity(repositoryClass: 'App\\Repository\\BookCopyRepository')]
+#[ORM\Table(name: 'book_copy')]
+#[ORM\Index(columns: ['status'], name: 'idx_book_copy_status')]
+#[ORM\Index(columns: ['access_type'], name: 'idx_book_copy_access')]
 class BookCopy
 {
     public const STATUS_AVAILABLE = 'AVAILABLE';

@@ -40,13 +40,13 @@ class AuditLog
     #[Groups(['audit:read'])]
     private ?string $ipAddress = null;
 
-    #[ORM\Column(type: 'text', nullable: true)]
+    #[ORM\Column(type: 'json', nullable: true)]
     #[Groups(['audit:read'])]
-    private ?string $oldValues = null;
+    private ?array $oldValues = null;
 
-    #[ORM\Column(type: 'text', nullable: true)]
+    #[ORM\Column(type: 'json', nullable: true)]
     #[Groups(['audit:read'])]
-    private ?string $newValues = null;
+    private ?array $newValues = null;
 
     #[ORM\Column(type: 'text', nullable: true)]
     #[Groups(['audit:read'])]
@@ -121,23 +121,23 @@ class AuditLog
         return $this;
     }
 
-    public function getOldValues(): ?string
+    public function getOldValues(): ?array
     {
         return $this->oldValues;
     }
 
-    public function setOldValues(?string $oldValues): self
+    public function setOldValues(?array $oldValues): self
     {
         $this->oldValues = $oldValues;
         return $this;
     }
 
-    public function getNewValues(): ?string
+    public function getNewValues(): ?array
     {
         return $this->newValues;
     }
 
-    public function setNewValues(?string $newValues): self
+    public function setNewValues(?array $newValues): self
     {
         $this->newValues = $newValues;
         return $this;

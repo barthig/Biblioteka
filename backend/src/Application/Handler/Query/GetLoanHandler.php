@@ -8,7 +8,7 @@ use App\Exception\AuthorizationException;
 use App\Repository\LoanRepository;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
-#[AsMessageHandler]
+#[AsMessageHandler(bus: 'query.bus')]
 class GetLoanHandler
 {
     public function __construct(

@@ -6,6 +6,9 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: 'App\\Repository\\WeedingRecordRepository')]
+#[ORM\Table(name: 'weeding_record')]
+#[ORM\Index(columns: ['book_id'], name: 'idx_weeding_book')]
+#[ORM\Index(columns: ['action'], name: 'idx_weeding_action')]
 class WeedingRecord
 {
     public const ACTION_DISCARD = 'DISCARD';

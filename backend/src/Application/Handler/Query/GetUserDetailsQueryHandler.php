@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace App\Application\QueryHandler\User;
+namespace App\Application\Handler\Query;
 
 use App\Application\Query\User\GetUserDetailsQuery;
 use App\Exception\NotFoundException;
@@ -10,7 +10,7 @@ use App\Repository\LoanRepository;
 use App\Repository\FineRepository;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
-#[AsMessageHandler]
+#[AsMessageHandler(bus: 'query.bus')]
 class GetUserDetailsQueryHandler
 {
     public function __construct(

@@ -62,7 +62,6 @@ class RatingController extends AbstractController
                 $userRating = [
                     'id' => $userRatings[0]->getId(),
                     'rating' => $userRatings[0]->getRating(),
-                    'review' => $userRatings[0]->getReview()
                 ];
             }
         }
@@ -74,7 +73,6 @@ class RatingController extends AbstractController
             'ratings' => array_map(fn(Rating $r) => [
                 'id' => $r->getId(),
                 'rating' => $r->getRating(),
-                'review' => $r->getReview(),
                 'userName' => $r->getUser()->getName(),
                 'createdAt' => $r->getCreatedAt()->format('Y-m-d H:i:s'),
                 'updatedAt' => $r->getUpdatedAt()?->format('Y-m-d H:i:s'),
@@ -199,7 +197,6 @@ class RatingController extends AbstractController
             'ratings' => array_map(fn(Rating $r) => [
                 'id' => $r->getId(),
                 'rating' => $r->getRating(),
-                'review' => $r->getReview(),
                 'book' => [
                     'id' => $r->getBook()->getId(),
                     'title' => $r->getBook()->getTitle(),

@@ -9,6 +9,11 @@ use Symfony\Component\Serializer\Attribute\Groups;
 use Symfony\Component\Serializer\Attribute\SerializedName;
 
 #[ORM\Entity]
+#[ORM\Table(name: 'book')]
+#[ORM\Index(columns: ['isbn'], name: 'idx_book_isbn')]
+#[ORM\Index(columns: ['title'], name: 'idx_book_title')]
+#[ORM\Index(columns: ['publication_year'], name: 'idx_book_pub_year')]
+#[ORM\HasLifecycleCallbacks]
 class Book
 {
     public const AGE_GROUP_TODDLERS = '0-2';
@@ -123,7 +128,10 @@ class Book
 
     #[ORM\Column(type: 'datetime_immutable')]
     #[Groups(['book:read', 'reservation:read'])]
-    private \DateTimeInterface $createdAt;
+    private \DateTimeImmutable $createdAt;
+
+    #[ORM\Column(type: 'datetime_immutable')]
+    private \DateTimeImmutable $updatedAt;
 
     #[Groups(['book:read'])]
     private bool $isFavorite = false;
@@ -137,10 +145,19 @@ class Book
     public function __construct()
     {
         $this->createdAt = new \DateTimeImmutable();
+        $this->updatedAt = new \DateTimeImmutable();
         $this->categories = new ArrayCollection();
         $this->inventory = new ArrayCollection();
         $this->digitalAssets = new ArrayCollection();
     }
+
+    #[ORM\PreUpdate]
+    public function onPreUpdate(): void
+    {
+        $this->updatedAt = new \DateTimeImmutable();
+    }
+
+    public function getUpdatedAt(): \DateTimeImmutable { return $this->updatedAt; }
 
     public function getId(): ?int
     {

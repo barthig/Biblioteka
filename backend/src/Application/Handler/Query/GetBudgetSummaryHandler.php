@@ -7,7 +7,7 @@ use App\Exception\NotFoundException;
 use App\Repository\AcquisitionBudgetRepository;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
-#[AsMessageHandler]
+#[AsMessageHandler(bus: 'query.bus')]
 class GetBudgetSummaryHandler
 {
     public function __construct(private readonly AcquisitionBudgetRepository $repository)

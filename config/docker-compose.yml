@@ -68,8 +68,8 @@ services:
       redis:
         condition: service_healthy
     environment:
-      APP_ENV: prod
-      APP_DEBUG: 0
+      APP_ENV: dev
+      APP_DEBUG: 1
       DATABASE_URL: postgresql://biblioteka:biblioteka@db:5432/biblioteka_dev?serverVersion=16&charset=utf8
       MESSENGER_TRANSPORT_DSN: "amqp://app:app@rabbitmq:5672/%2f"
       REDIS_URL: redis://redis:6379
@@ -97,7 +97,7 @@ services:
         fi &&
         php bin/console doctrine:query:sql \"SELECT setval('reservation_id_seq', COALESCE((SELECT MAX(id) FROM reservation), 1), true);\" &&
         php bin/console doctrine:query:sql \"SELECT setval('loan_id_seq', COALESCE((SELECT MAX(id) FROM loan), 1), true);\" &&
-        php bin/console cache:warmup --env=prod &&
+        php bin/console cache:warmup --env=dev &&
         chown -R www-data:www-data /app/var &&
         chmod -R 775 /app/var &&
         php-fpm -F
@@ -130,8 +130,8 @@ services:
       redis:
         condition: service_healthy
     environment:
-      APP_ENV: prod
-      APP_DEBUG: 0
+      APP_ENV: dev
+      APP_DEBUG: 1
       DATABASE_URL: postgresql://biblioteka:biblioteka@db:5432/biblioteka_dev?serverVersion=16&charset=utf8
       MESSENGER_TRANSPORT_DSN: "amqp://app:app@rabbitmq:5672/%2f"
       REDIS_URL: redis://redis:6379

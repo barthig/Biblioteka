@@ -6,6 +6,9 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: 'App\\Repository\\FineRepository')]
+#[ORM\Table(name: 'fine')]
+#[ORM\Index(columns: ['loan_id'], name: 'idx_fine_loan')]
+#[ORM\Index(columns: ['paid_at'], name: 'idx_fine_paid')]
 class Fine
 {
     #[ORM\Id]

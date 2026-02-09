@@ -2,8 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Command\Reservation;
+namespace App\Application\Handler\Command;
 
+use App\Application\Command\Reservation\PrepareReservationCommand;
 use App\Entity\Reservation;
 use App\Exception\BusinessLogicException;
 use App\Exception\NotFoundException;
@@ -12,7 +13,7 @@ use App\Service\User\NotificationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
-#[AsMessageHandler]
+#[AsMessageHandler(bus: 'command.bus')]
 final readonly class PrepareReservationCommandHandler
 {
     public function __construct(

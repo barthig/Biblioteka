@@ -101,6 +101,8 @@ framework:
       App\Application\Command\User\UpdatePreferencesCommand: sync
       App\Application\Command\User\UpdateUIPreferencesCommand: sync
       App\Application\Command\Weeding\CreateWeedingRecordCommand: sync
+      App\Application\Command\Loan\UpdateLoanCommand: sync
+      App\Application\Command\Reservation\PrepareReservationCommand: sync
       
       # Queries - synchronous
       App\Application\Query\Loan\GetLoanQuery: sync
@@ -158,6 +160,10 @@ framework:
       App\Application\Query\StaffRole\GetStaffRoleQuery: sync
       App\Application\Query\StaffRole\ListStaffRolesQuery: sync
       App\Application\Query\User\GetUserDetailsQuery: sync
+      App\Application\Query\User\GetUserByIdQuery: sync
+      App\Application\Query\Book\ExportBooksQuery: sync
+      App\Application\Query\Recommendation\FindSimilarBooksQuery: sync
+      App\Application\Query\Statistics\GetLibraryStatisticsQuery: sync
       App\Application\Query\Weeding\ListWeedingRecordsQuery: sync
       
       # Messages - asynchronous

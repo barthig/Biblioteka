@@ -6,7 +6,7 @@ use App\Application\Query\Loan\ListUserLoansQuery;
 use App\Repository\LoanRepository;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
-#[AsMessageHandler]
+#[AsMessageHandler(bus: 'query.bus')]
 class ListUserLoansHandler
 {
     public function __construct(

@@ -23,3 +23,9 @@ framework:
             policy: 'fixed_window'
             limit: 3
             interval: '1 hour'
+
+        # Global API rate limit
+        api_global:
+            policy: 'token_bucket'
+            limit: 200
+            rate: { interval: '1 minute', amount: 200 }

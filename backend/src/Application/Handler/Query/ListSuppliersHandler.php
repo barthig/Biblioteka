@@ -6,7 +6,7 @@ use App\Application\Query\Acquisition\ListSuppliersQuery;
 use App\Repository\SupplierRepository;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
-#[AsMessageHandler]
+#[AsMessageHandler(bus: 'query.bus')]
 class ListSuppliersHandler
 {
     public function __construct(private readonly SupplierRepository $repository)

@@ -6,7 +6,7 @@ use App\Application\Query\Author\ListAuthorsQuery;
 use App\Repository\AuthorRepository;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
-#[AsMessageHandler]
+#[AsMessageHandler(bus: 'query.bus')]
 class ListAuthorsHandler
 {
     public function __construct(

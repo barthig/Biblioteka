@@ -7,7 +7,7 @@ use App\Entity\Reservation;
 use App\Repository\ReservationRepository;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
-#[AsMessageHandler]
+#[AsMessageHandler(bus: 'query.bus')]
 class GetReservationHandler
 {
     public function __construct(

@@ -12,7 +12,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
-#[AsMessageHandler]
+#[AsMessageHandler(bus: 'command.bus')]
 class CreateReviewHandler
 {
     public function __construct(
@@ -54,8 +54,7 @@ class CreateReviewHandler
                 ->setBook($book)
                 ->setUser($user);
         }
-        $rating->setRating($command->rating)
-               ->setReview($command->comment);
+        $rating->setRating($command->rating);
         $this->entityManager->persist($rating);
         $this->entityManager->flush();
 

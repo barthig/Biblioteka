@@ -9,7 +9,7 @@ use App\Repository\AcquisitionBudgetRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
-#[AsMessageHandler]
+#[AsMessageHandler(bus: 'command.bus')]
 class UpdateBudgetHandler
 {
     public function __construct(

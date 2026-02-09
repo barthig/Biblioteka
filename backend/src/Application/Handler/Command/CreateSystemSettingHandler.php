@@ -7,7 +7,7 @@ use App\Entity\SystemSetting;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
-#[AsMessageHandler]
+#[AsMessageHandler(bus: 'command.bus')]
 class CreateSystemSettingHandler
 {
     public function __construct(

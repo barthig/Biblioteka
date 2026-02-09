@@ -7,7 +7,7 @@ use App\Entity\Loan;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
-#[AsMessageHandler]
+#[AsMessageHandler(bus: 'query.bus')]
 class GetPopularTitlesHandler
 {
     public function __construct(

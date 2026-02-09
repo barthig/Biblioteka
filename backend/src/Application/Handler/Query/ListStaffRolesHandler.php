@@ -6,7 +6,7 @@ use App\Application\Query\StaffRole\ListStaffRolesQuery;
 use App\Repository\StaffRoleRepository;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
-#[AsMessageHandler]
+#[AsMessageHandler(bus: 'query.bus')]
 class ListStaffRolesHandler
 {
     public function __construct(

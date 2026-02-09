@@ -21,11 +21,10 @@ class JwtService
     /**
      * @param array<string, mixed> $claims
      */
-    public static function createToken(array $claims, int $ttl = 86400): string
+    public static function createToken(array $claims, int $ttl = 900): string
     {
         $secrets = self::getSecrets();
         if (empty($secrets)) {
-            error_log('JWT secret is not configured');
             throw new ExternalServiceException('JWT secret is not configured');
         }
 

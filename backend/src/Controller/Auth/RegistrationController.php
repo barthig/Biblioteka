@@ -70,11 +70,10 @@ class RegistrationController extends AbstractController
     )]
     public function register(Request $request, RegistrationService $registrationService, ValidatorInterface $validator): JsonResponse
     {
-        // Rate limiting tymczasowo wyłączone
-        // $limiter = $this->registrationAttemptsLimiter->create($request->getClientIp());
-        // if (!$limiter->consume(1)->isAccepted()) {
-        //     return $this->json(['message' => 'Zbyt wiele prób rejestracji. Spróbuj ponownie później.'], 429);
-        // }
+        $limiter = $this->registrationAttemptsLimiter->create($request->getClientIp());
+        if (!$limiter->consume(1)->isAccepted()) {
+            return $this->json(['message' => 'Zbyt wiele prób rejestracji. Spróbuj ponownie później.'], 429);
+        }
         
         $data = json_decode($request->getContent(), true) ?: [];
 

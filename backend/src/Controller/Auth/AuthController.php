@@ -55,7 +55,7 @@ class AuthController extends AbstractController
                     properties: [
                         new OA\Property(property: 'token', type: 'string'),
                         new OA\Property(property: 'refreshToken', type: 'string'),
-                        new OA\Property(property: 'expiresIn', type: 'integer', example: 86400),
+                        new OA\Property(property: 'expiresIn', type: 'integer', example: 900),
                         new OA\Property(property: 'refreshExpiresIn', type: 'integer', example: 2592000),
                     ]
                 )
@@ -138,7 +138,7 @@ class AuthController extends AbstractController
             return $this->json([
                 'token' => $token,
                 'refreshToken' => $refreshTokenString,
-                'expiresIn' => 86400,
+                'expiresIn' => 900,
                 'refreshExpiresIn' => 2592000,
             ], 200);
         } catch (\Throwable $e) {
@@ -216,7 +216,7 @@ class AuthController extends AbstractController
                     properties: [
                         new OA\Property(property: 'token', type: 'string'),
                         new OA\Property(property: 'refreshToken', type: 'string'),
-                        new OA\Property(property: 'expiresIn', type: 'integer', example: 86400),
+                        new OA\Property(property: 'expiresIn', type: 'integer', example: 900),
                         new OA\Property(property: 'refreshExpiresIn', type: 'integer', example: 2592000),
                     ]
                 )
@@ -241,6 +241,18 @@ class AuthController extends AbstractController
             return $this->jsonError(ApiError::unauthorized());
         }
 
+        // S-13: Validate user status on token refresh
+        $appEnv = getenv('APP_ENV') ?: ($_ENV['APP_ENV'] ?? null);
+        if ($appEnv !== 'test' && !$user->isVerified()) {
+            return $this->jsonError(ApiError::forbidden());
+        }
+        if ($user->isPendingApproval()) {
+            return $this->jsonError(ApiError::forbidden());
+        }
+        if ($user->isBlocked()) {
+            return $this->jsonError(ApiError::forbidden());
+        }
+
         $this->refreshTokenService->revokeRefreshToken($refreshTokenString);
         
         try {
@@ -260,7 +272,7 @@ class AuthController extends AbstractController
         return $this->json([
             'token' => $token,
             'refreshToken' => $newRefreshTokenString,
-            'expiresIn' => 86400,
+            'expiresIn' => 900,
             'refreshExpiresIn' => 2592000,
         ], 200);
     }

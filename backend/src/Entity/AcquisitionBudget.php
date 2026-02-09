@@ -6,6 +6,8 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: 'App\\Repository\\AcquisitionBudgetRepository')]
+#[ORM\Table(name: 'acquisition_budget')]
+#[ORM\Index(columns: ['fiscal_year'], name: 'idx_budget_fiscal_year')]
 class AcquisitionBudget
 {
     #[ORM\Id]
@@ -139,8 +141,7 @@ class AcquisitionBudget
         }
 
         $current = (float) $this->spentAmount;
-        $change = (float) $this->normalizeMoney($delta);
-        $change = (float) $delta < 0 ? -$change : $change;
+        $change = (float) $delta;
         $this->spentAmount = number_format(max(0.0, $current + $change), 2, '.', '');
         $this->touch();
         return $this;

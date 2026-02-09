@@ -6,6 +6,10 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: 'App\\Repository\\AcquisitionOrderRepository')]
+#[ORM\Table(name: 'acquisition_order')]
+#[ORM\Index(columns: ['status'], name: 'idx_order_status')]
+#[ORM\Index(columns: ['supplier_id'], name: 'idx_order_supplier')]
+#[ORM\Index(columns: ['created_at'], name: 'idx_order_created')]
 class AcquisitionOrder
 {
     public const STATUS_DRAFT = 'DRAFT';

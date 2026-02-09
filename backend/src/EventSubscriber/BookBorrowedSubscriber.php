@@ -43,11 +43,11 @@ final class BookBorrowedSubscriber implements EventSubscriberInterface
             $auditLog->setEntityType('Loan');
             $auditLog->setEntityId($loan->getId());
             $auditLog->setUser($loan->getUser());
-            $auditLog->setNewValues(json_encode([
+            $auditLog->setNewValues([
                 'bookId' => $loan->getBook()?->getId(),
                 'bookTitle' => $loan->getBook()?->getTitle(),
                 'dueDate' => $loan->getDueAt()?->format('Y-m-d')
-            ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+            ]);
             
             $this->auditLogRepository->save($auditLog, true);
             

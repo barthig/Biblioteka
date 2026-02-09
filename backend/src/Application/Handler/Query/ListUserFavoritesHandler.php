@@ -8,7 +8,7 @@ use App\Repository\FavoriteRepository;
 
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
-#[AsMessageHandler]
+#[AsMessageHandler(bus: 'query.bus')]
 class ListUserFavoritesHandler
 {
     public function __construct(

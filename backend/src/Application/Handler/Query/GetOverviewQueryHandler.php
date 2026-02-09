@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace App\Application\QueryHandler\Dashboard;
+namespace App\Application\Handler\Query;
 
 use App\Application\Query\Dashboard\GetOverviewQuery;
 use App\Entity\Book;
@@ -11,7 +11,7 @@ use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
-#[AsMessageHandler]
+#[AsMessageHandler(bus: 'query.bus')]
 class GetOverviewQueryHandler
 {
     public function __construct(

@@ -11,7 +11,7 @@ use App\Repository\RatingRepository;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
-#[AsMessageHandler]
+#[AsMessageHandler(bus: 'query.bus')]
 class GetBookHandler
 {
     public function __construct(

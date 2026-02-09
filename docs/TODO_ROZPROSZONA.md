@@ -4,6 +4,53 @@ Poniższa lista podsumowuje brakujące elementy wymagane do obrony tezy o archit
 
 > **Legenda statusów:**  ✅ zrobione  |  🔧 do sprawdzenia/dopracowania  |  ⬜ do zrobienia
 
+---
+
+## 0. Poprawki z audytu (FULL_AUDIT_REPORT.md) — ✅ UKOŃCZONE
+
+Wszystkie poprawki z 46-punktowego audytu zostały wdrożone:
+
+### Architektura / CQRS (P-01 … P-04)
+- ✅ **P-01** – Dodano jawny `bus:` do 110 handler `#[AsMessageHandler]` (63 command + 47 query)
+- ✅ **P-02** – Przeniesiono 6 handlerów z `QueryHandler/` do `Handler/Query/`, usunięto legacy namespace z services.yaml
+- ✅ **P-03** – Dodano 6 brakujących wpisów routing do messenger.yaml (UpdateLoanCommand, PrepareReservationCommand, ExportBooksQuery, FindSimilarBooksQuery, GetLibraryStatisticsQuery, GetUserByIdQuery)
+- ✅ **P-04** – Przeniesiono `PrepareReservationCommandHandler` z `Command/Reservation/` do `Handler/Command/`, dodano `bus: 'command.bus'`
+
+### Bezpieczeństwo (S-03, S-04, S-09, S-10, S-13)
+- ✅ **S-03** – CORS wildcard `['*']` → `['%env(CORS_ALLOW_ORIGIN)%']` w nelmio_cors.yaml
+- ✅ **S-04** – Odblokowano rate limiting w RegistrationController
+- ✅ **S-09** – JWT TTL zmieniony z 86400 (24h) na 900 (15 min) — JwtService + AuthController + OA annotations
+- ✅ **S-10** – Usunięto 9 `error_log()` z JwtAuthenticator + 1 z JwtService
+- ✅ **S-13** – Dodano walidację statusu użytkownika (isVerified, isPendingApproval, isBlocked) w endpoincie refresh
+
+### Model danych / Encje (D-01 … D-10)
+- ✅ **D-01** – Dodano 4 indeksy do Loan (user, book, due, returned) + `#[ORM\Table]` + `#[HasLifecycleCallbacks]`
+- ✅ **D-02** – Dodano 4 indeksy do Reservation (user+status, book+status, expires, status) + `#[ORM\Table]`
+- ✅ **D-03** – Usunięto pole `$review` z Rating (dane żyją w Review entity); poprawiono kaskadowo RatingController, RateBookHandler, CreateReviewHandler, ListBookReviewsHandler
+- ✅ **D-04** – `DateTimeInterface` → `DateTimeImmutable` w Loan i Book (properties + getters/setters)
+- ✅ **D-05** – Dodano indeksy do Fine, BookCopy, NotificationLog, WeedingRecord, AcquisitionOrder
+- ✅ **D-07** – Dodano pole `updatedAt` + `#[ORM\PreUpdate]` do Book i Loan
+- ✅ **D-08** – Dodano jawne `#[ORM\Table(name: ...)]` do 8 encji
+- ✅ **D-09** – Naprawiono błąd znaku w `AcquisitionBudget::adjustSpentBy()`
+- ✅ **D-10** – AuditLog `oldValues`/`newValues` zmienione z `text` → `json` (string→array); poprawiono kaskadowo AuditService, BookBorrowedSubscriber, BookReturnedSubscriber
+
+### CI / Konfiguracja (T-03, T-04, O-01, O-02)
+- ✅ **T-03** – Dodano brakujące test suites do phpunit.xml.dist (Integration, Security)
+- ✅ **T-04** – Poprawiono poziom PHPStan w CI z 5 na 6 (zgodność z phpstan.neon)
+- ✅ **O-01** – Skonsolidowano rate_limiter (usunięto duplikat z framework.yaml, dodano api_global do rate_limiter.yaml)
+- ✅ **O-02** – Zmieniono APP_ENV z `prod` na `dev` w docker-compose.yml (środowisko dev)
+
+### Frontend (F-01 … F-07)
+- ✅ **F-01** – ErrorBoundary istnieje i owija App
+- ✅ **F-02** – Legacy api.js przeniesione do .bak/.legacy (usunięte), aktywne API w `api/client.js`
+- ✅ **F-03** – Auth skonsolidowane w `context/AuthContext.jsx`, Zustand store usunięty
+- ✅ **F-04** – React.lazy + Suspense zaimplementowane w App.jsx
+- ✅ **F-05** – AuthGuard chroni chronione trasy
+- ✅ **F-06** – Route `path="*"` → NotFound istnieje
+- ✅ **F-07** – console.log JWT leaks usunięte (pliki legacy usunięte)
+
+---
+
 ## A. Krytyczne (wymagane do zgodności z tematem)
 
 - ✅ **Wydzielenie mikroserwisów**

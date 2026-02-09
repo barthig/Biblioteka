@@ -6,7 +6,7 @@ use App\Application\Query\Announcement\ListAnnouncementsQuery;
 use App\Repository\AnnouncementRepository;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
-#[AsMessageHandler]
+#[AsMessageHandler(bus: 'query.bus')]
 class ListAnnouncementsHandler
 {
     public function __construct(private readonly AnnouncementRepository $repository)

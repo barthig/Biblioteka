@@ -43,11 +43,11 @@ class AuditService
             ->setDescription($description);
 
         if ($oldValues !== null) {
-            $log->setOldValues(json_encode($oldValues, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+            $log->setOldValues($oldValues);
         }
 
         if ($newValues !== null) {
-            $log->setNewValues(json_encode($newValues, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+            $log->setNewValues($newValues);
         }
 
         $this->entityManager->persist($log);

@@ -12,7 +12,7 @@ use App\Repository\BookCopyRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
-#[AsMessageHandler]
+#[AsMessageHandler(bus: 'command.bus')]
 class UpdateBookCopyHandler
 {
     public function __construct(

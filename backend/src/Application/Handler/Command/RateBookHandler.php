@@ -54,17 +54,11 @@ class RateBookHandler
 
         if ($existingRating) {
             $existingRating->setRating($command->rating);
-            if ($command->review !== null) {
-                $existingRating->setReview($command->review);
-            }
         } else {
             $existingRating = (new Rating())
                 ->setUser($user)
                 ->setBook($book)
                 ->setRating($command->rating);
-            if ($command->review) {
-                $existingRating->setReview($command->review);
-            }
             $this->entityManager->persist($existingRating);
         }
 
@@ -90,7 +84,6 @@ class RateBookHandler
             'rating' => [
                 'id' => $existingRating->getId(),
                 'rating' => $existingRating->getRating(),
-                'review' => $existingRating->getReview(),
             ],
             'averageRating' => $this->ratingRepository->getAverageRatingForBook($book->getId()),
             'ratingCount' => $this->ratingRepository->getRatingCountForBook($book->getId())

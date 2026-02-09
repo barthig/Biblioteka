@@ -8,7 +8,7 @@ use App\Repository\SystemSettingRepository;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
-#[AsMessageHandler]
+#[AsMessageHandler(bus: 'query.bus')]
 class GetSystemSettingHandler
 {
     public function __construct(

@@ -49,11 +49,7 @@ services:
     tags:
       - { name: messenger.message_handler, bus: query.bus }
 
-  # Legacy QueryHandler namespace - ensure it also runs on the query bus
-  App\Application\QueryHandler\:
-    resource: '../src/Application/QueryHandler'
-    tags:
-      - { name: messenger.message_handler, bus: query.bus }
+  # Legacy QueryHandler namespace removed — all handlers moved to Handler\Query\
 
   App\DataFixtures\:
     resource: '../src/DataFixtures/'

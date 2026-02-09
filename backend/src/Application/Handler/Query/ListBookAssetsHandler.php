@@ -9,7 +9,7 @@ use App\Repository\BookDigitalAssetRepository;
 use App\Repository\BookRepository;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
-#[AsMessageHandler]
+#[AsMessageHandler(bus: 'query.bus')]
 class ListBookAssetsHandler
 {
     public function __construct(

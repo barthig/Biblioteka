@@ -6,7 +6,7 @@ use App\Application\Query\AuditLog\ListAuditLogsQuery;
 use App\Repository\AuditLogRepository;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
-#[AsMessageHandler]
+#[AsMessageHandler(bus: 'query.bus')]
 class ListAuditLogsHandler
 {
     public function __construct(

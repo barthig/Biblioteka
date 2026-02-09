@@ -6,7 +6,7 @@ use App\Application\Query\SystemSetting\ListSystemSettingsQuery;
 use App\Repository\SystemSettingRepository;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
-#[AsMessageHandler]
+#[AsMessageHandler(bus: 'query.bus')]
 class ListSystemSettingsHandler
 {
     public function __construct(

@@ -6,7 +6,7 @@ use App\Application\Query\Category\ListCategoriesQuery;
 use App\Repository\CategoryRepository;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
-#[AsMessageHandler]
+#[AsMessageHandler(bus: 'query.bus')]
 class ListCategoriesHandler
 {
     public function __construct(
