@@ -4,16 +4,19 @@ namespace App\Application\Handler\Command;
 use App\Application\Command\Reservation\ExpireReservationCommand;
 use App\Entity\BookCopy;
 use App\Entity\Reservation;
+use App\Event\ReservationExpiredEvent;
 use App\Repository\ReservationRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 #[AsMessageHandler]
 class ExpireReservationHandler
 {
     public function __construct(
         private EntityManagerInterface $em,
-        private ReservationRepository $reservationRepository
+        private ReservationRepository $reservationRepository,
+        private EventDispatcherInterface $eventDispatcher,
     ) {
     }
 
@@ -50,5 +53,7 @@ class ExpireReservationHandler
 
         $this->em->persist($reservation);
         $this->em->flush();
+
+        $this->eventDispatcher->dispatch(new ReservationExpiredEvent($reservation));
     }
 }

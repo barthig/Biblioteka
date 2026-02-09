@@ -3,6 +3,7 @@ namespace App\Application\Handler\Command;
 
 use App\Application\Command\Book\UpdateBookCommand;
 use App\Entity\Book;
+use App\Event\BookUpdatedEvent;
 use App\Repository\AuthorRepository;
 use App\Repository\BookRepository;
 use App\Repository\CategoryRepository;
@@ -10,6 +11,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 #[AsMessageHandler]
 class UpdateBookHandler
@@ -18,7 +20,8 @@ class UpdateBookHandler
         private readonly EntityManagerInterface $entityManager,
         private readonly BookRepository $bookRepository,
         private readonly AuthorRepository $authorRepository,
-        private readonly CategoryRepository $categoryRepository
+        private readonly CategoryRepository $categoryRepository,
+        private readonly EventDispatcherInterface $eventDispatcher,
     ) {
     }
 
@@ -87,6 +90,8 @@ class UpdateBookHandler
 
         $this->entityManager->persist($book);
         $this->entityManager->flush();
+
+        $this->eventDispatcher->dispatch(new BookUpdatedEvent($book));
 
         return $book;
     }

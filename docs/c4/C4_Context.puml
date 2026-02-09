@@ -1,0 +1,21 @@
+@startuml C4_Context
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+title System Context Diagram — Biblioteka (Distributed Architecture)
+
+Person(reader, "Czytelnik", "Przegląda katalog, wypożycza książki, ocenia")
+Person(librarian, "Bibliotekarz", "Zarządza katalogiem i wypożyczeniami")
+Person(admin, "Administrator", "Konfiguruje system, zarządza użytkownikami")
+
+System(biblioteka, "System Biblioteka", "Zarządzanie biblioteką w architekturze rozproszonej")
+
+System_Ext(openai, "OpenAI API", "Generowanie embeddingów wektorowych")
+System_Ext(smtp_ext, "Serwer SMTP", "Wysyłka e-mail")
+
+Rel(reader, biblioteka, "Przegląda, wypożycza, rezerwuje", "HTTPS")
+Rel(librarian, biblioteka, "Zarządza katalogiem, wypożyczeniami", "HTTPS")
+Rel(admin, biblioteka, "Administracja, raporty", "HTTPS")
+
+Rel(biblioteka, openai, "Pobiera embeddingi", "HTTPS/REST")
+Rel(biblioteka, smtp_ext, "Wysyła powiadomienia", "SMTP/TLS")
+@enduml

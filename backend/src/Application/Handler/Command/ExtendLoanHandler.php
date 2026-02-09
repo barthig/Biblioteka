@@ -3,11 +3,13 @@ namespace App\Application\Handler\Command;
 
 use App\Application\Command\Loan\ExtendLoanCommand;
 use App\Entity\Loan;
+use App\Event\LoanExtendedEvent;
 use App\Repository\LoanRepository;
 use App\Repository\ReservationRepository;
 use App\Service\System\SystemSettingsService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 #[AsMessageHandler]
 class ExtendLoanHandler
@@ -16,7 +18,8 @@ class ExtendLoanHandler
         private EntityManagerInterface $em,
         private LoanRepository $loanRepository,
         private ReservationRepository $reservationRepository,
-        private SystemSettingsService $settingsService
+        private SystemSettingsService $settingsService,
+        private EventDispatcherInterface $eventDispatcher,
     ) {
     }
 
@@ -58,6 +61,8 @@ class ExtendLoanHandler
 
         $this->em->persist($loan);
         $this->em->flush();
+
+        $this->eventDispatcher->dispatch(new LoanExtendedEvent($loan));
 
         return $loan;
     }

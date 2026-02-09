@@ -1,0 +1,35 @@
+@startuml C4_Component_Backend
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title Component Diagram — Catalog & Loan Service (Symfony Backend)
+
+Container_Boundary(backend, "Catalog & Loan Service") {
+
+    Component(controllers, "REST Controllers", "Symfony Controllers", "HTTP request handling, validation, auth")
+    Component(command_bus, "Command Bus", "Symfony Messenger", "Handles write operations (CQRS)")
+    Component(query_bus, "Query Bus", "Symfony Messenger", "Handles read operations (CQRS)")
+    Component(command_handlers, "Command Handlers", "PHP", "Business logic for writes:\nCreateLoan, ReturnLoan, CreateReservation...")
+    Component(query_handlers, "Query Handlers", "PHP", "Business logic for reads:\nListBooks, GetLoan, GetRecommendations...")
+    Component(domain_events, "Domain Events", "Symfony EventDispatcher", "BookBorrowed, BookReturned, ReservationCreated...")
+    Component(integration_bridge, "Integration Event Bridge", "IntegrationEventBridgeSubscriber", "Bridges domain events → RabbitMQ\n(topic exchange: biblioteka.events)")
+    Component(entities, "Entities / Repositories", "Doctrine ORM", "Book, Loan, User, Reservation...\n29 entities, 35 tables")
+    Component(security, "Security", "JWT Authenticator", "JWT, RBAC (User/Librarian/Admin)")
+}
+
+Rel(controllers, command_bus, "Dispatches commands")
+Rel(controllers, query_bus, "Dispatches queries")
+Rel(command_bus, command_handlers, "Routes to handler")
+Rel(query_bus, query_handlers, "Routes to handler")
+Rel(command_handlers, entities, "Persist via Doctrine")
+Rel(query_handlers, entities, "Read via Doctrine")
+Rel(command_handlers, domain_events, "Dispatch events")
+Rel(domain_events, integration_bridge, "Subscribe")
+
+ComponentDb(db, "PostgreSQL", "Main DB")
+Component_Ext(rabbitmq, "RabbitMQ", "Message Broker")
+
+Rel(entities, db, "SQL")
+Rel(integration_bridge, rabbitmq, "Publish integration events", "AMQP")
+Rel(controllers, security, "Authenticate/Authorize")
+
+@enduml

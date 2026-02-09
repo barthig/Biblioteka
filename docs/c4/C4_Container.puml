@@ -1,0 +1,69 @@
+@startuml C4_Container
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+LAYOUT_WITH_LEGEND()
+
+title Container Diagram — Biblioteka (Distributed Architecture)
+
+Person(user, "Użytkownik", "Czytelnik / Bibliotekarz / Admin")
+
+System_Boundary(system, "System Biblioteka") {
+
+    Container(traefik, "API Gateway", "Traefik v3", "Routing, rate limiting, circuit breaker, TLS termination")
+    Container(frontend, "Frontend SPA", "React 18 / Vite", "Interfejs użytkownika")
+
+    Container(backend, "Catalog & Loan Service", "PHP 8.2 / Symfony 6.4", "Zarządzanie katalogiem, wypożyczeniami, użytkownikami.\nCQRS (command/query bus), REST API")
+    Container(nginx, "Reverse Proxy", "Nginx", "PHP-FPM proxy, static files")
+
+    Container(notification_svc, "Notification Service", "Python / FastAPI", "Wysyłka powiadomień e-mail/SMS.\nKonsumuje zdarzenia z RabbitMQ.\nWłasna baza danych.")
+    Container(recommendation_svc, "Recommendation Service", "Python / FastAPI", "Rekomendacje AI, wyszukiwanie semantyczne.\npgvector embeddingi.\nWłasna baza danych.")
+
+    Container(worker, "Async Worker", "PHP / Symfony Messenger", "Przetwarza komendy async z kolejki")
+
+    ContainerDb(db_main, "Main Database", "PostgreSQL 16 + pgvector", "Katalog, wypożyczenia, użytkownicy\n(Catalog & Loan bounded contexts)")
+    ContainerDb(db_notification, "Notification DB", "PostgreSQL 16", "Logi powiadomień, deduplication")
+    ContainerDb(db_recommendation, "Recommendation DB", "PostgreSQL 16 + pgvector", "Embeddingi książek, interakcje użytkowników")
+
+    Container(rabbitmq, "Message Broker", "RabbitMQ 3.13", "Topic exchange: biblioteka.events\nIntegration events, DLQ, retry")
+    Container(redis, "Cache", "Redis 7", "Sesje, cache zapytań, rate limiting")
+
+    Container(prometheus, "Prometheus", "Metrics", "Zbieranie metryk z serwisów")
+    Container(grafana, "Grafana", "Dashboards", "Wizualizacja metryk i logów")
+    Container(jaeger, "Jaeger", "Tracing", "Distributed tracing")
+}
+
+System_Ext(openai, "OpenAI API", "Embeddingi wektorowe")
+System_Ext(smtp, "SMTP", "E-mail delivery")
+
+' ─── Relationships ───
+
+Rel(user, traefik, "HTTPS", "HTTP/80")
+Rel(traefik, frontend, "Proxy", "/")
+Rel(traefik, nginx, "Proxy", "/api/*")
+Rel(traefik, notification_svc, "Proxy", "/api/notifications/*")
+Rel(traefik, recommendation_svc, "Proxy", "/api/recommendations/*")
+
+Rel(nginx, backend, "FastCGI", "TCP/9000")
+
+Rel(backend, db_main, "SQL", "TCP/5432")
+Rel(backend, redis, "Cache", "TCP/6379")
+Rel(backend, rabbitmq, "Publish events", "AMQP")
+
+Rel(worker, db_main, "SQL", "TCP/5432")
+Rel(worker, rabbitmq, "Consume", "AMQP")
+
+Rel(notification_svc, db_notification, "SQL", "TCP/5432")
+Rel(notification_svc, rabbitmq, "Consume events", "AMQP")
+Rel(notification_svc, smtp, "Send email", "SMTP")
+
+Rel(recommendation_svc, db_recommendation, "SQL + pgvector", "TCP/5432")
+Rel(recommendation_svc, rabbitmq, "Consume events", "AMQP")
+Rel(recommendation_svc, openai, "Embeddings", "HTTPS")
+
+Rel(prometheus, traefik, "Scrape /metrics")
+Rel(prometheus, notification_svc, "Scrape /metrics")
+Rel(prometheus, recommendation_svc, "Scrape /metrics")
+Rel(grafana, prometheus, "Query")
+Rel(grafana, jaeger, "Query traces")
+
+@enduml

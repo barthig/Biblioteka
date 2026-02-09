@@ -1,0 +1,124 @@
+# Traefik dynamic configuration — middleware & routing rules
+
+http:
+  middlewares:
+    # Rate limiting
+    rate-limit:
+      rateLimit:
+        average: 100
+        burst: 50
+        period: 1s
+
+    # CORS
+    cors-headers:
+      headers:
+        accessControlAllowMethods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - PATCH
+          - OPTIONS
+        accessControlAllowHeaders:
+          - Authorization
+          - Content-Type
+          - X-Requested-With
+          - X-API-SECRET
+        accessControlAllowOriginList:
+          - "http://localhost:5173"
+          - "http://localhost:3000"
+        accessControlMaxAge: 86400
+        addVaryHeader: true
+
+    # Circuit breaker
+    circuit-breaker:
+      circuitBreaker:
+        expression: "LatencyAtQuantileMS(50.0) > 1000 || NetworkErrorRatio() > 0.30"
+
+    # Retry on failure
+    retry-middleware:
+      retry:
+        attempts: 3
+        initialInterval: 100ms
+
+  # Routers — ordered by specificity (Traefik auto-prioritizes longer rules)
+  routers:
+    # Notification Service — /api/notifications/**
+    notification-api:
+      rule: "PathPrefix(`/api/notifications`)"
+      service: notification-svc
+      entryPoints:
+        - web
+      middlewares:
+        - cors-headers
+        - rate-limit
+
+    # Recommendation Service — /api/recommendations/**
+    recommendation-api:
+      rule: "PathPrefix(`/api/recommendations`)"
+      service: recommendation-svc
+      entryPoints:
+        - web
+      middlewares:
+        - cors-headers
+        - rate-limit
+
+    # Main backend API — everything else under /api and /health
+    backend-api:
+      rule: "PathPrefix(`/api`) || PathPrefix(`/health`)"
+      service: backend-svc
+      entryPoints:
+        - web
+      middlewares:
+        - cors-headers
+        - rate-limit
+        - circuit-breaker
+
+    # Frontend (lowest priority — catch-all)
+    frontend:
+      rule: "PathPrefix(`/`)"
+      service: frontend-svc
+      entryPoints:
+        - web
+      priority: 1
+
+    # Traefik dashboard
+    traefik-dashboard:
+      rule: "PathPrefix(`/dashboard`)"
+      service: api@internal
+      entryPoints:
+        - web
+
+  # Services
+  services:
+    backend-svc:
+      loadBalancer:
+        servers:
+          - url: "http://nginx:80"
+        healthCheck:
+          path: /health
+          interval: 10s
+          timeout: 3s
+
+    notification-svc:
+      loadBalancer:
+        servers:
+          - url: "http://notification-service:8001"
+        healthCheck:
+          path: /health
+          interval: 10s
+          timeout: 3s
+
+    recommendation-svc:
+      loadBalancer:
+        servers:
+          - url: "http://recommendation-service:8002"
+        healthCheck:
+          path: /health
+          interval: 10s
+          timeout: 3s
+
+    frontend-svc:
+      loadBalancer:
+        servers:
+          - url: "http://frontend:5173"

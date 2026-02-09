@@ -6,6 +6,12 @@ health_check:
   controller: App\Controller\HealthController::health
   methods: [GET]
 
+# Distributed health check (aggregates all services)
+health_distributed:
+  path: /health/distributed
+  controller: App\Controller\DistributedHealthController
+  methods: [GET]
+
 # Authentication
 api_auth_test:
   path: /api/test-login

@@ -237,3 +237,28 @@ services:
   App\ApiDoc\RouteOperationDescriber:
     tags:
       - { name: nelmio_api_doc.describer, priority: -1500 }
+
+  # ─── Integration Events (distributed architecture) ───
+  App\Service\Integration\IntegrationEventPublisher:
+    arguments:
+      $amqpConnection: '@app.amqp_connection'
+      $exchange: 'biblioteka.events'
+
+  app.amqp_connection:
+    class: PhpAmqpLib\Connection\AMQPStreamConnection
+    factory: ['App\Service\Integration\AmqpConnectionFactory', 'create']
+    arguments:
+      $dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
+
+  App\EventSubscriber\IntegrationEventBridgeSubscriber:
+    tags: ['kernel.event_subscriber']
+
+  # Distributed health check — inject Predis client
+  app.redis_client:
+    class: Predis\Client
+    arguments:
+      - '%env(REDIS_URL)%'
+
+  App\Controller\DistributedHealthController:
+    arguments:
+      $redis: '@app.redis_client'

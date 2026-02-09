@@ -4,6 +4,7 @@ namespace App\Application\Handler\Command;
 use App\Application\Command\Book\CreateBookCommand;
 use App\Entity\Book;
 use App\Entity\BookCopy;
+use App\Event\BookCreatedEvent;
 use App\Repository\AuthorRepository;
 use App\Repository\CategoryRepository;
 use App\Service\User\NotificationService;
@@ -11,6 +12,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 #[AsMessageHandler]
 class CreateBookHandler
@@ -19,7 +21,8 @@ class CreateBookHandler
         private readonly EntityManagerInterface $entityManager,
         private readonly AuthorRepository $authorRepository,
         private readonly CategoryRepository $categoryRepository,
-        private readonly NotificationService $notificationService
+        private readonly NotificationService $notificationService,
+        private readonly EventDispatcherInterface $eventDispatcher,
     ) {
     }
 
@@ -92,6 +95,8 @@ class CreateBookHandler
         $this->entityManager->flush();
 
         $this->notificationService->notifyNewBookAvailable($book);
+
+        $this->eventDispatcher->dispatch(new BookCreatedEvent($book));
 
         return $book;
     }

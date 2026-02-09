@@ -5,12 +5,14 @@ use App\Application\Command\Reservation\CreateReservationCommand;
 use App\Entity\Book;
 use App\Entity\Reservation;
 use App\Entity\User;
+use App\Event\ReservationCreatedEvent;
 use App\Message\ReservationQueuedNotification;
 use App\Repository\ReservationRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Symfony\Component\Messenger\MessageBusInterface;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 #[AsMessageHandler]
 class CreateReservationHandler
@@ -19,7 +21,8 @@ class CreateReservationHandler
         private EntityManagerInterface $em,
         private ReservationRepository $reservationRepository,
         private MessageBusInterface $bus,
-        private LoggerInterface $logger
+        private LoggerInterface $logger,
+        private EventDispatcherInterface $eventDispatcher,
     ) {
     }
 
@@ -63,6 +66,8 @@ class CreateReservationHandler
 
         $this->em->persist($reservation);
         $this->em->flush();
+
+        $this->eventDispatcher->dispatch(new ReservationCreatedEvent($reservation));
 
         try {
             $this->bus->dispatch(new ReservationQueuedNotification(

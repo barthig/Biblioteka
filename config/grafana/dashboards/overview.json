@@ -1,0 +1,94 @@
+{
+  "dashboard": {
+    "title": "Biblioteka — System Overview",
+    "uid": "biblioteka-overview",
+    "timezone": "browser",
+    "refresh": "10s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Traefik — Requests per second",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+        "targets": [
+          {
+            "expr": "sum(rate(traefik_service_requests_total[1m])) by (service)",
+            "legendFormat": "{{service}}"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Traefik — Response latency (p95)",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(traefik_service_request_duration_seconds_bucket[1m])) by (le, service))",
+            "legendFormat": "p95 {{service}}"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Notification Service — Events processed",
+        "type": "stat",
+        "gridPos": { "h": 6, "w": 6, "x": 0, "y": 8 },
+        "targets": [
+          {
+            "expr": "sum(notification_events_processed_total)",
+            "legendFormat": "Processed"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Notification Service — Events failed",
+        "type": "stat",
+        "gridPos": { "h": 6, "w": 6, "x": 6, "y": 8 },
+        "targets": [
+          {
+            "expr": "sum(notification_events_failed_total)",
+            "legendFormat": "Failed"
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Recommendation — Embedding latency",
+        "type": "timeseries",
+        "gridPos": { "h": 6, "w": 12, "x": 12, "y": 8 },
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(recommendation_embedding_latency_seconds_bucket[5m])) by (le))",
+            "legendFormat": "p95"
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Recommendation — Request latency",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 14 },
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(recommendation_request_latency_seconds_bucket[5m])) by (le, endpoint))",
+            "legendFormat": "p95 {{endpoint}}"
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Error rate (all services)",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 14 },
+        "targets": [
+          {
+            "expr": "sum(rate(traefik_service_requests_total{code=~\"5..\"}[1m])) by (service)",
+            "legendFormat": "5xx {{service}}"
+          }
+        ]
+      }
+    ]
+  }
+}

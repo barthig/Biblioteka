@@ -4,15 +4,18 @@ namespace App\Application\Handler\Command;
 use App\Application\Command\Fine\CreateFineCommand;
 use App\Entity\Fine;
 use App\Entity\Loan;
+use App\Event\FineCreatedEvent;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 #[AsMessageHandler]
 class CreateFineHandler
 {
     public function __construct(
-        private readonly EntityManagerInterface $entityManager
+        private readonly EntityManagerInterface $entityManager,
+        private readonly EventDispatcherInterface $eventDispatcher,
     ) {
     }
 
@@ -32,6 +35,8 @@ class CreateFineHandler
 
         $this->entityManager->persist($fine);
         $this->entityManager->flush();
+
+        $this->eventDispatcher->dispatch(new FineCreatedEvent($fine));
 
         return $fine;
     }

@@ -1,0 +1,31 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  # Traefik metrics
+  - job_name: "traefik"
+    static_configs:
+      - targets: ["traefik:8082"]
+
+  # Notification Service metrics
+  - job_name: "notification-service"
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["notification-service:8001"]
+
+  # Recommendation Service metrics
+  - job_name: "recommendation-service"
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["recommendation-service:8002"]
+
+  # RabbitMQ (via management plugin)
+  - job_name: "rabbitmq"
+    static_configs:
+      - targets: ["rabbitmq:15692"]
+
+  # Node exporter (optional — host metrics)
+  # - job_name: "node-exporter"
+  #   static_configs:
+  #     - targets: ["node-exporter:9100"]

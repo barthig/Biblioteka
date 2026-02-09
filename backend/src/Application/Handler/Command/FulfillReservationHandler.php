@@ -3,16 +3,19 @@ namespace App\Application\Handler\Command;
 
 use App\Application\Command\Reservation\FulfillReservationCommand;
 use App\Entity\Reservation;
+use App\Event\ReservationFulfilledEvent;
 use App\Repository\ReservationRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 #[AsMessageHandler]
 class FulfillReservationHandler
 {
     public function __construct(
         private EntityManagerInterface $em,
-        private ReservationRepository $reservationRepository
+        private ReservationRepository $reservationRepository,
+        private EventDispatcherInterface $eventDispatcher,
     ) {
     }
 
@@ -39,5 +42,7 @@ class FulfillReservationHandler
         
         $this->em->persist($reservation);
         $this->em->flush();
+
+        $this->eventDispatcher->dispatch(new ReservationFulfilledEvent($reservation));
     }
 }

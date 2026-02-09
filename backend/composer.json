@@ -26,7 +26,8 @@
                     "predis/predis":  "^3.3",
                     "friendsofsymfony/elastica-bundle":  "^7.0",
                     "symfony/security-bundle":  "^6.4",
-                    "nelmio/cors-bundle":  "^2.6"
+                    "nelmio/cors-bundle":  "^2.6",
+                    "php-amqplib/php-amqplib":  "^3.6"
                 },
     "autoload":  {
                      "psr-4":  {
