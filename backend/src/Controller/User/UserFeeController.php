@@ -3,6 +3,7 @@ namespace App\Controller\User;
 
 use App\Controller\Traits\ExceptionHandlingTrait;
 use App\Dto\ApiError;
+use App\Exception\AppException;
 use App\Service\Loan\FeeService;
 use App\Service\Auth\SecurityService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -53,8 +54,8 @@ class UserFeeController extends AbstractController
 
         try {
             $fees = $this->feeService->listOutstandingFees($userId);
-        } catch (\RuntimeException $e) {
-            return $this->jsonError(ApiError::notFound('User'));
+        } catch (AppException $e) {
+            return $this->jsonError(ApiError::fromException($e));
         }
 
         return $this->json([
@@ -94,15 +95,8 @@ class UserFeeController extends AbstractController
             $fee = $this->feeService->markFeePaid($userId, (int) $feeId);
         } catch (\InvalidArgumentException $e) {
             return $this->jsonError(ApiError::badRequest($e->getMessage()));
-        } catch (\RuntimeException $e) {
-            $message = $e->getMessage();
-            if ($message === 'User not found') {
-                return $this->jsonError(ApiError::notFound('User'));
-            }
-            if ($message === 'Fee not found') {
-                return $this->jsonError(ApiError::notFound('Fee'));
-            }
-            return $this->jsonError(ApiError::internalError('Internal error'));
+        } catch (AppException $e) {
+            return $this->jsonError(ApiError::fromException($e));
         }
 
         return $this->json($fee, 200, [], [

@@ -1,6 +1,7 @@
 <?php
 namespace App\Controller\User;
 
+use App\Controller\Traits\ExceptionHandlingTrait;
 use App\Dto\ApiError;
 use App\Repository\UserRepository;
 use App\Service\Auth\SecurityService;
@@ -16,10 +17,12 @@ use OpenApi\Attributes as OA;
 #[OA\Tag(name: 'User')]
 class UserAvatarController extends AbstractController
 {
+    use ExceptionHandlingTrait;
+
     public function __construct(
         private readonly KernelInterface $kernel,
         private readonly UserRepository $users,
-        private readonly EntityManagerInterface $em
+        private readonly EntityManagerInterface $entityManager
     ) {
     }
 
@@ -47,12 +50,12 @@ class UserAvatarController extends AbstractController
     {
         $userId = $security->getCurrentUserId($request);
         if (!$userId) {
-            return $this->json(ApiError::unauthorized(), 401);
+            return $this->jsonError(ApiError::unauthorized());
         }
 
         $user = $this->users->find($userId);
         if (!$user) {
-            return $this->json(ApiError::notFound('User not found'), 404);
+            return $this->jsonError(ApiError::notFound('User not found'));
         }
 
         $data = json_decode($request->getContent(), true) ?? [];
@@ -60,16 +63,16 @@ class UserAvatarController extends AbstractController
         $mimeType = isset($data['mimeType']) && is_string($data['mimeType']) ? trim($data['mimeType']) : 'image/jpeg';
 
         if ($content === null) {
-            return $this->json(ApiError::badRequest('Missing content payload (base64)'));
+            return $this->jsonError(ApiError::badRequest('Missing content payload (base64)'));
         }
 
         $decoded = base64_decode($content, true);
         if ($decoded === false) {
-            return $this->json(ApiError::badRequest('Invalid base64 payload'));
+            return $this->jsonError(ApiError::badRequest('Invalid base64 payload'));
         }
 
         if (!str_starts_with(strtolower($mimeType), 'image/')) {
-            return $this->json(ApiError::badRequest('Avatar must be an image'));
+            return $this->jsonError(ApiError::badRequest('Avatar must be an image'));
         }
 
         $ext = self::extensionFromMime($mimeType) ?? 'bin';
@@ -81,13 +84,13 @@ class UserAvatarController extends AbstractController
         $path = $dir . DIRECTORY_SEPARATOR . $storage;
         $bytes = @file_put_contents($path, $decoded);
         if ($bytes === false || $bytes === 0) {
-            return $this->json(ApiError::internalError('Failed to store avatar'));
+            return $this->jsonError(ApiError::internalError('Failed to store avatar'));
         }
 
         $user->setAvatarStorageName($storage);
         $user->setAvatarMimeType($mimeType);
         $user->setAvatarUpdatedAt(new \DateTimeImmutable());
-        $this->em->flush();
+        $this->entityManager->flush();
 
         return $this->json([
             'avatarUrl' => '/api/users/' . $user->getId() . '/avatar',
@@ -107,12 +110,12 @@ class UserAvatarController extends AbstractController
     {
         $user = $this->users->find($id);
         if (!$user || $user->getAvatarStorageName() === null) {
-            return $this->json(ApiError::notFound('Avatar not found'), 404);
+            return $this->jsonError(ApiError::notFound('Avatar not found'));
         }
 
         $path = $this->avatarDirectory() . DIRECTORY_SEPARATOR . $user->getAvatarStorageName();
         if (!is_file($path)) {
-            return $this->json(ApiError::notFound('Avatar not found'), 404);
+            return $this->jsonError(ApiError::notFound('Avatar not found'));
         }
 
         $response = new BinaryFileResponse($path);

@@ -14,16 +14,16 @@ use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 class GetOverviewQueryHandler
 {
     public function __construct(
-        private readonly EntityManagerInterface $em
+        private readonly EntityManagerInterface $entityManager
     ) {
     }
 
     public function __invoke(GetOverviewQuery $query): array
     {
-        $bookRepo = $this->em->getRepository(Book::class);
-        $userRepo = $this->em->getRepository(User::class);
-        $loanRepo = $this->em->getRepository(Loan::class);
-        $reservationRepo = $this->em->getRepository(Reservation::class);
+        $bookRepo = $this->entityManager->getRepository(Book::class);
+        $userRepo = $this->entityManager->getRepository(User::class);
+        $loanRepo = $this->entityManager->getRepository(Loan::class);
+        $reservationRepo = $this->entityManager->getRepository(Reservation::class);
 
         return [
             'totalBooks' => $bookRepo->count([]),

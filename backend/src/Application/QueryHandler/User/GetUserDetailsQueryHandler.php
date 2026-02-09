@@ -3,6 +3,7 @@
 namespace App\Application\QueryHandler\User;
 
 use App\Application\Query\User\GetUserDetailsQuery;
+use App\Exception\NotFoundException;
 use App\Repository\UserRepository;
 use App\Repository\LoanRepository;
 use App\Repository\FineRepository;
@@ -23,7 +24,7 @@ class GetUserDetailsQueryHandler
         $user = $this->userRepository->find($query->userId);
         
         if (!$user) {
-            throw new \RuntimeException('User not found');
+            throw NotFoundException::forUser($query->userId);
         }
 
         // Get active loans

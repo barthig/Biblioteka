@@ -148,14 +148,14 @@ class NotificationController extends AbstractController
         $templates = [
             [
                 'type' => 'reservation_prepared',
-                'title' => 'Rezerwacja gotowa do odbioru',
-                'message' => 'Twoja rezerwacja jest gotowa do odbioru. Odbierz ja w najblizszych dniach.',
+                'title' => 'Reservation ready for pickup',
+                'message' => 'Your reservation is ready for pickup. Please collect it within the next few days.',
                 'link' => '/reservations',
             ],
             [
                 'type' => 'announcement_published',
-                'title' => 'Nowe ogloszenie biblioteki',
-                'message' => 'Dodano nowe ogloszenie. Sprawdz szczegoly w panelu.',
+                'title' => 'New library announcement',
+                'message' => 'A new announcement has been posted. Check the details in your dashboard.',
                 'link' => '/announcements',
             ],
         ];

@@ -97,7 +97,7 @@ class RegistrationController extends AbstractController
             'privacyConsent' => $dto->privacyConsent,
         ];
 
-        // newsletterSubscribed powinien być przekazany tylko jeśli został jawnie ustawiony
+        // newsletterSubscribed should be passed only if explicitly set
         if (array_key_exists('newsletterSubscribed', $data)) {
             $payload['newsletterSubscribed'] = $dto->newsletterSubscribed;
         }
@@ -116,7 +116,7 @@ class RegistrationController extends AbstractController
 
             return $this->jsonErrorMessage($status, $exception->getMessage());
         } catch (\Throwable $error) {
-            return $this->jsonErrorMessage(500, 'Nie udało się utworzyć konta.');
+            return $this->jsonErrorMessage(500, 'Failed to create account.');
         }
 
         return $this->json([
@@ -163,7 +163,7 @@ class RegistrationController extends AbstractController
 
             return $this->jsonErrorMessage($status, $exception->getMessage());
         } catch (\Throwable $error) {
-            return $this->jsonErrorMessage(500, 'Nie udało się zweryfikować konta.');
+            return $this->jsonErrorMessage(500, 'Failed to verify account.');
         }
 
         $response = [

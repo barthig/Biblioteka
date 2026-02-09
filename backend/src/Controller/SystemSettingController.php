@@ -23,7 +23,8 @@ class SystemSettingController extends AbstractController
     use ExceptionHandlingTrait;
 
     public function __construct(
-        private MessageBusInterface $messageBus
+        private readonly MessageBusInterface $commandBus,
+        private readonly MessageBusInterface $queryBus
     ) {
     }
 
@@ -47,7 +48,7 @@ class SystemSettingController extends AbstractController
         $limit = min(100, max(1, (int) $request->query->get('limit', 50)));
 
         $query = new ListSystemSettingsQuery(page: $page, limit: $limit);
-        $envelope = $this->messageBus->dispatch($query);
+        $envelope = $this->queryBus->dispatch($query);
         $settings = $envelope->last(HandledStamp::class)?->getResult() ?? [];
 
         return $this->json($settings);
@@ -67,7 +68,7 @@ class SystemSettingController extends AbstractController
     public function get(int $id): JsonResponse
     {
         $query = new GetSystemSettingQuery(settingId: $id);
-        $envelope = $this->messageBus->dispatch($query);
+        $envelope = $this->queryBus->dispatch($query);
         $setting = $envelope->last(HandledStamp::class)?->getResult();
 
         return $this->json($setting);
@@ -106,7 +107,7 @@ class SystemSettingController extends AbstractController
             description: $data['description'] ?? null
         );
 
-        $envelope = $this->messageBus->dispatch($command);
+        $envelope = $this->commandBus->dispatch($command);
         $setting = $envelope->last(HandledStamp::class)?->getResult();
 
         return $this->json($setting, Response::HTTP_CREATED);
@@ -134,7 +135,7 @@ class SystemSettingController extends AbstractController
             description: $data['description'] ?? null
         );
 
-        $envelope = $this->messageBus->dispatch($command);
+        $envelope = $this->commandBus->dispatch($command);
         $setting = $envelope->last(HandledStamp::class)?->getResult();
 
         return $this->json($setting);
@@ -154,7 +155,7 @@ class SystemSettingController extends AbstractController
     public function delete(int $id): JsonResponse
     {
         $command = new DeleteSystemSettingCommand(settingId: $id);
-        $this->messageBus->dispatch($command);
+        $this->commandBus->dispatch($command);
 
         return $this->json(null, Response::HTTP_NO_CONTENT);
     }

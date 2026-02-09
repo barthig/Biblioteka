@@ -1,6 +1,7 @@
 <?php
 namespace App\Service\Book;
 
+use App\Exception\ExternalServiceException;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
@@ -29,7 +30,7 @@ class OpenAIEmbeddingService
 
         $data = $response->toArray(false);
         if (!isset($data['data'][0]['embedding']) || !is_array($data['data'][0]['embedding'])) {
-            throw new \RuntimeException('OpenAI embedding response is missing embedding data.');
+            throw new ExternalServiceException('OpenAI embedding response is missing embedding data.');
         }
 
         return array_map('floatval', $data['data'][0]['embedding']);

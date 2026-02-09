@@ -1,6 +1,7 @@
 <?php
 namespace App\Controller\Books;
 
+use App\Controller\Traits\ExceptionHandlingTrait;
 use App\Dto\ApiError;
 use App\Entity\Book;
 use App\Entity\BookDigitalAsset;
@@ -17,6 +18,8 @@ use OpenApi\Attributes as OA;
 #[OA\Tag(name: 'BookAsset')]
 class BookPublicAssetController extends AbstractController
 {
+    use ExceptionHandlingTrait;
+
     public function __construct(
         private readonly KernelInterface $kernel,
         private readonly BookRepository $bookRepository,
@@ -40,22 +43,22 @@ class BookPublicAssetController extends AbstractController
     {
         $book = $this->bookRepository->find($id);
         if (!$book instanceof Book) {
-            return $this->json(ApiError::notFound('Book not found'), 404);
+            return $this->jsonError(ApiError::notFound('Book not found'));
         }
 
         $assets = $this->assetRepository->findForBook($book);
         if ($assets === []) {
-            return $this->json(ApiError::notFound('Cover not found'), 404);
+            return $this->jsonError(ApiError::notFound('Cover not found'));
         }
 
         $asset = $this->pickCoverAsset($assets);
         if (!$asset instanceof BookDigitalAsset) {
-            return $this->json(ApiError::notFound('Cover not found'), 404);
+            return $this->jsonError(ApiError::notFound('Cover not found'));
         }
 
         $path = $this->assetDirectory() . DIRECTORY_SEPARATOR . $asset->getStorageName();
         if (!is_file($path)) {
-            return $this->json(ApiError::notFound('Cover not found'), 404);
+            return $this->jsonError(ApiError::notFound('Cover not found'));
         }
 
         $response = new BinaryFileResponse($path);

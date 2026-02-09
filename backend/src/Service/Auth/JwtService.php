@@ -1,6 +1,8 @@
 <?php
 namespace App\Service\Auth;
 
+use App\Exception\ExternalServiceException;
+
 class JwtService
 {
     private static function base64UrlEncode(string $data): string
@@ -23,7 +25,7 @@ class JwtService
         $secrets = self::getSecrets();
         if (empty($secrets)) {
             error_log('JWT secret is not configured');
-            throw new \RuntimeException('JWT secret is not configured');
+            throw new ExternalServiceException('JWT secret is not configured');
         }
 
         $currentSecret = $secrets[0]; // use first as current

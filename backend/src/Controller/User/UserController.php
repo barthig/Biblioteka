@@ -85,7 +85,7 @@ class UserController extends AbstractController
     {
         // Only librarians can list all users
         if (!$this->security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->jsonErrorMessage(403, 'Forbidden');
+            return $this->jsonError(ApiError::forbidden());
         }
 
         $users = array_values(array_filter(
@@ -113,7 +113,7 @@ class UserController extends AbstractController
     {
         // validate id — should be positive integer
         if (!ctype_digit($id) || (int)$id <= 0) {
-            return $this->jsonErrorMessage(400, 'Invalid id parameter');
+            return $this->jsonError(ApiError::badRequest('Invalid id parameter'));
         }
         
         $userId = (int)$id;
@@ -121,12 +121,12 @@ class UserController extends AbstractController
         
         // Users can only see their own profile unless they're librarians
         if ($currentUserId !== $userId && !$this->security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->jsonErrorMessage(403, 'Forbidden');
+            return $this->jsonError(ApiError::forbidden());
         }
 
         $user = $repo->find($userId);
         if (!$user) {
-            return $this->jsonErrorMessage(404, 'User not found');
+            return $this->jsonError(ApiError::notFound('User not found'));
         }
         
         return $this->json($user, 200, [], ['groups' => ['user:read']]);
@@ -136,7 +136,7 @@ class UserController extends AbstractController
     public function search(UserRepository $repo, Request $request): JsonResponse
     {
         if (!$this->security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->jsonErrorMessage(403, 'Forbidden');
+            return $this->jsonError(ApiError::forbidden());
         }
 
         $query = $request->query->get('q', '');
@@ -152,11 +152,11 @@ class UserController extends AbstractController
     public function getUserDetails(string $id, Request $request): JsonResponse
     {
         if (!$this->security->hasRole($request, 'ROLE_LIBRARIAN')) {
-            return $this->jsonErrorMessage(403, 'Forbidden');
+            return $this->jsonError(ApiError::forbidden());
         }
 
         if (!ctype_digit($id) || (int)$id <= 0) {
-            return $this->jsonErrorMessage(400, 'Invalid id parameter');
+            return $this->jsonError(ApiError::badRequest('Invalid id parameter'));
         }
 
         try {
@@ -170,15 +170,15 @@ class UserController extends AbstractController
             if ($response = $this->jsonFromHttpException($e)) {
                 return $response;
             }
-            return $this->jsonErrorMessage(404, $e->getMessage());
+            return $this->jsonError(ApiError::notFound($e->getMessage()));
         }
     }
 
     #[IsGranted('ROLE_ADMIN')]
     #[OA\Put(
         path: '/api/users/{id}',
-        summary: 'Aktualizuj użytkownika',
-        description: 'Aktualizuje dane użytkownika. Wymaga roli ADMIN.',
+        summary: 'Update user',
+        description: 'Update user data. Requires ADMIN role.',
         tags: ['Users'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
@@ -195,21 +195,21 @@ class UserController extends AbstractController
             )
         ),
         responses: [
-            new OA\Response(response: 200, description: 'Użytkownik zaktualizowany', content: new OA\JsonContent(ref: '#/components/schemas/User')),
-            new OA\Response(response: 403, description: 'Brak uprawnień', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
-            new OA\Response(response: 404, description: 'Użytkownik nie znaleziony', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
+            new OA\Response(response: 200, description: 'User updated', content: new OA\JsonContent(ref: '#/components/schemas/User')),
+            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'User not found', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
         ]
     )]
     public function update(string $id, UserRepository $repo, Request $request): JsonResponse
     {
         if (!$this->security->hasRole($request, 'ROLE_ADMIN')) {
-            return $this->jsonErrorMessage(403, 'Forbidden');
+            return $this->jsonError(ApiError::forbidden());
         }
 
         $userId = (int)$id;
         $user = $repo->find($userId);
         if (!$user) {
-            return $this->jsonErrorMessage(404, 'User not found');
+            return $this->jsonError(ApiError::notFound('User not found'));
         }
 
         $data = json_decode($request->getContent(), true) ?? [];
@@ -242,23 +242,23 @@ class UserController extends AbstractController
     #[IsGranted('ROLE_ADMIN')]
     #[OA\Delete(
         path: '/api/users/{id}',
-        summary: 'Usuń użytkownika',
-        description: 'Usuwa użytkownika. Wymaga roli ADMIN. Nie można usunąć własnego konta.',
+        summary: 'Delete user',
+        description: 'Delete a user. Requires ADMIN role. Cannot delete own account.',
         tags: ['Users'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
         ],
         responses: [
-            new OA\Response(response: 204, description: 'Użytkownik usunięty'),
-            new OA\Response(response: 400, description: 'Nie można usunąć własnego konta', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
-            new OA\Response(response: 403, description: 'Brak uprawnień', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
-            new OA\Response(response: 404, description: 'Użytkownik nie znaleziony', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
+            new OA\Response(response: 204, description: 'User deleted'),
+            new OA\Response(response: 400, description: 'Cannot delete own account', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'User not found', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
         ]
     )]
     public function delete(string $id, UserRepository $repo, Request $request): JsonResponse
     {
         if (!$this->security->hasRole($request, 'ROLE_ADMIN')) {
-            return $this->jsonErrorMessage(403, 'Forbidden');
+            return $this->jsonError(ApiError::forbidden());
         }
 
         $userId = (int)$id;
@@ -266,12 +266,12 @@ class UserController extends AbstractController
         
         // Prevent admin from deleting themselves
         if ($userId === $currentUserId) {
-            return $this->jsonErrorMessage(400, 'Cannot delete your own account');
+            return $this->jsonError(ApiError::badRequest('Cannot delete your own account'));
         }
 
         $user = $repo->find($userId);
         if (!$user) {
-            return $this->jsonErrorMessage(404, 'User not found');
+            return $this->jsonError(ApiError::notFound('User not found'));
         }
 
         $repo->remove($user, true);
@@ -318,9 +318,7 @@ class UserController extends AbstractController
             $data = json_decode($request->getContent(), true);
             
             if (!isset($data['oldPassword']) || !isset($data['newPassword'])) {
-                return $this->json([
-                    'message' => 'Missing required fields: oldPassword, newPassword'
-                ], 400);
+                return $this->jsonError(ApiError::badRequest('Missing required fields: oldPassword, newPassword'));
             }
 
             $oldPassword = $data['oldPassword'];
@@ -328,23 +326,19 @@ class UserController extends AbstractController
 
             // Validate new password
             if (strlen($newPassword) < 6) {
-                return $this->json([
-                    'message' => 'New password must be at least 6 characters long'
-                ], 400);
+                return $this->jsonError(ApiError::badRequest('New password must be at least 6 characters long'));
             }
 
             $currentUserId = $this->security->getCurrentUserId($request);
             $user = $repo->find($currentUserId);
 
             if (!$user) {
-                return $this->jsonErrorMessage(404, 'User not found');
+                return $this->jsonError(ApiError::notFound('User not found'));
             }
 
             // Verify old password
             if (!password_verify($oldPassword, $user->getPassword())) {
-                return $this->json([
-                    'message' => 'Invalid old password'
-                ], 400);
+                return $this->jsonError(ApiError::badRequest('Invalid old password'));
             }
 
             // Hash and set new password
@@ -352,14 +346,10 @@ class UserController extends AbstractController
             $user->setPassword($hashedPassword);
             $repo->save($user, true);
 
-            return $this->json([
-                'message' => 'Password changed successfully'
-            ]);
+            return $this->jsonSuccess(['message' => 'Password changed successfully']);
 
         } catch (\Exception $e) {
-            return $this->json([
-                'message' => 'Failed to change password: ' . $e->getMessage()
-            ], 500);
+            return $this->jsonError(ApiError::internalError('Failed to change password'));
         }
     }
 }

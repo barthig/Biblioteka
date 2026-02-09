@@ -17,7 +17,7 @@ final class ReservationService
     public function __construct(
         private readonly ReservationRepository $reservations,
         private readonly BookService $bookService,
-        private readonly EntityManagerInterface $em,
+        private readonly EntityManagerInterface $entityManager,
         private readonly MessageBusInterface $bus,
         private readonly LoggerInterface $logger
     ) {
@@ -50,8 +50,8 @@ final class ReservationService
         $nextReservation->assignBookCopy($copy);
         $nextReservation->setExpiresAt((new \DateTimeImmutable())->modify('+2 days'));
 
-        $this->em->persist($nextReservation);
-        $this->em->flush();
+        $this->entityManager->persist($nextReservation);
+        $this->entityManager->flush();
 
         try {
             $expiresAtIso = $nextReservation->getExpiresAt()->format(DATE_ATOM);

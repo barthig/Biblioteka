@@ -23,7 +23,8 @@ class IntegrationConfigController extends AbstractController
     use ExceptionHandlingTrait;
 
     public function __construct(
-        private MessageBusInterface $messageBus
+        private readonly MessageBusInterface $commandBus,
+        private readonly MessageBusInterface $queryBus
     ) {
     }
 
@@ -47,7 +48,7 @@ class IntegrationConfigController extends AbstractController
         $limit = min(100, max(1, (int) $request->query->get('limit', 50)));
 
         $query = new ListIntegrationConfigsQuery(page: $page, limit: $limit);
-        $envelope = $this->messageBus->dispatch($query);
+        $envelope = $this->queryBus->dispatch($query);
         $configs = $envelope->last(HandledStamp::class)?->getResult() ?? [];
 
         return $this->json($configs);
@@ -67,7 +68,7 @@ class IntegrationConfigController extends AbstractController
     public function get(int $id): JsonResponse
     {
         $query = new GetIntegrationConfigQuery(configId: $id);
-        $envelope = $this->messageBus->dispatch($query);
+        $envelope = $this->queryBus->dispatch($query);
         $config = $envelope->last(HandledStamp::class)?->getResult();
 
         return $this->json($config);
@@ -106,7 +107,7 @@ class IntegrationConfigController extends AbstractController
             settings: $data['settings'] ?? []
         );
 
-        $envelope = $this->messageBus->dispatch($command);
+        $envelope = $this->commandBus->dispatch($command);
         $config = $envelope->last(HandledStamp::class)?->getResult();
 
         return $this->json($config, Response::HTTP_CREATED);
@@ -135,7 +136,7 @@ class IntegrationConfigController extends AbstractController
             settings: $data['settings'] ?? null
         );
 
-        $envelope = $this->messageBus->dispatch($command);
+        $envelope = $this->commandBus->dispatch($command);
         $config = $envelope->last(HandledStamp::class)?->getResult();
 
         return $this->json($config);
@@ -155,7 +156,7 @@ class IntegrationConfigController extends AbstractController
     public function delete(int $id): JsonResponse
     {
         $command = new DeleteIntegrationConfigCommand(configId: $id);
-        $this->messageBus->dispatch($command);
+        $this->commandBus->dispatch($command);
 
         return $this->json(null, Response::HTTP_NO_CONTENT);
     }

@@ -12,6 +12,7 @@ use App\Application\Query\Account\GetAccountDetailsQuery;
 use App\Controller\Traits\ExceptionHandlingTrait;
 use App\Controller\Traits\ValidationTrait;
 use App\Dto\ApiError;
+use App\Exception\AppException;
 use App\Request\ChangePasswordRequest;
 use App\Request\UpdateAccountRequest;
 use App\Service\Auth\SecurityService;
@@ -165,7 +166,7 @@ class AccountController extends AbstractController
 
         try {
             $this->commandBus->dispatch($command);
-            return $this->jsonSuccess(['message' => 'Hasło zostało zaktualizowane']);
+            return $this->jsonSuccess(['message' => 'Password updated successfully']);
         } catch (\Throwable $e) {
             return $this->handleCommandException($e);
         }
@@ -378,10 +379,9 @@ class AccountController extends AbstractController
                 currentPin: (string) $data['currentPin'],
                 newPin: (string) $data['newPin']
             ));
-        } catch (\RuntimeException|HttpExceptionInterface $e) {
-            if ($e instanceof HttpExceptionInterface) {
-                return $this->jsonError(ApiError::fromException($e));
-            }
+        } catch (AppException $e) {
+            return $this->jsonError(ApiError::fromException($e));
+        } catch (\Throwable $e) {
             return $this->jsonError(ApiError::badRequest($e->getMessage()));
         }
 

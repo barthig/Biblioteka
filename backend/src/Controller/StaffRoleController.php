@@ -23,7 +23,8 @@ class StaffRoleController extends AbstractController
     use ExceptionHandlingTrait;
 
     public function __construct(
-        private MessageBusInterface $messageBus
+        private readonly MessageBusInterface $commandBus,
+        private readonly MessageBusInterface $queryBus
     ) {
     }
 
@@ -47,7 +48,7 @@ class StaffRoleController extends AbstractController
         $limit = min(100, max(1, (int) $request->query->get('limit', 50)));
 
         $query = new ListStaffRolesQuery(page: $page, limit: $limit);
-        $envelope = $this->messageBus->dispatch($query);
+        $envelope = $this->queryBus->dispatch($query);
         $roles = $envelope->last(HandledStamp::class)?->getResult() ?? [];
 
         return $this->json($roles);
@@ -67,7 +68,7 @@ class StaffRoleController extends AbstractController
     public function get(int $id): JsonResponse
     {
         $query = new GetStaffRoleQuery(roleId: $id);
-        $envelope = $this->messageBus->dispatch($query);
+        $envelope = $this->queryBus->dispatch($query);
         $role = $envelope->last(HandledStamp::class)?->getResult();
 
         return $this->json($role);
@@ -107,7 +108,7 @@ class StaffRoleController extends AbstractController
             description: $data['description'] ?? null
         );
 
-        $envelope = $this->messageBus->dispatch($command);
+        $envelope = $this->commandBus->dispatch($command);
         $role = $envelope->last(HandledStamp::class)?->getResult();
 
         return $this->json($role, Response::HTTP_CREATED);
@@ -136,7 +137,7 @@ class StaffRoleController extends AbstractController
             description: $data['description'] ?? null
         );
 
-        $envelope = $this->messageBus->dispatch($command);
+        $envelope = $this->commandBus->dispatch($command);
         $role = $envelope->last(HandledStamp::class)?->getResult();
 
         return $this->json($role);
@@ -156,7 +157,7 @@ class StaffRoleController extends AbstractController
     public function delete(int $id): JsonResponse
     {
         $command = new DeleteStaffRoleCommand(roleId: $id);
-        $this->messageBus->dispatch($command);
+        $this->commandBus->dispatch($command);
 
         return $this->json(null, Response::HTTP_NO_CONTENT);
     }

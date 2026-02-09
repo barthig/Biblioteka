@@ -382,7 +382,7 @@ class BookController extends AbstractController
         $data = json_decode($request->getContent(), true) ?? [];
         
         if (isset($data['copies']) || isset($data['totalCopies'])) {
-            return $this->jsonError(ApiError::badRequest('Inventory is managed automatycznie przez system wypożyczeń i nie może być edytowane ręcznie'));
+            return $this->jsonError(ApiError::badRequest('Inventory is managed automatically by the loan system and cannot be edited manually'));
         }
         
         $dto = $this->mapArrayToDto($data, new UpdateBookRequest());

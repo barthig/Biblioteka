@@ -38,42 +38,42 @@ class RegistrationService
     {
         $email = isset($data['email']) ? strtolower(trim((string) $data['email'])) : '';
         if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            throw RegistrationException::validation('Podaj poprawny adres e-mail.');
+            throw RegistrationException::validation('Please provide a valid email address.');
         }
 
         $name = isset($data['name']) ? trim((string) $data['name']) : '';
         if ($name === '') {
-            throw RegistrationException::validation('Imie i nazwisko sa wymagane.');
+            throw RegistrationException::validation('Name is required.');
         }
 
         $password = (string) ($data['password'] ?? '');
         $this->assertPasswordStrength($password);
 
 
-        // Email musi być unikalny
+        // Email must be unique
         if ($this->users->findOneBy(['email' => $email])) {
-            throw RegistrationException::validation('Konto z takim adresem e-mail już istnieje.', 409);
+            throw RegistrationException::validation('An account with this email address already exists.', 409);
         }
 
-        // Numer telefonu musi być unikalny (jeśli podany)
+        // Phone number must be unique (if provided)
         if (isset($data['phoneNumber']) && $data['phoneNumber'] !== '') {
             $phone = trim((string) $data['phoneNumber']);
             if ($phone !== '' && $this->users->findOneBy(['phoneNumber' => $phone])) {
-                throw RegistrationException::validation('Konto z takim numerem telefonu już istnieje.', 409);
+                throw RegistrationException::validation('An account with this phone number already exists.', 409);
             }
         }
 
-        // PESEL musi być unikalny (jeśli podany)
+        // PESEL must be unique (if provided)
         if (isset($data['pesel']) && $data['pesel'] !== '') {
             $pesel = trim((string) $data['pesel']);
             if ($pesel !== '' && $this->users->findOneBy(['pesel' => $pesel])) {
-                throw RegistrationException::validation('Konto z takim numerem PESEL już istnieje.', 409);
+                throw RegistrationException::validation('An account with this PESEL number already exists.', 409);
             }
         }
 
         $consentValue = $data['privacyConsent'] ?? null;
         if (!$this->toBool($consentValue)) {
-            throw RegistrationException::validation('Musisz wyrazic zgode na przetwarzanie danych osobowych.');
+            throw RegistrationException::validation('You must consent to the processing of personal data.');
         }
 
         $user = (new User())

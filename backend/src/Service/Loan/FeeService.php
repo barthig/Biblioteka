@@ -2,6 +2,7 @@
 namespace App\Service\Loan;
 
 use App\Entity\Fine;
+use App\Exception\NotFoundException;
 use App\Repository\FineRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -11,7 +12,7 @@ class FeeService
     public function __construct(
         private readonly UserRepository $users,
         private readonly FineRepository $fines,
-        private readonly EntityManagerInterface $em
+        private readonly EntityManagerInterface $entityManager
     ) {
     }
 
@@ -22,7 +23,7 @@ class FeeService
     {
         $user = $this->users->find($userId);
         if (!$user) {
-            throw new \RuntimeException('User not found');
+            throw NotFoundException::forUser($userId);
         }
 
         return $this->fines->findOutstandingByUser($user);
@@ -32,12 +33,12 @@ class FeeService
     {
         $user = $this->users->find($userId);
         if (!$user) {
-            throw new \RuntimeException('User not found');
+            throw NotFoundException::forUser($userId);
         }
 
         $fee = $this->fines->findOneByIdAndUser($feeId, $user);
         if (!$fee) {
-            throw new \RuntimeException('Fee not found');
+            throw NotFoundException::forEntity('Fee', $feeId);
         }
 
         if ($fee->isPaid()) {
@@ -45,7 +46,7 @@ class FeeService
         }
 
         $fee->markAsPaid();
-        $this->em->flush();
+        $this->entityManager->flush();
 
         return $fee;
     }

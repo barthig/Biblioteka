@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Application\Command\Reservation;
 
 use App\Entity\Reservation;
+use App\Exception\BusinessLogicException;
+use App\Exception\NotFoundException;
 use App\Repository\ReservationRepository;
 use App\Service\User\NotificationService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -15,7 +17,7 @@ final readonly class PrepareReservationCommandHandler
 {
     public function __construct(
         private ReservationRepository $reservationRepository,
-        private EntityManagerInterface $em,
+        private EntityManagerInterface $entityManager,
         private NotificationService $notificationService,
     ) {
     }
@@ -25,15 +27,15 @@ final readonly class PrepareReservationCommandHandler
         $reservation = $this->reservationRepository->find($command->reservationId);
 
         if (!$reservation) {
-            throw new \RuntimeException('Reservation not found');
+            throw NotFoundException::forReservation($command->reservationId);
         }
 
         if ($reservation->getStatus() !== Reservation::STATUS_ACTIVE) {
-            throw new \RuntimeException('Only active reservations can be marked as prepared');
+            throw BusinessLogicException::invalidState('Only active reservations can be marked as prepared');
         }
 
         $reservation->markPrepared();
-        $this->em->flush();
+        $this->entityManager->flush();
 
         // Send notification to user
         $this->notificationService->notifyReservationPrepared($reservation);

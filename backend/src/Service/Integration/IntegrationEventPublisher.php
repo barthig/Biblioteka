@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Service\Integration;
 
+use App\Exception\ExternalServiceException;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -71,7 +72,7 @@ class IntegrationEventPublisher
     {
         if ($this->channel === null || !$this->channel->is_open()) {
             if ($this->amqpConnection === null) {
-                throw new \RuntimeException('AMQP connection not available');
+                throw new ExternalServiceException('AMQP connection not available');
             }
             $this->channel = $this->amqpConnection->channel();
         }

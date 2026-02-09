@@ -120,6 +120,11 @@ services:
       $commandBus: '@command.bus'
       $security: '@App\Service\SecurityService'
 
+  App\Controller\User\UserController:
+    arguments:
+      $messageBus: '@query.bus'
+      $security: '@App\Service\SecurityService'
+
   App\Controller\User\AccountController:
     arguments:
       $commandBus: '@command.bus'
@@ -219,6 +224,21 @@ services:
   App\Controller\Admin\RoleAdminController:
     arguments:
       $commandBus: '@command.bus'
+
+  App\Controller\StaffRoleController:
+    arguments:
+      $commandBus: '@command.bus'
+      $queryBus: '@query.bus'
+
+  App\Controller\SystemSettingController:
+    arguments:
+      $commandBus: '@command.bus'
+      $queryBus: '@query.bus'
+
+  App\Controller\IntegrationConfigController:
+    arguments:
+      $commandBus: '@command.bus'
+      $queryBus: '@query.bus'
 
   App\Controller\Admin\IntegrationAdminController:
     arguments:
