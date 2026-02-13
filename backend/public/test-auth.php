@@ -3,9 +3,21 @@
  * Authentication Debug Script
  * Tests JWT token handling end-to-end
  * 
+ * WARNING: This file is for development/testing only.
+ * It is blocked in production via the guard below.
+ * 
  * Usage: 
  *   curl -H "Authorization: Bearer YOUR_TOKEN" http://localhost/test-auth.php
  */
+
+// S-05: Block in production
+$appEnv = getenv('APP_ENV') ?: ($_ENV['APP_ENV'] ?? 'prod');
+if (!in_array($appEnv, ['dev', 'test'], true)) {
+    http_response_code(404);
+    header('Content-Type: application/json');
+    echo json_encode(['error' => 'Not Found']);
+    exit;
+}
 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');

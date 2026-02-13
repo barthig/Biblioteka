@@ -123,7 +123,6 @@ jobs:
           else
             echo "PHP-CS-Fixer config not found, skipping..."
           fi
-        continue-on-error: true
 
       - name: Security check
         run: composer audit

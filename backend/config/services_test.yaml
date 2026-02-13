@@ -17,3 +17,7 @@ services:
     public: true
   App\Repository\BookRepository:
     public: true
+
+  security.user_password_hasher:
+    alias: Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface
+    public: true

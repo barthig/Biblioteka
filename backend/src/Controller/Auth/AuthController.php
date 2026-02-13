@@ -16,6 +16,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\RateLimiter\RateLimiterFactory;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use OpenApi\Attributes as OA;
@@ -28,6 +29,7 @@ class AuthController extends AbstractController
     public function __construct(
         private readonly RateLimiterFactory $loginAttemptsLimiter,
         private readonly RefreshTokenService $refreshTokenService,
+        private readonly UserPasswordHasherInterface $passwordHasher,
     ) {
     }
 
@@ -91,7 +93,7 @@ class AuthController extends AbstractController
             $password = $loginRequest->password;
 
             $user = $repo->findOneBy(['email' => $email]);
-            if (!$user || !password_verify($password, $user->getPassword())) {
+            if (!$user || !$this->passwordHasher->isPasswordValid($user, $password)) {
                 $limit = $limiter->consume(1);
                 if (!$limit->isAccepted()) {
                     return $this->jsonError(ApiError::tooManyRequests('Zbyt wiele prób logowania. Spróbuj ponownie za 15 minut.'));

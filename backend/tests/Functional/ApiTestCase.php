@@ -191,9 +191,12 @@ abstract class ApiTestCase extends WebTestCase
         $user = new User();
         $user->setEmail($email)
             ->setName($name ?? ucfirst(strstr($email, '@', true) ?: 'User'))
-            ->setRoles($roles)
-            ->setPassword(password_hash($password, PASSWORD_BCRYPT))
-            ->markVerified();
+            ->setRoles($roles);
+
+        /** @var \Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface $hasher */
+        $hasher = static::getContainer()->get('security.user_password_hasher');
+        $user->setPassword($hasher->hashPassword($user, $password));
+        $user->markVerified();
 
         $this->entityManager->persist($user);
         $this->entityManager->flush();

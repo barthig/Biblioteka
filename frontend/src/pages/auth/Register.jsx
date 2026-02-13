@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { apiFetch } from '../../api'
 import PageHeader from '../../components/ui/PageHeader'
@@ -25,6 +25,7 @@ const EMAIL_RULE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export default function Register() {
   const auth = useAuth()
+  const navigate = useNavigate()
   const [form, setForm] = useState(initialForm)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -138,7 +139,7 @@ export default function Register() {
 
       // Przekieruj po 2 sekundach na stronę logowania
       setTimeout(() => {
-        window.location.href = '/login'
+        navigate('/login')
       }, 2000)
     } catch (err) {
       setError(err.message || 'Rejestracja nie powiodła się')

@@ -17,9 +17,15 @@ use App\Entity\AcquisitionExpense;
 use App\Entity\WeedingRecord;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class AppFixtures extends Fixture
 {
+    public function __construct(
+        private readonly UserPasswordHasherInterface $passwordHasher
+    ) {
+    }
+
     public function load(ObjectManager $manager): void
     {
         $authors = [];
@@ -57,7 +63,8 @@ class AppFixtures extends Fixture
             ->setAddressLine('Ul. Biblioteczna 10')
             ->setCity('Miasto 10')
             ->setPostalCode('00-10')
-            ->setPassword(password_hash('Admin1234', PASSWORD_BCRYPT));
+              ->setPassword('temp');
+        $admin->setPassword($this->passwordHasher->hashPassword($admin, 'Admin1234'));
         $admin->markVerified();
         $manager->persist($admin);
         $users[] = $admin;
@@ -78,8 +85,8 @@ class AppFixtures extends Fixture
                 ->setAddressLine('Ul. Biblioteczna ' . $i)
                 ->setCity('Miasto ' . $i)
                 ->setPostalCode(str_pad((string) $i, 5, '0', STR_PAD_LEFT))
-                ->setPassword(password_hash('password' . $i, PASSWORD_BCRYPT));
-
+                  ->setPassword('temp');
+            $user->setPassword($this->passwordHasher->hashPassword($user, 'password' . $i));
             $user->markVerified();
 
             if ($i === 30) {

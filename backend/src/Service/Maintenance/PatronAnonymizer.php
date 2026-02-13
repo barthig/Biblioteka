@@ -8,6 +8,7 @@ use App\Repository\LoanRepository;
 use App\Repository\ReservationRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class PatronAnonymizer
 {
@@ -16,7 +17,8 @@ class PatronAnonymizer
         private UserRepository $users,
         private LoanRepository $loans,
         private ReservationRepository $reservations,
-        private FineRepository $fines
+        private FineRepository $fines,
+        private UserPasswordHasherInterface $passwordHasher
     ) {
     }
 
@@ -120,7 +122,7 @@ class PatronAnonymizer
         $user->setRoles(['ROLE_USER']);
         $user->setLoanLimit(User::GROUP_LIMITS[$user->getMembershipGroup()] ?? User::GROUP_LIMITS[User::GROUP_STANDARD]);
         $user->requireVerification();
-        $user->setPassword(password_hash(bin2hex(random_bytes(16)), PASSWORD_BCRYPT));
+        $user->setPassword($this->passwordHasher->hashPassword($user, bin2hex(random_bytes(16))));
     }
 
     private function isAlreadyAnonymized(User $user): bool

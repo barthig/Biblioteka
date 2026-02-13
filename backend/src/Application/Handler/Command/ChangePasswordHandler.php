@@ -9,6 +9,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 #[AsMessageHandler(bus: 'command.bus')]
 class ChangePasswordHandler
@@ -16,7 +17,8 @@ class ChangePasswordHandler
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
         private readonly UserRepository $userRepository,
-        private readonly RefreshTokenRepository $refreshTokenRepository
+        private readonly RefreshTokenRepository $refreshTokenRepository,
+        private readonly UserPasswordHasherInterface $passwordHasher
     ) {
     }
 
@@ -28,12 +30,16 @@ class ChangePasswordHandler
             throw new NotFoundHttpException('User not found');
         }
 
-        if (!password_verify($command->currentPassword, $user->getPassword())) {
+        if (!$this->passwordHasher->isPasswordValid($user, $command->currentPassword)) {
             throw new BadRequestHttpException('Current password is incorrect');
         }
 
-        if (strlen($command->newPassword) < 8) {
-            throw new BadRequestHttpException('New password must be at least 8 characters');
+        if (strlen($command->newPassword) < 10) {
+            throw new BadRequestHttpException('New password must be at least 10 characters');
+        }
+
+        if (!preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/', $command->newPassword)) {
+            throw new BadRequestHttpException('Password must contain lowercase, uppercase letters and a digit');
         }
 
         if ($command->currentPassword === $command->newPassword) {
@@ -44,7 +50,7 @@ class ChangePasswordHandler
             throw new BadRequestHttpException('Password confirmation does not match');
         }
 
-        $user->setPassword(password_hash($command->newPassword, PASSWORD_BCRYPT));
+        $user->setPassword($this->passwordHasher->hashPassword($user, $command->newPassword));
         
         // Revoke all refresh tokens for security - force re-login on all devices
         $this->refreshTokenRepository->revokeAllUserTokens($user);

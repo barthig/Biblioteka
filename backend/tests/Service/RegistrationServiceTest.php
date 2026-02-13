@@ -10,6 +10,7 @@ use App\Service\Auth\RegistrationException;
 use App\Service\Auth\RegistrationService;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class RegistrationServiceTest extends TestCase
 {
@@ -21,7 +22,7 @@ class RegistrationServiceTest extends TestCase
         $service->register([
             'email' => 'invalid',
             'name' => 'Test User',
-            'password' => 'Pass1234',
+            'password' => 'StrongPass1',
             'privacyConsent' => true
         ]);
     }
@@ -43,11 +44,14 @@ class RegistrationServiceTest extends TestCase
         ));
         $entityManager->expects($this->once())->method('flush');
 
-        $service = new RegistrationService($entityManager, $users, $tokens, $embedding);
+        $hasher = $this->createMock(UserPasswordHasherInterface::class);
+        $hasher->method('hashPassword')->willReturn('hashed_password');
+
+        $service = new RegistrationService($entityManager, $users, $tokens, $embedding, $hasher);
         $token = $service->register([
             'email' => 'USER@EXAMPLE.COM',
             'name' => 'Test User',
-            'password' => 'Pass1234',
+            'password' => 'StrongPass1',
             'privacyConsent' => true,
             'tastePrompt' => 'fantasy'
         ]);
@@ -72,7 +76,9 @@ class RegistrationServiceTest extends TestCase
         $entityManager->expects($this->atLeastOnce())->method('persist');
         $entityManager->expects($this->once())->method('flush');
 
-        $service = new RegistrationService($entityManager, $users, $tokens, $embedding);
+        $hasher = $this->createMock(UserPasswordHasherInterface::class);
+
+        $service = new RegistrationService($entityManager, $users, $tokens, $embedding, $hasher);
         $verified = $service->verify('token');
 
         $this->assertTrue($verified->isVerified());
@@ -91,7 +97,9 @@ class RegistrationServiceTest extends TestCase
 
         $tokens->method('findActiveByToken')->with('token')->willReturn($token);
 
-        $service = new RegistrationService($entityManager, $users, $tokens, $embedding);
+        $hasher = $this->createMock(UserPasswordHasherInterface::class);
+
+        $service = new RegistrationService($entityManager, $users, $tokens, $embedding, $hasher);
 
         $this->expectException(RegistrationException::class);
         $service->verify('token');
@@ -104,7 +112,9 @@ class RegistrationServiceTest extends TestCase
         $tokens = $this->createMock(RegistrationTokenRepository::class);
         $embedding = $this->createMock(OpenAIEmbeddingService::class);
         $users->method('findOneBy')->willReturn(null);
+        $hasher = $this->createMock(UserPasswordHasherInterface::class);
+        $hasher->method('hashPassword')->willReturn('hashed_password');
 
-        return new RegistrationService($entityManager, $users, $tokens, $embedding);
+        return new RegistrationService($entityManager, $users, $tokens, $embedding, $hasher);
     }
 }

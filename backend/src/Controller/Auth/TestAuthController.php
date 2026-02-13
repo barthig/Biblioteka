@@ -11,6 +11,7 @@ use App\Service\Auth\RefreshTokenService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use OpenApi\Attributes as OA;
 
 #[OA\Tag(name: 'TestAuth')]
@@ -19,7 +20,8 @@ class TestAuthController extends AbstractController
     use ExceptionHandlingTrait;
     
     public function __construct(
-        private readonly RefreshTokenService $refreshTokenService
+        private readonly RefreshTokenService $refreshTokenService,
+        private readonly UserPasswordHasherInterface $passwordHasher
     ) {
     }
 
@@ -66,7 +68,7 @@ class TestAuthController extends AbstractController
                 return $this->jsonErrorMessage(404, 'User not found');
             }
 
-            if (!password_verify($password, $user->getPassword())) {
+            if (!$this->passwordHasher->isPasswordValid($user, $password)) {
                 return $this->json([
                     'error' => 'Invalid password',
                     'hashLength' => strlen($user->getPassword()),

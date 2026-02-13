@@ -16,3 +16,5 @@ opentelemetry-exporter-jaeger==1.22.0
 opentelemetry-instrumentation-fastapi==0.43b0
 httpx==0.26.0
 tenacity==8.2.3
+pytest==8.0.0
+pytest-asyncio==0.23.3

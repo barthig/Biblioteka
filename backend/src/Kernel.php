@@ -12,6 +12,28 @@ class Kernel extends BaseKernel
 {
     use MicroKernelTrait;
 
+    public function boot(): void
+    {
+        parent::boot();
+
+        // S-02: Reject known placeholder secrets in production
+        if ($this->environment === 'prod') {
+            $placeholders = ['change_me', 'change_me_secret', 'change_me_api', 'change_me_jwt'];
+            $criticalVars = ['APP_SECRET', 'API_SECRET', 'JWT_SECRET'];
+
+            foreach ($criticalVars as $var) {
+                $value = $_ENV[$var] ?? $_SERVER[$var] ?? getenv($var) ?: '';
+                if (in_array($value, $placeholders, true) || str_starts_with($value, 'change_me')) {
+                    throw new \RuntimeException(sprintf(
+                        'SECURITY: Environment variable "%s" contains a placeholder value. '
+                        . 'Set a real secret before running in production.',
+                        $var
+                    ));
+                }
+            }
+        }
+    }
+
     protected function configureContainer(ContainerConfigurator $container): void
     {
         $confDir = dirname(__DIR__) . '/config';

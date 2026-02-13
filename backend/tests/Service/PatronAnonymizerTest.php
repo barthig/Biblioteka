@@ -11,6 +11,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\QueryBuilder;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class PatronAnonymizerTest extends TestCase
 {
@@ -44,7 +45,10 @@ class PatronAnonymizerTest extends TestCase
         $em->expects($this->never())->method('persist');
         $em->expects($this->never())->method('flush');
 
-        $service = new PatronAnonymizer($em, $users, $loans, $reservations, $fines);
+        $hasher = $this->createMock(UserPasswordHasherInterface::class);
+        $hasher->method('hashPassword')->willReturn('hashed_random');
+
+        $service = new PatronAnonymizer($em, $users, $loans, $reservations, $fines, $hasher);
         $result = $service->anonymize(new \DateTimeImmutable('-1 year'), 10, true);
 
         $this->assertSame(1, $result['anonymized']);

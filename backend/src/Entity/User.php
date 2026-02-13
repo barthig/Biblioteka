@@ -100,7 +100,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private bool $newsletterSubscribed = true;
 
     #[ORM\Column(type: 'string', length: 11, nullable: true)]
-    #[Groups(['user:read'])]
     private ?string $pesel = null;
 
     #[ORM\Column(type: 'string', length: 20, nullable: true)]
@@ -152,7 +151,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: 'string', length: 5, nullable: true)]
     private ?string $language = 'pl';
 
-    #[ORM\Column(type: 'string', length: 4, nullable: true)]
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private ?string $pin = null;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
@@ -362,6 +361,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getPesel(): ?string { return $this->pesel; }
     public function setPesel(?string $pesel): self { $this->pesel = $pesel; return $this; }
 
+    /**
+     * Return masked PESEL for API responses (shows only last 4 digits).
+     */
+    #[Groups(['user:read'])]
+    public function getPeselMasked(): ?string
+    {
+        if ($this->pesel === null) {
+            return null;
+        }
+        return str_repeat('*', max(0, strlen($this->pesel) - 4)) . substr($this->pesel, -4);
+    }
+
     public function getCardNumber(): ?string { return $this->cardNumber; }
     public function setCardNumber(?string $cardNumber): self { $this->cardNumber = $cardNumber; return $this; }
 
@@ -411,7 +422,24 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setLanguage(?string $language): self { $this->language = $language; return $this; }
 
     public function getPin(): ?string { return $this->pin; }
-    public function setPin(?string $pin): self { $this->pin = $pin; return $this; }
+    public function setPin(?string $pin): self
+    {
+        if ($pin !== null && strlen($pin) <= 6) {
+            // Hash short PINs (plaintext input); already-hashed values are longer
+            $this->pin = password_hash($pin, PASSWORD_BCRYPT);
+        } else {
+            $this->pin = $pin;
+        }
+        return $this;
+    }
+
+    public function verifyPin(string $plainPin): bool
+    {
+        if ($this->pin === null) {
+            return false;
+        }
+        return password_verify($plainPin, $this->pin);
+    }
 
     #[Groups(['user:read'])]
     public function getAvatarUrl(): ?string

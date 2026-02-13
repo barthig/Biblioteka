@@ -8,12 +8,14 @@ use App\Exception\BusinessLogicException;
 use App\Exception\ValidationException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 #[AsMessageHandler(bus: 'command.bus')]
 class CreateUserHandler
 {
     public function __construct(
-        private readonly EntityManagerInterface $entityManager
+        private readonly EntityManagerInterface $entityManager,
+        private readonly UserPasswordHasherInterface $passwordHasher
     ) {
     }
 
@@ -53,7 +55,15 @@ class CreateUserHandler
             $user->block($command->blockedReason);
         }
 
-        $user->setPassword(password_hash($command->password, PASSWORD_BCRYPT));
+        // Validate password policy
+        if (strlen($command->password) < 10) {
+            throw ValidationException::forField('password', 'Password must be at least 10 characters');
+        }
+        if (!preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/', $command->password)) {
+            throw ValidationException::forField('password', 'Password must contain lowercase, uppercase letters and a digit');
+        }
+
+        $user->setPassword($this->passwordHasher->hashPassword($user, $command->password));
         $user->setPendingApproval($command->pendingApproval);
 
         if ($command->verified) {

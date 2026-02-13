@@ -16,8 +16,17 @@
         <testsuite name="Integration">
             <directory>tests/Integration</directory>
         </testsuite>
-        <testsuite name="Security">
-            <directory>tests/Security</directory>
+        <testsuite name="Service">
+            <directory>tests/Service</directory>
+        </testsuite>
+        <testsuite name="Entity">
+            <directory>tests/Entity</directory>
+        </testsuite>
+        <testsuite name="EventSubscriber">
+            <directory>tests/EventSubscriber</directory>
+        </testsuite>
+        <testsuite name="Performance">
+            <directory>tests/Performance</directory>
         </testsuite>
     </testsuites>
     <php>

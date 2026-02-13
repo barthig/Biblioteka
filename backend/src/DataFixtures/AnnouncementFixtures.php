@@ -6,9 +6,15 @@ use App\Entity\Announcement;
 use App\Entity\User;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class AnnouncementFixtures extends Fixture
 {
+    public function __construct(
+        private readonly UserPasswordHasherInterface $passwordHasher
+    ) {
+    }
+
     public function load(ObjectManager $manager): void
     {
         // Pobierz użytkownika administratora
@@ -20,7 +26,7 @@ class AnnouncementFixtures extends Fixture
             $adminUser->setEmail('admin@biblioteka.pl');
             $adminUser->setName('Administrator');
             $adminUser->setRoles(['ROLE_LIBRARIAN', 'ROLE_ADMIN']);
-            $adminUser->setPassword(password_hash('admin', PASSWORD_BCRYPT));
+            $adminUser->setPassword($this->passwordHasher->hashPassword($adminUser, 'Admin12345'));
             $adminUser->markVerified(); // Use markVerified() method
             $adminUser->recordPrivacyConsent();
             $manager->persist($adminUser);

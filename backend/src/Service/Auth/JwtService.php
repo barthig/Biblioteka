@@ -3,21 +3,11 @@ declare(strict_types=1);
 namespace App\Service\Auth;
 
 use App\Exception\ExternalServiceException;
+use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
 
 class JwtService
 {
-    private static function base64UrlEncode(string $data): string
-    {
-        return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
-    }
-
-    private static function base64UrlDecode(string $data): string
-    {
-        $pad = 4 - (strlen($data) % 4);
-        if ($pad < 4) $data .= str_repeat('=', $pad);
-        return base64_decode(strtr($data, '-_', '+/'));
-    }
-
     /**
      * @param array<string, mixed> $claims
      */
@@ -27,25 +17,17 @@ class JwtService
         if (empty($secrets)) {
             throw new ExternalServiceException('JWT secret is not configured');
         }
-
-        $currentSecret = $secrets[0]; // use first as current
-        $kid = '1'; // key id
-
-        $header = ['alg' => 'HS256', 'typ' => 'JWT', 'kid' => $kid];
-        $payload = $claims;
+        $currentSecret = $secrets[0];
         $now = time();
-        $payload['iat'] = $now;
-        $payload['exp'] = $now + $ttl;
-        $payload['iss'] = 'biblioteka'; // issuer
-        $payload['aud'] = 'biblioteka-api'; // audience
-
-        $bHeader = self::base64UrlEncode(json_encode($header));
-        $bPayload = self::base64UrlEncode(json_encode($payload));
-
-        $signature = hash_hmac('sha256', $bHeader . '.' . $bPayload, $currentSecret, true);
-        $bSig = self::base64UrlEncode($signature);
-
-        return sprintf('%s.%s.%s', $bHeader, $bPayload, $bSig);
+        $payload = array_merge($claims, [
+            'iat' => $now,
+            'nbf' => $now,
+            'exp' => $now + $ttl,
+            'iss' => 'biblioteka',
+            'aud' => 'biblioteka-api',
+            'jti' => bin2hex(random_bytes(16)),
+        ]);
+        return JWT::encode($payload, $currentSecret, 'HS256', '1');
     }
 
     /**
@@ -54,32 +36,41 @@ class JwtService
     public static function validateToken(string $token): ?array
     {
         $secrets = self::getSecrets();
-        if (empty($secrets)) return null;
+        if (empty($secrets)) {
+            return null;
+        }
 
-        $parts = explode('.', $token);
-        if (count($parts) !== 3) return null;
-        [$bHeader, $bPayload, $bSig] = $parts;
+        // Try to decode header to get kid
+        $tks = explode('.', $token);
+        if (count($tks) !== 3) {
+            return null;
+        }
 
-        $header = json_decode(self::base64UrlDecode($bHeader), true);
-        if (!$header || !isset($header['kid'])) return null;
-        $kid = $header['kid'];
+        try {
+            $headerJson = JWT::urlsafeB64Decode($tks[0]);
+            $header = json_decode($headerJson, true);
+        } catch (\Throwable) {
+            return null;
+        }
 
-        // Use secret based on kid (1-based index)
+        $kid = $header['kid'] ?? '1';
         $secretIndex = is_numeric($kid) ? (int)$kid - 1 : 0;
-        $secret = isset($secrets[$secretIndex]) ? $secrets[$secretIndex] : $secrets[0];
+        $secret = $secrets[$secretIndex] ?? $secrets[0];
 
-        $expectedSig = hash_hmac('sha256', $bHeader . '.' . $bPayload, $secret, true);
-        $expectedB = self::base64UrlEncode($expectedSig);
-        if (!hash_equals($expectedB, $bSig)) return null;
-
-        $jsonPayload = self::base64UrlDecode($bPayload);
-        $payload = json_decode($jsonPayload, true);
-        if (!$payload) return null;
-        if (isset($payload['exp']) && time() > (int)$payload['exp']) return null;
+        try {
+            JWT::$leeway = 30; // 30 seconds clock skew tolerance
+            $payload = (array) JWT::decode($token, new Key($secret, 'HS256'));
+        } catch (\Throwable) {
+            return null;
+        }
 
         // Validate iss and aud
-        if (!isset($payload['iss']) || $payload['iss'] !== 'biblioteka') return null;
-        if (!isset($payload['aud']) || $payload['aud'] !== 'biblioteka-api') return null;
+        if (!isset($payload['iss']) || $payload['iss'] !== 'biblioteka') {
+            return null;
+        }
+        if (!isset($payload['aud']) || $payload['aud'] !== 'biblioteka-api') {
+            return null;
+        }
 
         return $payload;
     }

@@ -10,6 +10,7 @@ use App\Service\Book\OpenAIEmbeddingService;
 use DateInterval;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class RegistrationService
 {
@@ -22,7 +23,8 @@ class RegistrationService
         private EntityManagerInterface $entityManager,
         private UserRepository $users,
         private RegistrationTokenRepository $tokens,
-        private OpenAIEmbeddingService $embeddingService
+        private OpenAIEmbeddingService $embeddingService,
+        private UserPasswordHasherInterface $passwordHasher
     ) {
 
         $requireApproval = getenv('REGISTRATION_REQUIRE_APPROVAL') ?: ($_ENV['REGISTRATION_REQUIRE_APPROVAL'] ?? 'false');
@@ -83,7 +85,9 @@ class RegistrationService
             ->setRoles(['ROLE_USER'])
             ->setPendingApproval($this->requireApproval)
             ->requireVerification()
-            ->setPassword(password_hash($password, PASSWORD_BCRYPT));
+            ->setPassword('temp'); // placeholder for hasher
+
+        $user->setPassword($this->passwordHasher->hashPassword($user, $password));
 
         if (isset($data['phoneNumber'])) {
             $phone = trim((string) $data['phoneNumber']);
@@ -169,12 +173,12 @@ class RegistrationService
 
     private function assertPasswordStrength(string $password): void
     {
-        if (strlen($password) < 8) {
-            throw RegistrationException::validation('Haslo musi miec co najmniej 8 znakow.');
+        if (strlen($password) < 10) {
+            throw RegistrationException::validation('Haslo musi miec co najmniej 10 znakow.');
         }
 
-        if (!preg_match('/(?=.*[a-zA-Z])(?=.*\d)/', $password)) {
-            throw RegistrationException::validation('Haslo musi zawierac litery oraz co najmniej jedna cyfre.');
+        if (!preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/', $password)) {
+            throw RegistrationException::validation('Haslo musi zawierac male i wielkie litery oraz co najmniej jedna cyfre.');
         }
     }
 

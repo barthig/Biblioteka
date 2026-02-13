@@ -44,7 +44,10 @@ export default class ErrorBoundary extends React.Component {
               <button className="btn btn--primary" onClick={this.handleReset}>
                 Spróbuj ponownie
               </button>
-              <button className="btn btn--secondary" onClick={() => window.location.href = '/'}>
+              <button className="btn btn--secondary" onClick={() => {
+                // Intentional full reload — class component, resets all state cleanly
+                window.location.href = '/'
+              }}>
                 Strona główna
               </button>
             </div>

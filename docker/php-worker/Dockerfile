@@ -77,3 +77,6 @@ COPY backend /app
 RUN composer dump-autoload --optimize --classmap-authoritative
 
 CMD ["php", "bin/console", "messenger:consume", "async", "-vv"]
+
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
+    CMD php bin/console messenger:stats async || exit 1

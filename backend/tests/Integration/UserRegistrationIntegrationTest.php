@@ -118,9 +118,12 @@ class UserRegistrationIntegrationTest extends WebTestCase
         $user = new User();
         $user->setEmail($email)
             ->setName('Existing User')
-            ->setRoles(['ROLE_USER'])
-            ->setPassword(password_hash('ExistingPass1', PASSWORD_BCRYPT))
-            ->markVerified();
+            ->setRoles(['ROLE_USER']);
+
+        /** @var \Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface $hasher */
+        $hasher = static::getContainer()->get('security.user_password_hasher');
+        $user->setPassword($hasher->hashPassword($user, 'ExistingPass1'));
+        $user->markVerified();
 
         $em = $this->getEntityManager();
         $em->persist($user);

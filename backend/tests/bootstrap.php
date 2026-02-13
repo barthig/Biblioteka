@@ -66,9 +66,12 @@ if (!$userRepo->findOneBy(['email' => $seedEmail])) {
     $user = new \App\Entity\User();
     $user->setEmail($seedEmail)
         ->setName('Verified User')
-        ->setRoles(['ROLE_USER', 'ROLE_SYSTEM'])
-        ->setPassword(password_hash('password123', PASSWORD_BCRYPT))
-        ->markVerified();
+        ->setRoles(['ROLE_USER', 'ROLE_SYSTEM']);
+
+    /** @var \Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface $hasher */
+    $hasher = $kernel->getContainer()->get('security.user_password_hasher');
+    $user->setPassword($hasher->hashPassword($user, 'Password123'));
+    $user->markVerified();
 
     $em->persist($user);
     $em->flush();

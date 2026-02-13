@@ -37,7 +37,9 @@ class UserManagementControllerTest extends ApiTestCase
         $repo = $this->entityManager->getRepository(User::class);
         $created = $repo->findOneBy(['email' => 'new@example.com']);
         self::assertNotNull($created);
-        self::assertTrue(password_verify('StrongPass1', $created->getPassword()));
+        /** @var \Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface $hasher */
+        $hasher = static::getContainer()->get('security.user_password_hasher');
+        self::assertTrue($hasher->isPasswordValid($created, 'StrongPass1'));
     }
 
     public function testUpdateUserRolesRequiresAdmin(): void
