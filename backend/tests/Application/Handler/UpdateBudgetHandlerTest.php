@@ -39,6 +39,7 @@ class UpdateBudgetHandlerTest extends TestCase
             ->with(1)
             ->willReturn($budget);
 
+        $this->entityManager->expects($this->once())->method('persist')->with($budget);
         $this->entityManager->expects($this->once())->method('flush');
 
         $command = new UpdateBudgetCommand(
@@ -66,7 +67,7 @@ class UpdateBudgetHandlerTest extends TestCase
             ->willReturn(null);
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Budget not found');
+        $this->expectExceptionMessage('Budget with ID "999" was not found.');
 
         $command = new UpdateBudgetCommand(999, 'Name', '2024', '10000', 'PLN');
         ($this->handler)($command);
@@ -85,9 +86,9 @@ class UpdateBudgetHandlerTest extends TestCase
             ->method('find')
             ->willReturn($budget);
 
+        $this->entityManager->expects($this->once())->method('persist')->with($budget);
         $this->entityManager->expects($this->once())->method('flush');
 
-        // Only update name, keep other fields
         $command = new UpdateBudgetCommand(
             1,
             'New Name Only',
@@ -99,7 +100,7 @@ class UpdateBudgetHandlerTest extends TestCase
         $result = ($this->handler)($command);
 
         $this->assertEquals('New Name Only', $result->getName());
-        $this->assertEquals('2024', $result->getFiscalYear()); // unchanged
-        $this->assertEquals('100000.00', $result->getAllocatedAmount()); // unchanged
+        $this->assertEquals('2024', $result->getFiscalYear());
+        $this->assertEquals('100000.00', $result->getAllocatedAmount());
     }
 }

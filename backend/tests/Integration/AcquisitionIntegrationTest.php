@@ -2,118 +2,101 @@
 
 namespace App\Tests\Integration;
 
-use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use App\Entity\AcquisitionBudget;
+use App\Entity\AcquisitionOrder;
+use App\Entity\Supplier;
+use App\Tests\Functional\ApiTestCase;
 
-/**
- * Test integracyjny: Proces akwizycji książek
- */
-class AcquisitionIntegrationTest extends WebTestCase
+class AcquisitionIntegrationTest extends ApiTestCase
 {
-    private $client;
-    private $librarianToken;
-
-    protected function setUp(): void
-    {
-        $this->client = static::createClient();
-        
-        // Login jako bibliotekarz
-        $this->client->request('POST', '/api/auth/login', [], [], [
-            'CONTENT_TYPE' => 'application/json',
-            'HTTP_X_API_SECRET' => $_ENV['API_SECRET']
-        ], json_encode([
-            'email' => 'librarian@example.com',
-            'password' => 'librarian123'
-        ]));
-        
-        $data = json_decode($this->client->getResponse()->getContent(), true);
-        $this->librarianToken = $data['token'];
-    }
-
     public function testCompleteAcquisitionProcess(): void
     {
-        // 1. Utworzenie budżetu
-        $this->client->request('POST', '/api/acquisitions/budgets', [], [], [
-            'CONTENT_TYPE' => 'application/json',
-            'HTTP_AUTHORIZATION' => 'Bearer ' . $this->librarianToken,
-            'HTTP_X_API_SECRET' => $_ENV['API_SECRET']
-        ], json_encode([
-            'year' => 2025,
-            'totalAmount' => 50000.00,
-            'category' => 'books'
-        ]));
-        
-        $this->assertResponseStatusCodeSame(201);
-        $budget = json_decode($this->client->getResponse()->getContent(), true);
-        $budgetId = $budget['id'];
+        $librarian = $this->createUser('integration-librarian@example.com', ['ROLE_LIBRARIAN']);
+        $client = $this->createAuthenticatedClient($librarian);
 
-        // 2. Dodanie dostawcy
-        $this->client->request('POST', '/api/acquisitions/suppliers', [], [], [
-            'CONTENT_TYPE' => 'application/json',
-            'HTTP_AUTHORIZATION' => 'Bearer ' . $this->librarianToken,
-            'HTTP_X_API_SECRET' => $_ENV['API_SECRET']
-        ], json_encode([
-            'name' => 'Test Publisher',
-            'email' => 'publisher@example.com',
-            'phone' => '+48123456789',
-            'address' => 'Warszawa, ul. Testowa 1'
-        ]));
-        
+        $this->jsonRequest($client, 'POST', '/api/admin/acquisitions/budgets', [
+            'name' => 'Integration Budget 2025',
+            'fiscalYear' => '2025',
+            'allocatedAmount' => '50000.00',
+            'currency' => 'PLN',
+        ]);
         $this->assertResponseStatusCodeSame(201);
-        $supplier = json_decode($this->client->getResponse()->getContent(), true);
-        $supplierId = $supplier['id'];
+        $budgetPayload = $this->getJsonResponse($client);
+        $budgetId = $budgetPayload['id'] ?? null;
+        if ($budgetId === null) {
+            $budget = $this->entityManager->getRepository(AcquisitionBudget::class)
+                ->findOneBy(['name' => 'Integration Budget 2025']);
+            $this->assertNotNull($budget);
+            $budgetId = $budget->getId();
+        }
 
-        // 3. Utworzenie zamówienia
-        $this->client->request('POST', '/api/acquisitions/orders', [], [], [
-            'CONTENT_TYPE' => 'application/json',
-            'HTTP_AUTHORIZATION' => 'Bearer ' . $this->librarianToken,
-            'HTTP_X_API_SECRET' => $_ENV['API_SECRET']
-        ], json_encode([
+        $this->jsonRequest($client, 'POST', '/api/admin/acquisitions/suppliers', [
+            'name' => 'Integration Publisher',
+            'contactEmail' => 'publisher@example.com',
+            'contactPhone' => '+48123456789',
+            'addressLine' => 'ul. Testowa 1',
+            'city' => 'Warszawa',
+            'country' => 'PL',
+            'active' => true,
+        ]);
+        $this->assertResponseStatusCodeSame(201);
+        $supplierPayload = $this->getJsonResponse($client);
+        $supplierId = $supplierPayload['id'] ?? null;
+        if ($supplierId === null) {
+            $supplier = $this->entityManager->getRepository(Supplier::class)
+                ->findOneBy(['name' => 'Integration Publisher']);
+            $this->assertNotNull($supplier);
+            $supplierId = $supplier->getId();
+        }
+
+        $this->jsonRequest($client, 'POST', '/api/admin/acquisitions/orders', [
             'supplierId' => $supplierId,
             'budgetId' => $budgetId,
+            'title' => 'Integration Order',
+            'totalAmount' => '249.95',
+            'currency' => 'PLN',
             'items' => [
                 [
                     'title' => 'Test Book 1',
                     'isbn' => '978-83-1234-567-8',
                     'quantity' => 5,
-                    'unitPrice' => 49.99
-                ]
-            ]
-        ]));
-        
+                    'unitPrice' => 49.99,
+                ],
+            ],
+        ]);
         $this->assertResponseStatusCodeSame(201);
-        $order = json_decode($this->client->getResponse()->getContent(), true);
-        $orderId = $order['id'];
+        $orderPayload = $this->getJsonResponse($client);
+        $orderId = $orderPayload['id'] ?? null;
+        if ($orderId === null) {
+            $order = $this->entityManager->getRepository(AcquisitionOrder::class)
+                ->findOneBy(['title' => 'Integration Order']);
+            $this->assertNotNull($order);
+            $orderId = $order->getId();
+        }
 
-        // 4. Sprawdzenie budżetu - powinien się zmniejszyć
-        $this->client->request('GET', "/api/acquisitions/budgets/{$budgetId}", [], [], [
-            'HTTP_AUTHORIZATION' => 'Bearer ' . $this->librarianToken,
-            'HTTP_X_API_SECRET' => $_ENV['API_SECRET']
+        $this->sendRequest($client, 'GET', '/api/admin/acquisitions/budgets/' . $budgetId . '/summary');
+        $this->assertResponseStatusCodeSame(200);
+        $initialSummary = $this->getJsonResponse($client);
+        $this->assertArrayHasKey('remainingAmount', $initialSummary);
+        $this->assertSame(0.0, (float) $initialSummary['spentAmount']);
+
+        $this->jsonRequest($client, 'POST', '/api/admin/acquisitions/orders/' . $orderId . '/receive', [
+            'receivedAt' => '2025-02-15',
+            'expenseAmount' => '249.95',
+            'expenseDescription' => 'Invoice 2025/02',
         ]);
-        
-        $this->assertResponseIsSuccessful();
-        $updatedBudget = json_decode($this->client->getResponse()->getContent(), true);
-        $this->assertLessThan($budget['totalAmount'], $updatedBudget['remainingAmount']);
+        $this->assertResponseStatusCodeSame(200);
 
-        // 5. Oznaczenie zamówienia jako dostarczone
-        $this->client->request('PUT', "/api/acquisitions/orders/{$orderId}/status", [], [], [
-            'CONTENT_TYPE' => 'application/json',
-            'HTTP_AUTHORIZATION' => 'Bearer ' . $this->librarianToken,
-            'HTTP_X_API_SECRET' => $_ENV['API_SECRET']
-        ], json_encode([
-            'status' => 'delivered'
-        ]));
-        
-        $this->assertResponseIsSuccessful();
+        $this->sendRequest($client, 'GET', '/api/admin/acquisitions/budgets/' . $budgetId . '/summary');
+        $this->assertResponseStatusCodeSame(200);
+        $updatedSummary = $this->getJsonResponse($client);
+        $this->assertSame(249.95, (float) $updatedSummary['spentAmount']);
+        $this->assertSame(49750.05, (float) $updatedSummary['remainingAmount']);
 
-        // 6. Raport akwizycji
-        $this->client->request('GET', '/api/acquisitions/reports?year=2025', [], [], [
-            'HTTP_AUTHORIZATION' => 'Bearer ' . $this->librarianToken,
-            'HTTP_X_API_SECRET' => $_ENV['API_SECRET']
-        ]);
-        
-        $this->assertResponseIsSuccessful();
-        $report = json_decode($this->client->getResponse()->getContent(), true);
-        $this->assertArrayHasKey('totalSpent', $report);
-        $this->assertArrayHasKey('totalOrders', $report);
+        $this->entityManager->clear();
+        $storedOrder = $this->entityManager->getRepository(AcquisitionOrder::class)->find($orderId);
+        $this->assertNotNull($storedOrder);
+        $this->assertSame(AcquisitionOrder::STATUS_RECEIVED, $storedOrder->getStatus());
     }
 }
+

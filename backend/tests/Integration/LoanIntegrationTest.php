@@ -2,159 +2,84 @@
 
 namespace App\Tests\Integration;
 
-use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use App\Entity\Book;
+use App\Entity\Loan;
+use App\Tests\Functional\ApiTestCase;
 
-/**
- * Test integracyjny: Pełny cykl wypożyczenia książki
- */
-class LoanIntegrationTest extends WebTestCase
+class LoanIntegrationTest extends ApiTestCase
 {
-    private $client;
-    private $token;
-    private $librarianToken;
-
-    protected function setUp(): void
-    {
-        $this->client = static::createClient();
-        
-        // Login jako użytkownik
-        $this->client->request('POST', '/api/auth/login', [], [], [
-            'CONTENT_TYPE' => 'application/json',
-            'HTTP_X_API_SECRET' => $_ENV['API_SECRET']
-        ], json_encode([
-            'email' => 'user@example.com',
-            'password' => 'password123'
-        ]));
-        
-        $data = json_decode($this->client->getResponse()->getContent(), true);
-        $this->token = $data['token'];
-
-        // Login jako bibliotekarz
-        $this->client->request('POST', '/api/auth/login', [], [], [
-            'CONTENT_TYPE' => 'application/json',
-            'HTTP_X_API_SECRET' => $_ENV['API_SECRET']
-        ], json_encode([
-            'email' => 'librarian@example.com',
-            'password' => 'librarian123'
-        ]));
-        
-        $data = json_decode($this->client->getResponse()->getContent(), true);
-        $this->librarianToken = $data['token'];
-    }
-
     public function testCompleteBookLoanFlow(): void
     {
-        // 1. Użytkownik wyszukuje książkę
-        $this->client->request('GET', '/api/books?search=Test', [], [], [
-            'HTTP_AUTHORIZATION' => 'Bearer ' . $this->token,
-            'HTTP_X_API_SECRET' => $_ENV['API_SECRET']
-        ]);
-        
-        $this->assertResponseIsSuccessful();
-        $books = json_decode($this->client->getResponse()->getContent(), true);
-        $this->assertNotEmpty($books['data']);
-        $bookId = $books['data'][0]['id'];
+        $user = $this->createUser('integration-user@example.com');
+        $author = $this->createAuthor('Integration Author');
+        $category = $this->createCategory('Integration Loans');
+        $book = $this->createBook('Integration Book', $author, 1, [$category], 2);
 
-        // 2. Użytkownik sprawdza dostępność
-        $this->client->request('GET', "/api/books/{$bookId}", [], [], [
-            'HTTP_AUTHORIZATION' => 'Bearer ' . $this->token,
-            'HTTP_X_API_SECRET' => $_ENV['API_SECRET']
-        ]);
-        
-        $this->assertResponseIsSuccessful();
-        $book = json_decode($this->client->getResponse()->getContent(), true);
-        $this->assertGreaterThan(0, $book['availableCopies']);
-        $copyId = $book['copies'][0]['id'];
+        $client = $this->createAuthenticatedClient($user);
 
-        // 3. Bibliotekarz tworzy wypożyczenie
-        $this->client->request('POST', '/api/loans', [], [], [
-            'CONTENT_TYPE' => 'application/json',
-            'HTTP_AUTHORIZATION' => 'Bearer ' . $this->librarianToken,
-            'HTTP_X_API_SECRET' => $_ENV['API_SECRET']
-        ], json_encode([
-            'bookCopyId' => $copyId,
-            'userId' => 1 // ID użytkownika
-        ]));
-        
+        $this->sendRequest($client, 'GET', '/api/books/' . $book->getId());
+        $this->assertResponseIsSuccessful();
+        $bookPayload = $this->getJsonResponse($client);
+        $this->assertSame($book->getId(), $bookPayload['id']);
+
+        $this->jsonRequest($client, 'POST', '/api/loans', [
+            'userId' => $user->getId(),
+            'bookId' => $book->getId(),
+            'days' => 14,
+        ]);
         $this->assertResponseStatusCodeSame(201);
-        $loan = json_decode($this->client->getResponse()->getContent(), true);
-        $loanId = $loan['id'];
-        $this->assertNotNull($loan['dueDate']);
 
-        // 4. Użytkownik sprawdza swoje wypożyczenia
-        $this->client->request('GET', '/api/loans', [], [], [
-            'HTTP_AUTHORIZATION' => 'Bearer ' . $this->token,
-            'HTTP_X_API_SECRET' => $_ENV['API_SECRET']
+        $loan = $this->entityManager->getRepository(Loan::class)->findOneBy([
+            'user' => $user,
+            'book' => $book,
         ]);
-        
-        $this->assertResponseIsSuccessful();
-        $loans = json_decode($this->client->getResponse()->getContent(), true);
-        $this->assertNotEmpty($loans['data']);
-        $this->assertEquals($loanId, $loans['data'][0]['id']);
+        $this->assertNotNull($loan);
+        $loanId = $loan->getId();
+        $this->sendRequest($client, 'GET', '/api/me/loans');
+        $this->assertResponseStatusCodeSame(200);
+        $loansPayload = $this->getJsonResponse($client);
+        $this->assertArrayHasKey('data', $loansPayload);
+        $this->assertCount(1, $loansPayload['data']);
 
-        // 5. Użytkownik przedłuża wypożyczenie
-        $this->client->request('POST', "/api/loans/{$loanId}/renew", [], [], [
-            'HTTP_AUTHORIZATION' => 'Bearer ' . $this->token,
-            'HTTP_X_API_SECRET' => $_ENV['API_SECRET']
-        ]);
-        
-        $this->assertResponseIsSuccessful();
-        $renewed = json_decode($this->client->getResponse()->getContent(), true);
-        $this->assertEquals(1, $renewed['renewalCount']);
+        $this->sendRequest($client, 'PUT', '/api/loans/' . $loanId . '/extend');
+        $this->assertResponseStatusCodeSame(200);
+        $extendPayload = $this->getJsonResponse($client);
+        $this->assertArrayHasKey('data', $extendPayload);
 
-        // 6. Bibliotekarz zwraca książkę
-        $this->client->request('POST', "/api/loans/{$loanId}/return", [], [], [
-            'HTTP_AUTHORIZATION' => 'Bearer ' . $this->librarianToken,
-            'HTTP_X_API_SECRET' => $_ENV['API_SECRET']
-        ]);
-        
-        $this->assertResponseIsSuccessful();
+        $this->sendRequest($client, 'PUT', '/api/loans/' . $loanId . '/return');
+        $this->assertResponseStatusCodeSame(200);
 
-        // 7. Weryfikacja - książka znów dostępna
-        $this->client->request('GET', "/api/books/{$bookId}", [], [], [
-            'HTTP_AUTHORIZATION' => 'Bearer ' . $this->token,
-            'HTTP_X_API_SECRET' => $_ENV['API_SECRET']
-        ]);
-        
-        $this->assertResponseIsSuccessful();
-        $book = json_decode($this->client->getResponse()->getContent(), true);
-        $this->assertGreaterThan(0, $book['availableCopies']);
+        $this->entityManager->clear();
+        $reloadedBook = $this->entityManager->getRepository(Book::class)->find($book->getId());
+        $this->assertNotNull($reloadedBook);
+        $this->assertSame(1, $reloadedBook->getCopies());
     }
 
     public function testReservationToLoanFlow(): void
     {
-        // 1. Wszystkie egzemplarze wypożyczone
-        $bookId = 1;
-        
-        // 2. Użytkownik tworzy rezerwację
-        $this->client->request('POST', '/api/reservations', [], [], [
-            'CONTENT_TYPE' => 'application/json',
-            'HTTP_AUTHORIZATION' => 'Bearer ' . $this->token,
-            'HTTP_X_API_SECRET' => $_ENV['API_SECRET']
-        ], json_encode([
-            'bookId' => $bookId
-        ]));
-        
-        $this->assertResponseStatusCodeSame(201);
-        $reservation = json_decode($this->client->getResponse()->getContent(), true);
-        $this->assertArrayHasKey('queuePosition', $reservation);
+        $user = $this->createUser('integration-reservation@example.com');
+        $book = $this->createBook('Reservation Book', null, 1, null, 0);
 
-        // 3. Książka zostaje zwrócona (w prawdziwym scenariuszu)
-        // Rezerwacja powinna się zmienić na ready
-        
-        // 4. Użytkownik sprawdza rezerwacje
-        $this->client->request('GET', '/api/reservations', [], [], [
-            'HTTP_AUTHORIZATION' => 'Bearer ' . $this->token,
-            'HTTP_X_API_SECRET' => $_ENV['API_SECRET']
+        $client = $this->createAuthenticatedClient($user);
+        $this->jsonRequest($client, 'POST', '/api/reservations', [
+            'bookId' => $book->getId(),
         ]);
-        
-        $this->assertResponseIsSuccessful();
+
+        $this->assertResponseStatusCodeSame(201);
+        $reservation = $this->getJsonResponse($client);
+        $this->assertArrayHasKey('data', $reservation);
+        $this->assertArrayHasKey('id', $reservation['data']);
+
+        $this->sendRequest($client, 'GET', '/api/reservations');
+        $this->assertResponseStatusCodeSame(200);
+        $reservations = $this->getJsonResponse($client);
+        $this->assertArrayHasKey('data', $reservations);
+        $this->assertCount(1, $reservations['data']);
     }
 
     public function testOverdueLoanCreatesfine(): void
     {
-        // Ten test wymaga mockowania czasu lub czekania
-        // W prawdziwym środowisku można to testować za pomocą CLI command
         $this->markTestSkipped('Requires time manipulation or cron job simulation');
     }
 }
+

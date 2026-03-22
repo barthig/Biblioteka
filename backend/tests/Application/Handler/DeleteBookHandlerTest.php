@@ -4,36 +4,47 @@ namespace App\Tests\Application\Handler;
 use App\Application\Command\Book\DeleteBookCommand;
 use App\Application\Handler\Command\DeleteBookHandler;
 use App\Entity\Book;
+use App\Event\BookDeletedEvent;
 use App\Repository\BookRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 class DeleteBookHandlerTest extends TestCase
 {
     private EntityManagerInterface $em;
     private BookRepository $bookRepository;
+    private EventDispatcherInterface $eventDispatcher;
     private DeleteBookHandler $handler;
 
     protected function setUp(): void
     {
         $this->em = $this->createMock(EntityManagerInterface::class);
         $this->bookRepository = $this->createMock(BookRepository::class);
+        $this->eventDispatcher = $this->createMock(EventDispatcherInterface::class);
 
         $this->handler = new DeleteBookHandler(
             $this->em,
-            $this->bookRepository
+            $this->bookRepository,
+            $this->eventDispatcher
         );
     }
 
     public function testDeleteBookSuccess(): void
     {
         $book = $this->createMock(Book::class);
+        $book->method('getId')->willReturn(1);
+        $book->method('getTitle')->willReturn('Test Book');
 
         $this->bookRepository->method('find')->with(1)->willReturn($book);
 
         $this->em->expects($this->once())->method('remove')->with($book);
         $this->em->expects($this->once())->method('flush');
+        $this->eventDispatcher
+            ->expects($this->once())
+            ->method('dispatch')
+            ->with($this->isInstanceOf(BookDeletedEvent::class));
 
         $command = new DeleteBookCommand(bookId: 1);
         ($this->handler)($command);

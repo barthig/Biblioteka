@@ -60,7 +60,7 @@ class GetBudgetSummaryHandlerTest extends TestCase
         $handler = new GetBudgetSummaryHandler($repository);
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Budget not found');
+        $this->expectExceptionMessage('Budget with ID "999" was not found.');
 
         $query = new GetBudgetSummaryQuery(999);
         ($handler)($query);
@@ -86,3 +86,4 @@ class GetBudgetSummaryHandlerTest extends TestCase
         $this->assertEquals(37654.33, $result['remainingAmount']);
     }
 }
+

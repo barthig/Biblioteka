@@ -12,6 +12,7 @@ use Doctrine\ORM\EntityRepository;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 class CreateReservationHandlerTest extends TestCase
 {
@@ -19,6 +20,7 @@ class CreateReservationHandlerTest extends TestCase
     private ReservationRepository $reservationRepository;
     private MessageBusInterface $bus;
     private LoggerInterface $logger;
+    private EventDispatcherInterface $eventDispatcher;
     private CreateReservationHandler $handler;
 
     protected function setUp(): void
@@ -27,12 +29,14 @@ class CreateReservationHandlerTest extends TestCase
         $this->reservationRepository = $this->createMock(ReservationRepository::class);
         $this->bus = $this->createMock(MessageBusInterface::class);
         $this->logger = $this->createMock(LoggerInterface::class);
+        $this->eventDispatcher = $this->createMock(EventDispatcherInterface::class);
 
         $this->handler = new CreateReservationHandler(
             $this->em,
             $this->reservationRepository,
             $this->bus,
-            $this->logger
+            $this->logger,
+            $this->eventDispatcher
         );
     }
 
@@ -55,9 +59,11 @@ class CreateReservationHandlerTest extends TestCase
             return match ($class) {
                 User::class => $userRepo,
                 Book::class => $bookRepo,
+                default => $this->createMock(EntityRepository::class),
             };
         });
 
+        $this->reservationRepository->method('countActiveByUser')->with($user)->willReturn(0);
         $this->reservationRepository->method('findFirstActiveForUserAndBook')->with($user, $book)->willReturn(null);
 
         $this->em->expects($this->once())->method('persist')->with($this->isInstanceOf(Reservation::class));
@@ -72,7 +78,7 @@ class CreateReservationHandlerTest extends TestCase
     public function testThrowsExceptionWhenUserNotFound(): void
     {
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('User or book not found');
+        $this->expectExceptionMessage('User with ID "999" was not found.');
 
         $userRepo = $this->createMock(EntityRepository::class);
         $userRepo->method('find')->with(999)->willReturn(null);
@@ -83,6 +89,7 @@ class CreateReservationHandlerTest extends TestCase
             return match ($class) {
                 User::class => $userRepo,
                 Book::class => $bookRepo,
+                default => $this->createMock(EntityRepository::class),
             };
         });
 
@@ -93,7 +100,7 @@ class CreateReservationHandlerTest extends TestCase
     public function testThrowsExceptionWhenBookAvailable(): void
     {
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Book currently available, wypożycz zamiast rezerwować');
+        $this->expectExceptionMessage('Book is currently available');
 
         $user = $this->createMock(User::class);
         $book = $this->createMock(Book::class);
@@ -109,8 +116,11 @@ class CreateReservationHandlerTest extends TestCase
             return match ($class) {
                 User::class => $userRepo,
                 Book::class => $bookRepo,
+                default => $this->createMock(EntityRepository::class),
             };
         });
+
+        $this->reservationRepository->method('countActiveByUser')->with($user)->willReturn(0);
 
         $command = new CreateReservationCommand(userId: 1, bookId: 1, expiresInDays: 14);
         ($this->handler)($command);
@@ -119,7 +129,7 @@ class CreateReservationHandlerTest extends TestCase
     public function testThrowsExceptionWhenAlreadyReserved(): void
     {
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Masz już aktywną rezerwację na tę książkę');
+        $this->expectExceptionMessage('You have already reserved this book.');
 
         $user = $this->createMock(User::class);
         $book = $this->createMock(Book::class);
@@ -137,9 +147,11 @@ class CreateReservationHandlerTest extends TestCase
             return match ($class) {
                 User::class => $userRepo,
                 Book::class => $bookRepo,
+                default => $this->createMock(EntityRepository::class),
             };
         });
 
+        $this->reservationRepository->method('countActiveByUser')->with($user)->willReturn(0);
         $this->reservationRepository->method('findFirstActiveForUserAndBook')->with($user, $book)->willReturn($existingReservation);
 
         $command = new CreateReservationCommand(userId: 1, bookId: 1, expiresInDays: 14);

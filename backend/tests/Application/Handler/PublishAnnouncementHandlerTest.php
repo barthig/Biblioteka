@@ -61,7 +61,7 @@ class PublishAnnouncementHandlerTest extends TestCase
         $handler = new PublishAnnouncementHandler($entityManager, $repository, $notificationService);
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Announcement not found');
+        $this->expectExceptionMessage('Announcement with ID "999" was not found.');
 
         $command = new PublishAnnouncementCommand(999);
         ($handler)($command);
@@ -95,3 +95,4 @@ class PublishAnnouncementHandlerTest extends TestCase
         $this->assertEquals('published', $result->getStatus());
     }
 }
+

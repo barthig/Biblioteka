@@ -13,8 +13,7 @@ class RatingControllerTest extends ApiTestCase
         $rating = (new Rating())
             ->setUser($user)
             ->setBook($book)
-            ->setRating(4)
-            ->setReview('Solid read');
+            ->setRating(4);
         $this->entityManager->persist($rating);
         $this->entityManager->flush();
 
@@ -110,8 +109,7 @@ class RatingControllerTest extends ApiTestCase
         $rating = (new Rating())
             ->setUser($user)
             ->setBook($book)
-            ->setRating(4)
-            ->setReview('Solid read');
+            ->setRating(4);
         $this->entityManager->persist($rating);
         $this->entityManager->flush();
 
@@ -124,3 +122,5 @@ class RatingControllerTest extends ApiTestCase
         $this->assertCount(1, $payload['ratings']);
     }
 }
+
+

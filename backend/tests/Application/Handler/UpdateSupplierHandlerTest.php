@@ -28,6 +28,7 @@ class UpdateSupplierHandlerTest extends TestCase
         $repository->expects($this->once())->method('find')->with(1)->willReturn($supplier);
 
         $entityManager = $this->createMock(EntityManagerInterface::class);
+        $entityManager->expects($this->once())->method('persist')->with($supplier);
         $entityManager->expects($this->once())->method('flush');
 
         $handler = new UpdateSupplierHandler($entityManager, $repository);
@@ -68,6 +69,7 @@ class UpdateSupplierHandlerTest extends TestCase
         $repository->method('find')->willReturn($supplier);
 
         $entityManager = $this->createMock(EntityManagerInterface::class);
+        $entityManager->expects($this->once())->method('persist')->with($supplier);
         $entityManager->expects($this->once())->method('flush');
 
         $handler = new UpdateSupplierHandler($entityManager, $repository);
@@ -101,7 +103,7 @@ class UpdateSupplierHandlerTest extends TestCase
         $handler = new UpdateSupplierHandler($entityManager, $repository);
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Supplier not found');
+        $this->expectExceptionMessage('Supplier with ID "999" was not found.');
 
         $command = new UpdateSupplierCommand(999, 'Name', null, null, null, null, null, null, null, null);
         ($handler)($command);

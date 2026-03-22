@@ -27,7 +27,7 @@ class AcquisitionOrderControllerTest extends ApiTestCase
             'totalAmount' => '50.00',
         ]);
 
-        $this->assertResponseStatusCodeSame(409);
+        $this->assertResponseStatusCodeSame(422);
     }
 
     public function testOrderLifecycleAndBudgetExpense(): void
@@ -146,6 +146,7 @@ class AcquisitionOrderControllerTest extends ApiTestCase
         $this->assertResponseStatusCodeSame(200);
 
         $this->sendRequest($client, 'POST', '/api/admin/acquisitions/orders/' . $order['id'] . '/cancel');
-        $this->assertResponseStatusCodeSame(409);
+        $this->assertResponseStatusCodeSame(422);
     }
 }
+

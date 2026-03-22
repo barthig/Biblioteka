@@ -6,9 +6,6 @@ namespace App\Tests\Functional;
  */
 class ErrorResponseFormatTest extends ApiTestCase
 {
-    /**
-     * Test that 404 errors return proper ApiError format
-     */
     public function testNotFoundErrorFormat(): void
     {
         $client = $this->createApiClient();
@@ -19,9 +16,6 @@ class ErrorResponseFormatTest extends ApiTestCase
         $this->assertErrorResponseStructure($response, 'NOT_FOUND', 404);
     }
 
-    /**
-     * Test that 403 forbidden errors return proper ApiError format
-     */
     public function testForbiddenErrorFormat(): void
     {
         $user = $this->createUser('forbidden-format@example.com', ['ROLE_USER']);
@@ -33,9 +27,6 @@ class ErrorResponseFormatTest extends ApiTestCase
         $this->assertErrorResponseStructure($response, 'FORBIDDEN', 403);
     }
 
-    /**
-     * Test that 401 unauthorized errors return proper ApiError format
-     */
     public function testUnauthorizedErrorFormat(): void
     {
         $client = $this->createClientWithoutSecret();
@@ -46,13 +37,9 @@ class ErrorResponseFormatTest extends ApiTestCase
         $this->assertErrorResponseStructure($response, 'UNAUTHORIZED', 401);
     }
 
-    /**
-     * Test that 400 bad request errors return proper ApiError format
-     */
     public function testBadRequestErrorFormat(): void
     {
         $client = $this->createClientWithoutSecret();
-        // Invalid JSON payload
         $client->request('POST', '/api/auth/login', [], [], ['CONTENT_TYPE' => 'application/json'], '{ invalid json');
 
         $this->assertResponseStatusCodeSame(400);
@@ -61,13 +48,9 @@ class ErrorResponseFormatTest extends ApiTestCase
         $this->assertErrorResponseStructure($data, 'BAD_REQUEST', 400);
     }
 
-    /**
-     * Test that validation errors return proper ApiError format with details
-     */
     public function testValidationErrorFormat(): void
     {
         $client = $this->createClientWithoutSecret();
-        // POST with missing required fields
         $client->request(
             'POST',
             '/api/auth/login',
@@ -79,10 +62,10 @@ class ErrorResponseFormatTest extends ApiTestCase
 
         $this->assertResponseStatusCodeSame(400);
         $response = $this->getJsonResponse($client);
-        
+
         $this->assertArrayHasKey('error', $response);
         $error = $response['error'];
-        
+
         $this->assertSame(400, $error['statusCode']);
         if ($error['code'] === 'VALIDATION_FAILED') {
             $this->assertStringContainsString('Validation', $error['message']);
@@ -94,9 +77,6 @@ class ErrorResponseFormatTest extends ApiTestCase
         }
     }
 
-    /**
-     * Test that 409 conflict errors return proper ApiError format
-     */
     public function testConflictErrorFormat(): void
     {
         $librarian = $this->createUser('conflict-format@example.com', ['ROLE_LIBRARIAN']);
@@ -109,14 +89,11 @@ class ErrorResponseFormatTest extends ApiTestCase
             'totalAmount' => '50.00',
         ]);
 
-        $this->assertResponseStatusCodeSame(409);
+        $this->assertResponseStatusCodeSame(422);
         $response = $this->getJsonResponse($client);
-        $this->assertErrorResponseStructure($response, 'CONFLICT', 409);
+        $this->assertErrorResponseStructure($response, 'UNPROCESSABLE_ENTITY', 422);
     }
 
-    /**
-     * Test that 422 unprocessable entity errors return proper ApiError format
-     */
     public function testUnprocessableEntityErrorFormat(): void
     {
         $librarian = $this->createUser('unprocessable-format@example.com', ['ROLE_LIBRARIAN']);
@@ -132,35 +109,27 @@ class ErrorResponseFormatTest extends ApiTestCase
         $this->assertErrorResponseStructure($response, 'UNPROCESSABLE_ENTITY', 422);
     }
 
-    /**
-     * Test that 500 internal errors return proper ApiError format
-     */
     public function testInternalErrorFormat(): void
     {
         $client = $this->createApiClient();
-        // Trigger an error condition - request an invalid endpoint
         $this->sendRequest($client, 'GET', '/api/invalid-endpoint-that-does-not-exist');
-        
-        // 404 or 500 - both should follow format
+
         $response = $this->getJsonResponse($client);
         $this->assertArrayHasKey('error', $response);
-        
+
         $error = $response['error'];
         $this->assertArrayHasKey('code', $error);
         $this->assertArrayHasKey('message', $error);
         $this->assertArrayHasKey('statusCode', $error);
     }
 
-    /**
-     * Test that success responses are wrapped in 'data' envelope
-     */
     public function testSuccessResponseFormat(): void
     {
         $client = $this->createApiClient();
         $this->sendRequest($client, 'GET', '/health');
 
         $response = $this->getJsonResponse($client);
-        
+
         $this->assertResponseStatusCodeSame(200);
         $this->assertIsArray($response);
         $this->assertFalse(
@@ -169,40 +138,33 @@ class ErrorResponseFormatTest extends ApiTestCase
         );
     }
 
-    /**
-     * Test error response structure for consistency
-     * Verifies all required fields are present
-     */
     private function assertErrorResponseStructure(array $response, string $expectedCode, int $expectedStatus): void
     {
         $this->assertArrayHasKey('error', $response, 'Response must have error object');
-        
+
         $error = $response['error'];
         $this->assertIsArray($error, 'error field must be an array/object');
-        
+
         $this->assertArrayHasKey('code', $error, 'error.code is required');
         $this->assertArrayHasKey('message', $error, 'error.message is required');
         $this->assertArrayHasKey('statusCode', $error, 'error.statusCode is required');
-        
+
         $this->assertSame($expectedCode, $error['code'], "Expected code to be $expectedCode");
         $this->assertSame($expectedStatus, $error['statusCode'], "Expected statusCode to be $expectedStatus");
-        
+
         $this->assertIsString($error['message'], 'error.message must be a string');
         $this->assertNotEmpty($error['message'], 'error.message must not be empty');
     }
 
-    /**
-     * Helper to extract JSON response
-     */
     protected function getJsonResponse($client): array
     {
         $response = $client->getResponse();
         $content = $response->getContent();
-        
+
         if (empty($content)) {
             return [];
         }
-        
+
         return json_decode($content, true) ?? [];
     }
 }

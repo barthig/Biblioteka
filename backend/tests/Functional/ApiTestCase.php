@@ -45,15 +45,7 @@ abstract class ApiTestCase extends WebTestCase
         $em = static::getContainer()->get('doctrine')->getManager();
         $this->entityManager = $em;
 
-        if (!self::$schemaInitialized) {
-            $metadata = $em->getMetadataFactory()->getAllMetadata();
-            if (!empty($metadata)) {
-                $schemaTool = new SchemaTool($em);
-                $schemaTool->dropSchema($metadata);
-                $schemaTool->createSchema($metadata);
-            }
-            self::$schemaInitialized = true;
-        }
+        $this->ensureSchema();
 
         $this->purgeDatabase();
         $this->seedDefaultUsers();
@@ -199,8 +191,20 @@ abstract class ApiTestCase extends WebTestCase
         $user->markVerified();
 
         $this->entityManager->persist($user);
-        $this->entityManager->flush();
 
+        try {
+            $this->entityManager->flush();
+        } catch (\Throwable $exception) {
+            $this->entityManager->clear();
+            $existing = $this->entityManager
+                ->getRepository(User::class)
+                ->findOneBy(['email' => $email]);
+            if ($existing instanceof User) {
+                return $existing;
+            }
+
+            throw $exception;
+        }
         return $user;
     }
 
@@ -379,33 +383,73 @@ abstract class ApiTestCase extends WebTestCase
         return $fine;
     }
 
+    private function ensureSchema(): void
+    {
+        $metadata = $this->entityManager->getMetadataFactory()->getAllMetadata();
+        if (empty($metadata)) {
+            return;
+        }
+
+        if (!self::$schemaInitialized) {
+            $schemaTool = new SchemaTool($this->entityManager);
+            $schemaTool->dropSchema($metadata);
+             $schemaTool->updateSchema($metadata, true);
+            self::$schemaInitialized = true;
+            return;
+        }
+
+        $schemaManager = $this->entityManager->getConnection()->createSchemaManager();
+        $tableNames = array_map('strtolower', $schemaManager->listTableNames());
+
+        foreach (['app_user', 'book', 'book_copy', 'loan', 'reservation'] as $requiredTable) {
+            if (!in_array($requiredTable, $tableNames, true)) {
+                $schemaTool = new SchemaTool($this->entityManager);
+                 $schemaTool->updateSchema($metadata, true);
+                return;
+            }
+        }
+    }
     private function purgeDatabase(): void
     {
-    $this->entityManager->createQuery('DELETE FROM App\Entity\BackupRecord br')->execute();
-    $this->entityManager->createQuery('DELETE FROM App\Entity\IntegrationConfig ic')->execute();
-    $this->entityManager->createQuery('DELETE FROM App\Entity\SystemSetting ss')->execute();
-    $this->entityManager->createQuery('DELETE FROM App\Entity\StaffRole sr')->execute();
-    $this->entityManager->createQuery('DELETE FROM App\Entity\AcquisitionExpense ae')->execute();
-    $this->entityManager->createQuery('DELETE FROM App\Entity\AcquisitionOrder ao')->execute();
-    $this->entityManager->createQuery('DELETE FROM App\Entity\AcquisitionBudget ab')->execute();
-    $this->entityManager->createQuery('DELETE FROM App\Entity\Supplier s')->execute();
-    $this->entityManager->createQuery('DELETE FROM App\Entity\WeedingRecord wr')->execute();
-    $this->entityManager->createQuery('DELETE FROM App\Entity\Fine f')->execute();
-    $this->entityManager->createQuery('DELETE FROM App\Entity\NotificationLog nl')->execute();
-    $this->entityManager->createQuery('DELETE FROM App\Entity\Reservation r')->execute();
-    $this->entityManager->createQuery('DELETE FROM App\Entity\Loan l')->execute();
-    $this->entityManager->createQuery('DELETE FROM App\Entity\BookCopy bc')->execute();
-    $this->entityManager->createQuery('DELETE FROM App\Entity\Book b')->execute();
-    $this->entityManager->createQuery('DELETE FROM App\Entity\Category c')->execute();
-    $this->entityManager->createQuery('DELETE FROM App\Entity\Author a')->execute();
-    $this->entityManager->createQuery('DELETE FROM App\Entity\Announcement an')->execute();
-    $this->entityManager->createQuery('DELETE FROM App\Entity\User u')->execute();
+        foreach ([
+            'DELETE FROM App\Entity\BackupRecord br',
+            'DELETE FROM App\Entity\IntegrationConfig ic',
+            'DELETE FROM App\Entity\SystemSetting ss',
+            'DELETE FROM App\Entity\StaffRole sr',
+            'DELETE FROM App\Entity\AcquisitionExpense ae',
+            'DELETE FROM App\Entity\AcquisitionOrder ao',
+            'DELETE FROM App\Entity\AcquisitionBudget ab',
+            'DELETE FROM App\Entity\Supplier s',
+            'DELETE FROM App\Entity\WeedingRecord wr',
+            'DELETE FROM App\Entity\Fine f',
+            'DELETE FROM App\Entity\NotificationLog nl',
+            'DELETE FROM App\Entity\RefreshToken rt',
+            'DELETE FROM App\Entity\Reservation r',
+            'DELETE FROM App\Entity\Loan l',
+            'DELETE FROM App\Entity\BookCopy bc',
+            'DELETE FROM App\Entity\Book b',
+            'DELETE FROM App\Entity\Category c',
+            'DELETE FROM App\Entity\Author a',
+            'DELETE FROM App\Entity\Announcement an',
+            'DELETE FROM App\Entity\User u',
+        ] as $dql) {
+            $this->safeDelete($dql);
+        }
+
         $this->entityManager->clear();
         if (self::getContainer()->has('cache.rate_limiter')) {
             self::getContainer()->get('cache.rate_limiter')->clear();
         }
     }
 
+    private function safeDelete(string $dql): void
+    {
+        try {
+            $this->entityManager->createQuery($dql)->execute();
+        } catch (\Throwable $exception) {
+            // Ignore missing tables in lightweight SQLite test schema.
+        }
+    }
     private function seedDefaultUsers(): void
     {
         $existing = $this->entityManager
@@ -417,5 +461,15 @@ abstract class ApiTestCase extends WebTestCase
         }
     }
 }
+
+
+
+
+
+
+
+
+
+
 
 

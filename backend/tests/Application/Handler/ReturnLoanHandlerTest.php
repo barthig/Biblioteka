@@ -75,7 +75,7 @@ class ReturnLoanHandlerTest extends TestCase
     public function testThrowsExceptionWhenLoanNotFound(): void
     {
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Loan not found');
+        $this->expectExceptionMessage('Loan with ID "999" was not found.');
 
         $this->loanRepository->method('find')->with(999)->willReturn(null);
 
@@ -86,7 +86,7 @@ class ReturnLoanHandlerTest extends TestCase
     public function testThrowsExceptionWhenLoanAlreadyReturned(): void
     {
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Loan already returned');
+        $this->expectExceptionMessage('This loan has already been returned.');
 
         $loan = (new Loan())
             ->setBook(new Book())
@@ -100,3 +100,5 @@ class ReturnLoanHandlerTest extends TestCase
         ($this->handler)($command);
     }
 }
+
+

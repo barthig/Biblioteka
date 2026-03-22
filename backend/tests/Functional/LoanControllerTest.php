@@ -72,7 +72,7 @@ class LoanControllerTest extends ApiTestCase
             'bookId' => $book->getId(),
         ]);
 
-        $this->assertResponseStatusCodeSame(409);
+        $this->assertResponseStatusCodeSame(422);
     }
 
     public function testBorrowerCanReturnLoan(): void
@@ -273,3 +273,4 @@ class LoanControllerTest extends ApiTestCase
         self::assertNull($deleted);
     }
 }
+

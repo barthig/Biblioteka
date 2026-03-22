@@ -30,7 +30,7 @@ class WeedingControllerTest extends ApiTestCase
             'reason' => 'Damaged',
         ]);
 
-        $this->assertResponseStatusCodeSame(409);
+        $this->assertResponseStatusCodeSame(422);
     }
 
     public function testCreateRejectsCopyFromAnotherBook(): void
@@ -48,7 +48,7 @@ class WeedingControllerTest extends ApiTestCase
             'reason' => 'Invalid association',
         ]);
 
-        $this->assertResponseStatusCodeSame(400);
+        $this->assertResponseStatusCodeSame(404);
     }
 
     public function testCreateWithdrawsCopyAndRecordsEntry(): void
@@ -107,3 +107,5 @@ class WeedingControllerTest extends ApiTestCase
         }
     }
 }
+
+

@@ -13,8 +13,7 @@ class ReviewControllerTest extends ApiTestCase
         $rating = (new Rating())
             ->setUser($user)
             ->setBook($book)
-            ->setRating(4)
-            ->setReview('Nice');
+            ->setRating(4);
         $this->entityManager->persist($rating);
         $this->entityManager->flush();
 
@@ -87,13 +86,6 @@ class ReviewControllerTest extends ApiTestCase
             ->setRating(4)
             ->setComment('Nice');
         $this->entityManager->persist($review);
-
-        $rating = (new Rating())
-            ->setUser($user)
-            ->setBook($book)
-            ->setRating(4)
-            ->setReview('Nice');
-        $this->entityManager->persist($rating);
         $this->entityManager->flush();
 
         $client = $this->createAuthenticatedClient($user);

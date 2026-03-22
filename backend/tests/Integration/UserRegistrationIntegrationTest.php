@@ -156,7 +156,8 @@ class UserRegistrationIntegrationTest extends WebTestCase
         $this->assertArrayHasKey('password', $response['error']['details']);
         $passwordDetail = $response['error']['details']['password'];
         $detailString = is_array($passwordDetail) ? implode(' ', $passwordDetail) : (string) $passwordDetail;
-        $this->assertStringContainsString('Hasło', $detailString);
+        $this->assertStringContainsString('Password', $detailString);
     }
 }
+
 

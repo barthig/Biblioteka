@@ -6,6 +6,7 @@ use App\Application\Handler\Command\UpdateBookHandler;
 use App\Entity\Author;
 use App\Entity\Book;
 use App\Entity\Category;
+use App\Event\BookUpdatedEvent;
 use App\Repository\AuthorRepository;
 use App\Repository\BookRepository;
 use App\Repository\CategoryRepository;
@@ -13,6 +14,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 class UpdateBookHandlerTest extends TestCase
 {
@@ -20,6 +22,7 @@ class UpdateBookHandlerTest extends TestCase
     private BookRepository $bookRepository;
     private AuthorRepository $authorRepository;
     private CategoryRepository $categoryRepository;
+    private EventDispatcherInterface $eventDispatcher;
     private UpdateBookHandler $handler;
 
     protected function setUp(): void
@@ -28,12 +31,14 @@ class UpdateBookHandlerTest extends TestCase
         $this->bookRepository = $this->createMock(BookRepository::class);
         $this->authorRepository = $this->createMock(AuthorRepository::class);
         $this->categoryRepository = $this->createMock(CategoryRepository::class);
+        $this->eventDispatcher = $this->createMock(EventDispatcherInterface::class);
 
         $this->handler = new UpdateBookHandler(
             $this->em,
             $this->bookRepository,
             $this->authorRepository,
-            $this->categoryRepository
+            $this->categoryRepository,
+            $this->eventDispatcher
         );
     }
 
@@ -45,6 +50,8 @@ class UpdateBookHandlerTest extends TestCase
 
         $book->expects($this->once())->method('setTitle')->with('Updated Title');
         $book->expects($this->once())->method('setAuthor')->with($author);
+        $book->expects($this->once())->method('clearCategories');
+        $book->expects($this->once())->method('addCategory')->with($category);
 
         $this->bookRepository->method('find')->with(1)->willReturn($book);
         $this->authorRepository->method('find')->with(1)->willReturn($author);
@@ -52,6 +59,10 @@ class UpdateBookHandlerTest extends TestCase
 
         $this->em->expects($this->once())->method('persist')->with($book);
         $this->em->expects($this->once())->method('flush');
+        $this->eventDispatcher
+            ->expects($this->once())
+            ->method('dispatch')
+            ->with($this->isInstanceOf(BookUpdatedEvent::class));
 
         $command = new UpdateBookCommand(
             bookId: 1,

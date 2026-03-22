@@ -68,7 +68,7 @@ class UpdateUserHandlerTest extends TestCase
     public function testThrowsExceptionWhenUserNotFound(): void
     {
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('User not found');
+        $this->expectExceptionMessage('User with ID "999" was not found.');
 
         $this->userRepository->method('find')->with(999)->willReturn(null);
 
@@ -76,3 +76,4 @@ class UpdateUserHandlerTest extends TestCase
         ($this->handler)($command);
     }
 }
+
