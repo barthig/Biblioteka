@@ -73,9 +73,15 @@ class CreateLoanHandlerTest extends TestCase
 
         $this->em->method('getRepository')
             ->willReturnCallback(function ($class) use ($userRepo, $bookRepo, $interactionRepo) {
-                if ($class === User::class) return $userRepo;
-                if ($class === Book::class) return $bookRepo;
-                if ($class === \App\Entity\UserBookInteraction::class) return $interactionRepo;
+                if ($class === User::class) {
+                    return $userRepo;
+                }
+                if ($class === Book::class) {
+                    return $bookRepo;
+                }
+                if ($class === \App\Entity\UserBookInteraction::class) {
+                    return $interactionRepo;
+                }
                 return $this->createMock(\Doctrine\ORM\EntityRepository::class);
             });
 
@@ -88,6 +94,7 @@ class CreateLoanHandlerTest extends TestCase
         $this->em->expects($this->exactly(2))->method('persist');
         $this->em->expects($this->once())->method('flush');
         $this->em->expects($this->once())->method('commit');
+        $this->eventDispatcher->expects($this->once())->method('dispatch');
 
         $command = new CreateLoanCommand(userId: 1, bookId: 10);
         $loan = ($this->handler)($command);
@@ -98,7 +105,7 @@ class CreateLoanHandlerTest extends TestCase
     public function testThrowsExceptionWhenUserNotFound(): void
     {
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('User not found');
+        $this->expectExceptionMessage('User with ID "999" was not found.');
 
         $userRepo = $this->createMock(\Doctrine\ORM\EntityRepository::class);
         $userRepo->method('find')->with(999)->willReturn(null);
@@ -122,7 +129,7 @@ class CreateLoanHandlerTest extends TestCase
     public function testThrowsExceptionWhenUserIsBlocked(): void
     {
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Konto czytelnika jest zablokowane');
+        $this->expectExceptionMessage('User account is blocked.');
 
         $user = $this->createMock(User::class);
         $user->method('isBlocked')->willReturn(true);
@@ -147,7 +154,7 @@ class CreateLoanHandlerTest extends TestCase
     public function testThrowsExceptionWhenLoanLimitReached(): void
     {
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Limit wypożyczeń został osiągnięty');
+        $this->expectExceptionMessage('Maximum loan limit (3) has been reached.');
 
         $user = $this->createMock(User::class);
         $user->method('isBlocked')->willReturn(false);
@@ -176,7 +183,7 @@ class CreateLoanHandlerTest extends TestCase
     public function testThrowsExceptionWhenBookNotFound(): void
     {
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Book not found');
+        $this->expectExceptionMessage('Book with ID "999" was not found.');
 
         $user = $this->createMock(User::class);
         $user->method('isBlocked')->willReturn(false);
@@ -190,8 +197,12 @@ class CreateLoanHandlerTest extends TestCase
 
         $this->em->method('getRepository')
             ->willReturnCallback(function ($class) use ($userRepo, $bookRepo) {
-                if ($class === User::class) return $userRepo;
-                if ($class === Book::class) return $bookRepo;
+                if ($class === User::class) {
+                    return $userRepo;
+                }
+                if ($class === Book::class) {
+                    return $bookRepo;
+                }
                 return $this->createMock(\Doctrine\ORM\EntityRepository::class);
             });
 
@@ -205,13 +216,14 @@ class CreateLoanHandlerTest extends TestCase
     public function testThrowsExceptionWhenNoCopiesAvailable(): void
     {
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('No copies available');
+        $this->expectExceptionMessage('No copies of this book are currently available.');
 
         $user = $this->createMock(User::class);
         $user->method('isBlocked')->willReturn(false);
         $user->method('getLoanLimit')->willReturn(5);
 
         $book = $this->createMock(Book::class);
+        $book->method('getId')->willReturn(10);
 
         $userRepo = $this->createMock(\Doctrine\ORM\EntityRepository::class);
         $userRepo->method('find')->with(1)->willReturn($user);
@@ -221,8 +233,12 @@ class CreateLoanHandlerTest extends TestCase
 
         $this->em->method('getRepository')
             ->willReturnCallback(function ($class) use ($userRepo, $bookRepo) {
-                if ($class === User::class) return $userRepo;
-                if ($class === Book::class) return $bookRepo;
+                if ($class === User::class) {
+                    return $userRepo;
+                }
+                if ($class === Book::class) {
+                    return $bookRepo;
+                }
                 return $this->createMock(\Doctrine\ORM\EntityRepository::class);
             });
 
@@ -236,3 +252,4 @@ class CreateLoanHandlerTest extends TestCase
         ($this->handler)($command);
     }
 }
+

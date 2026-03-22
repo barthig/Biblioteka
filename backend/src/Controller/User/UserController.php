@@ -9,21 +9,22 @@ use App\Entity\User;
 use App\Repository\UserRepository;
 use App\Service\Auth\SecurityService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Messenger\HandleTrait;
 use Symfony\Component\Messenger\MessageBusInterface;
+use Symfony\Component\Messenger\Stamp\HandledStamp;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use OpenApi\Attributes as OA;
 
 #[OA\Tag(name: 'User')]
 class UserController extends AbstractController
 {
-    use HandleTrait;
     use ExceptionHandlingTrait;
 
     public function __construct(
         private readonly SecurityService $security,
+        #[Autowire(service: 'query.bus')]
         private readonly MessageBusInterface $messageBus
     ) {
     }
@@ -161,7 +162,9 @@ class UserController extends AbstractController
         }
 
         try {
-            $result = $this->handle(new GetUserDetailsQuery((int)$id));
+            $result = $this->messageBus
+                ->dispatch(new GetUserDetailsQuery((int)$id))
+                ->last(HandledStamp::class)?->getResult();
             
             return $this->json($result, 200, [], [
                 'groups' => ['user:read', 'loan:read', 'fine:read']

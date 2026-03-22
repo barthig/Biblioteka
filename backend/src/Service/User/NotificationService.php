@@ -124,6 +124,54 @@ final class NotificationService
         $this->entityManager->flush();
     }
 
+    public function notifyReservationQueued(Reservation $reservation): void
+    {
+        $user = $reservation->getUser();
+        if (!$user) {
+            $this->logger->warning('Notification skipped - missing user for queued reservation', [
+                'reservationId' => $reservation->getId(),
+            ]);
+            return;
+        }
+
+        $bookTitle = $reservation->getBook()?->getTitle() ?? 'book';
+        $expiresAt = $reservation->getExpiresAt()?->format('Y-m-d') ?? 'soon';
+
+        $title = 'Reservation added to queue';
+        $message = sprintf(
+            'Your reservation for "%s" has been registered. We will notify you when a copy is ready. Current expiry date: %s.',
+            $bookTitle,
+            $expiresAt
+        );
+
+        $this->storeInAppNotification(
+            $user,
+            'reservation_queued',
+            $title,
+            $message,
+            '/reservations',
+            ['reservationId' => $reservation->getId()],
+            sprintf('reservation-queued:%d', $reservation->getId() ?? 0)
+        );
+
+        $subject = sprintf('Reservation queued: "%s"', $bookTitle);
+        $text = sprintf(
+            "Hello %s,\n\nYour reservation for \"%s\" has been added to the queue. We will notify you when a copy is ready for pickup. Current expiry date: %s.\n\nLibrary",
+            $user->getName() ?: 'reader',
+            $bookTitle,
+            $expiresAt
+        );
+        $html = sprintf(
+            '<p>Hello %s,</p><p>Your reservation for <strong>%s</strong> has been added to the queue. We will notify you when a copy is ready for pickup.</p><p>Current expiry date: <strong>%s</strong>.</p><p>Library</p>',
+            htmlspecialchars($user->getName() ?: 'reader', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
+            htmlspecialchars($bookTitle, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
+            $expiresAt
+        );
+
+        $this->sendReservationNotification($reservation, $subject, $text, $html);
+        $this->entityManager->flush();
+    }
+
     public function notifyAnnouncementPublished(Announcement $announcement): void
     {
         $recipients = $this->userRepository->findAnnouncementRecipients();
@@ -424,4 +472,3 @@ final class NotificationService
         return rtrim($slice) . '...';
     }
 }
-

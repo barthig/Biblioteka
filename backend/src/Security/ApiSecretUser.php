@@ -11,7 +11,7 @@ final class ApiSecretUser implements UserInterface
      */
     public function getRoles(): array
     {
-        return ['ROLE_SERVICE'];
+        return ['ROLE_ADMIN', 'ROLE_SYSTEM'];
     }
 
     public function getUserIdentifier(): string

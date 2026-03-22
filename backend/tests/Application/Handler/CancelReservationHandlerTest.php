@@ -3,7 +3,6 @@ namespace App\Tests\Application\Handler;
 
 use App\Application\Command\Reservation\CancelReservationCommand;
 use App\Application\Handler\Command\CancelReservationHandler;
-use App\Entity\BookCopy;
 use App\Entity\Reservation;
 use App\Repository\ReservationRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -48,7 +47,7 @@ class CancelReservationHandlerTest extends TestCase
     public function testThrowsExceptionWhenReservationNotFound(): void
     {
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Reservation not found');
+        $this->expectExceptionMessage('Reservation with ID "999" was not found.');
 
         $this->reservationRepository->method('find')->with(999)->willReturn(null);
 
@@ -59,7 +58,7 @@ class CancelReservationHandlerTest extends TestCase
     public function testThrowsExceptionWhenReservationAlreadyFulfilled(): void
     {
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Reservation already fulfilled');
+        $this->expectExceptionMessage('Cannot cancel reservation: reservation is already fulfilled');
 
         $reservation = $this->createMock(Reservation::class);
         $reservation->method('getStatus')->willReturn(Reservation::STATUS_FULFILLED);

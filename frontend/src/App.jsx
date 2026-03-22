@@ -6,10 +6,8 @@ import { ResourceCacheProvider } from './context/ResourceCacheContext'
 import ErrorBoundary from './components/ErrorBoundary'
 import { AuthGuard } from './guards'
 
-// Components (loaded eagerly – always visible)
 import { Navbar, RequireRole } from './components/common'
 
-// Pages – lazy-loaded for code splitting
 const Login = React.lazy(() => import('./pages/auth/Login'))
 const Register = React.lazy(() => import('./pages/auth/Register'))
 const Books = React.lazy(() => import('./pages/books/Books'))
@@ -57,11 +55,11 @@ export default function App() {
             },
           }}
         />
-        <div className="app-shell theme-root">
+        <div className="app-shell theme-root min-h-screen">
           <Navbar />
-          <main className="main">
-            <div className="content-shell">
-              <Suspense fallback={<div className="page page--centered"><p>Ładowanie...</p></div>}>
+          <main className="main flex-1 px-4 sm:px-5 lg:px-10">
+            <div className="content-shell mx-auto w-full max-w-screen-2xl">
+              <Suspense fallback={<div className="page page--centered px-4 py-8 sm:px-6"><p>Ladowanie...</p></div>}>
               <Routes>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/books" element={<Books />} />
@@ -111,11 +109,11 @@ export default function App() {
                 <Route path="*" element={<NotFound />} />
               </Routes>
               </Suspense>
-              <footer className="footer">
-                <p>(c) 2025 Biblioteka. System zarz�dzania bibliotek� i wypo�yczeniami.</p>
-                <div className="footer__links">
+              <footer className="footer px-2 py-6 sm:px-4">
+                <p>(c) 2025 Biblioteka. System zarzadzania biblioteka i wypozyczeniami.</p>
+                <div className="footer__links flex-wrap gap-3 sm:gap-6">
                   <a href="#regulamin">Regulamin</a>
-                  <a href="#prywatnosc">Polityka prywatno�ci</a>
+                  <a href="#prywatnosc">Polityka prywatnosci</a>
                   <a href="#kontakt">Kontakt</a>
                 </div>
               </footer>
@@ -127,5 +125,3 @@ export default function App() {
     </ErrorBoundary>
   )
 }
-
-

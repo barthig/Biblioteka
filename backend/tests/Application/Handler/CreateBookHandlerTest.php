@@ -6,18 +6,20 @@ use App\Application\Handler\Command\CreateBookHandler;
 use App\Entity\Author;
 use App\Entity\Book;
 use App\Entity\Category;
+use App\Event\BookCreatedEvent;
 use App\Repository\AuthorRepository;
 use App\Repository\CategoryRepository;
-use App\Service\User\NotificationService;
-use App\Service\Notification\NotificationSender;
-use App\Repository\UserRepository;
 use App\Repository\NotificationLogRepository;
+use App\Repository\UserRepository;
+use App\Service\Notification\NotificationSender;
+use App\Service\User\NotificationService;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 class CreateBookHandlerTest extends TestCase
 {
@@ -25,6 +27,7 @@ class CreateBookHandlerTest extends TestCase
     private AuthorRepository&MockObject $authorRepository;
     private CategoryRepository&MockObject $categoryRepository;
     private NotificationService $notificationService;
+    private EventDispatcherInterface&MockObject $eventDispatcher;
     private CreateBookHandler $handler;
 
     protected function setUp(): void
@@ -32,6 +35,7 @@ class CreateBookHandlerTest extends TestCase
         $this->em = $this->createMock(EntityManagerInterface::class);
         $this->authorRepository = $this->createMock(AuthorRepository::class);
         $this->categoryRepository = $this->createMock(CategoryRepository::class);
+        $this->eventDispatcher = $this->createMock(EventDispatcherInterface::class);
         $sender = $this->createMock(NotificationSender::class);
         $logger = $this->createMock(LoggerInterface::class);
         $userRepository = $this->createMock(UserRepository::class);
@@ -48,7 +52,8 @@ class CreateBookHandlerTest extends TestCase
             $this->em,
             $this->authorRepository,
             $this->categoryRepository,
-            $this->notificationService
+            $this->notificationService,
+            $this->eventDispatcher
         );
     }
 
@@ -62,6 +67,10 @@ class CreateBookHandlerTest extends TestCase
 
         $this->em->expects($this->atLeastOnce())->method('persist');
         $this->em->expects($this->atLeast(2))->method('flush');
+        $this->eventDispatcher
+            ->expects($this->once())
+            ->method('dispatch')
+            ->with($this->isInstanceOf(BookCreatedEvent::class));
 
         $command = new CreateBookCommand(
             title: 'Test Book',
@@ -132,7 +141,7 @@ class CreateBookHandlerTest extends TestCase
 
         $author = $this->createMock(Author::class);
         $this->authorRepository->method('find')->with(1)->willReturn($author);
-        $this->categoryRepository->method('findBy')->with(['id' => []])->willReturn([]);
+        $this->categoryRepository->expects($this->never())->method('findBy');
 
         $command = new CreateBookCommand(
             title: 'Test Book',

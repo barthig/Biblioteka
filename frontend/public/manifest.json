@@ -1,0 +1,19 @@
+{
+  "name": "Biblioteka",
+  "short_name": "Biblioteka",
+  "description": "System zarzadzania biblioteka",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f5f5f0",
+  "theme_color": "#7c9dd1",
+  "lang": "pl",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

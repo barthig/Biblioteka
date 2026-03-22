@@ -13,6 +13,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -24,7 +25,10 @@ class CategoryController extends AbstractController
     use ExceptionHandlingTrait;
 
     public function __construct(
-        private readonly MessageBusInterface $bus
+        #[Autowire(service: 'command.bus')]
+        private readonly MessageBusInterface $commandBus,
+        #[Autowire(service: 'query.bus')]
+        private readonly MessageBusInterface $queryBus
     ) {
     }
 
@@ -54,7 +58,7 @@ class CategoryController extends AbstractController
         $limit = min(100, max(1, (int) $request->query->get('limit', 50)));
 
         $query = new ListCategoriesQuery(page: $page, limit: $limit);
-        $envelope = $this->bus->dispatch($query);
+        $envelope = $this->queryBus->dispatch($query);
         $categories = $envelope->last(HandledStamp::class)?->getResult() ?? [];
 
         return $this->json($categories, Response::HTTP_OK, [], ['groups' => ['book:read']]);
@@ -77,7 +81,7 @@ class CategoryController extends AbstractController
     {
         try {
             $query = new GetCategoryQuery(categoryId: $id);
-            $envelope = $this->bus->dispatch($query);
+            $envelope = $this->queryBus->dispatch($query);
             $category = $envelope->last(HandledStamp::class)?->getResult();
 
             return $this->json($category, Response::HTTP_OK, [], ['groups' => ['book:read']]);
@@ -115,7 +119,7 @@ class CategoryController extends AbstractController
         }
 
         $command = new CreateCategoryCommand(name: $data['name']);
-        $envelope = $this->bus->dispatch($command);
+        $envelope = $this->commandBus->dispatch($command);
         $category = $envelope->last(HandledStamp::class)?->getResult();
 
         return $this->json($category, Response::HTTP_CREATED, [], ['groups' => ['book:read']]);
@@ -150,7 +154,7 @@ class CategoryController extends AbstractController
                 name: $data['name'] ?? null
             );
 
-            $envelope = $this->bus->dispatch($command);
+            $envelope = $this->commandBus->dispatch($command);
             $category = $envelope->last(HandledStamp::class)?->getResult();
 
             return $this->json($category, Response::HTTP_OK, [], ['groups' => ['book:read']]);
@@ -178,7 +182,7 @@ class CategoryController extends AbstractController
     {
         try {
             $command = new DeleteCategoryCommand(categoryId: $id);
-            $this->bus->dispatch($command);
+            $this->commandBus->dispatch($command);
 
             return $this->json(null, Response::HTTP_NO_CONTENT);
         } catch (\Symfony\Component\HttpKernel\Exception\NotFoundHttpException $e) {

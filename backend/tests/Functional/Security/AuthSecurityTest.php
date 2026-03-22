@@ -4,46 +4,46 @@ namespace App\Tests\Functional\Security;
 
 use App\Entity\RefreshToken;
 use App\Service\Auth\RefreshTokenService;
-use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
-use Symfony\Component\HttpFoundation\Response;
+use App\Tests\Functional\ApiTestCase;
 
-/**
- * Security tests for authentication endpoints
- */
-class AuthSecurityTest extends WebTestCase
+class AuthSecurityTest extends ApiTestCase
 {
     private $client;
 
     protected function setUp(): void
     {
+        parent::setUp();
+
         putenv('API_SECRET=test-secret');
         $_ENV['API_SECRET'] = 'test-secret';
-        $this->client = static::createClient();
+        $this->client = $this->createClientWithoutSecret();
+
+        $cachePool = static::getContainer()->has('cache.rate_limiter')
+            ? static::getContainer()->get('cache.rate_limiter')
+            : null;
+        if ($cachePool) {
+            $cachePool->clear();
+        }
     }
 
-    /**
-     * Test that login rate limiting is enforced
-     */
     public function testLoginRateLimitingIsEnforced(): void
     {
-        // Attempt 6 logins from same IP (limit is 5)
         for ($i = 0; $i < 6; $i++) {
             $this->client->request('POST', '/api/auth/login', [], [], [
                 'CONTENT_TYPE' => 'application/json',
+                'REMOTE_ADDR' => '10.0.0.10',
             ], json_encode([
                 'email' => 'test@example.com',
                 'password' => 'wrongpassword'
             ]));
 
             if ($i < 5) {
-                // First 5 attempts should get 401 (unauthorized)
                 $this->assertNotEquals(429, $this->client->getResponse()->getStatusCode(),
                     "Request $i should not be rate limited yet");
             } else {
-                // 6th attempt should be rate limited
                 $this->assertEquals(429, $this->client->getResponse()->getStatusCode(),
                     'Login should be rate limited after 5 attempts');
-                
+
                 $data = json_decode($this->client->getResponse()->getContent(), true);
                 $message = $data['error']['message'] ?? $data['message'] ?? '';
                 $this->assertStringContainsString('Zbyt wiele', $message);
@@ -51,9 +51,6 @@ class AuthSecurityTest extends WebTestCase
         }
     }
 
-    /**
-     * Test that login fails if refresh token creation fails
-     */
     public function testLoginFailsWhenRefreshTokenCreationFails(): void
     {
         static::ensureKernelShutdown();
@@ -66,6 +63,7 @@ class AuthSecurityTest extends WebTestCase
 
         $client->request('POST', '/api/auth/login', [], [], [
             'CONTENT_TYPE' => 'application/json',
+            'REMOTE_ADDR' => '10.0.0.11',
         ], json_encode([
             'email' => 'verified@example.com',
             'password' => 'password123'
@@ -80,9 +78,6 @@ class AuthSecurityTest extends WebTestCase
         static::ensureKernelShutdown();
     }
 
-    /**
-     * Test that API_SECRET header grants access to staff-only routes
-     */
     public function testApiSecretHeaderGrantsAccessToStaffRoute(): void
     {
         $this->client->request('GET', '/api/users', [], [], [
@@ -93,9 +88,6 @@ class AuthSecurityTest extends WebTestCase
             'API_SECRET should grant access to staff-only routes');
     }
 
-    /**
-     * Test that invalid API_SECRET header is rejected
-     */
     public function testInvalidApiSecretHeaderIsRejected(): void
     {
         $this->client->request('GET', '/api/users', [], [], [
@@ -106,9 +98,6 @@ class AuthSecurityTest extends WebTestCase
             'Invalid API_SECRET should be rejected');
     }
 
-    /**
-     * Test that /api/test-login is disabled in production even with API_SECRET
-     */
     public function testTestLoginEndpointIsDisabledInProduction(): void
     {
         $previousEnv = getenv('APP_ENV');
@@ -138,9 +127,6 @@ class AuthSecurityTest extends WebTestCase
         }
     }
 
-    /**
-     * Test that API_SECRET in Authorization header is rejected
-     */
     public function testApiSecretInAuthorizationHeaderIsRejected(): void
     {
         $this->client->request('GET', '/api/profile', [], [], [
@@ -151,14 +137,11 @@ class AuthSecurityTest extends WebTestCase
             'API_SECRET in Authorization header should not grant access');
     }
 
-    /**
-     * Test that refresh token rotation occurs on token refresh
-     */
     public function testRefreshTokenRotationOnRefresh(): void
     {
-        // 1. Login to get initial tokens
         $this->client->request('POST', '/api/auth/login', [], [], [
             'CONTENT_TYPE' => 'application/json',
+            'REMOTE_ADDR' => '10.0.0.12',
         ], json_encode([
             'email' => 'verified@example.com',
             'password' => 'password123'
@@ -168,7 +151,6 @@ class AuthSecurityTest extends WebTestCase
         $loginData = json_decode($this->client->getResponse()->getContent(), true);
         $firstRefreshToken = $loginData['refreshToken'];
 
-        // 2. Use refresh token to get new access token
         $this->client->request('POST', '/api/auth/refresh', [], [], [
             'CONTENT_TYPE' => 'application/json',
         ], json_encode([
@@ -183,7 +165,6 @@ class AuthSecurityTest extends WebTestCase
         $this->assertNotEquals($firstRefreshToken, $secondRefreshToken,
             'Refresh token should be rotated (different from original)');
 
-        // 3. Try to reuse the old refresh token - should fail
         $this->client->request('POST', '/api/auth/refresh', [], [], [
             'CONTENT_TYPE' => 'application/json',
         ], json_encode([
@@ -194,30 +175,26 @@ class AuthSecurityTest extends WebTestCase
             'Old refresh token should be invalid after rotation');
     }
 
-    /**
-     * Test that refresh tokens cannot be replayed after use
-     */
     public function testRefreshTokenReuseDetection(): void
     {
-        // Login
         $this->client->request('POST', '/api/auth/login', [], [], [
             'CONTENT_TYPE' => 'application/json',
+            'REMOTE_ADDR' => '10.0.0.13',
         ], json_encode([
             'email' => 'verified@example.com',
             'password' => 'password123'
         ]));
 
+        $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
         $loginData = json_decode($this->client->getResponse()->getContent(), true);
         $refreshToken = $loginData['refreshToken'];
 
-        // Use refresh token once
         $this->client->request('POST', '/api/auth/refresh', [], [], [
             'CONTENT_TYPE' => 'application/json',
         ], json_encode(['refreshToken' => $refreshToken]));
 
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
 
-        // Try to use same refresh token again - should fail
         $this->client->request('POST', '/api/auth/refresh', [], [], [
             'CONTENT_TYPE' => 'application/json',
         ], json_encode(['refreshToken' => $refreshToken]));
@@ -226,9 +203,6 @@ class AuthSecurityTest extends WebTestCase
             'Refresh token should not be reusable after being rotated');
     }
 
-    /**
-     * Test that login returns error (not 200) when refresh token creation fails
-     */
     public function testLoginReturns500OnRefreshTokenFailure(): void
     {
         static::ensureKernelShutdown();
@@ -241,6 +215,7 @@ class AuthSecurityTest extends WebTestCase
 
         $client->request('POST', '/api/auth/login', [], [], [
             'CONTENT_TYPE' => 'application/json',
+            'REMOTE_ADDR' => '10.0.0.14',
         ], json_encode([
             'email' => 'verified@example.com',
             'password' => 'password123'
@@ -255,13 +230,11 @@ class AuthSecurityTest extends WebTestCase
         static::ensureKernelShutdown();
     }
 
-    /**
-     * Test that refresh tokens are stored hashed in database
-     */
     public function testRefreshTokensAreHashedInDatabase(): void
     {
         $this->client->request('POST', '/api/auth/login', [], [], [
             'CONTENT_TYPE' => 'application/json',
+            'REMOTE_ADDR' => '10.0.0.15',
         ], json_encode([
             'email' => 'verified@example.com',
             'password' => 'password123'

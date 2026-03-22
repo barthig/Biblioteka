@@ -5,20 +5,24 @@ use App\Application\Command\Fine\CreateFineCommand;
 use App\Application\Handler\Command\CreateFineHandler;
 use App\Entity\Fine;
 use App\Entity\Loan;
+use App\Event\FineCreatedEvent;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 class CreateFineHandlerTest extends TestCase
 {
     private EntityManagerInterface $em;
+    private EventDispatcherInterface $eventDispatcher;
     private CreateFineHandler $handler;
 
     protected function setUp(): void
     {
         $this->em = $this->createMock(EntityManagerInterface::class);
-        $this->handler = new CreateFineHandler($this->em);
+        $this->eventDispatcher = $this->createMock(EventDispatcherInterface::class);
+        $this->handler = new CreateFineHandler($this->em, $this->eventDispatcher);
     }
 
     public function testCreateFineSuccess(): void
@@ -31,6 +35,10 @@ class CreateFineHandlerTest extends TestCase
         $this->em->method('getRepository')->with(Loan::class)->willReturn($loanRepository);
         $this->em->expects($this->once())->method('persist')->with($this->isInstanceOf(Fine::class));
         $this->em->expects($this->once())->method('flush');
+        $this->eventDispatcher
+            ->expects($this->once())
+            ->method('dispatch')
+            ->with($this->isInstanceOf(FineCreatedEvent::class));
 
         $command = new CreateFineCommand(
             loanId: 1,

@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 require dirname(__DIR__) . '/vendor/autoload.php';
@@ -26,62 +27,22 @@ $_ENV['DATABASE_URL'] = $_SERVER['DATABASE_URL'] = $databaseUrl;
 
 $cacheDir = dirname(__DIR__) . '/var/cache/test';
 if (is_dir($cacheDir)) {
-    $files = new \RecursiveIteratorIterator(
-        new \RecursiveDirectoryIterator($cacheDir, \FilesystemIterator::SKIP_DOTS),
-        \RecursiveIteratorIterator::CHILD_FIRST
+    $iterator = new RecursiveIteratorIterator(
+        new RecursiveDirectoryIterator($cacheDir, FilesystemIterator::SKIP_DOTS | FilesystemIterator::UNIX_PATHS),
+        RecursiveIteratorIterator::CHILD_FIRST,
+        RecursiveIteratorIterator::CATCH_GET_CHILD
     );
 
-    foreach ($files as $file) {
+    foreach ($iterator as $file) {
+        $pathname = $file->getPathname();
         if ($file->isDir()) {
-            @rmdir($file->getPathname());
+            @rmdir($pathname);
             continue;
         }
 
-        @unlink($file->getPathname());
+        @unlink($pathname);
     }
 
     @rmdir($cacheDir);
 }
 
-// Ensure test database schema exists and seed baseline user for auth tests
-$kernel = new \App\Kernel('test', false);
-$kernel->boot();
-
-$em = $kernel->getContainer()->get('doctrine')->getManager();
-$connection = $em->getConnection();
-if ($connection->getDatabasePlatform()->getName() !== 'sqlite') {
-    $connection->executeStatement('CREATE EXTENSION IF NOT EXISTS vector');
-}
-$metadata = $em->getMetadataFactory()->getAllMetadata();
-if (!empty($metadata)) {
-    $tool = new \Doctrine\ORM\Tools\SchemaTool($em);
-    $tool->dropSchema($metadata);
-    $tool->updateSchema($metadata, true);
-}
-
-$userRepo = $em->getRepository(\App\Entity\User::class);
-$seedEmail = 'verified@example.com';
-
-if (!$userRepo->findOneBy(['email' => $seedEmail])) {
-    $user = new \App\Entity\User();
-    $user->setEmail($seedEmail)
-        ->setName('Verified User')
-        ->setRoles(['ROLE_USER', 'ROLE_SYSTEM']);
-
-    /** @var \Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface $hasher */
-    $hasher = $kernel->getContainer()->get('security.user_password_hasher');
-    $user->setPassword($hasher->hashPassword($user, 'Password123'));
-    $user->markVerified();
-
-    $em->persist($user);
-    $em->flush();
-}
-
-$cachePool = $kernel->getContainer()->has('cache.rate_limiter')
-    ? $kernel->getContainer()->get('cache.rate_limiter')
-    : null;
-if ($cachePool) {
-    $cachePool->clear();
-}
-
-$kernel->shutdown();

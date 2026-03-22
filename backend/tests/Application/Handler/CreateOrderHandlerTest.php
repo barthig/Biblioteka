@@ -76,7 +76,7 @@ class CreateOrderHandlerTest extends TestCase
         $this->supplierRepository->method('find')->willReturn(null);
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Supplier not found');
+        $this->expectExceptionMessage('Supplier with ID "999" was not found.');
 
         $command = new CreateOrderCommand(
             999,
@@ -129,7 +129,7 @@ class CreateOrderHandlerTest extends TestCase
         $this->budgetRepository->method('find')->willReturn(null);
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Budget not found');
+        $this->expectExceptionMessage('Budget with ID "999" was not found.');
 
         $command = new CreateOrderCommand(
             1,
@@ -162,7 +162,7 @@ class CreateOrderHandlerTest extends TestCase
         $this->budgetRepository->method('find')->willReturn($budget);
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Budget currency mismatch');
+        $this->expectExceptionMessage('Budget currency does not match order currency');
 
         $command = new CreateOrderCommand(
             1,
@@ -208,3 +208,5 @@ class CreateOrderHandlerTest extends TestCase
         $this->assertNull($result->getBudget());
     }
 }
+
+

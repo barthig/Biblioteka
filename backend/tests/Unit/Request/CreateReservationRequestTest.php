@@ -13,7 +13,7 @@ class CreateReservationRequestTest extends TestCase
     protected function setUp(): void
     {
         $this->validator = Validation::createValidatorBuilder()
-            ->enableAnnotationMapping()
+            ->enableAttributeMapping()
             ->getValidator();
     }
 
@@ -37,7 +37,7 @@ class CreateReservationRequestTest extends TestCase
 
         $violations = $this->validator->validate($request);
         $this->assertCount(0, $violations, 'Valid days should not trigger validation errors');
-        
+
         foreach ($violations as $violation) {
             $this->assertStringNotContainsString('days', $violation->getPropertyPath());
         }
@@ -50,9 +50,9 @@ class CreateReservationRequestTest extends TestCase
         $request->days = 0;
 
         $violations = $this->validator->validate($request);
-        
+
         $this->assertGreaterThan(0, count($violations));
-        
+
         $hasRangeError = false;
         foreach ($violations as $violation) {
             if ($violation->getPropertyPath() === 'days') {
@@ -69,12 +69,13 @@ class CreateReservationRequestTest extends TestCase
         $request->days = 15;
 
         $violations = $this->validator->validate($request);
-        
+
         $this->assertGreaterThan(0, count($violations));
-        
+
         $hasRangeError = false;
         foreach ($violations as $violation) {
-            if (str_contains($violation->getMessage(), 'od 1 do 14')) {
+            if ($violation->getPropertyPath() === 'days'
+                && str_contains($violation->getMessage(), 'between 1 and 14 days')) {
                 $hasRangeError = true;
             }
         }

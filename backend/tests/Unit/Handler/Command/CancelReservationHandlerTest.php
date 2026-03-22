@@ -14,9 +14,9 @@ use PHPUnit\Framework\TestCase;
 
 class CancelReservationHandlerTest extends TestCase
 {
-    private $em;
-    private $reservationRepository;
-    private $handler;
+    private EntityManagerInterface $em;
+    private ReservationRepository $reservationRepository;
+    private CancelReservationHandler $handler;
 
     protected function setUp(): void
     {
@@ -28,7 +28,7 @@ class CancelReservationHandlerTest extends TestCase
     public function testOwnershipVerificationForNonLibrarian(): void
     {
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Forbidden');
+        $this->expectExceptionMessage('You can only modify your own resources.');
 
         $owner = $this->createMock(User::class);
         $owner->method('getId')->willReturn(1);
@@ -41,7 +41,7 @@ class CancelReservationHandlerTest extends TestCase
 
         $command = new CancelReservationCommand(
             reservationId: 1,
-            userId: 2, // Different user
+            userId: 2,
             isLibrarian: false
         );
 
@@ -66,11 +66,13 @@ class CancelReservationHandlerTest extends TestCase
 
         $command = new CancelReservationCommand(
             reservationId: 1,
-            userId: 2, // Different user
-            isLibrarian: true // But is librarian
+            userId: 2,
+            isLibrarian: true
         );
 
+        $this->em->expects($this->once())->method('persist')->with($reservation);
         $this->em->expects($this->once())->method('flush');
+        $reservation->expects($this->once())->method('cancel');
 
         ($this->handler)($command);
     }
@@ -78,7 +80,7 @@ class CancelReservationHandlerTest extends TestCase
     public function testCannotCancelFulfilledReservation(): void
     {
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Reservation already fulfilled');
+        $this->expectExceptionMessage('Cannot cancel reservation: reservation is already fulfilled');
 
         $owner = $this->createMock(User::class);
         $owner->method('getId')->willReturn(1);
@@ -101,7 +103,7 @@ class CancelReservationHandlerTest extends TestCase
     public function testCannotCancelAlreadyCancelledReservation(): void
     {
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Reservation already cancelled');
+        $this->expectExceptionMessage('Cannot cancel reservation: reservation is already cancelled');
 
         $owner = $this->createMock(User::class);
         $owner->method('getId')->willReturn(1);
@@ -124,7 +126,7 @@ class CancelReservationHandlerTest extends TestCase
     public function testCannotCancelExpiredReservation(): void
     {
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Reservation already expired');
+        $this->expectExceptionMessage('Cannot cancel reservation: reservation has already expired');
 
         $owner = $this->createMock(User::class);
         $owner->method('getId')->willReturn(1);
@@ -153,6 +155,7 @@ class CancelReservationHandlerTest extends TestCase
         $book->expects($this->once())->method('recalculateInventoryCounters');
 
         $copy = $this->createMock(BookCopy::class);
+        $copy->method('getStatus')->willReturn(BookCopy::STATUS_RESERVED);
         $copy->expects($this->once())->method('setStatus')->with(BookCopy::STATUS_AVAILABLE);
 
         $reservation = $this->createMock(Reservation::class);
@@ -171,6 +174,7 @@ class CancelReservationHandlerTest extends TestCase
             isLibrarian: false
         );
 
+        $this->em->expects($this->exactly(3))->method('persist')->with($this->logicalOr($copy, $book, $reservation));
         $this->em->expects($this->once())->method('flush');
 
         ($this->handler)($command);

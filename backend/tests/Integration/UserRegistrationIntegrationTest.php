@@ -121,7 +121,7 @@ class UserRegistrationIntegrationTest extends WebTestCase
             ->setRoles(['ROLE_USER']);
 
         /** @var \Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface $hasher */
-        $hasher = static::getContainer()->get('security.user_password_hasher');
+        $hasher = static::getContainer()->get(\Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface::class);
         $user->setPassword($hasher->hashPassword($user, 'ExistingPass1'));
         $user->markVerified();
 
@@ -159,3 +159,4 @@ class UserRegistrationIntegrationTest extends WebTestCase
         $this->assertStringContainsString('Hasło', $detailString);
     }
 }
+

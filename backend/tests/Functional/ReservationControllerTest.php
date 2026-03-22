@@ -1,6 +1,7 @@
 <?php
 namespace App\Tests\Functional;
 
+use App\Entity\NotificationLog;
 use App\Entity\Reservation;
 
 class ReservationControllerTest extends ApiTestCase
@@ -29,6 +30,10 @@ class ReservationControllerTest extends ApiTestCase
         } else {
             self::assertSame($book->getId(), $payload['data']['book']['id']);
         }
+
+        $notification = $this->entityManager->getRepository(NotificationLog::class)
+            ->findOneBy(['type' => 'reservation_queued', 'channel' => 'in_app']);
+        self::assertNotNull($notification);
 
         $listClient = $this->createAuthenticatedClient($waiter);
         $this->sendRequest($listClient, 'GET', '/api/reservations');
@@ -70,7 +75,7 @@ class ReservationControllerTest extends ApiTestCase
         $repo = $this->entityManager->getRepository(Reservation::class);
         $reservation = $repo->find($reservationId);
         self::assertNotNull($reservation);
-        self::assertContains($reservation->getStatus(), [Reservation::STATUS_CANCELLED, Reservation::STATUS_ACTIVE]);
+        self::assertSame(Reservation::STATUS_CANCELLED, $reservation->getStatus());
     }
 
     public function testCannotReserveWhenCopyAvailable(): void
@@ -83,6 +88,7 @@ class ReservationControllerTest extends ApiTestCase
             'bookId' => $book->getId(),
         ]);
 
-        $this->assertResponseStatusCodeSame(400);
+        $this->assertResponseStatusCodeSame(422);
     }
 }
+

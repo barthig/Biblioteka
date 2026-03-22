@@ -194,7 +194,7 @@ abstract class ApiTestCase extends WebTestCase
             ->setRoles($roles);
 
         /** @var \Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface $hasher */
-        $hasher = static::getContainer()->get('security.user_password_hasher');
+        $hasher = static::getContainer()->get(\Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface::class);
         $user->setPassword($hasher->hashPassword($user, $password));
         $user->markVerified();
 
@@ -417,3 +417,5 @@ abstract class ApiTestCase extends WebTestCase
         }
     }
 }
+
+

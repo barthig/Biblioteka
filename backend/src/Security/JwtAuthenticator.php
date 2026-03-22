@@ -59,7 +59,7 @@ class JwtAuthenticator extends AbstractAuthenticator
             // Set jwt_payload for API secret authentication
             $request->attributes->set('jwt_payload', [
                 'sub' => null,
-                'roles' => ['ROLE_SERVICE'],
+                'roles' => ['ROLE_ADMIN', 'ROLE_SYSTEM'],
                 'auth' => 'api_secret',
             ]);
             $request->attributes->set('api_secret_auth', true);
@@ -209,3 +209,4 @@ class JwtAuthenticator extends AbstractAuthenticator
         throw new CustomUserMessageAuthenticationException('Invalid API secret');
     }
 }
+

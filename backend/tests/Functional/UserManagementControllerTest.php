@@ -38,7 +38,7 @@ class UserManagementControllerTest extends ApiTestCase
         $created = $repo->findOneBy(['email' => 'new@example.com']);
         self::assertNotNull($created);
         /** @var \Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface $hasher */
-        $hasher = static::getContainer()->get('security.user_password_hasher');
+        $hasher = static::getContainer()->get(\Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface::class);
         self::assertTrue($hasher->isPasswordValid($created, 'StrongPass1'));
     }
 
@@ -103,3 +103,4 @@ class UserManagementControllerTest extends ApiTestCase
         self::assertNull($deleted);
     }
 }
+

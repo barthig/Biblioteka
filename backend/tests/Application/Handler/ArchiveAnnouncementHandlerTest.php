@@ -42,7 +42,7 @@ class ArchiveAnnouncementHandlerTest extends TestCase
         $handler = new ArchiveAnnouncementHandler($entityManager, $repository);
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Announcement not found');
+        $this->expectExceptionMessage('Announcement with ID "999" was not found.');
 
         $command = new ArchiveAnnouncementCommand(999);
         ($handler)($command);

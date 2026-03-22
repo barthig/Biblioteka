@@ -8,6 +8,10 @@ use Firebase\JWT\Key;
 
 class JwtService
 {
+    private const ISSUER = 'biblioteka';
+    private const AUDIENCE = 'biblioteka-api';
+    private const LEEWAY_SECONDS = 30;
+
     /**
      * @param array<string, mixed> $claims
      */
@@ -23,8 +27,8 @@ class JwtService
             'iat' => $now,
             'nbf' => $now,
             'exp' => $now + $ttl,
-            'iss' => 'biblioteka',
-            'aud' => 'biblioteka-api',
+            'iss' => self::ISSUER,
+            'aud' => self::AUDIENCE,
             'jti' => bin2hex(random_bytes(16)),
         ]);
         return JWT::encode($payload, $currentSecret, 'HS256', '1');
@@ -53,26 +57,24 @@ class JwtService
             return null;
         }
 
-        $kid = $header['kid'] ?? '1';
-        $secretIndex = is_numeric($kid) ? (int)$kid - 1 : 0;
-        $secret = $secrets[$secretIndex] ?? $secrets[0];
+        $candidateSecrets = self::resolveCandidateSecrets($secrets, $header['kid'] ?? null);
+        $previousLeeway = JWT::$leeway;
+        JWT::$leeway = self::LEEWAY_SECONDS;
 
         try {
-            JWT::$leeway = 30; // 30 seconds clock skew tolerance
-            $payload = (array) JWT::decode($token, new Key($secret, 'HS256'));
-        } catch (\Throwable) {
-            return null;
+            foreach ($candidateSecrets as $secret) {
+                try {
+                    $payload = (array) JWT::decode($token, new Key($secret, 'HS256'));
+                    return self::isPayloadValid($payload) ? $payload : null;
+                } catch (\Throwable) {
+                    continue;
+                }
+            }
+        } finally {
+            JWT::$leeway = $previousLeeway;
         }
 
-        // Validate iss and aud
-        if (!isset($payload['iss']) || $payload['iss'] !== 'biblioteka') {
-            return null;
-        }
-        if (!isset($payload['aud']) || $payload['aud'] !== 'biblioteka-api') {
-            return null;
-        }
-
-        return $payload;
+        return null;
     }
 
     /**
@@ -89,6 +91,57 @@ class JwtService
         }
         $secrets = array_map('trim', explode(',', $secretsStr));
         return array_values(array_filter($secrets, static fn(string $s) => $s !== ''));
+    }
+
+    /**
+     * @param string[] $secrets
+     * @return string[]
+     */
+    private static function resolveCandidateSecrets(array $secrets, mixed $kid): array
+    {
+        if (!is_string($kid) && !is_int($kid)) {
+            return $secrets;
+        }
+
+        $secretIndex = (int) $kid - 1;
+        if ($secretIndex < 0 || !isset($secrets[$secretIndex])) {
+            return $secrets;
+        }
+
+        $preferredSecret = $secrets[$secretIndex];
+        unset($secrets[$secretIndex]);
+
+        return [$preferredSecret, ...array_values($secrets)];
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     */
+    private static function isPayloadValid(array $payload): bool
+    {
+        if (($payload['iss'] ?? null) !== self::ISSUER) {
+            return false;
+        }
+
+        $audience = $payload['aud'] ?? null;
+        if (is_array($audience)) {
+            if (!in_array(self::AUDIENCE, $audience, true)) {
+                return false;
+            }
+        } elseif ($audience !== self::AUDIENCE) {
+            return false;
+        }
+
+        $subject = $payload['sub'] ?? null;
+        if (!is_int($subject) && !is_string($subject)) {
+            return false;
+        }
+
+        if (filter_var((string) $subject, FILTER_VALIDATE_INT) === false || (int) $subject <= 0) {
+            return false;
+        }
+
+        return true;
     }
 }
 

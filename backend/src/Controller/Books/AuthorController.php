@@ -13,6 +13,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -24,7 +25,10 @@ class AuthorController extends AbstractController
     
     #[OA\Tag(name: 'Author')]
     public function __construct(
-        private readonly MessageBusInterface $bus
+        #[Autowire(service: 'command.bus')]
+        private readonly MessageBusInterface $commandBus,
+        #[Autowire(service: 'query.bus')]
+        private readonly MessageBusInterface $queryBus
     ) {
     }
 
@@ -54,7 +58,7 @@ class AuthorController extends AbstractController
             search: $search
         );
 
-        $envelope = $this->bus->dispatch($query);
+        $envelope = $this->queryBus->dispatch($query);
         $authors = $envelope->last(HandledStamp::class)?->getResult() ?? [];
 
         return $this->json($authors, Response::HTTP_OK, [], ['groups' => ['book:read']]);
@@ -77,7 +81,7 @@ class AuthorController extends AbstractController
     {
         try {
             $query = new GetAuthorQuery(authorId: $id);
-            $envelope = $this->bus->dispatch($query);
+            $envelope = $this->queryBus->dispatch($query);
             $author = $envelope->last(HandledStamp::class)?->getResult();
 
             return $this->json($author, Response::HTTP_OK, [], ['groups' => ['book:read']]);
@@ -116,7 +120,7 @@ class AuthorController extends AbstractController
         }
 
         $command = new CreateAuthorCommand(name: $data['name']);
-        $envelope = $this->bus->dispatch($command);
+        $envelope = $this->commandBus->dispatch($command);
         $author = $envelope->last(HandledStamp::class)?->getResult();
 
         return $this->json($author, Response::HTTP_CREATED, [], ['groups' => ['book:read']]);
@@ -155,7 +159,7 @@ class AuthorController extends AbstractController
                 name: $data['name'] ?? null
             );
 
-            $envelope = $this->bus->dispatch($command);
+            $envelope = $this->commandBus->dispatch($command);
             $author = $envelope->last(HandledStamp::class)?->getResult();
 
             return $this->json($author, Response::HTTP_OK, [], ['groups' => ['book:read']]);
@@ -183,7 +187,7 @@ class AuthorController extends AbstractController
     {
         try {
             $command = new DeleteAuthorCommand(authorId: $id);
-            $this->bus->dispatch($command);
+            $this->commandBus->dispatch($command);
 
             return $this->json(null, Response::HTTP_NO_CONTENT);
         } catch (\Symfony\Component\HttpKernel\Exception\NotFoundHttpException $e) {
