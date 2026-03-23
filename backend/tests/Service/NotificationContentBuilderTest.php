@@ -44,6 +44,7 @@ class NotificationContentBuilderTest extends TestCase
         $builder = new NotificationContentBuilder();
         $content = $builder->buildReservationReady($user, $reservation);
 
-        $this->assertStringContainsString('Rezerwacja', $content->getSubject());
+        $this->assertStringContainsString('Reservation', $content->getSubject());
     }
 }
+

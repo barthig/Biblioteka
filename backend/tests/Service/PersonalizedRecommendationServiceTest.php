@@ -9,7 +9,7 @@ use App\Repository\FavoriteRepository;
 use App\Repository\LoanRepository;
 use App\Repository\RatingRepository;
 use App\Repository\RecommendationFeedbackRepository;
-use App\Service\PersonalizedRecommendationService;
+use App\Service\Book\PersonalizedRecommendationService;
 use PHPUnit\Framework\TestCase;
 
 class PersonalizedRecommendationServiceTest extends TestCase
@@ -80,3 +80,4 @@ class PersonalizedRecommendationServiceTest extends TestCase
         $this->assertSame('age-group', $groups[0]['key']);
     }
 }
+

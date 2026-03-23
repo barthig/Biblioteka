@@ -1,7 +1,7 @@
 <?php
 namespace App\Tests\Service;
 
-use App\Service\RegistrationException;
+use App\Service\Auth\RegistrationException;
 use PHPUnit\Framework\TestCase;
 
 class RegistrationExceptionTest extends TestCase
@@ -13,3 +13,4 @@ class RegistrationExceptionTest extends TestCase
         $this->assertSame(409, $exception->getCode());
     }
 }
+

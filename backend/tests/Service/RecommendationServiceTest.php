@@ -4,7 +4,7 @@ namespace App\Tests\Service;
 use App\Entity\User;
 use App\Repository\BookRepository;
 use App\Repository\UserBookInteractionRepository;
-use App\Service\RecommendationService;
+use App\Service\Book\RecommendationService;
 use PHPUnit\Framework\TestCase;
 
 class RecommendationServiceTest extends TestCase
@@ -42,3 +42,4 @@ class RecommendationServiceTest extends TestCase
         $this->assertSame('ok', $result['status']);
     }
 }
+

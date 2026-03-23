@@ -2,7 +2,7 @@
 
 namespace App\Tests\Service;
 
-use App\Service\ElasticsearchService;
+use App\Service\System\ElasticsearchService;
 use PHPUnit\Framework\TestCase;
 
 class ElasticsearchServiceTest extends TestCase
@@ -41,3 +41,4 @@ class ElasticsearchServiceTest extends TestCase
         $this->assertIsArray($results);
     }
 }
+

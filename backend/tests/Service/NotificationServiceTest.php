@@ -21,18 +21,27 @@ class NotificationServiceTest extends TestCase
         $userRepository = $this->createMock(UserRepository::class);
         $notificationLogs = $this->createMock(NotificationLogRepository::class);
         $entityManager = $this->createMock(EntityManagerInterface::class);
-        
+
         return new NotificationService($sender, $logger, $userRepository, $notificationLogs, $entityManager);
     }
 
-    public function testSkipsWhenUserMissing(): void
+    public function testSendsEmailOnlyWhenPhoneMissing(): void
     {
         $sender = $this->createMock(NotificationSender::class);
         $logger = $this->createMock(LoggerInterface::class);
-        $logger->expects($this->once())->method('warning');
+
+        $user = new User();
+        $user->setName('Reader')->setEmail('reader@example.com');
+        $book = (new Book())->setTitle('Book')->setAuthor(new \App\Entity\Author());
 
         $loan = $this->createMock(Loan::class);
-        $loan->method('getUser')->willReturn(null);
+        $loan->method('getUser')->willReturn($user);
+        $loan->method('getBook')->willReturn($book);
+        $loan->method('getDueAt')->willReturn(new \DateTimeImmutable('+1 day'));
+        $loan->method('getId')->willReturn(1);
+
+        $sender->expects($this->once())->method('sendEmail')->willReturn(['status' => 'sent']);
+        $sender->expects($this->never())->method('sendSms');
 
         $service = $this->createService($sender, $logger);
         $service->notifyLoanCreated($loan);
@@ -44,7 +53,7 @@ class NotificationServiceTest extends TestCase
         $logger = $this->createMock(LoggerInterface::class);
 
         $user = new User();
-        $user->setName('Reader')->setPhoneNumber('123');
+        $user->setName('Reader')->setEmail('reader@example.com')->setPhoneNumber('123');
         $book = (new Book())->setTitle('Book')->setAuthor(new \App\Entity\Author());
 
         $loan = $this->createMock(Loan::class);

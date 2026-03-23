@@ -60,6 +60,11 @@ abstract class ApiTestCase extends WebTestCase
         parent::tearDown();
     }
 
+    private function resetEntityManager(): void
+    {
+        $this->entityManager = static::getContainer()->get('doctrine')->resetManager();
+    }
+
     protected function createApiClient(?string $token = null): HttpKernelBrowser
     {
         static::ensureKernelShutdown();
@@ -166,6 +171,10 @@ abstract class ApiTestCase extends WebTestCase
 
     protected function createUser(string $email, array $roles = ['ROLE_USER'], string $password = 'StrongPass1', ?string $name = null): User
     {
+        if (!$this->entityManager->isOpen()) {
+            $this->resetEntityManager();
+        }
+
         $existing = $this->entityManager
             ->getRepository(User::class)
             ->findOneBy(['email' => $email]);
@@ -461,6 +470,7 @@ abstract class ApiTestCase extends WebTestCase
         }
     }
 }
+
 
 
 

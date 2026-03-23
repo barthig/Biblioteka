@@ -9,107 +9,80 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 use Symfony\Component\RateLimiter\RateLimiterFactory;
-use Symfony\Component\RateLimiter\RateLimit;
-use Symfony\Component\RateLimiter\LimiterInterface;
+use Symfony\Component\RateLimiter\Storage\InMemoryStorage;
 
 class RateLimiterSubscriberTest extends TestCase
 {
+    private function createFactory(int $limit = 30): RateLimiterFactory
+    {
+        return new RateLimiterFactory([
+            'id' => 'test',
+            'policy' => 'fixed_window',
+            'limit' => $limit,
+            'interval' => '1 minute',
+        ], new InMemoryStorage());
+    }
+
     public function testSkipsNonApiRoutes(): void
     {
-        $anonymousLimiter = $this->createMock(RateLimiterFactory::class);
-        $authenticatedLimiter = $this->createMock(RateLimiterFactory::class);
-        
-        $subscriber = new RateLimiterSubscriber($anonymousLimiter, $authenticatedLimiter);
-        
-        $request = new Request([], [], [], [], [], ['REQUEST_URI' => '/health']);
+        $subscriber = new RateLimiterSubscriber($this->createFactory(), $this->createFactory());
+
+        $request = new Request([], [], [], [], [], ['REQUEST_URI' => '/health', 'REMOTE_ADDR' => '127.0.0.1']);
         $kernel = $this->createMock(HttpKernelInterface::class);
         $event = new RequestEvent($kernel, $request, HttpKernelInterface::MAIN_REQUEST);
-        
-        // Should not create any limiters for non-API routes
-        $anonymousLimiter->expects($this->never())->method('create');
-        $authenticatedLimiter->expects($this->never())->method('create');
-        
+
         $subscriber->onKernelRequest($event);
-        
+
         $this->assertNull($event->getResponse());
+        $this->assertNull($request->attributes->get('rate_limit'));
     }
 
     public function testSkipsHealthCheckEndpoint(): void
     {
-        $anonymousLimiter = $this->createMock(RateLimiterFactory::class);
-        $authenticatedLimiter = $this->createMock(RateLimiterFactory::class);
-        
-        $subscriber = new RateLimiterSubscriber($anonymousLimiter, $authenticatedLimiter);
-        
-        $request = new Request([], [], [], [], [], ['REQUEST_URI' => '/api/health']);
+        $subscriber = new RateLimiterSubscriber($this->createFactory(), $this->createFactory());
+
+        $request = new Request([], [], [], [], [], ['REQUEST_URI' => '/api/health', 'REMOTE_ADDR' => '127.0.0.1']);
         $kernel = $this->createMock(HttpKernelInterface::class);
         $event = new RequestEvent($kernel, $request, HttpKernelInterface::MAIN_REQUEST);
-        
-        $anonymousLimiter->expects($this->never())->method('create');
-        $authenticatedLimiter->expects($this->never())->method('create');
-        
+
         $subscriber->onKernelRequest($event);
-        
+
         $this->assertNull($event->getResponse());
+        $this->assertNull($request->attributes->get('rate_limit'));
     }
 
     public function testAllowsRequestWithinLimit(): void
     {
-        $limiter = $this->createMock(LimiterInterface::class);
-        $rateLimit = $this->createMock(RateLimit::class);
-        
-        $rateLimit->method('isAccepted')->willReturn(true);
-        $rateLimit->method('getLimit')->willReturn(30);
-        $rateLimit->method('getRemainingTokens')->willReturn(29);
-        
-        $limiter->method('consume')->willReturn($rateLimit);
-        
-        $anonymousLimiter = $this->createMock(RateLimiterFactory::class);
-        $anonymousLimiter->method('create')->willReturn($limiter);
-        
-        $authenticatedLimiter = $this->createMock(RateLimiterFactory::class);
-        
-        $subscriber = new RateLimiterSubscriber($anonymousLimiter, $authenticatedLimiter);
-        
-        $request = new Request([], [], [], [], [], ['REQUEST_URI' => '/api/books']);
+        $subscriber = new RateLimiterSubscriber($this->createFactory(30), $this->createFactory(30));
+
+        $request = new Request([], [], [], [], [], ['REQUEST_URI' => '/api/books', 'REMOTE_ADDR' => '127.0.0.1']);
         $kernel = $this->createMock(HttpKernelInterface::class);
         $event = new RequestEvent($kernel, $request, HttpKernelInterface::MAIN_REQUEST);
-        
+
         $subscriber->onKernelRequest($event);
-        
+
         $this->assertNull($event->getResponse());
         $this->assertIsArray($request->attributes->get('rate_limit'));
     }
 
     public function testBlocksRequestWhenLimitExceeded(): void
     {
-        $limiter = $this->createMock(LimiterInterface::class);
-        $rateLimit = $this->createMock(RateLimit::class);
-        
-        $rateLimit->method('isAccepted')->willReturn(false);
-        $rateLimit->method('getLimit')->willReturn(30);
-        $rateLimit->method('getRemainingTokens')->willReturn(0);
-        $rateLimit->method('getRetryAfter')->willReturn(new \DateTimeImmutable('+60 seconds'));
-        
-        $limiter->method('consume')->willReturn($rateLimit);
-        
-        $anonymousLimiter = $this->createMock(RateLimiterFactory::class);
-        $anonymousLimiter->method('create')->willReturn($limiter);
-        
-        $authenticatedLimiter = $this->createMock(RateLimiterFactory::class);
-        
+        $anonymousLimiter = $this->createFactory(1);
+        $authenticatedLimiter = $this->createFactory(1);
+        $anonymousLimiter->create('127.0.0.1')->consume(1);
+
         $subscriber = new RateLimiterSubscriber($anonymousLimiter, $authenticatedLimiter);
-        
-        $request = new Request([], [], [], [], [], ['REQUEST_URI' => '/api/books']);
+
+        $request = new Request([], [], [], [], [], ['REQUEST_URI' => '/api/books', 'REMOTE_ADDR' => '127.0.0.1']);
         $kernel = $this->createMock(HttpKernelInterface::class);
         $event = new RequestEvent($kernel, $request, HttpKernelInterface::MAIN_REQUEST);
-        
+
         $subscriber->onKernelRequest($event);
-        
+
         $response = $event->getResponse();
         $this->assertInstanceOf(JsonResponse::class, $response);
         $this->assertEquals(429, $response->getStatusCode());
-        
+
         $content = json_decode($response->getContent(), true);
         $this->assertEquals('Too Many Requests', $content['error']);
         $this->assertArrayHasKey('retry_after', $content);

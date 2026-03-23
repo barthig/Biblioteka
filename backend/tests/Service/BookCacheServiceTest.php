@@ -2,7 +2,7 @@
 
 namespace App\Tests\Service;
 
-use App\Service\BookCacheService;
+use App\Service\Book\BookCacheService;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
 
@@ -123,3 +123,4 @@ class BookCacheServiceTest extends TestCase
         $this->assertEquals($books2, $result2);
     }
 }
+
