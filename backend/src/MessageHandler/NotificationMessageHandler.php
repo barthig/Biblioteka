@@ -5,8 +5,10 @@ namespace App\MessageHandler;
 use App\Entity\NotificationLog;
 use App\Entity\Reservation;
 use App\Entity\User;
+use App\Message\LoanBorrowedMessage;
 use App\Message\LoanDueReminderMessage;
 use App\Message\LoanOverdueMessage;
+use App\Message\LoanReturnedMessage;
 use App\Message\NotificationMessageInterface;
 use App\Message\ReservationReadyMessage;
 use App\Repository\LoanRepository;
@@ -23,8 +25,6 @@ use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 #[AsMessageHandler]
 class NotificationMessageHandler
 {
-    private const DEDUPLICATION_WINDOW_HOURS = 6;
-
     public function __construct(
         private UserRepository $users,
         private LoanRepository $loans,
@@ -41,15 +41,7 @@ class NotificationMessageHandler
     {
         $user = $this->users->find($message->getUserId());
         if (!$user) {
-            $this->logger->warning('Notification skipped – user missing', ['userId' => $message->getUserId()]);
-            return;
-        }
-
-        $dedupSince = (new \DateTimeImmutable(sprintf('-%d hours', self::DEDUPLICATION_WINDOW_HOURS)));
-        if ($this->logs->wasSentSince($message->getFingerprint(), $dedupSince)) {
-            $this->logger->info('Notification skipped due to deduplication', [
-                'fingerprint' => $message->getFingerprint(),
-            ]);
+            $this->logger->warning('Notification skipped - user missing', ['userId' => $message->getUserId()]);
             return;
         }
 
@@ -57,6 +49,28 @@ class NotificationMessageHandler
         $payload = $message->getPayload();
 
         switch ($message->getType()) {
+            case NotificationMessageInterface::TYPE_LOAN_BORROWED:
+                \assert($message instanceof LoanBorrowedMessage);
+                $loan = $this->loans->find($message->getLoanId());
+                if (!$loan || $loan->getReturnedAt() !== null) {
+                    $this->logger->info('Skipping borrowed notification, loan missing or already returned', [
+                        'loanId' => $message->getLoanId(),
+                    ]);
+                    return;
+                }
+                $content = $this->contentBuilder->buildLoanBorrowed($user, $loan);
+                break;
+            case NotificationMessageInterface::TYPE_LOAN_RETURNED:
+                \assert($message instanceof LoanReturnedMessage);
+                $loan = $this->loans->find($message->getLoanId());
+                if (!$loan || $loan->getReturnedAt() === null) {
+                    $this->logger->info('Skipping returned notification, loan missing or not returned', [
+                        'loanId' => $message->getLoanId(),
+                    ]);
+                    return;
+                }
+                $content = $this->contentBuilder->buildLoanReturned($user, $loan, $message->isOverdue());
+                break;
             case NotificationMessageInterface::TYPE_LOAN_DUE:
                 \assert($message instanceof LoanDueReminderMessage);
                 $loan = $this->loans->find($message->getLoanId());
@@ -100,13 +114,32 @@ class NotificationMessageHandler
 
     private function deliver(NotificationMessageInterface $message, User $user, NotificationContent $content, array $payload): void
     {
+        $logsToFlush = false;
+
         foreach ($content->getChannels() as $channel) {
+            if ($this->logs->existsForFingerprint($message->getFingerprint(), $channel)) {
+                $this->logger->info('Notification skipped due to fingerprint deduplication', [
+                    'fingerprint' => $message->getFingerprint(),
+                    'channel' => $channel,
+                ]);
+                continue;
+            }
+
             $result = match ($channel) {
                 'email' => $this->sender->sendEmail($user, $content),
                 'sms' => $this->sender->sendSms($user, $content),
                 default => ['status' => 'skipped', 'error' => 'unsupported_channel'],
             };
-            $status = $result['status'];
+
+            $status = strtoupper((string) ($result['status'] ?? 'unknown'));
+            if ($status === 'FAILED') {
+                $this->logger->error('Async notification delivery failed', [
+                    'fingerprint' => $message->getFingerprint(),
+                    'channel' => $channel,
+                    'userId' => $user->getId(),
+                    'error' => $result['error'] ?? null,
+                ]);
+            }
 
             $log = (new NotificationLog())
                 ->setUser($user)
@@ -114,12 +147,15 @@ class NotificationMessageHandler
                 ->setChannel($channel)
                 ->setFingerprint($message->getFingerprint())
                 ->setPayload($payload)
-                ->setStatus(strtoupper($status))
+                ->setStatus($status)
                 ->setErrorMessage($result['error'] ?? null);
 
             $this->em->persist($log);
+            $logsToFlush = true;
         }
 
-        $this->em->flush();
+        if ($logsToFlush) {
+            $this->em->flush();
+        }
     }
 }

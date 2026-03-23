@@ -76,7 +76,6 @@ class AuditLogRepository extends ServiceEntityRepository
     {
         $offset = ($page - 1) * $limit;
 
-        // Build count query separately without joins
         $countQb = $this->createQueryBuilder('a')
             ->select('COUNT(a.id)');
 
@@ -92,12 +91,11 @@ class AuditLogRepository extends ServiceEntityRepository
 
         if (isset($filters['userId'])) {
             $countQb->andWhere('a.user = :userId')
-               ->setParameter('userId', (int)$filters['userId']);
+               ->setParameter('userId', (int) $filters['userId']);
         }
 
         $total = (int) $countQb->getQuery()->getSingleScalarResult();
 
-        // Build results query with joins
         $qb = $this->createQueryBuilder('a')
             ->leftJoin('a.user', 'u')->addSelect('u')
             ->orderBy('a.createdAt', 'DESC');
@@ -114,7 +112,7 @@ class AuditLogRepository extends ServiceEntityRepository
 
         if (isset($filters['userId'])) {
             $qb->andWhere('a.user = :userId')
-               ->setParameter('userId', (int)$filters['userId']);
+               ->setParameter('userId', (int) $filters['userId']);
         }
 
         $results = $qb->setMaxResults($limit)
@@ -128,8 +126,16 @@ class AuditLogRepository extends ServiceEntityRepository
                 'page' => $page,
                 'limit' => $limit,
                 'total' => $total,
-                'totalPages' => $total > 0 ? (int)ceil($total / $limit) : 0
-            ]
+                'totalPages' => $total > 0 ? (int) ceil($total / $limit) : 0,
+            ],
         ];
+    }
+
+    public function save(AuditLog $auditLog, bool $flush = false): void
+    {
+        $this->getEntityManager()->persist($auditLog);
+        if ($flush) {
+            $this->getEntityManager()->flush();
+        }
     }
 }

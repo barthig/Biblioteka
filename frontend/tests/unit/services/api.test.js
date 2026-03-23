@@ -4,6 +4,18 @@ import { apiFetch } from '../../../src/api'
 // Mock fetch globally
 globalThis.fetch = vi.fn()
 
+function createMockResponse({ ok = true, status = 200, data = {}, text, headers = { 'content-type': 'application/json' } } = {}) {
+  return {
+    ok,
+    status,
+    headers: {
+      get: (name) => headers[name.toLowerCase()] ?? headers[name] ?? null
+    },
+    json: async () => data,
+    text: async () => (text ?? JSON.stringify(data))
+  }
+}
+
 describe('api', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -17,12 +29,7 @@ describe('api', () => {
   describe('apiFetch', () => {
     it('should make successful GET request', async () => {
       const mockData = { id: 1, name: 'Test' }
-      globalThis.fetch.mockResolvedValue({
-        ok: true,
-        status: 200,
-        json: async () => mockData,
-        text: async () => JSON.stringify(mockData)
-      })
+      globalThis.fetch.mockResolvedValue(createMockResponse({ status: 200, data: mockData }))
 
       const result = await apiFetch('/api/test')
 
@@ -38,12 +45,7 @@ describe('api', () => {
     it('should include auth token from localStorage', async () => {
       localStorage.setItem('token', 'test-token-123')
       
-      globalThis.fetch.mockResolvedValue({
-        ok: true,
-        status: 200,
-        json: async () => ({}),
-        text: async () => '{}'
-      })
+      globalThis.fetch.mockResolvedValue(createMockResponse({ status: 200, data: {} }))
 
       await apiFetch('/api/test')
 
@@ -58,12 +60,7 @@ describe('api', () => {
     })
 
     it('should handle POST request with body', async () => {
-      globalThis.fetch.mockResolvedValue({
-        ok: true,
-        status: 201,
-        json: async () => ({ id: 1 }),
-        text: async () => '{"id":1}'
-      })
+      globalThis.fetch.mockResolvedValue(createMockResponse({ status: 201, data: { id: 1 } }))
 
       const body = { name: 'New Item' }
       await apiFetch('/api/items', {
@@ -82,48 +79,42 @@ describe('api', () => {
     })
 
     it('should throw error on 404', async () => {
-      globalThis.fetch.mockResolvedValue({
+      globalThis.fetch.mockResolvedValue(createMockResponse({
         ok: false,
         status: 404,
-        statusText: 'Not Found',
-        json: async () => ({ error: 'Not found' }),
-        text: async () => '{"error":"Not found"}'
-      })
+        data: { error: 'Not found' }
+      }))
 
       await expect(apiFetch('/api/notfound')).rejects.toThrow()
     })
 
     it('should throw error on 500', async () => {
-      globalThis.fetch.mockResolvedValue({
+      globalThis.fetch.mockResolvedValue(createMockResponse({
         ok: false,
         status: 500,
-        statusText: 'Internal Server Error',
-        json: async () => ({ error: 'Server error' }),
-        text: async () => '{"error":"Server error"}'
-      })
+        data: { error: 'Server error' }
+      }))
 
       await expect(apiFetch('/api/error')).rejects.toThrow()
     })
 
     it('should handle 401 Unauthorized', async () => {
-      globalThis.fetch.mockResolvedValue({
+      globalThis.fetch.mockResolvedValue(createMockResponse({
         ok: false,
         status: 401,
-        statusText: 'Unauthorized',
-        json: async () => ({ error: 'Unauthorized' }),
-        text: async () => '{"error":"Unauthorized"}'
-      })
+        data: { error: 'Unauthorized' }
+      }))
 
       await expect(apiFetch('/api/protected')).rejects.toThrow()
     })
 
     it('should return null for empty response', async () => {
-      globalThis.fetch.mockResolvedValue({
-        ok: true,
+      globalThis.fetch.mockResolvedValue(createMockResponse({
         status: 204,
-        json: async () => null,
-        text: async () => ''
-      })
+        data: null,
+        text: '',
+        headers: {}
+      }))
 
       const result = await apiFetch('/api/delete')
       expect(result).toBeNull()

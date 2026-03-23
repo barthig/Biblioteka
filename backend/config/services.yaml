@@ -278,3 +278,7 @@ services:
   App\Controller\DistributedHealthController:
     arguments:
       $redis: '@app.redis_client'
+
+  App\MessageHandler\TestNotificationDispatchHandler:
+    arguments:
+      $fromAddress: '%app.notifications.from%'

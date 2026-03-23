@@ -8,6 +8,67 @@ use App\Entity\User;
 
 class NotificationContentBuilder
 {
+    public function buildLoanBorrowed(User $user, Loan $loan): NotificationContent
+    {
+        $title = $loan->getBook()->getTitle();
+        $dueAt = $loan->getDueAt()->format('Y-m-d');
+
+        $subject = sprintf('Loan created: "%s"', $title);
+        $text = sprintf(
+            "Hello %s,\n\nYour loan for \"%s\" has been created. Due date: %s.\n\nLibrary",
+            $user->getName() ?: 'reader',
+            $title,
+            $dueAt
+        );
+
+        $html = sprintf(
+            '<p>Hello %s,</p><p>Your loan for <strong>%s</strong> has been created. Due date: <strong>%s</strong>.</p><p>Library</p>',
+            htmlspecialchars($user->getName() ?: 'reader', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
+            htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
+            $dueAt
+        );
+
+        return new NotificationContent($subject, $text, $html, $this->resolveChannels($user));
+    }
+
+    public function buildLoanReturned(User $user, Loan $loan, bool $overdue): NotificationContent
+    {
+        $title = $loan->getBook()->getTitle();
+
+        if ($overdue) {
+            $dueAt = $loan->getDueAt()->format('Y-m-d');
+            $subject = sprintf('Overdue return processed: "%s"', $title);
+            $text = sprintf(
+                "Hello %s,\n\nYour loan for \"%s\" was returned overdue. Original due date: %s.\n\nLibrary",
+                $user->getName() ?: 'reader',
+                $title,
+                $dueAt
+            );
+            $html = sprintf(
+                '<p>Hello %s,</p><p>Your loan for <strong>%s</strong> was returned overdue. Original due date: <strong>%s</strong>.</p><p>Library</p>',
+                htmlspecialchars($user->getName() ?: 'reader', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
+                htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
+                $dueAt
+            );
+
+            return new NotificationContent($subject, $text, $html, $this->resolveChannels($user));
+        }
+
+        $subject = sprintf('Loan returned: "%s"', $title);
+        $text = sprintf(
+            "Hello %s,\n\nYour loan for \"%s\" has been marked as returned.\n\nLibrary",
+            $user->getName() ?: 'reader',
+            $title
+        );
+        $html = sprintf(
+            '<p>Hello %s,</p><p>Your loan for <strong>%s</strong> has been marked as returned.</p><p>Library</p>',
+            htmlspecialchars($user->getName() ?: 'reader', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
+            htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
+        );
+
+        return new NotificationContent($subject, $text, $html, $this->resolveChannels($user));
+    }
+
     public function buildLoanDue(User $user, Loan $loan): NotificationContent
     {
         $title = $loan->getBook()->getTitle();
@@ -53,12 +114,7 @@ class NotificationContentBuilder
             max(1, $daysLate)
         );
 
-        $channels = ['email'];
-        if ($user->getPhoneNumber()) {
-            $channels[] = 'sms';
-        }
-
-        return new NotificationContent($subject, $text, $html, $channels);
+        return new NotificationContent($subject, $text, $html, $this->resolveChannels($user));
     }
 
     public function buildReservationReady(User $user, Reservation $reservation): NotificationContent
@@ -81,11 +137,16 @@ class NotificationContentBuilder
             $deadline
         );
 
+        return new NotificationContent($subject, $text, $html, $this->resolveChannels($user));
+    }
+
+    private function resolveChannels(User $user): array
+    {
         $channels = ['email'];
         if ($user->getPhoneNumber()) {
             $channels[] = 'sms';
         }
 
-        return new NotificationContent($subject, $text, $html, $channels);
+        return $channels;
     }
 }

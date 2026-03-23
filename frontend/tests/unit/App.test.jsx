@@ -44,24 +44,23 @@ vi.mock('../../src/pages/admin/SystemLogs', () => ({ default: () => <div>System 
 import App from '../../src/App'
 
 describe('App routing', () => {
-  it('renders dashboard route', () => {
+  it('renders dashboard route', async () => {
     render(
       <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/']}>
         <App />
       </MemoryRouter>
     )
     expect(screen.getByText('Navbar')).toBeInTheDocument()
-    expect(screen.getByText('Dashboard Page')).toBeInTheDocument()
+    expect(await screen.findByText('Dashboard Page')).toBeInTheDocument()
   })
 
-  it('renders books route', () => {
+  it('renders books route', async () => {
     render(
       <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/books']}>
         <App />
       </MemoryRouter>
     )
-    expect(screen.getByText('Books Page')).toBeInTheDocument()
+    expect(await screen.findByText('Books Page')).toBeInTheDocument()
   })
 })
-
 

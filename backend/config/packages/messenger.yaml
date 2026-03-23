@@ -103,6 +103,8 @@ framework:
       App\Application\Command\Weeding\CreateWeedingRecordCommand: sync
       App\Application\Command\Loan\UpdateLoanCommand: sync
       App\Application\Command\Reservation\PrepareReservationCommand: sync
+      App\Application\Command\Notification\TriggerTestNotificationCommand: sync
+      App\Application\Command\User\UpdateUserRolesCommand: sync
       
       # Queries - synchronous
       App\Application\Query\Loan\GetLoanQuery: sync
@@ -165,10 +167,15 @@ framework:
       App\Application\Query\Recommendation\FindSimilarBooksQuery: sync
       App\Application\Query\Statistics\GetLibraryStatisticsQuery: sync
       App\Application\Query\Weeding\ListWeedingRecordsQuery: sync
+      App\Application\Query\Notification\ListNotificationsQuery: sync
       
       # Messages - asynchronous
       App\Message\ReservationQueuedNotification: async
+      App\Message\LoanBorrowedMessage: async
+      App\Message\LoanReturnedMessage: async
+      App\Message\TestNotificationDispatchMessage: async
       App\Message\LoanDueReminderMessage: async
       App\Message\LoanOverdueMessage: async
       App\Message\ReservationReadyMessage: async
       App\Message\UpdateBookEmbeddingMessage: async
+

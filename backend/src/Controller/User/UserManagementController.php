@@ -7,20 +7,20 @@ use App\Application\Command\User\CreateUserCommand;
 use App\Application\Command\User\DeleteUserCommand;
 use App\Application\Command\User\UnblockUserCommand;
 use App\Application\Command\User\UpdateUserCommand;
+use App\Application\Command\User\UpdateUserRolesCommand;
 use App\Controller\Traits\ExceptionHandlingTrait;
 use App\Controller\Traits\ValidationTrait;
 use App\Dto\ApiError;
-use App\Repository\StaffRoleRepository;
 use App\Request\CreateUserRequest;
 use App\Request\UpdateUserRequest;
 use App\Service\Auth\SecurityService;
+use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
-use OpenApi\Attributes as OA;
 
 #[OA\Tag(name: 'UserManagement')]
 class UserManagementController extends AbstractController
@@ -30,8 +30,7 @@ class UserManagementController extends AbstractController
 
     public function __construct(
         private readonly MessageBusInterface $commandBus,
-        private readonly SecurityService $security,
-        private readonly StaffRoleRepository $staffRoles
+        private readonly SecurityService $security
     ) {}
 
     #[OA\Post(
@@ -67,14 +66,14 @@ class UserManagementController extends AbstractController
             new OA\Response(response: 403, description: 'Access denied', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
         ]
     )]
-public function create(Request $request, ValidatorInterface $validator): JsonResponse
+    public function create(Request $request, ValidatorInterface $validator): JsonResponse
     {
         if (!$this->security->hasRole($request, 'ROLE_LIBRARIAN')) {
             return $this->jsonError(ApiError::forbidden());
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
-        
+
         $dto = $this->mapArrayToDto($data, new CreateUserRequest());
         $errors = $validator->validate($dto);
         if (count($errors) > 0) {
@@ -150,18 +149,17 @@ public function create(Request $request, ValidatorInterface $validator): JsonRes
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
-        
+
         $dto = $this->mapArrayToDto($data, new UpdateUserRequest());
         $errors = $validator->validate($dto);
         if (count($errors) > 0) {
             return $this->validationErrorResponse($errors);
         }
 
-        // Authorization checks for specific fields
         if (isset($data['roles']) && !$isAdmin) {
             return $this->jsonError(ApiError::forbidden());
         }
-        if ((array_key_exists('pendingApproval', $data) || array_key_exists('verified', $data) || 
+        if ((array_key_exists('pendingApproval', $data) || array_key_exists('verified', $data) ||
              isset($data['membershipGroup']) || isset($data['loanLimit']) || isset($data['blocked'])) && !$isLibrarian) {
             return $this->jsonError(ApiError::forbidden());
         }
@@ -283,35 +281,7 @@ public function create(Request $request, ValidatorInterface $validator): JsonRes
             return $this->jsonError(ApiError::badRequest('roles are required'));
         }
 
-        $roles = array_values(array_unique(array_filter(array_map(static function ($role) {
-            $role = strtoupper(trim((string) $role));
-            if ($role === '') {
-                return null;
-            }
-            return str_starts_with($role, 'ROLE_') ? $role : 'ROLE_' . $role;
-        }, $roles))));
-
-        if (count($roles) === 0) {
-            return $this->jsonError(ApiError::badRequest('roles are required'));
-        }
-
-        $allowedBaseRoles = ['ROLE_USER', 'ROLE_LIBRARIAN', 'ROLE_ADMIN', 'ROLE_SYSTEM'];
-        $invalidRoles = [];
-        foreach ($roles as $role) {
-            if (in_array($role, $allowedBaseRoles, true)) {
-                continue;
-            }
-            if ($this->staffRoles->findOneByRoleKey($role)) {
-                continue;
-            }
-            $invalidRoles[] = $role;
-        }
-
-        if (count($invalidRoles) > 0) {
-            return $this->jsonError(ApiError::badRequest('Invalid roles', ['invalidRoles' => $invalidRoles]));
-        }
-
-        $command = new UpdateUserCommand(
+        $command = new UpdateUserRolesCommand(
             userId: (int) $id,
             roles: $roles
         );
@@ -416,6 +386,4 @@ public function create(Request $request, ValidatorInterface $validator): JsonRes
             return $this->jsonErrorMessage(404, $e->getMessage());
         }
     }
-
 }
-

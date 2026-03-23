@@ -4,6 +4,8 @@ namespace App\Message;
 
 interface NotificationMessageInterface
 {
+    public const TYPE_LOAN_BORROWED = 'loan_borrowed';
+    public const TYPE_LOAN_RETURNED = 'loan_returned';
     public const TYPE_LOAN_DUE = 'loan_due';
     public const TYPE_LOAN_OVERDUE = 'loan_overdue';
     public const TYPE_RESERVATION_READY = 'reservation_ready';

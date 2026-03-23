@@ -2,15 +2,17 @@
 declare(strict_types=1);
 namespace App\Controller\User;
 
+use App\Application\Command\Notification\TriggerTestNotificationCommand;
+use App\Application\Query\Notification\ListNotificationsQuery;
 use App\Controller\Traits\ExceptionHandlingTrait;
 use App\Dto\ApiError;
-use App\Repository\NotificationLogRepository;
 use App\Service\Auth\SecurityService;
-use Doctrine\ORM\EntityManagerInterface;
+use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use OpenApi\Attributes as OA;
+use Symfony\Component\Messenger\MessageBusInterface;
+use Symfony\Component\Messenger\Stamp\HandledStamp;
 
 #[OA\Tag(name: 'Notification')]
 class NotificationController extends AbstractController
@@ -19,8 +21,8 @@ class NotificationController extends AbstractController
 
     public function __construct(
         private readonly SecurityService $security,
-        private readonly NotificationLogRepository $notificationLogs,
-        private readonly EntityManagerInterface $entityManager
+        private readonly MessageBusInterface $queryBus,
+        private readonly MessageBusInterface $commandBus
     ) {
     }
 
@@ -42,35 +44,29 @@ class NotificationController extends AbstractController
     )]
     public function list(Request $request): JsonResponse
     {
-        if ($request->query->getBoolean('serviceDown', false)) {
-            return $this->jsonErrorMessage(503, 'Notification service unavailable');
-        }
-
         $userId = $this->security->getCurrentUserId($request);
         if (!$userId) {
             return $this->jsonErrorMessage(401, 'Unauthorized');
         }
 
-        $limit = max(1, min(100, $request->query->getInt('limit', 20)));
-        $logs = $this->notificationLogs->findInAppForUser($userId, $limit);
-        if ($logs === []) {
-            $logs = $this->seedTestNotifications($userId, $limit);
-        }
+        $query = new ListNotificationsQuery(
+            userId: $userId,
+            limit: max(1, min(100, $request->query->getInt('limit', 20))),
+            serviceDown: $request->query->getBoolean('serviceDown', false)
+        );
 
-        $notifications = [];
-        foreach ($logs as $log) {
-            $payload = $log->getPayload() ?? [];
-            $notifications[] = [
-                'id' => $log->getId(),
-                'type' => $payload['type'] ?? $log->getType(),
-                'title' => $payload['title'] ?? null,
-                'message' => $payload['message'] ?? null,
-                'link' => $payload['link'] ?? null,
-                'createdAt' => $log->getSentAt()->format(DATE_ATOM),
-            ];
-        }
+        try {
+            $envelope = $this->queryBus->dispatch($query);
+            $notifications = $envelope->last(HandledStamp::class)?->getResult() ?? [];
+            return $this->json($notifications, 200);
+        } catch (\Throwable $e) {
+            $e = $this->unwrapThrowable($e);
+            if ($response = $this->jsonFromHttpException($e)) {
+                return $response;
+            }
 
-        return $this->json($notifications, 200);
+            return $this->jsonError(ApiError::internalError($e->getMessage()));
+        }
     }
 
     #[OA\Post(
@@ -114,77 +110,35 @@ class NotificationController extends AbstractController
             return $this->jsonErrorMessage(403, 'Forbidden');
         }
 
-        if ($request->headers->get('X-Queue-Status') === 'down') {
-            return $this->jsonErrorMessage(503, 'Queue unavailable');
-        }
-
         $payload = json_decode($request->getContent(), true) ?? [];
         if (empty($payload['channel']) || empty($payload['target'])) {
             return $this->jsonErrorMessage(400, 'Missing channel or target');
         }
 
-        $channel = $payload['channel'];
+        $channel = (string) $payload['channel'];
         if (!in_array($channel, ['email', 'sms'], true)) {
             return $this->jsonErrorMessage(422, 'Unsupported notification channel');
         }
 
-        return $this->json([
-            'status' => 'queued',
-            'channel' => $channel,
-            'target' => $payload['target'],
-            'message' => $payload['message'] ?? 'Test notification',
-        ], 202);
-    }
+        $command = new TriggerTestNotificationCommand(
+            requestedByUserId: $this->security->getCurrentUserId($request) ?? 0,
+            channel: $channel,
+            target: (string) $payload['target'],
+            message: (string) ($payload['message'] ?? 'Test notification'),
+            queueAvailable: $request->headers->get('X-Queue-Status') !== 'down'
+        );
 
-    /**
-     * @return \App\Entity\NotificationLog[]
-     */
-    private function seedTestNotifications(int $userId, int $limit): array
-    {
-        $user = $this->entityManager->getRepository(\App\Entity\User::class)->find($userId);
-        if (!$user) {
-            return [];
-        }
-
-        $templates = [
-            [
-                'type' => 'reservation_prepared',
-                'title' => 'Reservation ready for pickup',
-                'message' => 'Your reservation is ready for pickup. Please collect it within the next few days.',
-                'link' => '/reservations',
-            ],
-            [
-                'type' => 'announcement_published',
-                'title' => 'New library announcement',
-                'message' => 'A new announcement has been posted. Check the details in your dashboard.',
-                'link' => '/announcements',
-            ],
-        ];
-
-        $created = [];
-        $count = 0;
-        foreach ($templates as $template) {
-            if ($count >= $limit) {
-                break;
+        try {
+            $envelope = $this->commandBus->dispatch($command);
+            $result = $envelope->last(HandledStamp::class)?->getResult() ?? [];
+            return $this->json($result, 202);
+        } catch (\Throwable $e) {
+            $e = $this->unwrapThrowable($e);
+            if ($response = $this->jsonFromHttpException($e)) {
+                return $response;
             }
-            $fingerprint = substr(hash('sha256', $template['type'] . '|' . $userId . '|' . microtime(true) . '|' . random_int(0, PHP_INT_MAX)), 0, 64);
-            $log = (new \App\Entity\NotificationLog())
-                ->setUser($user)
-                ->setType($template['type'])
-                ->setChannel('in_app')
-                ->setFingerprint($fingerprint)
-                ->setPayload($template)
-                ->setStatus('DELIVERED');
 
-            $this->entityManager->persist($log);
-            $created[] = $log;
-            $count++;
+            return $this->jsonError(ApiError::internalError($e->getMessage()));
         }
-
-        $this->entityManager->flush();
-
-        return $created;
     }
 }
-
-

@@ -25,6 +25,14 @@ let refreshToken = localStorage.getItem('refreshToken')
 let isRefreshing = false
 let refreshSubscribers = []
 
+const getStoredToken = (key) => {
+  try {
+    return localStorage.getItem(key)
+  } catch {
+    return null
+  }
+}
+
 export const setTokens = (access, refresh) => {
   accessToken = access
   refreshToken = refresh
@@ -51,10 +59,12 @@ export const getAccessToken = () => accessToken
 const requestInterceptors = [
   // Add auth header
   (options) => {
-    if (accessToken && !options.headers?.['Authorization']) {
+    const token = accessToken || getStoredToken('token')
+    if (token && !options.headers?.['Authorization']) {
+      accessToken = token
       options.headers = {
         ...options.headers,
-        'Authorization': `Bearer ${accessToken}`,
+        'Authorization': `Bearer ${token}`,
       }
     }
     return options
@@ -121,6 +131,7 @@ const onTokenRefreshed = (newToken) => {
 }
 
 const refreshAccessToken = async () => {
+  refreshToken = refreshToken || getStoredToken('refreshToken')
   if (!refreshToken) {
     throw new Error('No refresh token available')
   }
@@ -246,13 +257,16 @@ export const apiClient = async (endpoint, options = {}) => {
       }
       
       // Parse response
-      const contentType = response.headers.get('content-type')
+      const contentType = response.headers?.get?.('content-type') ?? null
       let data
       
-      if (contentType?.includes('application/json')) {
+      if (response.status === 204) {
+        data = null
+      } else if (contentType?.includes('application/json')) {
         data = await response.json()
       } else {
-        data = await response.text()
+        const text = await response.text()
+        data = text === '' ? null : text
       }
       
       if (!response.ok) {
