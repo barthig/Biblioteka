@@ -214,8 +214,8 @@ services:
   App\Controller\User\NotificationController:
     arguments:
       $security: '@App\Service\SecurityService'
-      $notificationLogs: '@App\Repository\NotificationLogRepository'
-      $entityManager: '@doctrine.orm.entity_manager'
+      $queryBus: '@query.bus'
+      $commandBus: '@command.bus'
 
   App\Controller\Admin\RoleAdminController:
     arguments:
@@ -282,3 +282,5 @@ services:
   App\MessageHandler\TestNotificationDispatchHandler:
     arguments:
       $fromAddress: '%app.notifications.from%'
+
+

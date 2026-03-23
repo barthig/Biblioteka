@@ -1,9 +1,11 @@
 <?php
 namespace App\Tests\Functional;
 
+use App\Entity\NotificationLog;
+
 class NotificationControllerTest extends ApiTestCase
 {
-    public function testListNotificationsRequiresLibrarian(): void
+    public function testListNotificationsReturnsEmptyArrayWithoutSeedData(): void
     {
         $user = $this->createUser('user@example.com');
         $client = $this->createAuthenticatedClient($user);
@@ -12,25 +14,40 @@ class NotificationControllerTest extends ApiTestCase
 
         $this->assertResponseStatusCodeSame(200);
         $data = $this->getJsonResponse($client);
-        $this->assertNotEmpty($data);
+        $this->assertSame([], $data);
     }
 
-    public function testListNotificationsReturnsData(): void
+    public function testListNotificationsReturnsPersistedInAppNotifications(): void
     {
-        $librarian = $this->createUser('librarian@example.com', ['ROLE_LIBRARIAN']);
-        $client = $this->createAuthenticatedClient($librarian);
+        $user = $this->createUser('reader@example.com');
+        $log = (new NotificationLog())
+            ->setUser($user)
+            ->setType('reservation_prepared')
+            ->setChannel('in_app')
+            ->setFingerprint('notif-functional-1')
+            ->setPayload([
+                'type' => 'reservation_prepared',
+                'title' => 'Ready',
+                'message' => 'Collect your copy',
+                'link' => '/reservations',
+            ])
+            ->setStatus('DELIVERED');
+        $this->entityManager->persist($log);
+        $this->entityManager->flush();
 
+        $client = $this->createAuthenticatedClient($user);
         $this->sendRequest($client, 'GET', '/api/notifications');
 
         $this->assertResponseStatusCodeSame(200);
         $data = $this->getJsonResponse($client);
-        $this->assertNotEmpty($data);
+        $this->assertCount(1, $data);
+        $this->assertSame('Ready', $data[0]['title']);
     }
 
     public function testListNotificationsServiceDown(): void
     {
-        $librarian = $this->createUser('librarian@example.com', ['ROLE_LIBRARIAN']);
-        $client = $this->createAuthenticatedClient($librarian);
+        $user = $this->createUser('reader@example.com');
+        $client = $this->createAuthenticatedClient($user);
 
         $this->sendRequest($client, 'GET', '/api/notifications?serviceDown=1');
 
