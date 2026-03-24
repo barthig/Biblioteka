@@ -1,4 +1,4 @@
-const { test, expect } = require('@playwright/test')
+import { test, expect } from '@playwright/test'
 
 test('books list and details', async ({ page }) => {
   await page.route('**/api/books/filters', async (route) => {

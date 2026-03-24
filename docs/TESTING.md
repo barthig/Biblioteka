@@ -32,3 +32,16 @@ npm run build
 ```
 
 This split matches the diploma requirements: backend unit tests are in `tests/Unit`, while CQRS and async notification flow coverage is expanded in `tests/Application`, `tests/EventSubscriber` and `tests/Service`.
+
+## Distributed architecture smoke tests
+
+When the distributed stack is running through Traefik, use:
+
+```bash
+./tests/integration/test_cross_service.sh
+./tests/integration/test_gateway_routing.sh
+```
+
+Purpose:
+- `test_cross_service.sh` verifies health, metrics and public API availability through the gateway.
+- `test_gateway_routing.sh` verifies that collision-prone paths are routed to the correct owner behind Traefik.

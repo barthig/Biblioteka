@@ -1,8 +1,8 @@
 services:
   backend:
     environment:
-      APP_ENV: prod
-      APP_DEBUG: 0
+      APP_ENV: dev
+      APP_DEBUG: 1
     volumes:
       - backend_vendor:/app/vendor
       - backend_var:/app/var
@@ -11,6 +11,6 @@ services:
         mkdir -p /app/var/cache /app/var/log &&
         chown -R www-data:www-data /app/var &&
         chmod -R 775 /app/var &&
-        php bin/console cache:warmup --env=prod &&
+        php bin/console cache:warmup --env=dev &&
         php-fpm -F
       "

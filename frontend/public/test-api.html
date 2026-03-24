@@ -63,7 +63,7 @@
     </div>
 
     <div class="test-box">
-        <h2>Test 2: Lista książek (/api/books)</h2>
+        <h2>Test 2: Lista ksiÄ…ĹĽek (/api/books)</h2>
         <button onclick="testBooks()">Testuj /api/books</button>
         <button onclick="testBooksLimit()">Testuj /api/books?limit=3</button>
         <div id="booksResult"></div>
@@ -83,20 +83,20 @@
 
     <div class="test-box">
         <h2>Informacje</h2>
-        <p><strong>API URL:</strong> http://localhost:8000</p>
+        <p><strong>API URL:</strong> same-origin (/api via current host)</p>
         <p><strong>Frontend URL:</strong> http://localhost:5173</p>
         <p><strong>Problem:</strong> Backend odpowiada bardzo wolno (~5-6 sekund) przez Docker volumes na Windows</p>
-        <p><strong>Rozwiązanie tymczasowe:</strong> Cierpliwość - dane się ładują, tylko wolno</p>
-        <p><strong>Rozwiązanie stałe:</strong> Użyć WSL2 lub przenieść vendor poza volume</p>
+        <p><strong>RozwiÄ…zanie tymczasowe:</strong> CierpliwoĹ›Ä‡ - dane siÄ™ Ĺ‚adujÄ…, tylko wolno</p>
+        <p><strong>RozwiÄ…zanie staĹ‚e:</strong> UĹĽyÄ‡ WSL2 lub przenieĹ›Ä‡ vendor poza volume</p>
     </div>
 
     <script>
-        const API_URL = 'http://localhost:8000';
+        const API_URL = window.location.origin;
         let token = localStorage.getItem('token');
 
         async function testEndpoint(url, options = {}, resultId) {
             const resultDiv = document.getElementById(resultId);
-            resultDiv.innerHTML = '<p class="loading">Ładowanie... (może zająć 5-10 sekund)</p>';
+            resultDiv.innerHTML = '<p class="loading">Ĺadowanie... (moĹĽe zajÄ…Ä‡ 5-10 sekund)</p>';
             
             const startTime = performance.now();
             
@@ -118,9 +118,9 @@
                 const duration = ((endTime - startTime) / 1000).toFixed(2);
                 
                 resultDiv.innerHTML = `
-                    <p class="error">Błąd!</p>
+                    <p class="error">BĹ‚Ä…d!</p>
                     <p class="timing">Czas: ${duration}s</p>
-                    <p><strong>Błąd:</strong> ${error.message}</p>
+                    <p><strong>BĹ‚Ä…d:</strong> ${error.message}</p>
                 `;
             }
         }
@@ -170,7 +170,7 @@
                     `;
                 } else {
                     resultDiv.innerHTML = `
-                        <p class="error">Błąd logowania</p>
+                        <p class="error">BĹ‚Ä…d logowania</p>
                         <p class="timing">Czas: ${duration}s</p>
                         <pre>${JSON.stringify(data, null, 2)}</pre>
                     `;
@@ -179,7 +179,7 @@
                 const endTime = performance.now();
                 const duration = ((endTime - startTime) / 1000).toFixed(2);
                 resultDiv.innerHTML = `
-                    <p class="error">Błąd: ${error.message}</p>
+                    <p class="error">BĹ‚Ä…d: ${error.message}</p>
                     <p class="timing">Czas: ${duration}s</p>
                 `;
             }
@@ -188,7 +188,7 @@
         function testDashboard() {
             if (!token) {
                 document.getElementById('dashboardResult').innerHTML = 
-                    '<p class="error">Najpierw zaloguj się!</p>';
+                    '<p class="error">Najpierw zaloguj siÄ™!</p>';
                 return;
             }
             

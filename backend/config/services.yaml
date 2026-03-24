@@ -49,7 +49,7 @@ services:
     tags:
       - { name: messenger.message_handler, bus: query.bus }
 
-  # Legacy QueryHandler namespace removed — all handlers moved to Handler\Query\
+  # Legacy QueryHandler namespace removed Ă˘â‚¬â€ť all handlers moved to Handler\Query\
 
   App\DataFixtures\:
     resource: '../src/DataFixtures/'
@@ -254,7 +254,7 @@ services:
     tags:
       - { name: nelmio_api_doc.describer, priority: -1500 }
 
-  # ─── Integration Events (distributed architecture) ───
+  # Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬ Integration Events (distributed architecture) Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬Ă˘â€ťâ‚¬
   App\Service\Integration\IntegrationEventPublisher:
     arguments:
       $amqpConnection: '@app.amqp_connection'
@@ -269,7 +269,7 @@ services:
   App\EventSubscriber\IntegrationEventBridgeSubscriber:
     tags: ['kernel.event_subscriber']
 
-  # Distributed health check — inject Predis client
+  # Distributed health check Ă˘â‚¬â€ť inject Predis client
   app.redis_client:
     class: Predis\Client
     arguments:
@@ -278,6 +278,7 @@ services:
   App\Controller\DistributedHealthController:
     arguments:
       $redis: '@app.redis_client'
+      $messengerTransportDsn: '%env(MESSENGER_TRANSPORT_DSN)%'
 
   App\MessageHandler\TestNotificationDispatchHandler:
     arguments:

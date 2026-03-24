@@ -1,4 +1,4 @@
-# Traefik dynamic configuration — middleware & routing rules
+# Traefik dynamic configuration - middleware & routing rules
 
 http:
   middlewares:
@@ -41,32 +41,35 @@ http:
         attempts: 3
         initialInterval: 100ms
 
-  # Routers — ordered by specificity (Traefik auto-prioritizes longer rules)
+  # Routers - explicit ownership to avoid prefix collisions with backend BFF endpoints
   routers:
-    # Notification Service — /api/notifications/**
+    # Notification Service - only microservice-owned read models
     notification-api:
-      rule: "PathPrefix(`/api/notifications`)"
+      rule: "Path(`/api/notifications/logs`) || Path(`/api/notifications/stats`)"
       service: notification-svc
+      priority: 100
       entryPoints:
         - web
       middlewares:
         - cors-headers
         - rate-limit
 
-    # Recommendation Service — /api/recommendations/**
+    # Recommendation Service - only microservice-owned recommendation endpoints
     recommendation-api:
-      rule: "PathPrefix(`/api/recommendations`)"
+      rule: "PathPrefix(`/api/recommendations/similar`) || PathPrefix(`/api/recommendations/for-user`) || PathPrefix(`/api/recommendations/search`)"
       service: recommendation-svc
+      priority: 100
       entryPoints:
         - web
       middlewares:
         - cors-headers
         - rate-limit
 
-    # Main backend API — everything else under /api and /health
+    # Main backend API - BFF endpoints and the rest of the application API
     backend-api:
       rule: "PathPrefix(`/api`) || PathPrefix(`/health`)"
       service: backend-svc
+      priority: 10
       entryPoints:
         - web
       middlewares:
@@ -74,7 +77,7 @@ http:
         - rate-limit
         - circuit-breaker
 
-    # Frontend (lowest priority — catch-all)
+    # Frontend (lowest priority - catch-all)
     frontend:
       rule: "PathPrefix(`/`)"
       service: frontend-svc
@@ -89,7 +92,6 @@ http:
       entryPoints:
         - web
 
-  # Services
   services:
     backend-svc:
       loadBalancer:

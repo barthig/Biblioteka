@@ -1,9 +1,9 @@
 // @ts-check
-const { defineConfig } = require('@playwright/test')
+import { defineConfig } from '@playwright/test'
 
 const baseURL = process.env.BASE_URL || 'http://localhost:5173'
 
-module.exports = defineConfig({
+export default defineConfig({
   testDir: './tests/e2e',
   fullyParallel: true,
   retries: 0,

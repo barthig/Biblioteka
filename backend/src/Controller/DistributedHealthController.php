@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use Doctrine\DBAL\Connection;
+use OpenApi\Attributes as OA;
 use Predis\Client as RedisClient;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use OpenApi\Attributes as OA;
 
 /**
- * Aggregated health check — queries all services in the distributed system.
+ * Aggregated health check - queries all services in the distributed system.
  */
 #[OA\Tag(name: 'Health')]
 class DistributedHealthController extends AbstractController
@@ -21,6 +21,8 @@ class DistributedHealthController extends AbstractController
         private readonly Connection $connection,
         private readonly RedisClient $redis,
         private readonly LoggerInterface $logger,
+        private readonly string $messengerTransportDsn = '',
+        private readonly ?string $rabbitMqManagementUrl = null,
     ) {
     }
 
@@ -39,7 +41,6 @@ class DistributedHealthController extends AbstractController
         $checks = [];
         $allOk = true;
 
-        // 1. Own database
         try {
             $this->connection->executeQuery('SELECT 1');
             $checks['database'] = 'ok';
@@ -48,7 +49,6 @@ class DistributedHealthController extends AbstractController
             $allOk = false;
         }
 
-        // 2. Redis
         try {
             $this->redis->ping();
             $checks['redis'] = 'ok';
@@ -57,19 +57,17 @@ class DistributedHealthController extends AbstractController
             $allOk = false;
         }
 
-        // 3. RabbitMQ (via management API)
-        $checks['rabbitmq'] = $this->checkHttpHealth('http://rabbitmq:15672/api/healthchecks/node', 'app', 'app');
+        [$rabbitMqUrl, $rabbitMqUser, $rabbitMqPass] = $this->resolveRabbitMqHealthConfig();
+        $checks['rabbitmq'] = $this->checkHttpHealth($rabbitMqUrl, $rabbitMqUser, $rabbitMqPass);
         if ($checks['rabbitmq'] !== 'ok') {
             $allOk = false;
         }
 
-        // 4. Notification Service
         $checks['notification_service'] = $this->checkHttpHealth('http://notification-service:8001/health');
         if ($checks['notification_service'] !== 'ok') {
             $allOk = false;
         }
 
-        // 5. Recommendation Service
         $checks['recommendation_service'] = $this->checkHttpHealth('http://recommendation-service:8002/health');
         if ($checks['recommendation_service'] !== 'ok') {
             $allOk = false;
@@ -82,22 +80,44 @@ class DistributedHealthController extends AbstractController
         ], $allOk ? 200 : 503);
     }
 
+    private function resolveRabbitMqHealthConfig(): array
+    {
+        $parts = parse_url($this->messengerTransportDsn);
+        $host = $parts['host'] ?? 'rabbitmq';
+        $user = $parts['user'] ?? null;
+        $pass = $parts['pass'] ?? null;
+        $url = $this->rabbitMqManagementUrl ?: sprintf('http://%s:15672/api/healthchecks/node', $host);
+
+        return [$url, $user, $pass];
+    }
+
     private function checkHttpHealth(string $url, ?string $user = null, ?string $pass = null): string
     {
         try {
+            $headers = [];
+            if ($user !== null && $pass !== null) {
+                $headers[] = 'Authorization: Basic ' . base64_encode($user . ':' . $pass);
+            }
+
             $ctx = stream_context_create([
                 'http' => [
                     'timeout' => 3,
                     'method' => 'GET',
-                    'header' => $user ? 'Authorization: Basic ' . base64_encode("$user:$pass") : '',
+                    'header' => implode("\r\n", $headers),
                 ],
             ]);
             $response = @file_get_contents($url, false, $ctx);
             if ($response !== false) {
                 return 'ok';
             }
+
             return 'error';
         } catch (\Throwable $e) {
+            $this->logger->warning('Distributed health HTTP probe failed', [
+                'url' => $url,
+                'error' => $e->getMessage(),
+            ]);
+
             return 'error';
         }
     }

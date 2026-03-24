@@ -3,14 +3,14 @@
  */
 
 // API Configuration
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+export const API_BASE_URL = import.meta.env.VITE_API_URL || ''
 export const API_TIMEOUT = 30000
 export const API_RETRY_ATTEMPTS = 3
 
 // App metadata
 export const APP_NAME = 'Biblioteka'
 export const APP_VERSION = '1.0.0'
-export const APP_DESCRIPTION = 'System zarządzania biblioteką'
+export const APP_DESCRIPTION = 'System zarzÄ…dzania bibliotekÄ…'
 
 // Local storage keys
 export const STORAGE_KEYS = {

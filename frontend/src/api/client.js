@@ -4,7 +4,7 @@
  */
 import { logger } from '../utils/logger'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+const API_BASE_URL = import.meta.env.VITE_API_URL || ''
 
 // ============================================
 // CONFIGURATION
@@ -144,7 +144,7 @@ const refreshAccessToken = async () => {
   
   if (!response.ok) {
     clearTokens()
-    // Intentional full reload — this runs outside the React component tree
+    // Intentional full reload â€” this runs outside the React component tree
     // where useNavigate() is unavailable
     window.location.href = '/login'
     throw new Error('Token refresh failed')

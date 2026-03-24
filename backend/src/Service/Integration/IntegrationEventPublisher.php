@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace App\Service\Integration;
 
 use App\Exception\ExternalServiceException;
+use PhpAmqpLib\Channel\AMQPChannel;
+use PhpAmqpLib\Connection\AMQPStreamConnection;
+use PhpAmqpLib\Message\AMQPMessage;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -16,8 +19,12 @@ use Psr\Log\LoggerInterface;
  */
 class IntegrationEventPublisher
 {
+    private const MAX_ATTEMPTS = 3;
+
+    private ?AMQPChannel $channel = null;
+
     public function __construct(
-        private readonly \PhpAmqpLib\Connection\AMQPStreamConnection|null $amqpConnection,
+        private readonly ?AMQPStreamConnection $amqpConnection,
         private readonly LoggerInterface $logger,
         private readonly string $exchange = 'biblioteka.events',
     ) {
@@ -37,38 +44,52 @@ class IntegrationEventPublisher
             'source' => 'backend',
         ];
 
-        try {
-            $channel = $this->getChannel();
-            $channel->exchange_declare($this->exchange, 'topic', false, true, false);
+        $message = new AMQPMessage(
+            json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR),
+            [
+                'content_type' => 'application/json',
+                'delivery_mode' => 2,
+                'timestamp' => time(),
+                'app_id' => 'biblioteka-backend',
+                'type' => $routingKey,
+            ]
+        );
 
-            $message = new \PhpAmqpLib\Message\AMQPMessage(
-                json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR),
-                [
-                    'content_type' => 'application/json',
-                    'delivery_mode' => 2, // persistent
-                    'timestamp' => time(),
-                    'app_id' => 'biblioteka-backend',
-                    'type' => $routingKey,
-                ]
-            );
+        for ($attempt = 1; $attempt <= self::MAX_ATTEMPTS; $attempt++) {
+            try {
+                $channel = $this->getChannel();
+                $channel->exchange_declare($this->exchange, 'topic', false, true, false);
+                $channel->basic_publish($message, $this->exchange, $routingKey);
 
-            $channel->basic_publish($message, $this->exchange, $routingKey);
+                $this->logger->info('Integration event published', [
+                    'routing_key' => $routingKey,
+                    'payload_keys' => array_keys($payload),
+                    'attempt' => $attempt,
+                ]);
 
-            $this->logger->info('Integration event published', [
-                'routing_key' => $routingKey,
-                'payload_keys' => array_keys($payload),
-            ]);
-        } catch (\Throwable $e) {
-            $this->logger->error('Failed to publish integration event', [
-                'routing_key' => $routingKey,
-                'error' => $e->getMessage(),
-            ]);
+                return;
+            } catch (\Throwable $e) {
+                $this->resetChannel();
+
+                $context = [
+                    'routing_key' => $routingKey,
+                    'attempt' => $attempt,
+                    'max_attempts' => self::MAX_ATTEMPTS,
+                    'error' => $e->getMessage(),
+                ];
+
+                if ($attempt < self::MAX_ATTEMPTS) {
+                    $this->logger->warning('Retrying integration event publish after broker error', $context);
+                    usleep($attempt * 100000);
+                    continue;
+                }
+
+                $this->logger->error('Failed to publish integration event after retries', $context);
+            }
         }
     }
 
-    private ?\PhpAmqpLib\Channel\AMQPChannel $channel = null;
-
-    private function getChannel(): \PhpAmqpLib\Channel\AMQPChannel
+    private function getChannel(): AMQPChannel
     {
         if ($this->channel === null || !$this->channel->is_open()) {
             if ($this->amqpConnection === null) {
@@ -76,6 +97,22 @@ class IntegrationEventPublisher
             }
             $this->channel = $this->amqpConnection->channel();
         }
+
         return $this->channel;
+    }
+
+    private function resetChannel(): void
+    {
+        if ($this->channel !== null) {
+            try {
+                if ($this->channel->is_open()) {
+                    $this->channel->close();
+                }
+            } catch (\Throwable) {
+                // Ignore cleanup failures, the next publish attempt will rebuild the channel.
+            }
+        }
+
+        $this->channel = null;
     }
 }
