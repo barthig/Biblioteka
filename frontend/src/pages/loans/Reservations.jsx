@@ -66,19 +66,8 @@ export default function Reservations() {
       invalidateResource('reservations:/api/reservations*')
     }
 
-    // Poll for cache changes every 2 seconds
-    const interval = setInterval(() => {
-      if (user?.id) {
-        const cached = getCachedResource(`reservations:${CACHE_KEY}`, CACHE_TTL)
-        if (!cached) {
-          load()
-        }
-      }
-    }, 2000)
-
     return () => {
       active = false
-      clearInterval(interval)
     }
   }, [getCachedResource, invalidateResource, setCachedResource, user?.id, CACHE_KEY, CACHE_TTL])
 

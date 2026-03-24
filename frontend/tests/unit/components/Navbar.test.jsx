@@ -1,24 +1,22 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 
-const prefetchResource = vi.fn().mockResolvedValue({})
 let mockAuth = { token: null, user: null, logout: vi.fn() }
 
 vi.mock('../../../src/context/AuthContext', () => ({
   useAuth: () => mockAuth
 }))
 
-vi.mock('../../../src/context/ResourceCacheContext', () => ({
-  useResourceCache: () => ({ prefetchResource })
-}))
-
 // Import after mocks
 import Navbar from '../../../src/components/common/Navbar'
 
 describe('Navbar', () => {
-  it('renders login/register when unauthenticated', () => {
+  beforeEach(() => {
     mockAuth = { token: null, user: null, logout: vi.fn() }
+  })
+
+  it('renders login/register when unauthenticated', () => {
     render(
       <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Navbar />
@@ -28,7 +26,7 @@ describe('Navbar', () => {
     expect(screen.getByRole('link', { name: /Zarejestruj/i })).toBeInTheDocument()
   })
 
-  it('renders user section and triggers prefetch', () => {
+  it('renders user section and closes mobile menu after navigation click', () => {
     mockAuth = { token: 'token', user: { name: 'Jan', roles: ['ROLE_USER'] }, logout: vi.fn() }
     render(
       <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
@@ -36,8 +34,10 @@ describe('Navbar', () => {
       </MemoryRouter>
     )
     expect(screen.getByText(/Jan/)).toBeInTheDocument()
-    fireEvent.mouseEnter(screen.getByRole('link', { name: /Wypo/i }))
-    expect(prefetchResource).toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: /Menu/i }))
+    expect(screen.getByRole('button', { name: /Menu/i })).toHaveAttribute('aria-expanded', 'true')
+    fireEvent.click(screen.getByRole('link', { name: /Wypo/i }))
+    expect(screen.getByRole('button', { name: /Menu/i })).toHaveAttribute('aria-expanded', 'false')
   })
 
   it('shows admin links only for admin', () => {
@@ -81,5 +81,4 @@ describe('Navbar', () => {
     expect(logout).toHaveBeenCalled()
   })
 })
-
 

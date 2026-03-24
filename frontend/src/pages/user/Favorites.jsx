@@ -64,17 +64,8 @@ export default function Favorites() {
 
     load()
 
-    // Poll for cache changes every 2 seconds
-    const interval = setInterval(() => {
-      const cached = getCachedResource(cacheKey, CACHE_TTL)
-      if (!cached) {
-        load()
-      }
-    }, 2000)
-
     return () => {
       active = false
-      clearInterval(interval)
     }
   }, [getCachedResource, invalidateResource, setCachedResource, user?.id, cacheKey, CACHE_KEY, CACHE_TTL])
 

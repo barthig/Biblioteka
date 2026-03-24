@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { apiFetch } from '../../api'
+import { useResourceCache } from '../../context/ResourceCacheContext'
 import PageHeader from '../../components/ui/PageHeader'
 import StatGrid from '../../components/ui/StatGrid'
 import StatCard from '../../components/ui/StatCard'
@@ -20,6 +21,7 @@ const defaultIntegration = {
 const defaultRole = { name: '', roleKey: '', modules: '', description: '' }
 
 export default function AdminPanel() {
+  const { getCachedResource, setCachedResource } = useResourceCache()
   const [activeTab, setActiveTab] = useState('users')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -60,6 +62,7 @@ export default function AdminPanel() {
 
   const systemLoaded = useMemo(() => settings.length > 0 || integrations.length > 0, [settings, integrations])
   const rolesLoaded = useMemo(() => roles.length > 0, [roles])
+  const ADMIN_CACHE_TTL = 120000
 
   useEffect(() => {
     loadLibraryStats()
@@ -67,15 +70,23 @@ export default function AdminPanel() {
 
   useEffect(() => {
     if (activeTab === 'users') {
-      loadUsers()
+      if (users.length === 0 && !loading) {
+        loadUsers()
+      }
     } else if (activeTab === 'system') {
-      loadSystem()
+      if (!systemLoaded && !loading) {
+        loadSystem()
+      }
     } else if (activeTab === 'roles') {
-      loadRolesAndAudit()
+      if ((!rolesLoaded || auditLogs.length === 0) && !loading) {
+        loadRolesAndAudit()
+      }
     } else if (activeTab === 'loans') {
-      loadLoans()
+      if (loans.length === 0 && !loansLoading) {
+        loadLoans()
+      }
     }
-  }, [activeTab])
+  }, [activeTab, auditLogs.length, loading, loans.length, loansLoading, rolesLoaded, systemLoaded, users.length])
 
   const formatDateInput = (value) => {
     if (!value) return ''
@@ -85,12 +96,22 @@ export default function AdminPanel() {
   }
 
   async function loadLibraryStats() {
+    const cacheKey = 'admin:/api/dashboard'
+    const cached = getCachedResource(cacheKey, ADMIN_CACHE_TTL)
+    if (cached) {
+      setLibraryStats(cached)
+      setLibraryStatsLoading(false)
+      setError(null)
+      return
+    }
+
     setLibraryStatsLoading(true)
     setError(null)
     try {
       const data = await apiFetch('/api/dashboard')
       if (data && typeof data === 'object' && !Array.isArray(data)) {
         setLibraryStats(data)
+        setCachedResource(cacheKey, data)
       } else {
         setLibraryStats(null)
       }
@@ -103,11 +124,22 @@ export default function AdminPanel() {
   }
 
   async function loadUsers() {
+    const cacheKey = 'admin:/api/users'
+    const cached = getCachedResource(cacheKey, ADMIN_CACHE_TTL)
+    if (cached) {
+      setUsers(Array.isArray(cached) ? cached : [])
+      setLoading(false)
+      setError(null)
+      return
+    }
+
     setLoading(true)
     setError(null)
     try {
       const data = await apiFetch('/api/users')
-      setUsers(Array.isArray(data) ? data : [])
+      const list = Array.isArray(data) ? data : []
+      setUsers(list)
+      setCachedResource(cacheKey, list)
     } catch (err) {
       setError(err.message || 'Nie udało się pobrać użytkowników')
     } finally {
@@ -205,6 +237,16 @@ export default function AdminPanel() {
   }
 
   async function loadSystem() {
+    const cacheKey = 'admin:/api/admin/system'
+    const cached = getCachedResource(cacheKey, ADMIN_CACHE_TTL)
+    if (cached) {
+      setSettings(Array.isArray(cached.settings) ? cached.settings : [])
+      setIntegrations(Array.isArray(cached.integrations) ? cached.integrations : [])
+      setLoading(false)
+      setError(null)
+      return
+    }
+
     setLoading(true)
     setError(null)
     try {
@@ -212,8 +254,11 @@ export default function AdminPanel() {
         apiFetch('/api/admin/system/settings'),
         apiFetch('/api/admin/system/integrations')
       ])
-      setSettings(settingsRes?.settings || (Array.isArray(settingsRes) ? settingsRes : []))
-      setIntegrations(integrationsRes?.integrations || (Array.isArray(integrationsRes) ? integrationsRes : []))
+      const nextSettings = settingsRes?.settings || (Array.isArray(settingsRes) ? settingsRes : [])
+      const nextIntegrations = integrationsRes?.integrations || (Array.isArray(integrationsRes) ? integrationsRes : [])
+      setSettings(nextSettings)
+      setIntegrations(nextIntegrations)
+      setCachedResource(cacheKey, { settings: nextSettings, integrations: nextIntegrations })
     } catch (err) {
       setError(err.message || 'Nie udało się pobrać danych systemu')
     } finally {
@@ -222,6 +267,17 @@ export default function AdminPanel() {
   }
 
   async function loadRolesAndAudit() {
+    const cacheKey = 'admin:/api/roles-audit'
+    const cached = getCachedResource(cacheKey, ADMIN_CACHE_TTL)
+    if (cached) {
+      setRoles(Array.isArray(cached.roles) ? cached.roles : [])
+      setAuditLogs(Array.isArray(cached.auditLogs) ? cached.auditLogs : [])
+      setUsers(Array.isArray(cached.users) ? cached.users : [])
+      setLoading(false)
+      setError(null)
+      return
+    }
+
     setLoading(true)
     setError(null)
     try {
@@ -230,10 +286,14 @@ export default function AdminPanel() {
         apiFetch('/api/audit-logs?limit=25'),
         apiFetch('/api/users')
       ])
-      setRoles(rolesRes?.roles || (Array.isArray(rolesRes) ? rolesRes : []))
+      const nextRoles = rolesRes?.roles || (Array.isArray(rolesRes) ? rolesRes : [])
       const entries = auditRes?.data || auditRes?.items || []
-      setAuditLogs(Array.isArray(entries) ? entries : [])
-      setUsers(Array.isArray(usersRes) ? usersRes : [])
+      const nextAuditLogs = Array.isArray(entries) ? entries : []
+      const nextUsers = Array.isArray(usersRes) ? usersRes : []
+      setRoles(nextRoles)
+      setAuditLogs(nextAuditLogs)
+      setUsers(nextUsers)
+      setCachedResource(cacheKey, { roles: nextRoles, auditLogs: nextAuditLogs, users: nextUsers })
     } catch (err) {
       setError(err.message || 'Nie udało się pobrać audytu lub ról')
     } finally {
@@ -398,19 +458,30 @@ export default function AdminPanel() {
   }
 
   async function loadLoans(filters = loanFilters) {
+    const params = {
+      user: filters.user,
+      book: filters.book
+    }
+    if (filters.status && filters.status !== 'all') {
+      params.status = filters.status
+    }
+    const cacheKey = `admin:/api/loans:${JSON.stringify(params)}`
+    const cached = getCachedResource(cacheKey, ADMIN_CACHE_TTL)
+    if (cached) {
+      setLoans(Array.isArray(cached) ? cached : [])
+      setLoansLoading(false)
+      setError(null)
+      return
+    }
+
     setLoansLoading(true)
     setError(null)
     try {
-      const params = {
-        user: filters.user,
-        book: filters.book
-      }
-      if (filters.status && filters.status !== 'all') {
-        params.status = filters.status
-      }
       const data = await loanService.getAllLoans(params)
       const items = data?.data || data?.items || data || []
-      setLoans(Array.isArray(items) ? items : [])
+      const nextLoans = Array.isArray(items) ? items : []
+      setLoans(nextLoans)
+      setCachedResource(cacheKey, nextLoans)
     } catch (err) {
       setError(err.message || 'Nie udało się pobrać wypożyczeń')
     } finally {

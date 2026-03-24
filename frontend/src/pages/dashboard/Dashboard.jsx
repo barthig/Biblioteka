@@ -22,6 +22,8 @@ export default function Dashboard() {
   const navigate = useNavigate()
   // Check for valid authentication - user must be present (token validated)
   const isAuthenticated = Boolean(user)
+  const userId = user?.id ?? null
+  const onboardingCompleted = Boolean(user?.onboardingCompleted)
   const isLibrarian = user?.roles?.includes('ROLE_LIBRARIAN')
   const isAdmin = user?.roles?.includes('ROLE_ADMIN')
   const { getCachedResource, setCachedResource, prefetchResource } = useResourceCache()
@@ -270,7 +272,7 @@ export default function Dashboard() {
           setCachedResource(hoursKey, hoursData)
           setCachedResource(announcementsKey, announcementsData)
 
-          if (user && !user.onboardingCompleted) {
+          if (userId && !onboardingCompleted) {
             setShowOnboarding(true)
           }
         }
@@ -287,7 +289,7 @@ export default function Dashboard() {
     return () => {
       mounted = false
     }
-  }, [isAuthenticated, user])
+  }, [isAuthenticated, userId, onboardingCompleted])
 
   if (!isAuthenticated) {
     return (

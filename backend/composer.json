@@ -32,6 +32,9 @@
                     "doctrine/doctrine-migrations-bundle":  "^3.7"
                 },
     "autoload":  {
+                     "files":  [
+                                   "compat/symfony_app_reference.php"
+                               ],
                      "psr-4":  {
                                    "App\\":  "src/"
                                }
