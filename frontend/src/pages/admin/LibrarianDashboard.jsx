@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { apiFetch } from '../../api'
+import { useResourceCache } from '../../context/ResourceCacheContext'
 import { StatCardSkeleton } from '../../components/ui/Skeleton'
 import PageHeader from '../../components/ui/PageHeader'
 import StatGrid from '../../components/ui/StatGrid'
@@ -9,6 +10,7 @@ import SectionCard from '../../components/ui/SectionCard'
 import FeedbackCard from '../../components/ui/FeedbackCard'
 
 export default function LibrarianDashboard() {
+  const { getCachedResource, prefetchResource } = useResourceCache()
   const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -18,10 +20,19 @@ export default function LibrarianDashboard() {
   }, [])
 
   async function loadStats() {
+    const cacheKey = 'librarian:/api/statistics/dashboard'
+    const cached = getCachedResource(cacheKey, 120000)
+    if (typeof cached !== 'undefined') {
+      setStats(cached)
+      setLoading(false)
+      setError(null)
+      return
+    }
+
     setLoading(true)
     setError(null)
     try {
-      const data = await apiFetch('/api/statistics/dashboard')
+      const data = await prefetchResource(cacheKey, () => apiFetch('/api/statistics/dashboard'), 120000)
       setStats(data)
     } catch (err) {
       setError(err.message || 'Nie udało się załadować statystyk')

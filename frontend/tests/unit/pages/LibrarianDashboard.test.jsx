@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import LibrarianDashboard from '../../../src/pages/admin/LibrarianDashboard'
 import { apiFetch } from '../../../src/api'
+import { ResourceCacheProvider } from '../../../src/context/ResourceCacheContext'
 
 vi.mock('../../../src/api', () => ({
   apiFetch: vi.fn()
@@ -28,10 +29,13 @@ describe('LibrarianDashboard page', () => {
       recentActivity: []
     })
 
-    render(<LibrarianDashboard />)
+    render(
+      <ResourceCacheProvider>
+        <LibrarianDashboard />
+      </ResourceCacheProvider>
+    )
 
     expect(await screen.findByText('Dashboard')).toBeInTheDocument()
     expect(await screen.findByText('3')).toBeInTheDocument()
   })
 })
-

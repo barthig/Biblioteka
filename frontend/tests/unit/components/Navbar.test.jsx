@@ -40,7 +40,7 @@ describe('Navbar', () => {
     expect(screen.getByRole('button', { name: /Menu/i })).toHaveAttribute('aria-expanded', 'false')
   })
 
-  it('shows admin links only for admin', () => {
+  it('shows staff link for admin', () => {
     mockAuth = { token: 'token', user: { name: 'Admin', roles: ['ROLE_ADMIN'] }, logout: vi.fn() }
     render(
       <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
@@ -48,15 +48,11 @@ describe('Navbar', () => {
       </MemoryRouter>
     )
 
-    expect(screen.getByRole('link', { name: /Panel administratora/i })).toBeInTheDocument()
-    expect(screen.queryByRole('link', { name: /Katalog import/i })).not.toBeInTheDocument()
-    expect(screen.queryByRole('link', { name: /Akcesje/i })).not.toBeInTheDocument()
-    expect(screen.queryByRole('link', { name: /Pliki ksiazek/i })).not.toBeInTheDocument()
-    expect(screen.queryByRole('link', { name: /Logi/i })).not.toBeInTheDocument()
-    expect(screen.queryByRole('link', { name: /Panel bibliotekarza/i })).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Panel personelu/i })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Panel personelu/i })).toHaveAttribute('href', '/staff?section=admin')
   })
 
-  it('shows librarian links only for librarian', () => {
+  it('shows staff and reports links for librarian', () => {
     mockAuth = { token: 'token', user: { name: 'Librarian', roles: ['ROLE_LIBRARIAN'] }, logout: vi.fn() }
     render(
       <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
@@ -64,7 +60,8 @@ describe('Navbar', () => {
       </MemoryRouter>
     )
 
-    expect(screen.getByRole('link', { name: /Panel bibliotekarza/i })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Panel personelu/i })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Panel personelu/i })).toHaveAttribute('href', '/staff?section=operations')
     expect(screen.getByRole('link', { name: /Raporty/i })).toBeInTheDocument()
     expect(screen.queryByRole('link', { name: /Panel administratora/i })).not.toBeInTheDocument()
   })
@@ -81,4 +78,3 @@ describe('Navbar', () => {
     expect(logout).toHaveBeenCalled()
   })
 })
-

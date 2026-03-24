@@ -621,17 +621,17 @@ export default function Dashboard() {
             <div className="stat-card">
               <h3>Rezerwacje do przygotowania</h3>
               <strong style={{ color: '#667eea' }}>{stats?.pendingReservations ?? 0}</strong>
-              <Link to="/librarian?tab=reservations&status=active" className="btn btn-ghost">Realizuj</Link>
+              <Link to="/staff?section=operations&tab=reservations&status=active" className="btn btn-ghost">Realizuj</Link>
             </div>
             <div className="stat-card">
               <h3>Przetrzymane zwroty</h3>
               <strong style={{ color: '#ff6838' }}>{stats?.overdueLoans ?? 0}</strong>
-              <Link to="/librarian?tab=loans&loan=overdue" className="btn btn-ghost">Wyświetl</Link>
+              <Link to="/staff?section=operations&tab=loans&loan=overdue" className="btn btn-ghost">Wyświetl</Link>
             </div>
             <div className="stat-card">
               <h3>Niewydane rezerwacje</h3>
               <strong style={{ color: '#f59e0b' }}>{stats?.preparedReservations ?? 0}</strong>
-              <Link to="/librarian?tab=reservations&status=prepared" className="btn btn-ghost">Sprawdź</Link>
+              <Link to="/staff?section=operations&tab=reservations&status=prepared" className="btn btn-ghost">Sprawdź</Link>
             </div>
           </div>
         </div>
@@ -639,11 +639,11 @@ export default function Dashboard() {
         <div className="surface-card">
           <h2 style={{ marginBottom: 'var(--space-3)' }}>Szybkie akcje</h2>
           <div className="form-actions">
-            <Link to="/librarian?tab=dashboard" className="btn btn-primary">Panel obsługi</Link>
+            <Link to="/staff?section=operations&tab=dashboard" className="btn btn-primary">Panel obsługi</Link>
             <Link to="/books" className="btn btn-ghost">Katalog książek</Link>
             <Link to="/announcements" className="btn btn-ghost">Ogłoszenia</Link>    
-            <Link to="/librarian?tab=create" className="btn btn-secondary">Nowe wypożyczenie</Link>
-            <Link to="/librarian?tab=loans" className="btn btn-secondary">Zobacz wypożyczenia</Link>
+            <Link to="/staff?section=operations&tab=create" className="btn btn-secondary">Nowe wypożyczenie</Link>
+            <Link to="/staff?section=operations&tab=loans" className="btn btn-secondary">Zobacz wypożyczenia</Link>
           </div>
         </div>
 
@@ -718,10 +718,9 @@ export default function Dashboard() {
         <div className="surface-card">
           <h2 style={{ marginBottom: 'var(--space-3)' }}>Narzędzia administracyjne</h2>
           <div className="form-actions">
-            <Link to="/admin/users" className="btn btn-primary">Zarządzanie użytkownikami</Link>
-            <Link to="/admin/config" className="btn btn-ghost">Konfiguracja systemu</Link>
-            <Link to="/admin/reports" className="btn btn-ghost">Raporty</Link>
-            <Link to="/admin/backup" className="btn btn-ghost">Kopia zapasowa</Link>
+            <Link to="/staff?section=admin" className="btn btn-primary">Zarządzanie użytkownikami</Link>
+            <Link to="/staff?section=admin" className="btn btn-ghost">Konfiguracja systemu</Link>
+            <Link to="/reports" className="btn btn-ghost">Raporty</Link>
           </div>
         </div>
 

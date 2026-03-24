@@ -32,8 +32,7 @@ vi.mock('../../src/pages/user/Notifications', () => ({ default: () => <div>Notif
 vi.mock('../../src/pages/auth/Login', () => ({ default: () => <div>Login Page</div> }))
 vi.mock('../../src/pages/auth/Register', () => ({ default: () => <div>Register Page</div> }))
 vi.mock('../../src/pages/user/Profile', () => ({ default: () => <div>Profile Page</div> }))
-vi.mock('../../src/pages/admin/AdminPanel', () => ({ default: () => <div>Admin Panel</div> }))
-vi.mock('../../src/pages/admin/LibrarianPanel', () => ({ default: () => <div>Librarian Panel</div> }))
+vi.mock('../../src/pages/admin/StaffPanel', () => ({ default: () => <div>Staff Panel</div> }))
 vi.mock('../../src/pages/user/UserDetails', () => ({ default: () => <div>User Details</div> }))
 vi.mock('../../src/pages/admin/Reports', () => ({ default: () => <div>Reports</div> }))
 vi.mock('../../src/pages/books/DigitalAssets', () => ({ default: () => <div>Digital Assets</div> }))
@@ -63,4 +62,3 @@ describe('App routing', () => {
     expect(await screen.findByText('Books Page')).toBeInTheDocument()
   })
 })
-

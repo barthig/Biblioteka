@@ -21,7 +21,7 @@ const defaultIntegration = {
 const defaultRole = { name: '', roleKey: '', modules: '', description: '' }
 
 export default function AdminPanel() {
-  const { getCachedResource, setCachedResource } = useResourceCache()
+  const { getCachedResource, setCachedResource, prefetchResource } = useResourceCache()
   const [activeTab, setActiveTab] = useState('users')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -108,10 +108,9 @@ export default function AdminPanel() {
     setLibraryStatsLoading(true)
     setError(null)
     try {
-      const data = await apiFetch('/api/dashboard')
+      const data = await prefetchResource(cacheKey, () => apiFetch('/api/dashboard'), ADMIN_CACHE_TTL)
       if (data && typeof data === 'object' && !Array.isArray(data)) {
         setLibraryStats(data)
-        setCachedResource(cacheKey, data)
       } else {
         setLibraryStats(null)
       }
@@ -136,10 +135,9 @@ export default function AdminPanel() {
     setLoading(true)
     setError(null)
     try {
-      const data = await apiFetch('/api/users')
+      const data = await prefetchResource(cacheKey, () => apiFetch('/api/users'), ADMIN_CACHE_TTL)
       const list = Array.isArray(data) ? data : []
       setUsers(list)
-      setCachedResource(cacheKey, list)
     } catch (err) {
       setError(err.message || 'Nie udało się pobrać użytkowników')
     } finally {
@@ -250,15 +248,21 @@ export default function AdminPanel() {
     setLoading(true)
     setError(null)
     try {
-      const [settingsRes, integrationsRes] = await Promise.all([
-        apiFetch('/api/admin/system/settings'),
-        apiFetch('/api/admin/system/integrations')
-      ])
+      const { settings: settingsRes, integrations: integrationsRes } = await prefetchResource(
+        cacheKey,
+        async () => {
+          const [settingsData, integrationsData] = await Promise.all([
+            apiFetch('/api/admin/system/settings'),
+            apiFetch('/api/admin/system/integrations')
+          ])
+          return { settings: settingsData, integrations: integrationsData }
+        },
+        ADMIN_CACHE_TTL
+      )
       const nextSettings = settingsRes?.settings || (Array.isArray(settingsRes) ? settingsRes : [])
       const nextIntegrations = integrationsRes?.integrations || (Array.isArray(integrationsRes) ? integrationsRes : [])
       setSettings(nextSettings)
       setIntegrations(nextIntegrations)
-      setCachedResource(cacheKey, { settings: nextSettings, integrations: nextIntegrations })
     } catch (err) {
       setError(err.message || 'Nie udało się pobrać danych systemu')
     } finally {
@@ -281,11 +285,21 @@ export default function AdminPanel() {
     setLoading(true)
     setError(null)
     try {
-      const [rolesRes, auditRes, usersRes] = await Promise.all([
-        apiFetch('/api/admin/system/roles'),
-        apiFetch('/api/audit-logs?limit=25'),
-        apiFetch('/api/users')
-      ])
+      const cachedUsers = getCachedResource('admin:/api/users', ADMIN_CACHE_TTL)
+      const { roles: rolesRes, audit: auditRes, users: usersRes } = await prefetchResource(
+        cacheKey,
+        async () => {
+          const [rolesData, auditData, usersData] = await Promise.all([
+            apiFetch('/api/admin/system/roles'),
+            apiFetch('/api/audit-logs?limit=25'),
+            typeof cachedUsers !== 'undefined'
+              ? Promise.resolve(cachedUsers)
+              : prefetchResource('admin:/api/users', () => apiFetch('/api/users'), ADMIN_CACHE_TTL)
+          ])
+          return { roles: rolesData, audit: auditData, users: usersData }
+        },
+        ADMIN_CACHE_TTL
+      )
       const nextRoles = rolesRes?.roles || (Array.isArray(rolesRes) ? rolesRes : [])
       const entries = auditRes?.data || auditRes?.items || []
       const nextAuditLogs = Array.isArray(entries) ? entries : []
@@ -293,6 +307,7 @@ export default function AdminPanel() {
       setRoles(nextRoles)
       setAuditLogs(nextAuditLogs)
       setUsers(nextUsers)
+      setCachedResource('admin:/api/users', nextUsers)
       setCachedResource(cacheKey, { roles: nextRoles, auditLogs: nextAuditLogs, users: nextUsers })
     } catch (err) {
       setError(err.message || 'Nie udało się pobrać audytu lub ról')
@@ -477,11 +492,10 @@ export default function AdminPanel() {
     setLoansLoading(true)
     setError(null)
     try {
-      const data = await loanService.getAllLoans(params)
+      const data = await prefetchResource(cacheKey, () => loanService.getAllLoans(params), ADMIN_CACHE_TTL)
       const items = data?.data || data?.items || data || []
       const nextLoans = Array.isArray(items) ? items : []
       setLoans(nextLoans)
-      setCachedResource(cacheKey, nextLoans)
     } catch (err) {
       setError(err.message || 'Nie udało się pobrać wypożyczeń')
     } finally {

@@ -21,8 +21,7 @@ const Profile = React.lazy(() => import('./pages/user/Profile'))
 const Favorites = React.lazy(() => import('./pages/user/Favorites'))
 const Notifications = React.lazy(() => import('./pages/user/Notifications'))
 const UserDetails = React.lazy(() => import('./pages/user/UserDetails'))
-const AdminPanel = React.lazy(() => import('./pages/admin/AdminPanel'))
-const LibrarianPanel = React.lazy(() => import('./pages/admin/LibrarianPanel'))
+const StaffPanel = React.lazy(() => import('./pages/admin/StaffPanel'))
 const Reports = React.lazy(() => import('./pages/admin/Reports'))
 const NotFound = React.lazy(() => import('./pages/NotFound'))
 
@@ -75,10 +74,18 @@ export default function App() {
                 <Route path="/register" element={<Register />} />
                 <Route path="/profile" element={<AuthGuard><Profile /></AuthGuard>} />
                 <Route
+                  path="/staff"
+                  element={(
+                    <RequireRole allowed={['ROLE_LIBRARIAN', 'ROLE_ADMIN']}>
+                      <StaffPanel />
+                    </RequireRole>
+                  )}
+                />
+                <Route
                   path="/admin/*"
                   element={(
                     <RequireRole allowed={['ROLE_ADMIN']}>
-                      <AdminPanel />
+                      <StaffPanel />
                     </RequireRole>
                   )}
                 />
@@ -94,7 +101,7 @@ export default function App() {
                   path="/librarian"
                   element={(
                     <RequireRole allowed={['ROLE_LIBRARIAN', 'ROLE_ADMIN']}>
-                      <LibrarianPanel />
+                      <StaffPanel />
                     </RequireRole>
                   )}
                 />

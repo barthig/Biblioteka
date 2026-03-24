@@ -167,15 +167,11 @@ export const ROUTES = {
   NOTIFICATIONS: '/notifications',
   
   // Admin
-  ADMIN: '/admin',
-  ADMIN_USERS: '/admin/users',
-  ADMIN_BOOKS: '/admin/books',
-  ADMIN_LOANS: '/admin/loans',
-  ADMIN_SETTINGS: '/admin/settings',
-  ADMIN_LOGS: '/admin/logs',
-  
+  STAFF: '/staff',
+  STAFF_ADMIN: '/staff?section=admin',
+  STAFF_OPERATIONS: '/staff?section=operations',
+
   // Librarian
-  LIBRARIAN: '/librarian',
   REPORTS: '/reports',
 }
 

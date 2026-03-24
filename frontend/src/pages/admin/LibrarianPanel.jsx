@@ -14,7 +14,7 @@ import { logger } from '../../utils/logger'
 
 export default function LibrarianPanel() {
   const { user } = useAuth()
-  const { getCachedResource, setCachedResource, invalidateResource } = useResourceCache()
+  const { getCachedResource, setCachedResource, invalidateResource, prefetchResource } = useResourceCache()
   const [searchParams] = useSearchParams()
   const isAdmin = user?.roles?.includes('ROLE_ADMIN')
   const [activeTab, setActiveTab] = useState('dashboard')
@@ -278,9 +278,8 @@ export default function LibrarianPanel() {
         setLoans(cached)
         return
       }
-      const data = await apiFetch('/api/loans')
+      const data = await prefetchResource(cacheKey, () => apiFetch('/api/loans'), CACHE_TTL)
       const nextLoans = Array.isArray(data) ? data : data.data || []
-      setCachedResource(cacheKey, nextLoans)
       setLoans(nextLoans)
     } catch (err) {
       setError(err.message || 'Nie udało się pobrać wypożyczeń')
@@ -325,14 +324,13 @@ export default function LibrarianPanel() {
         setStats(cached)
         return
       }
-      const data = await apiFetch('/api/statistics/dashboard')
+      const data = await prefetchResource(cacheKey, () => apiFetch('/api/statistics/dashboard'), CACHE_TTL)
       const nextStats = {
         activeLoans: data?.activeLoans ?? 0,
         overdueLoans: data?.overdueLoans ?? 0,
         totalUsers: data?.totalUsers ?? 0,
         availableCopies: data?.availableCopies ?? 0
       }
-      setCachedResource(cacheKey, nextStats)
       setStats(nextStats)
     } catch (err) {
       setError(err.message || 'Nie udało się pobrać statystyk')
@@ -351,13 +349,12 @@ export default function LibrarianPanel() {
         setLibrarySettings(cached)
         return
       }
-      const data = await apiFetch('/api/settings')
+      const data = await prefetchResource(cacheKey, () => apiFetch('/api/settings'), CACHE_TTL)
       const nextSettings = {
         loanLimitPerUser: data?.loanLimitPerUser ?? '',
         loanDurationDays: data?.loanDurationDays ?? '',
         notificationsEnabled: !!data?.notificationsEnabled
       }
-      setCachedResource(cacheKey, nextSettings)
       setLibrarySettings(nextSettings)
     } catch (err) {
       setError(err.message || 'Nie udało się pobrać ustawień')
@@ -405,9 +402,12 @@ export default function LibrarianPanel() {
         setReservations(cached)
         return
       }
-      const data = await apiFetch(`/api/reservations?history=true&limit=100${statusParam}`)
+      const data = await prefetchResource(
+        cacheKey,
+        () => apiFetch(`/api/reservations?history=true&limit=100${statusParam}`),
+        CACHE_TTL
+      )
       const nextReservations = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : []
-      setCachedResource(cacheKey, nextReservations)
       setReservations(nextReservations)
     } catch (err) {
       setError(err.message || 'Nie udało się pobrać rezerwacji')
@@ -519,9 +519,8 @@ export default function LibrarianPanel() {
         setFines(cached)
         return
       }
-      const data = await apiFetch('/api/fines?limit=50')
+      const data = await prefetchResource(cacheKey, () => apiFetch('/api/fines?limit=50'), CACHE_TTL)
       const nextFines = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : []
-      setCachedResource(cacheKey, nextFines)
       setFines(nextFines)
     } catch (err) {
       setError(err.message || 'Nie udało się pobrać opłat')

@@ -68,8 +68,8 @@ export default function Navbar() {
             <div className="top-nav__secondary">
               {isAdmin ? (
                 <>
-                  <NavLink to="/admin" className={navLinkClass} onClick={closeMenu}>
-                    Panel administratora
+                  <NavLink to="/staff?section=admin" className={navLinkClass} onClick={closeMenu}>
+                    Panel personelu
                   </NavLink>
                   <NavLink to="/my-loans" className={navLinkClass} onClick={closeMenu}>
                     Wypożyczenia
@@ -89,8 +89,8 @@ export default function Navbar() {
                 </>
               ) : isLibrarian ? (
                 <>
-                  <NavLink to="/librarian" className={navLinkClass} onClick={closeMenu}>
-                    Panel bibliotekarza
+                  <NavLink to="/staff?section=operations" className={navLinkClass} onClick={closeMenu}>
+                    Panel personelu
                   </NavLink>
                   <NavLink to="/reports" className={navLinkClass} onClick={closeMenu}>
                     Raporty

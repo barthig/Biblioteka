@@ -109,7 +109,7 @@ const UserDetails = () => {
       <div className="user-details-error">
         <h2>Błąd</h2>
         <p>{error}</p>
-        <button onClick={() => navigate('/admin/users')}>Powrót do listy użytkowników</button>
+        <button onClick={() => navigate('/staff?section=admin')}>Powrót do listy użytkowników</button>
       </div>
     );
   }
@@ -124,7 +124,7 @@ const UserDetails = () => {
     <div className="user-details-container">
       <div className="user-details-header">
         <h1>Szczegóły użytkownika</h1>
-        <button className="btn-back" onClick={() => navigate('/admin/users')}>
+        <button className="btn-back" onClick={() => navigate('/staff?section=admin')}>
           ← Powrót do listy
         </button>
       </div>
