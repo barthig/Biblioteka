@@ -1,6 +1,16 @@
 const SW_URL = '/sw.js'
 
 export function registerServiceWorker() {
+  if (!import.meta.env.PROD) {
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', async () => {
+        const registrations = await navigator.serviceWorker.getRegistrations()
+        await Promise.all(registrations.map((registration) => registration.unregister()))
+      })
+    }
+    return
+  }
+
   if (!('serviceWorker' in navigator)) {
     return
   }

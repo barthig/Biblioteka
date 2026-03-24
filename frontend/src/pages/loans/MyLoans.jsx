@@ -70,19 +70,8 @@ export default function MyLoans() {
 
     load()
 
-    // Poll for cache changes every 2 seconds
-    const interval = setInterval(() => {
-      if (token) {
-        const cached = getCachedResource(CACHE_KEY, CACHE_TTL)
-        if (!cached) {
-          load()
-        }
-      }
-    }, 2000)
-
     return () => {
       cancelled = true
-      clearInterval(interval)
     }
   }, [CACHE_KEY, CACHE_TTL, getCachedResource, invalidateResource, setCachedResource, token])
 

@@ -1,4 +1,4 @@
-services:
+﻿services:
   db:
     image: pgvector/pgvector:pg16
     restart: unless-stopped
@@ -69,7 +69,7 @@ services:
         condition: service_healthy
     environment:
       APP_ENV: dev
-      APP_DEBUG: 1
+      APP_DEBUG: 0
       DATABASE_URL: postgresql://biblioteka:biblioteka@db:5432/biblioteka_dev?serverVersion=16&charset=utf8
       MESSENGER_TRANSPORT_DSN: "amqp://app:app@rabbitmq:5672/%2f"
       REDIS_URL: redis://redis:6379
@@ -89,6 +89,7 @@ services:
         mkdir -p /app/var/cache/prod/doctrine/orm/Proxies &&
         chown -R www-data:www-data /app/var &&
         chmod -R 775 /app/var &&
+        composer install --no-interaction &&
         if php bin/console doctrine:query:sql 'SELECT 1 FROM app_user LIMIT 1' 2>/dev/null; then
           echo 'Database schema already exists, skipping migrations';
         else
@@ -131,7 +132,7 @@ services:
         condition: service_healthy
     environment:
       APP_ENV: dev
-      APP_DEBUG: 1
+      APP_DEBUG: 0
       DATABASE_URL: postgresql://biblioteka:biblioteka@db:5432/biblioteka_dev?serverVersion=16&charset=utf8
       MESSENGER_TRANSPORT_DSN: "amqp://app:app@rabbitmq:5672/%2f"
       REDIS_URL: redis://redis:6379
@@ -150,7 +151,7 @@ services:
         chown -R www-data:www-data /app/var &&
         chmod -R 775 /app/var &&
         composer install --no-interaction &&
-        php bin/console messenger:consume async -vv
+        php bin/console messenger:consume async --time-limit=3600 --memory-limit=256M
       "
 
   frontend:
@@ -172,7 +173,10 @@ services:
       - biblioteka-network
     command: >
       sh -c "
-        npm install &&
+        if [ ! -d node_modules/vite ]; then
+          npm ci --no-audit --no-fund;
+        fi &&
+        rm -rf node_modules/.vite &&
         npm run dev -- --host 0.0.0.0
       "
 
@@ -193,3 +197,4 @@ volumes:
     driver: local
   backend_var:
     driver: local
+

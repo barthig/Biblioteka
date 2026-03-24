@@ -108,6 +108,62 @@ describe('api', () => {
       await expect(apiFetch('/api/protected')).rejects.toThrow()
     })
 
+
+
+    it('should not try to refresh tokens for login endpoint 401 responses', async () => {
+      localStorage.removeItem('refreshToken')
+
+      globalThis.fetch.mockResolvedValue(createMockResponse({
+        ok: false,
+        status: 401,
+        data: { message: 'Authentication required' }
+      }))
+
+      await expect(apiFetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: 'bad@example.com', password: 'wrong' })
+      })).rejects.toThrow('Authentication required')
+
+      expect(globalThis.fetch).toHaveBeenCalledTimes(1)
+      expect(globalThis.fetch).not.toHaveBeenCalledWith(
+        expect.stringContaining('/api/auth/refresh'),
+        expect.anything()
+      )
+    })
+    it('should refresh tokens using the backend camelCase contract', async () => {
+      localStorage.setItem('token', 'expired-token')
+      localStorage.setItem('refreshToken', 'stored-refresh-token')
+
+      globalThis.fetch
+        .mockResolvedValueOnce(createMockResponse({
+          ok: false,
+          status: 401,
+          data: { error: 'Unauthorized' }
+        }))
+        .mockResolvedValueOnce(createMockResponse({
+          status: 200,
+          data: { token: 'new-access-token', refreshToken: 'new-refresh-token' }
+        }))
+        .mockResolvedValueOnce(createMockResponse({
+          status: 200,
+          data: { ok: true }
+        }))
+
+      const result = await apiFetch('/api/protected')
+
+      expect(result).toEqual({ ok: true })
+      expect(globalThis.fetch).toHaveBeenNthCalledWith(
+        2,
+        expect.stringContaining('/api/auth/refresh'),
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({ refreshToken: 'stored-refresh-token' })
+        })
+      )
+      expect(localStorage.getItem('token')).toBe('new-access-token')
+      expect(localStorage.getItem('refreshToken')).toBe('new-refresh-token')
+    })
     it('should return null for empty response', async () => {
       globalThis.fetch.mockResolvedValue(createMockResponse({
         status: 204,

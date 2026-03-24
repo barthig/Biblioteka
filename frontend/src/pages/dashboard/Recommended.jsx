@@ -137,20 +137,8 @@ export default function Recommended() {
 
     load()
 
-    // Refresh periodically only for authenticated users (guests shouldn't auto-refresh)
-    let interval = null
-    if (token) {
-      interval = setInterval(() => {
-        const cached = getCachedResource(cacheKey, CACHE_TTL)
-        if (!cached) {
-          load()
-        }
-      }, 2000)
-    }
-
     return () => {
       active = false
-      if (interval) clearInterval(interval)
     }
   }, [getCachedResource, setCachedResource, cacheKey, token])
 

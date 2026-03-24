@@ -174,6 +174,7 @@ final class ApiAuthSubscriber implements EventSubscriberInterface
             ['pattern' => '#^/api/books/popular$#', 'methods' => ['GET']],
             ['pattern' => '#^/api/books/new$#', 'methods' => ['GET']],
             ['pattern' => '#^/api/books/\\d+$#', 'methods' => ['GET']],
+            ['pattern' => '#^/api/books/\\d+/cover$#', 'methods' => ['GET']],
             ['pattern' => '#^/api/books/\\d+/availability$#', 'methods' => ['GET']],
             ['pattern' => '#^/api/books/\\d+/ratings$#', 'methods' => ['GET']],
             ['pattern' => '#^/api/collections$#', 'methods' => ['GET']],

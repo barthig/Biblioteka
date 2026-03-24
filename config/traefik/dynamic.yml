@@ -123,4 +123,4 @@ http:
     frontend-svc:
       loadBalancer:
         servers:
-          - url: "http://frontend:5173"
+          - url: "http://frontend:80"

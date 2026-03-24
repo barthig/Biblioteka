@@ -14,6 +14,7 @@ RUN apt-get update && apt-get install -y \
 RUN docker-php-ext-install \
     intl \
     pdo_pgsql \
+    sockets \
     && pecl install amqp \
     && docker-php-ext-enable amqp
 
@@ -50,6 +51,7 @@ RUN apt-get update && apt-get install -y \
 RUN docker-php-ext-install \
     intl \
     pdo_pgsql \
+    sockets \
     opcache \
     && pecl install amqp redis \
     && docker-php-ext-enable amqp redis
@@ -92,6 +94,7 @@ RUN apt-get update && apt-get install -y \
 # Install PHP extensions
 RUN docker-php-ext-install \
     pdo_pgsql \
+    sockets \
     pgsql \
     intl \
     opcache \

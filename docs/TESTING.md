@@ -35,6 +35,15 @@ This split matches the diploma requirements: backend unit tests are in `tests/Un
 
 ## Distributed architecture smoke tests
 
+For the standalone Docker development stack that uses the real `init-db-expanded-v2.sql`, use:
+
+```bash
+./tests/integration/test_standalone_stack.sh
+```
+
+Purpose:
+- `test_standalone_stack.sh` verifies the real Docker startup path, seeded login flow, refresh token flow and the key dashboard/public endpoints that previously failed because of schema drift.
+
 When the distributed stack is running through Traefik, use:
 
 ```bash

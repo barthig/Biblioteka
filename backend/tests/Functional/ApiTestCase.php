@@ -350,7 +350,7 @@ abstract class ApiTestCase extends WebTestCase
     }
 
     protected function createBudget(
-        string $name = 'BudÄąÄ˝et ZakupÄ‚Ĺ‚w',
+        string $name = 'Budżet Zakupów',
         string $fiscalYear = '2025',
         string $allocatedAmount = '1000.00',
         string $currency = 'PLN',

@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { authService } from '../services/authService'
-import { apiFetch } from '../api'
 import { applyUiPreferences, clearUiPreferences, loadStoredUiPreferences, storeUiPreferences } from '../utils/uiPreferences'
 import { logger } from '../utils/logger'
 
@@ -148,30 +147,6 @@ export function AuthProvider({ children }) {
     return () => window.removeEventListener('auth:unauthorized', handleUnauthorized)
   }, [navigate, isInitialized])
 
-  useEffect(() => {
-    if (!token) return
-    let active = true
-
-    async function loadPreferences() {
-      try {
-        const data = await apiFetch('/api/me')
-        if (!active || !data) return
-        const prefs = {
-          theme: data.theme ?? 'auto',
-          fontSize: data.fontSize ?? 'standard',
-          language: data.language ?? 'pl',
-        }
-        applyUiPreferences(prefs)
-        storeUiPreferences(prefs)
-      } catch {
-        // ignore preference load errors
-      }
-    }
-
-    loadPreferences()
-    return () => { active = false }
-  }, [token])
-
   function login(tokenValue, refreshTokenValue) {
     if (tokenValue) {
       localStorage.setItem('token', tokenValue)
@@ -188,6 +163,11 @@ export function AuthProvider({ children }) {
     const decoded = decodeJwt(tokenValue)
     if (decoded) {
       setUser(decoded)
+    }
+    const storedPreferences = loadStoredUiPreferences()
+    if (storedPreferences) {
+      applyUiPreferences(storedPreferences)
+      storeUiPreferences(storedPreferences)
     }
     // Note: navigation is handled by the Login component
   }
@@ -234,7 +214,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ token, refreshToken, user, login, logout, logoutAll, refreshSession, fetchAuthProfile }}>
+    <AuthContext.Provider value={{ token, refreshToken, user, loading: !isInitialized, login, logout, logoutAll, refreshSession, fetchAuthProfile }}>
       {children}
     </AuthContext.Provider>
   )

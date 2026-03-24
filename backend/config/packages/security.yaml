@@ -28,6 +28,7 @@ security:
 
   access_control:
     # Public endpoints
+    - { path: ^/api/test-login, roles: PUBLIC_ACCESS }
     - { path: ^/api/auth/login, roles: PUBLIC_ACCESS }
     - { path: ^/api/auth/register, roles: PUBLIC_ACCESS }
     - { path: ^/api/auth/verify, roles: PUBLIC_ACCESS }
@@ -39,6 +40,7 @@ security:
     - { path: ^/api/docs\.json, roles: PUBLIC_ACCESS }
     - { path: ^/api/books, roles: PUBLIC_ACCESS, methods: [GET] }
     - { path: ^/api/books/\d+, roles: PUBLIC_ACCESS, methods: [GET] }
+    - { path: ^/api/books/\d+/cover, roles: PUBLIC_ACCESS, methods: [GET] }
     - { path: ^/api/books/\d+/availability, roles: PUBLIC_ACCESS, methods: [GET] }
     - { path: ^/api/books/\d+/ratings, roles: PUBLIC_ACCESS, methods: [GET] }
     - { path: ^/api/collections, roles: PUBLIC_ACCESS, methods: [GET] }
@@ -54,3 +56,4 @@ security:
 
     # Default API access
     - { path: ^/api, roles: ROLE_USER }
+

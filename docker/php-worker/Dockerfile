@@ -13,6 +13,7 @@ RUN apt-get update && apt-get install -y \
 RUN docker-php-ext-install \
     intl \
     pdo_pgsql \
+    sockets \
     && pecl install amqp \
     && docker-php-ext-enable amqp
 
@@ -48,6 +49,7 @@ RUN apt-get update && apt-get install -y \
 RUN docker-php-ext-install \
     intl \
     pdo_pgsql \
+    sockets \
     && pecl install amqp \
     && docker-php-ext-enable amqp
 

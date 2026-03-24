@@ -134,6 +134,7 @@ class JwtAuthenticator extends AbstractAuthenticator
     private function isPublicRoute(string $path, string $method): bool
     {
         $publicRoutes = [
+            '/api/test-login' => ['POST'],
             '/api/auth/login' => ['POST'],
             '/api/auth/register' => ['POST'],
             '/api/auth/refresh' => ['POST'],
@@ -159,6 +160,7 @@ class JwtAuthenticator extends AbstractAuthenticator
             ['pattern' => '#^/api/books/popular$#', 'methods' => ['GET']],
             ['pattern' => '#^/api/books/new$#', 'methods' => ['GET']],
             ['pattern' => '#^/api/books/\d+$#', 'methods' => ['GET']],
+            ['pattern' => '#^/api/books/\d+/cover$#', 'methods' => ['GET']],
             ['pattern' => '#^/api/books/\d+/availability$#', 'methods' => ['GET']],
             ['pattern' => '#^/api/books/\d+/ratings$#', 'methods' => ['GET']],
             ['pattern' => '#^/api/collections$#', 'methods' => ['GET']],
@@ -209,4 +211,5 @@ class JwtAuthenticator extends AbstractAuthenticator
         throw new CustomUserMessageAuthenticationException('Invalid API secret');
     }
 }
+
 

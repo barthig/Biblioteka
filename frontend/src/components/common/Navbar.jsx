@@ -1,15 +1,12 @@
 ﻿import React, { useCallback, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { apiFetch } from '../../api'
-import { useResourceCache } from '../../context/ResourceCacheContext'
 
 const navLinkClass = ({ isActive }) => isActive ? 'top-nav__link is-active' : 'top-nav__link'
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false)
-  const { token, user, logout } = useAuth()
-  const { prefetchResource } = useResourceCache()
+  const { user, logout } = useAuth()
   // Check for valid authentication - user must be present (token validated)
   const isAuthenticated = Boolean(user)
   const roles = user?.roles || []
@@ -18,25 +15,6 @@ export default function Navbar() {
 
   const toggleMenu = () => setMenuOpen(prev => !prev)
   const closeMenu = useCallback(() => setMenuOpen(false), [])
-
-  const prefetchLoans = useCallback(() => {
-    if (!token) return
-    prefetchResource('loans:/api/loans', () => apiFetch('/api/loans')).catch(() => {})
-  }, [prefetchResource, token])
-
-  const prefetchReservations = useCallback(() => {
-    if (!token) return
-    prefetchResource('reservations:/api/reservations?history=true', () => apiFetch('/api/reservations?history=true')).catch(() => {})
-  }, [prefetchResource, token])
-
-  const prefetchFavorites = useCallback(() => {
-    if (!token) return
-    prefetchResource('favorites:/api/favorites', () => apiFetch('/api/favorites')).catch(() => {})
-  }, [prefetchResource, token])
-
-  const prefetchRecommended = useCallback(() => {
-    prefetchResource('recommended:/api/books/recommended', () => apiFetch('/api/books/recommended')).catch(() => {})
-  }, [prefetchResource])
 
   return (
     <header className="top-nav">
@@ -78,7 +56,7 @@ export default function Navbar() {
             <NavLink to="/books" className={navLinkClass} onClick={closeMenu}>
               Katalog
             </NavLink>
-            <NavLink to="/recommended" className={navLinkClass} onMouseEnter={prefetchRecommended} onFocus={prefetchRecommended} onClick={closeMenu}>
+            <NavLink to="/recommended" className={navLinkClass} onClick={closeMenu}>
               Polecane
             </NavLink>
             <NavLink to="/announcements" className={navLinkClass} onClick={closeMenu}>
@@ -93,13 +71,13 @@ export default function Navbar() {
                   <NavLink to="/admin" className={navLinkClass} onClick={closeMenu}>
                     Panel administratora
                   </NavLink>
-                  <NavLink to="/my-loans" className={navLinkClass} onMouseEnter={prefetchLoans} onFocus={prefetchLoans} onClick={closeMenu}>
+                  <NavLink to="/my-loans" className={navLinkClass} onClick={closeMenu}>
                     Wypożyczenia
                   </NavLink>
-                  <NavLink to="/reservations" className={navLinkClass} onMouseEnter={prefetchReservations} onFocus={prefetchReservations} onClick={closeMenu}>
+                  <NavLink to="/reservations" className={navLinkClass} onClick={closeMenu}>
                     Rezerwacje
                   </NavLink>
-                  <NavLink to="/favorites" className={navLinkClass} onMouseEnter={prefetchFavorites} onFocus={prefetchFavorites} onClick={closeMenu}>
+                  <NavLink to="/favorites" className={navLinkClass} onClick={closeMenu}>
                     Ulubione
                   </NavLink>
                   <NavLink to="/notifications" className={navLinkClass} onClick={closeMenu}>
@@ -120,13 +98,13 @@ export default function Navbar() {
                 </>
               ) : (
                 <>
-                  <NavLink to="/my-loans" className={navLinkClass} onMouseEnter={prefetchLoans} onFocus={prefetchLoans} onClick={closeMenu}>
+                  <NavLink to="/my-loans" className={navLinkClass} onClick={closeMenu}>
                     Wypożyczenia
                   </NavLink>
-                  <NavLink to="/reservations" className={navLinkClass} onMouseEnter={prefetchReservations} onFocus={prefetchReservations} onClick={closeMenu}>
+                  <NavLink to="/reservations" className={navLinkClass} onClick={closeMenu}>
                     Rezerwacje
                   </NavLink>
-                  <NavLink to="/favorites" className={navLinkClass} onMouseEnter={prefetchFavorites} onFocus={prefetchFavorites} onClick={closeMenu}>
+                  <NavLink to="/favorites" className={navLinkClass} onClick={closeMenu}>
                     Ulubione
                   </NavLink>
                   <NavLink to="/notifications" className={navLinkClass} onClick={closeMenu}>

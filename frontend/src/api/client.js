@@ -130,6 +130,16 @@ const onTokenRefreshed = (newToken) => {
   refreshSubscribers = []
 }
 
+const isAuthEndpoint = (endpoint) => {
+  return [
+    '/api/auth/login',
+    '/api/auth/register',
+    '/api/auth/refresh',
+    '/api/auth/logout',
+    '/api/auth/logout-all',
+    '/api/test-login',
+  ].some((path) => endpoint.startsWith(path))
+}
 const refreshAccessToken = async () => {
   refreshToken = refreshToken || getStoredToken('refreshToken')
   if (!refreshToken) {
@@ -139,19 +149,19 @@ const refreshAccessToken = async () => {
   const response = await fetch(`${config.baseURL}/api/auth/refresh`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ refresh_token: refreshToken }),
+    body: JSON.stringify({ refreshToken }),
   })
   
   if (!response.ok) {
     clearTokens()
-    // Intentional full reload â€” this runs outside the React component tree
+    // Intentional full reload Ä‚ËĂ˘â€šÂ¬Ă˘â‚¬ĹĄ this runs outside the React component tree
     // where useNavigate() is unavailable
     window.location.href = '/login'
     throw new Error('Token refresh failed')
   }
   
   const data = await response.json()
-  setTokens(data.token, data.refresh_token || refreshToken)
+  setTokens(data.token, data.refreshToken || refreshToken)
   return data.token
 }
 
@@ -223,7 +233,7 @@ export const apiClient = async (endpoint, options = {}) => {
       }
       
       // Handle 401 - Token expired
-      if (response.status === 401 && !options.noRefresh) {
+      if (response.status === 401 && !options.noRefresh && !isAuthEndpoint(endpoint)) {
         if (!isRefreshing) {
           isRefreshing = true
           try {
