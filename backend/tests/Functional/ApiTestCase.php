@@ -22,7 +22,7 @@ use Symfony\Component\HttpKernel\HttpKernelBrowser;
 abstract class ApiTestCase extends WebTestCase
 {
     protected const API_SECRET = 'test-secret';
-    protected const JWT_SECRET = 'test_jwt_secret';
+    protected const JWT_SECRET = 'test_jwt_secret_for_backend_suite_123';
 
     private static bool $schemaInitialized = false;
 
@@ -350,7 +350,7 @@ abstract class ApiTestCase extends WebTestCase
     }
 
     protected function createBudget(
-        string $name = 'Budżet Zakupów',
+        string $name = 'BudÄąÄ˝et ZakupÄ‚Ĺ‚w',
         string $fiscalYear = '2025',
         string $allocatedAmount = '1000.00',
         string $currency = 'PLN',

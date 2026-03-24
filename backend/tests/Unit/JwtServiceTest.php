@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Tests\Unit;
 
 use App\Service\Auth\JwtService;
@@ -7,9 +8,14 @@ use PHPUnit\Framework\TestCase;
 
 class JwtServiceTest extends TestCase
 {
+    private const PRIMARY_SECRET = 'test_jwt_secret_for_backend_suite_123';
+    private const LEGACY_SECRET = 'legacy_jwt_secret_for_backend_suite_456';
+
     protected function setUp(): void
     {
-        $_ENV['JWT_SECRET'] = 'test_jwt_secret';
+        putenv('JWT_SECRET=' . self::PRIMARY_SECRET);
+        $_ENV['JWT_SECRET'] = self::PRIMARY_SECRET;
+        putenv('JWT_SECRETS');
         unset($_ENV['JWT_SECRETS']);
     }
 
@@ -17,6 +23,7 @@ class JwtServiceTest extends TestCase
     {
         $token = JwtService::createToken(['sub' => 123, 'roles' => ['ROLE_USER']], 3600);
         $payload = JwtService::validateToken($token);
+
         $this->assertIsArray($payload);
         $this->assertEquals(123, $payload['sub']);
         $this->assertContains('ROLE_USER', $payload['roles']);
@@ -41,7 +48,7 @@ class JwtServiceTest extends TestCase
             'iss' => 'wrong-issuer',
             'aud' => 'biblioteka-api',
             'jti' => 'issuer-test',
-        ], 'test_jwt_secret', 'HS256', '1');
+        ], self::PRIMARY_SECRET, 'HS256', '1');
 
         $this->assertNull(JwtService::validateToken($token));
     }
@@ -57,7 +64,7 @@ class JwtServiceTest extends TestCase
             'iss' => 'biblioteka',
             'aud' => 'wrong-audience',
             'jti' => 'audience-test',
-        ], 'test_jwt_secret', 'HS256', '1');
+        ], self::PRIMARY_SECRET, 'HS256', '1');
 
         $this->assertNull(JwtService::validateToken($token));
     }
@@ -73,14 +80,16 @@ class JwtServiceTest extends TestCase
             'iss' => 'biblioteka',
             'aud' => 'biblioteka-api',
             'jti' => 'subject-test',
-        ], 'test_jwt_secret', 'HS256', '1');
+        ], self::PRIMARY_SECRET, 'HS256', '1');
 
         $this->assertNull(JwtService::validateToken($token));
     }
 
     public function testTokenCanBeValidatedWithRotatedSecretsEvenWhenKidIsWrong(): void
     {
-        $_ENV['JWT_SECRETS'] = 'current_secret,legacy_secret';
+        putenv('JWT_SECRETS=' . self::PRIMARY_SECRET . ',' . self::LEGACY_SECRET);
+        $_ENV['JWT_SECRETS'] = self::PRIMARY_SECRET . ',' . self::LEGACY_SECRET;
+        putenv('JWT_SECRET');
         unset($_ENV['JWT_SECRET']);
 
         $now = time();
@@ -92,7 +101,7 @@ class JwtServiceTest extends TestCase
             'iss' => 'biblioteka',
             'aud' => 'biblioteka-api',
             'jti' => 'rotation-test',
-        ], 'legacy_secret', 'HS256', '99');
+        ], self::LEGACY_SECRET, 'HS256', '99');
 
         $payload = JwtService::validateToken($token);
 

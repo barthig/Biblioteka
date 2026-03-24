@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+
 namespace App\Service\Auth;
 
 use App\Exception\ExternalServiceException;
@@ -11,6 +12,7 @@ class JwtService
     private const ISSUER = 'biblioteka';
     private const AUDIENCE = 'biblioteka-api';
     private const LEEWAY_SECONDS = 30;
+    private const MIN_SECRET_LENGTH = 32;
 
     /**
      * @param array<string, mixed> $claims
@@ -21,7 +23,8 @@ class JwtService
         if (empty($secrets)) {
             throw new ExternalServiceException('JWT secret is not configured');
         }
-        $currentSecret = $secrets[0];
+
+        $currentSecret = self::assertSecretStrength($secrets[0]);
         $now = time();
         $payload = array_merge($claims, [
             'iat' => $now,
@@ -31,6 +34,7 @@ class JwtService
             'aud' => self::AUDIENCE,
             'jti' => bin2hex(random_bytes(16)),
         ]);
+
         return JWT::encode($payload, $currentSecret, 'HS256', '1');
     }
 
@@ -44,7 +48,6 @@ class JwtService
             return null;
         }
 
-        // Try to decode header to get kid
         $tks = explode('.', $token);
         if (count($tks) !== 3) {
             return null;
@@ -52,7 +55,7 @@ class JwtService
 
         try {
             $headerJson = JWT::urlsafeB64Decode($tks[0]);
-            $header = json_decode($headerJson, true);
+            $header = json_decode($headerJson, true, 512, JSON_THROW_ON_ERROR);
         } catch (\Throwable) {
             return null;
         }
@@ -64,7 +67,7 @@ class JwtService
         try {
             foreach ($candidateSecrets as $secret) {
                 try {
-                    $payload = (array) JWT::decode($token, new Key($secret, 'HS256'));
+                    $payload = (array) JWT::decode($token, new Key(self::assertSecretStrength($secret), 'HS256'));
                     return self::isPayloadValid($payload) ? $payload : null;
                 } catch (\Throwable) {
                     continue;
@@ -84,13 +87,15 @@ class JwtService
     {
         $secretsStr = getenv('JWT_SECRETS') ?: ($_ENV['JWT_SECRETS'] ?? null);
         if (!$secretsStr) {
-            // Fallback to single secret
             $single = getenv('JWT_SECRET') ?: ($_ENV['JWT_SECRET'] ?? null);
             $single = $single ? trim($single) : '';
+
             return $single !== '' ? [$single] : [];
         }
+
         $secrets = array_map('trim', explode(',', $secretsStr));
-        return array_values(array_filter($secrets, static fn(string $s) => $s !== ''));
+
+        return array_values(array_filter($secrets, static fn(string $secret) => $secret !== ''));
     }
 
     /**
@@ -143,5 +148,13 @@ class JwtService
 
         return true;
     }
-}
 
+    private static function assertSecretStrength(string $secret): string
+    {
+        if (strlen($secret) < self::MIN_SECRET_LENGTH) {
+            throw new ExternalServiceException('JWT secret must be at least 32 characters long');
+        }
+
+        return $secret;
+    }
+}

@@ -22,7 +22,11 @@ export function registerServiceWorker() {
         })
       })
     } catch (error) {
-      console.warn('Service worker registration failed', error)
+      window.dispatchEvent(
+        new CustomEvent('pwa:registration-failed', {
+          detail: error instanceof Error ? error.message : 'unknown-error',
+        }),
+      )
     }
   })
 }
