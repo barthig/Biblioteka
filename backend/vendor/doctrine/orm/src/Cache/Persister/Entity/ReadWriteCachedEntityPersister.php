@@ -20,7 +20,10 @@ class ReadWriteCachedEntityPersister extends AbstractEntityPersister
         parent::__construct($persister, $region, $em, $class);
     }
 
-    public function afterTransactionComplete(): void
+    /**
+     * {@inheritDoc}
+     */
+    public function afterTransactionComplete()
     {
         $isChanged = true;
 
@@ -47,7 +50,10 @@ class ReadWriteCachedEntityPersister extends AbstractEntityPersister
         $this->queuedCache = [];
     }
 
-    public function afterTransactionRolledBack(): void
+    /**
+     * {@inheritDoc}
+     */
+    public function afterTransactionRolledBack()
     {
         if (isset($this->queuedCache['update'])) {
             foreach ($this->queuedCache['update'] as $item) {
@@ -64,7 +70,10 @@ class ReadWriteCachedEntityPersister extends AbstractEntityPersister
         $this->queuedCache = [];
     }
 
-    public function delete(object $entity): bool
+    /**
+     * {@inheritDoc}
+     */
+    public function delete($entity)
     {
         $key     = new EntityCacheKey($this->class->rootEntityName, $this->uow->getEntityIdentifier($entity));
         $lock    = $this->region->lock($key);
@@ -86,7 +95,10 @@ class ReadWriteCachedEntityPersister extends AbstractEntityPersister
         return $deleted;
     }
 
-    public function update(object $entity): void
+    /**
+     * {@inheritDoc}
+     */
+    public function update($entity)
     {
         $key  = new EntityCacheKey($this->class->rootEntityName, $this->uow->getEntityIdentifier($entity));
         $lock = $this->region->lock($key);

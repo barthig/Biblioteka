@@ -12,6 +12,7 @@ use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Persisters\Entity\BasicEntityPersister;
 use RuntimeException;
 
+use function defined;
 use function implode;
 use function in_array;
 use function is_object;
@@ -21,14 +22,24 @@ use function is_object;
  */
 class SqlExpressionVisitor extends ExpressionVisitor
 {
-    public function __construct(
-        private readonly BasicEntityPersister $persister,
-        private readonly ClassMetadata $classMetadata,
-    ) {
+    /** @var BasicEntityPersister */
+    private $persister;
+
+    /** @var ClassMetadata */
+    private $classMetadata;
+
+    public function __construct(BasicEntityPersister $persister, ClassMetadata $classMetadata)
+    {
+        $this->persister     = $persister;
+        $this->classMetadata = $classMetadata;
     }
 
-    /** Converts a comparison expression into the target query language output. */
-    public function walkComparison(Comparison $comparison): string
+    /**
+     * Converts a comparison expression into the target query language output.
+     *
+     * @return mixed
+     */
+    public function walkComparison(Comparison $comparison)
     {
         $field = $comparison->getField();
         $value = $comparison->getValue()->getValue(); // shortcut for walkValue()
@@ -41,7 +52,7 @@ class SqlExpressionVisitor extends ExpressionVisitor
         ) {
             throw MatchingAssociationFieldRequiresObject::fromClassAndAssociation(
                 $this->classMetadata->name,
-                $field,
+                $field
             );
         }
 
@@ -51,9 +62,11 @@ class SqlExpressionVisitor extends ExpressionVisitor
     /**
      * Converts a composite expression into the target query language output.
      *
+     * @return string
+     *
      * @throws RuntimeException
      */
-    public function walkCompositeExpression(CompositeExpression $expr): string
+    public function walkCompositeExpression(CompositeExpression $expr)
     {
         $expressionList = [];
 
@@ -61,18 +74,29 @@ class SqlExpressionVisitor extends ExpressionVisitor
             $expressionList[] = $this->dispatch($child);
         }
 
-        return match ($expr->getType()) {
-            CompositeExpression::TYPE_AND => '(' . implode(' AND ', $expressionList) . ')',
-            CompositeExpression::TYPE_OR => '(' . implode(' OR ', $expressionList) . ')',
-            CompositeExpression::TYPE_NOT => 'NOT (' . $expressionList[0] . ')',
-            default => throw new RuntimeException('Unknown composite ' . $expr->getType()),
-        };
+        switch ($expr->getType()) {
+            case CompositeExpression::TYPE_AND:
+                return '(' . implode(' AND ', $expressionList) . ')';
+
+            case CompositeExpression::TYPE_OR:
+                return '(' . implode(' OR ', $expressionList) . ')';
+
+            default:
+                // Multiversion support for `doctrine/collections` before and after v2.1.0
+                if (defined(CompositeExpression::class . '::TYPE_NOT') && $expr->getType() === CompositeExpression::TYPE_NOT) {
+                    return 'NOT (' . $expressionList[0] . ')';
+                }
+
+                throw new RuntimeException('Unknown composite ' . $expr->getType());
+        }
     }
 
     /**
      * Converts a value expression into the target query language part.
+     *
+     * @return string
      */
-    public function walkValue(Value $value): string
+    public function walkValue(Value $value)
     {
         return '?';
     }

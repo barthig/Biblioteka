@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Doctrine\Bundle\DoctrineBundle\Command;
 
 use Doctrine\DBAL\DriverManager;
@@ -27,7 +25,7 @@ class CreateDatabaseDoctrineCommand extends DoctrineCommand
         $this
             ->setName('doctrine:database:create')
             ->setDescription('Creates the configured database')
-            ->addOption('connection', 'c', InputOption::VALUE_REQUIRED, 'The connection to use for this command')
+            ->addOption('connection', 'c', InputOption::VALUE_OPTIONAL, 'The connection to use for this command')
             ->addOption('if-not-exists', null, InputOption::VALUE_NONE, 'Don\'t trigger an error, when the database already exists')
             ->setHelp(<<<'EOT'
 The <info>%command.name%</info> command creates the default connections database:
@@ -69,7 +67,7 @@ EOT);
         unset($params['dbname'], $params['path'], $params['url']);
 
         if ($connection->getDatabasePlatform() instanceof PostgreSQLPlatform) {
-            /** @phpstan-ignore nullCoalesce.offset (needed for DBAL < 4) */
+            /** @psalm-suppress InvalidArrayOffset It's still available in DBAL 3.x that we need to support */
             $params['dbname'] = $params['default_dbname'] ?? 'postgres';
         }
 

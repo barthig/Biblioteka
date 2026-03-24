@@ -4,38 +4,77 @@ declare(strict_types=1);
 
 namespace Doctrine\ORM\Mapping;
 
-/** This attribute is used to override association mapping of property for an entity relationship. */
+/**
+ * This attribute is used to override association mapping of property for an entity relationship.
+ *
+ * @Annotation
+ * @NamedArgumentConstructor
+ * @Target("ANNOTATION")
+ */
 final class AssociationOverride implements MappingAttribute
 {
     /**
-     * The join column that is being mapped to the persistent attribute.
+     * The name of the relationship property whose mapping is being overridden.
      *
-     * @var array<JoinColumn>|null
+     * @var string
+     * @readonly
      */
-    public readonly array|null $joinColumns;
+    public $name;
 
     /**
      * The join column that is being mapped to the persistent attribute.
      *
      * @var array<JoinColumn>|null
+     * @readonly
      */
-    public readonly array|null $inverseJoinColumns;
+    public $joinColumns;
 
     /**
-     * @param string                       $name               The name of the relationship property whose mapping is being overridden.
+     * The join column that is being mapped to the persistent attribute.
+     *
+     * @var array<JoinColumn>|null
+     * @readonly
+     */
+    public $inverseJoinColumns;
+
+    /**
+     * The join table that maps the relationship.
+     *
+     * @var JoinTable|null
+     * @readonly
+     */
+    public $joinTable;
+
+    /**
+     * The name of the association-field on the inverse-side.
+     *
+     * @var string|null
+     * @readonly
+     */
+    public $inversedBy;
+
+    /**
+     * The fetching strategy to use for the association.
+     *
+     * @var string|null
+     * @psalm-var 'LAZY'|'EAGER'|'EXTRA_LAZY'|null
+     * @readonly
+     * @Enum({"LAZY", "EAGER", "EXTRA_LAZY"})
+     */
+    public $fetch;
+
+    /**
      * @param JoinColumn|array<JoinColumn> $joinColumns
      * @param JoinColumn|array<JoinColumn> $inverseJoinColumns
-     * @param JoinTable|null               $joinTable          The join table that maps the relationship.
-     * @param string|null                  $inversedBy         The name of the association-field on the inverse-side.
-     * @phpstan-param 'LAZY'|'EAGER'|'EXTRA_LAZY'|null $fetch
+     * @psalm-param 'LAZY'|'EAGER'|'EXTRA_LAZY'|null $fetch
      */
     public function __construct(
-        public readonly string $name,
-        array|JoinColumn|null $joinColumns = null,
-        array|JoinColumn|null $inverseJoinColumns = null,
-        public readonly JoinTable|null $joinTable = null,
-        public readonly string|null $inversedBy = null,
-        public readonly string|null $fetch = null,
+        string $name,
+        $joinColumns = null,
+        $inverseJoinColumns = null,
+        ?JoinTable $joinTable = null,
+        ?string $inversedBy = null,
+        ?string $fetch = null
     ) {
         if ($joinColumns instanceof JoinColumn) {
             $joinColumns = [$joinColumns];
@@ -45,7 +84,11 @@ final class AssociationOverride implements MappingAttribute
             $inverseJoinColumns = [$inverseJoinColumns];
         }
 
+        $this->name               = $name;
         $this->joinColumns        = $joinColumns;
         $this->inverseJoinColumns = $inverseJoinColumns;
+        $this->joinTable          = $joinTable;
+        $this->inversedBy         = $inversedBy;
+        $this->fetch              = $fetch;
     }
 }

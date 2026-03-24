@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Doctrine\ORM\Tools\Console\Command;
 
+use Doctrine\ORM\Tools\Console\CommandCompatibility;
 use Doctrine\ORM\Tools\SchemaValidator;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -20,7 +21,10 @@ use function sprintf;
  */
 class ValidateSchemaCommand extends AbstractEntityManagerCommand
 {
-    protected function configure(): void
+    use CommandCompatibility;
+
+    /** @return void */
+    protected function configure()
     {
         $this->setName('orm:validate-schema')
              ->setDescription('Validate the mapping files')
@@ -31,7 +35,7 @@ class ValidateSchemaCommand extends AbstractEntityManagerCommand
              ->setHelp('Validate that the mapping files are correct and in sync with the database.');
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output): int
+    private function doExecute(InputInterface $input, OutputInterface $output): int
     {
         $ui = (new SymfonyStyle($input, $output))->getErrorStyle();
 
@@ -50,8 +54,8 @@ class ValidateSchemaCommand extends AbstractEntityManagerCommand
                     $ui->text(
                         sprintf(
                             '<error>[FAIL]</error> The entity-class <comment>%s</comment> mapping is invalid:',
-                            $className,
-                        ),
+                            $className
+                        )
                     );
 
                     $ui->listing($errorMessages);

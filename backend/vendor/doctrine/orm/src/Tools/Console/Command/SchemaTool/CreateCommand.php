@@ -19,7 +19,8 @@ use function sprintf;
  */
 class CreateCommand extends AbstractCommand
 {
-    protected function configure(): void
+    /** @return void */
+    protected function configure()
     {
         $this->setName('orm:schema-tool:create')
              ->setDescription('Processes the schema and either create it directly on EntityManager Storage Connection or generate the SQL output')
@@ -39,13 +40,14 @@ on a global level:
 
         return !str_starts_with($assetName, 'audit_');
     });
-EOT);
+EOT
+             );
     }
 
     /**
      * {@inheritDoc}
      */
-    protected function executeSchemaCommand(InputInterface $input, OutputInterface $output, SchemaTool $schemaTool, array $metadatas, SymfonyStyle $ui): int
+    protected function executeSchemaCommand(InputInterface $input, OutputInterface $output, SchemaTool $schemaTool, array $metadatas, SymfonyStyle $ui)
     {
         $dumpSql = $input->getOption('dump-sql') === true;
 

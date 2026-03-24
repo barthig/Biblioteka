@@ -38,69 +38,127 @@ interface Cache
      */
     public const MODE_REFRESH = 4;
 
-    public function getEntityCacheRegion(string $className): Region|null;
+    /**
+     * @param string $className The entity class.
+     *
+     * @return Region|null
+     */
+    public function getEntityCacheRegion($className);
 
-    public function getCollectionCacheRegion(string $className, string $association): Region|null;
+    /**
+     * @param string $className   The entity class.
+     * @param string $association The field name that represents the association.
+     *
+     * @return Region|null
+     */
+    public function getCollectionCacheRegion($className, $association);
 
     /**
      * Determine whether the cache contains data for the given entity "instance".
+     *
+     * @param string $className  The entity class.
+     * @param mixed  $identifier The entity identifier
+     *
+     * @return bool true if the underlying cache contains corresponding data; false otherwise.
      */
-    public function containsEntity(string $className, mixed $identifier): bool;
+    public function containsEntity($className, $identifier);
 
     /**
      * Evicts the entity data for a particular entity "instance".
+     *
+     * @param string $className  The entity class.
+     * @param mixed  $identifier The entity identifier.
+     *
+     * @return void
      */
-    public function evictEntity(string $className, mixed $identifier): void;
+    public function evictEntity($className, $identifier);
 
     /**
      * Evicts all entity data from the given region.
+     *
+     * @param string $className The entity metadata.
+     *
+     * @return void
      */
-    public function evictEntityRegion(string $className): void;
+    public function evictEntityRegion($className);
 
     /**
      * Evict data from all entity regions.
+     *
+     * @return void
      */
-    public function evictEntityRegions(): void;
+    public function evictEntityRegions();
 
     /**
      * Determine whether the cache contains data for the given collection.
+     *
+     * @param string $className       The entity class.
+     * @param string $association     The field name that represents the association.
+     * @param mixed  $ownerIdentifier The identifier of the owning entity.
+     *
+     * @return bool true if the underlying cache contains corresponding data; false otherwise.
      */
-    public function containsCollection(string $className, string $association, mixed $ownerIdentifier): bool;
+    public function containsCollection($className, $association, $ownerIdentifier);
 
     /**
      * Evicts the cache data for the given identified collection instance.
+     *
+     * @param string $className       The entity class.
+     * @param string $association     The field name that represents the association.
+     * @param mixed  $ownerIdentifier The identifier of the owning entity.
+     *
+     * @return void
      */
-    public function evictCollection(string $className, string $association, mixed $ownerIdentifier): void;
+    public function evictCollection($className, $association, $ownerIdentifier);
 
     /**
      * Evicts all entity data from the given region.
+     *
+     * @param string $className   The entity class.
+     * @param string $association The field name that represents the association.
+     *
+     * @return void
      */
-    public function evictCollectionRegion(string $className, string $association): void;
+    public function evictCollectionRegion($className, $association);
 
     /**
      * Evict data from all collection regions.
+     *
+     * @return void
      */
-    public function evictCollectionRegions(): void;
+    public function evictCollectionRegions();
 
     /**
      * Determine whether the cache contains data for the given query.
+     *
+     * @param string $regionName The cache name given to the query.
+     *
+     * @return bool true if the underlying cache contains corresponding data; false otherwise.
      */
-    public function containsQuery(string $regionName): bool;
+    public function containsQuery($regionName);
 
     /**
      * Evicts all cached query results under the given name, or default query cache if the region name is NULL.
+     *
+     * @param string|null $regionName The cache name associated to the queries being cached.
+     *
+     * @return void
      */
-    public function evictQueryRegion(string|null $regionName = null): void;
+    public function evictQueryRegion($regionName = null);
 
     /**
      * Evict data from all query regions.
+     *
+     * @return void
      */
-    public function evictQueryRegions(): void;
+    public function evictQueryRegions();
 
     /**
      * Get query cache by region name or create a new one if none exist.
      *
      * @param string|null $regionName Query cache region name, or default query cache if the region name is NULL.
+     *
+     * @return QueryCache The Query Cache associated with the region name.
      */
-    public function getQueryCache(string|null $regionName = null): QueryCache;
+    public function getQueryCache($regionName = null);
 }

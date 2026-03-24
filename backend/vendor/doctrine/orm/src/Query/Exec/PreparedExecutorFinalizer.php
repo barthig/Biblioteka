@@ -13,7 +13,8 @@ use Doctrine\ORM\Query;
  */
 final class PreparedExecutorFinalizer implements SqlFinalizer
 {
-    private AbstractSqlExecutor $executor;
+    /** @var AbstractSqlExecutor */
+    private $executor;
 
     public function __construct(AbstractSqlExecutor $exeutor)
     {

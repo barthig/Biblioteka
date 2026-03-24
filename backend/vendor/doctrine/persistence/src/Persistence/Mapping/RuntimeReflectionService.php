@@ -14,16 +14,26 @@ use function array_key_exists;
 use function assert;
 use function class_exists;
 use function class_parents;
+use function phpversion;
+use function version_compare;
 
 /**
  * PHP Runtime Reflection Service.
  */
 class RuntimeReflectionService implements ReflectionService
 {
+    /** @var bool */
+    private $supportsTypedPropertiesWorkaround;
+
+    public function __construct()
+    {
+        $this->supportsTypedPropertiesWorkaround = version_compare(phpversion(), '7.4.0') >= 0;
+    }
+
     /**
      * {@inheritDoc}
      */
-    public function getParentClasses(string $class): array
+    public function getParentClasses(string $class)
     {
         if (! class_exists($class)) {
             throw MappingException::nonExistingClass($class);
@@ -36,14 +46,20 @@ class RuntimeReflectionService implements ReflectionService
         return $parents;
     }
 
-    public function getClassShortName(string $class): string
+    /**
+     * {@inheritDoc}
+     */
+    public function getClassShortName(string $class)
     {
         $reflectionClass = new ReflectionClass($class);
 
         return $reflectionClass->getShortName();
     }
 
-    public function getClassNamespace(string $class): string
+    /**
+     * {@inheritDoc}
+     */
+    public function getClassNamespace(string $class)
     {
         $reflectionClass = new ReflectionClass($class);
 
@@ -51,33 +67,42 @@ class RuntimeReflectionService implements ReflectionService
     }
 
     /**
-     * @phpstan-param class-string<T> $class
+     * @psalm-param class-string<T> $class
      *
-     * @phpstan-return ReflectionClass<T>
+     * @return ReflectionClass
+     * @psalm-return ReflectionClass<T>
      *
      * @template T of object
      */
-    public function getClass(string $class): ReflectionClass
+    public function getClass(string $class)
     {
         return new ReflectionClass($class);
     }
 
-    public function getAccessibleProperty(string $class, string $property): RuntimeReflectionProperty
+    /**
+     * {@inheritDoc}
+     */
+    public function getAccessibleProperty(string $class, string $property)
     {
         $reflectionProperty = new RuntimeReflectionProperty($class, $property);
 
-        if (! array_key_exists($property, $this->getClass($class)->getDefaultProperties())) {
+        if ($this->supportsTypedPropertiesWorkaround && ! array_key_exists($property, $this->getClass($class)->getDefaultProperties())) {
             $reflectionProperty = new TypedNoDefaultReflectionProperty($class, $property);
         }
+
+        $reflectionProperty->setAccessible(true);
 
         return $reflectionProperty;
     }
 
-    public function hasPublicMethod(string $class, string $method): bool
+    /**
+     * {@inheritDoc}
+     */
+    public function hasPublicMethod(string $class, string $method)
     {
         try {
             $reflectionMethod = new ReflectionMethod($class, $method);
-        } catch (ReflectionException) {
+        } catch (ReflectionException $e) {
             return false;
         }
 

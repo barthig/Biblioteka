@@ -5,14 +5,9 @@ declare(strict_types=1);
 namespace Doctrine\ORM\Tools\Console\Command;
 
 use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\ORM\Mapping\AssociationMapping;
 use Doctrine\ORM\Mapping\ClassMetadata;
-use Doctrine\ORM\Mapping\FieldMapping;
 use Doctrine\Persistence\Mapping\MappingException;
 use InvalidArgumentException;
-use JsonException;
-use Symfony\Component\Console\Completion\CompletionInput;
-use Symfony\Component\Console\Completion\CompletionSuggestions;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -22,7 +17,6 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 use function array_filter;
 use function array_map;
 use function array_merge;
-use function array_values;
 use function count;
 use function current;
 use function get_debug_type;
@@ -36,10 +30,8 @@ use function preg_match;
 use function preg_quote;
 use function print_r;
 use function sprintf;
-use function str_replace;
 
 use const JSON_PRETTY_PRINT;
-use const JSON_THROW_ON_ERROR;
 use const JSON_UNESCAPED_SLASHES;
 use const JSON_UNESCAPED_UNICODE;
 
@@ -47,23 +39,18 @@ use const JSON_UNESCAPED_UNICODE;
  * Show information about mapped entities.
  *
  * @link    www.doctrine-project.org
+ *
+ * @psalm-import-type AssociationMapping from ClassMetadata
+ * @psalm-import-type FieldMapping from ClassMetadata
  */
 final class MappingDescribeCommand extends AbstractEntityManagerCommand
 {
     protected function configure(): void
     {
         $this->setName('orm:mapping:describe')
-            ->addArgument('entityName', InputArgument::REQUIRED, 'Full or partial name of entity')
-            ->setDescription('Display information about mapped objects')
-            ->addOption('em', null, InputOption::VALUE_REQUIRED, 'Name of the entity manager to operate on')
-            ->addOption(
-                'format',
-                null,
-                InputOption::VALUE_REQUIRED,
-                'Output format (text, json)',
-                MappingDescribeCommandFormat::TEXT->value,
-                array_map(static fn (MappingDescribeCommandFormat $format) => $format->value, MappingDescribeCommandFormat::cases()),
-            )
+             ->addArgument('entityName', InputArgument::REQUIRED, 'Full or partial name of entity')
+             ->setDescription('Display information about mapped objects')
+             ->addOption('em', null, InputOption::VALUE_REQUIRED, 'Name of the entity manager to operate on')
              ->setHelp(<<<'EOT'
 The %command.full_name% command describes the metadata for the given full or partial entity class name.
 
@@ -72,45 +59,19 @@ The %command.full_name% command describes the metadata for the given full or par
 Or:
 
     <info>%command.full_name%</info> MyEntity
-    
-To output the metadata in JSON format, use the <info>--format</info> option:
-  <info>%command.full_name% My\Namespace\Entity\MyEntity --format=json</info>
-
-To use a specific entity manager (e.g., for multi-DB projects), use the <info>--em</info> option:
-  <info>%command.full_name% My\Namespace\Entity\MyEntity --em=my_custom_entity_manager</info>
-
-EOT);
+EOT
+             );
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $ui = new SymfonyStyle($input, $output);
-
-        $format = MappingDescribeCommandFormat::from($input->getOption('format'));
+        $ui = (new SymfonyStyle($input, $output))->getErrorStyle();
 
         $entityManager = $this->getEntityManager($input);
 
-        $this->displayEntity($input->getArgument('entityName'), $entityManager, $ui, $format);
+        $this->displayEntity($input->getArgument('entityName'), $entityManager, $ui);
 
         return 0;
-    }
-
-    public function complete(CompletionInput $input, CompletionSuggestions $suggestions): void
-    {
-        if ($input->mustSuggestArgumentValuesFor('entityName')) {
-            $entityManager = $this->getEntityManager($input);
-
-            $entities = array_map(
-                static fn (string $fqcn) => str_replace('\\', '\\\\', $fqcn),
-                $this->getMappedEntities($entityManager),
-            );
-
-            $suggestions->suggestValues(array_values($entities));
-        }
-
-        if ($input->mustSuggestOptionValuesFor('format')) {
-            $suggestions->suggestValues(array_map(static fn (MappingDescribeCommandFormat $format) => $format->value, MappingDescribeCommandFormat::cases()));
-        }
     }
 
     /**
@@ -121,47 +82,9 @@ EOT);
     private function displayEntity(
         string $entityName,
         EntityManagerInterface $entityManager,
-        SymfonyStyle $ui,
-        MappingDescribeCommandFormat $format,
+        SymfonyStyle $ui
     ): void {
         $metadata = $this->getClassMetadata($entityName, $entityManager);
-
-        if ($format === MappingDescribeCommandFormat::JSON) {
-            $ui->text(json_encode(
-                [
-                    'name' => $metadata->name,
-                    'rootEntityName' => $metadata->rootEntityName,
-                    'customGeneratorDefinition' => $this->formatValueAsJson($metadata->customGeneratorDefinition),
-                    'customRepositoryClassName' => $metadata->customRepositoryClassName,
-                    'isMappedSuperclass' => $metadata->isMappedSuperclass,
-                    'isEmbeddedClass' => $metadata->isEmbeddedClass,
-                    'parentClasses' => $metadata->parentClasses,
-                    'subClasses' => $metadata->subClasses,
-                    'embeddedClasses' => $metadata->embeddedClasses,
-                    'identifier' => $metadata->identifier,
-                    'inheritanceType' => $metadata->inheritanceType,
-                    'discriminatorColumn' => $this->formatValueAsJson($metadata->discriminatorColumn),
-                    'discriminatorValue' => $metadata->discriminatorValue,
-                    'discriminatorMap' => $metadata->discriminatorMap,
-                    'generatorType' => $metadata->generatorType,
-                    'table' => $this->formatValueAsJson($metadata->table),
-                    'isIdentifierComposite' => $metadata->isIdentifierComposite,
-                    'containsForeignIdentifier' => $metadata->containsForeignIdentifier,
-                    'containsEnumIdentifier' => $metadata->containsEnumIdentifier,
-                    'sequenceGeneratorDefinition' => $this->formatValueAsJson($metadata->sequenceGeneratorDefinition),
-                    'changeTrackingPolicy' => $metadata->changeTrackingPolicy,
-                    'isVersioned' => $metadata->isVersioned,
-                    'versionField' => $metadata->versionField,
-                    'isReadOnly' => $metadata->isReadOnly,
-                    'entityListeners' => $metadata->entityListeners,
-                    'associationMappings' => $this->formatMappingsAsJson($metadata->associationMappings),
-                    'fieldMappings' => $this->formatMappingsAsJson($metadata->fieldMappings),
-                ],
-                JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR,
-            ));
-
-            return;
-        }
 
         $ui->table(
             ['Field', 'Value'],
@@ -175,7 +98,10 @@ EOT);
                     $this->formatField('Embedded class?', $metadata->isEmbeddedClass),
                     $this->formatField('Parent classes', $metadata->parentClasses),
                     $this->formatField('Sub classes', $metadata->subClasses),
-                    $this->formatField('Embedded classes', $metadata->embeddedClasses),
+                    $this->formatField('Embedded classes', $metadata->subClasses),
+                    $this->formatField('Named queries', $metadata->namedQueries),
+                    $this->formatField('Named native queries', $metadata->namedNativeQueries),
+                    $this->formatField('SQL result set mappings', $metadata->sqlResultSetMappings),
                     $this->formatField('Identifier', $metadata->identifier),
                     $this->formatField('Inheritance type', $metadata->inheritanceType),
                     $this->formatField('Discriminator column', $metadata->discriminatorColumn),
@@ -197,8 +123,8 @@ EOT);
                 [$this->formatField('Association mappings:', '')],
                 $this->formatMappings($metadata->associationMappings),
                 [$this->formatField('Field mappings:', '')],
-                $this->formatMappings($metadata->fieldMappings),
-            ),
+                $this->formatMappings($metadata->fieldMappings)
+            )
         );
     }
 
@@ -216,7 +142,7 @@ EOT);
         if (! $entityClassNames) {
             throw new InvalidArgumentException(
                 'You do not have any mapped Doctrine ORM entities according to the current configuration. ' .
-                'If you have entities or mapping files you should check your mapping configuration for errors.',
+                'If you have entities or mapping files you should check your mapping configuration for errors.'
             );
         }
 
@@ -231,22 +157,24 @@ EOT);
      */
     private function getClassMetadata(
         string $entityName,
-        EntityManagerInterface $entityManager,
+        EntityManagerInterface $entityManager
     ): ClassMetadata {
         try {
             return $entityManager->getClassMetadata($entityName);
-        } catch (MappingException) {
+        } catch (MappingException $e) {
         }
 
         $matches = array_filter(
             $this->getMappedEntities($entityManager),
-            static fn ($mappedEntity) => preg_match('{' . preg_quote($entityName) . '}', $mappedEntity),
+            static function ($mappedEntity) use ($entityName) {
+                return preg_match('{' . preg_quote($entityName) . '}', $mappedEntity);
+            }
         );
 
         if (! $matches) {
             throw new InvalidArgumentException(sprintf(
                 'Could not find any mapped Entity classes matching "%s"',
-                $entityName,
+                $entityName
             ));
         }
 
@@ -254,7 +182,7 @@ EOT);
             throw new InvalidArgumentException(sprintf(
                 'Entity name "%s" is ambiguous, possible matches: "%s"',
                 $entityName,
-                implode(', ', $matches),
+                implode(', ', $matches)
             ));
         }
 
@@ -263,8 +191,10 @@ EOT);
 
     /**
      * Format the given value for console output
+     *
+     * @param mixed $value
      */
-    private function formatValue(mixed $value): string
+    private function formatValue($value): string
     {
         if ($value === '') {
             return '';
@@ -283,10 +213,7 @@ EOT);
         }
 
         if (is_array($value)) {
-            return json_encode(
-                $value,
-                JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR,
-            );
+            return json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
         }
 
         if (is_object($value)) {
@@ -300,22 +227,6 @@ EOT);
         throw new InvalidArgumentException(sprintf('Do not know how to format value "%s"', print_r($value, true)));
     }
 
-    /** @throws JsonException */
-    private function formatValueAsJson(mixed $value): mixed
-    {
-        if (is_object($value)) {
-            $value = (array) $value;
-        }
-
-        if (is_array($value)) {
-            foreach ($value as $k => $v) {
-                $value[$k] = $this->formatValueAsJson($v);
-            }
-        }
-
-        return $value;
-    }
-
     /**
      * Add the given label and value to the two column table output
      *
@@ -323,9 +234,9 @@ EOT);
      * @param mixed  $value A Value to show
      *
      * @return string[]
-     * @phpstan-return array{0: string, 1: string}
+     * @psalm-return array{0: string, 1: string}
      */
-    private function formatField(string $label, mixed $value): array
+    private function formatField(string $label, $value): array
     {
         if ($value === null) {
             $value = '<comment>None</comment>';
@@ -337,10 +248,10 @@ EOT);
     /**
      * Format the association mappings
      *
-     * @phpstan-param array<string, FieldMapping|AssociationMapping> $propertyMappings
+     * @psalm-param array<string, FieldMapping|AssociationMapping> $propertyMappings
      *
      * @return string[][]
-     * @phpstan-return list<array{0: string, 1: string}>
+     * @psalm-return list<array{0: string, 1: string}>
      */
     private function formatMappings(array $propertyMappings): array
     {
@@ -349,7 +260,7 @@ EOT);
         foreach ($propertyMappings as $propertyName => $mapping) {
             $output[] = $this->formatField(sprintf('  %s', $propertyName), '');
 
-            foreach ((array) $mapping as $field => $value) {
+            foreach ($mapping as $field => $value) {
                 $output[] = $this->formatField(sprintf('    %s', $field), $this->formatValue($value));
             }
         }
@@ -358,28 +269,12 @@ EOT);
     }
 
     /**
-     * @param array<string, FieldMapping|AssociationMapping> $propertyMappings
-     *
-     * @return array<string, mixed>
-     */
-    private function formatMappingsAsJson(array $propertyMappings): array
-    {
-        $output = [];
-
-        foreach ($propertyMappings as $propertyName => $mapping) {
-            $output[$propertyName] = $this->formatValueAsJson((array) $mapping);
-        }
-
-        return $output;
-    }
-
-    /**
      * Format the entity listeners
      *
-     * @phpstan-param list<object> $entityListeners
+     * @psalm-param list<object> $entityListeners
      *
      * @return string[]
-     * @phpstan-return array{0: string, 1: string}
+     * @psalm-return array{0: string, 1: string}
      */
     private function formatEntityListeners(array $entityListeners): array
     {

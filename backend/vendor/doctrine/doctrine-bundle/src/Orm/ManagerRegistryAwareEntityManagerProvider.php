@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Doctrine\Bundle\DoctrineBundle\Orm;
 
 use Doctrine\ORM\EntityManagerInterface;
@@ -9,14 +7,16 @@ use Doctrine\ORM\Tools\Console\EntityManagerProvider;
 use Doctrine\Persistence\ManagerRegistry;
 use RuntimeException;
 
-use function get_debug_type;
+use function get_class;
 use function sprintf;
 
 final class ManagerRegistryAwareEntityManagerProvider implements EntityManagerProvider
 {
-    public function __construct(
-        private readonly ManagerRegistry $managerRegistry,
-    ) {
+    private ManagerRegistry $managerRegistry;
+
+    public function __construct(ManagerRegistry $managerRegistry)
+    {
+        $this->managerRegistry = $managerRegistry;
     }
 
     public function getDefaultManager(): EntityManagerInterface
@@ -36,7 +36,7 @@ final class ManagerRegistryAwareEntityManagerProvider implements EntityManagerPr
             sprintf(
                 'Only managers of type "%s" are supported. Instance of "%s given.',
                 EntityManagerInterface::class,
-                get_debug_type($em),
+                get_class($em),
             ),
         );
     }

@@ -11,6 +11,8 @@ interface QueryCacheValidator
 {
     /**
      * Checks if the query entry is valid
+     *
+     * @return bool
      */
-    public function isValid(QueryCacheKey $key, QueryCacheEntry $entry): bool;
+    public function isValid(QueryCacheKey $key, QueryCacheEntry $entry);
 }

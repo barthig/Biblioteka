@@ -19,42 +19,64 @@ use Doctrine\Persistence\Mapping\ClassMetadata;
 class CachedPersisterContext
 {
     /**
+     * Metadata object that describes the mapping of the mapped entity class.
+     *
+     * @var \Doctrine\ORM\Mapping\ClassMetadata
+     */
+    public $class;
+
+    /**
+     * ResultSetMapping that is used for all queries. Is generated lazily once per request.
+     *
+     * @var ResultSetMapping
+     */
+    public $rsm;
+
+    /**
      * The SELECT column list SQL fragment used for querying entities by this persister.
      * This SQL fragment is only generated once per request, if at all.
+     *
+     * @var string|null
      */
-    public string|null $selectColumnListSql = null;
+    public $selectColumnListSql;
 
     /**
      * The JOIN SQL fragment used to eagerly load all many-to-one and one-to-one
      * associations configured as FETCH_EAGER, as well as all inverse one-to-one associations.
+     *
+     * @var string
      */
-    public string|null $selectJoinSql = null;
+    public $selectJoinSql;
 
     /**
      * Counter for creating unique SQL table and column aliases.
+     *
+     * @var int
      */
-    public int $sqlAliasCounter = 0;
+    public $sqlAliasCounter = 0;
 
     /**
      * Map from class names (FQCN) to the corresponding generated SQL table aliases.
      *
      * @var array<class-string, string>
      */
-    public array $sqlTableAliases = [];
+    public $sqlTableAliases = [];
 
+    /**
+     * Whether this persistent context is considering limit operations applied to the selection queries
+     *
+     * @var bool
+     */
+    public $handlesLimits;
+
+    /** @param bool $handlesLimits */
     public function __construct(
-        /**
-         * Metadata object that describes the mapping of the mapped entity class.
-         */
-        public ClassMetadata $class,
-        /**
-         * ResultSetMapping that is used for all queries. Is generated lazily once per request.
-         */
-        public ResultSetMapping $rsm,
-        /**
-         * Whether this persistent context is considering limit operations applied to the selection queries
-         */
-        public bool $handlesLimits,
+        ClassMetadata $class,
+        ResultSetMapping $rsm,
+        $handlesLimits
     ) {
+        $this->class         = $class;
+        $this->rsm           = $rsm;
+        $this->handlesLimits = (bool) $handlesLimits;
     }
 }

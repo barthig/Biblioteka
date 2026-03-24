@@ -1,20 +1,21 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Doctrine\Bundle\DoctrineBundle\Mapping;
 
 use Doctrine\ORM\Mapping\ClassMetadata;
 
 class ClassMetadataCollection
 {
-    private string|null $path      = null;
-    private string|null $namespace = null;
+    private ?string $path      = null;
+    private ?string $namespace = null;
+
+    /** @var ClassMetadata[] */
+    private array $metadata;
 
     /** @param ClassMetadata[] $metadata */
-    public function __construct(
-        private readonly array $metadata,
-    ) {
+    public function __construct(array $metadata)
+    {
+        $this->metadata = $metadata;
     }
 
     /** @return ClassMetadata[] */

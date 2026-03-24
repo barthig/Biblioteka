@@ -1,37 +1,32 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Doctrine\Bundle\DoctrineBundle\Twig;
 
-use Doctrine\Deprecations\Deprecation;
 use Doctrine\SqlFormatter\HtmlHighlighter;
 use Doctrine\SqlFormatter\NullHighlighter;
 use Doctrine\SqlFormatter\SqlFormatter;
-use Stringable;
 use Symfony\Component\VarDumper\Cloner\Data;
 use Twig\DeprecatedCallableInfo;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFilter;
 
 use function addslashes;
-use function array_filter;
 use function array_key_exists;
-use function array_keys;
 use function array_merge;
-use function array_values;
 use function bin2hex;
 use function class_exists;
-use function count;
 use function implode;
 use function is_array;
 use function is_bool;
+use function is_object;
 use function is_string;
+use function method_exists;
 use function preg_match;
 use function preg_replace_callback;
 use function sprintf;
 use function strtoupper;
 use function substr;
+use function trigger_deprecation;
 
 /**
  * This class contains the needed functions in order to do the query highlighting
@@ -71,9 +66,11 @@ class DoctrineExtension extends AbstractExtension
      *
      * @internal
      *
+     * @param mixed $parameter
+     *
      * @return string
      */
-    public static function escapeFunction(mixed $parameter)
+    public static function escapeFunction($parameter)
     {
         $result = $parameter;
 
@@ -95,8 +92,8 @@ class DoctrineExtension extends AbstractExtension
                 $result = implode(', ', $result) ?: 'NULL';
                 break;
 
-            case $result instanceof Stringable:
-                $result = addslashes((string) $result);
+            case is_object($result) && method_exists($result, '__toString'):
+                $result = addslashes($result->__toString());
                 break;
 
             case $result === null:
@@ -114,8 +111,8 @@ class DoctrineExtension extends AbstractExtension
     /**
      * Return a query with the parameters replaced
      *
-     * @param string                       $query
-     * @param array<array-key, mixed>|Data $parameters
+     * @param string       $query
+     * @param mixed[]|Data $parameters
      *
      * @return string
      */
@@ -125,26 +122,26 @@ class DoctrineExtension extends AbstractExtension
             $parameters = $parameters->getValue(true);
         }
 
-        $keys = array_keys($parameters);
-        if (count(array_filter($keys, 'is_int')) === count($keys)) {
-            $parameters = array_values($parameters);
-        }
-
         $i = 0;
 
+        if (! array_key_exists(0, $parameters) && array_key_exists(1, $parameters)) {
+            $i = 1;
+        }
+
         return preg_replace_callback(
-            '/(?<!\?)\?(?!\?)|(?<!:)(:[a-z0-9_]+)/i',
+            '/\?|((?<!:):[a-z0-9_]+)/i',
             static function ($matches) use ($parameters, &$i) {
                 $key = substr($matches[0], 1);
 
-                if (! array_key_exists($i, $parameters) && ! array_key_exists($key, $parameters)) {
+                if (! array_key_exists($i, $parameters) && ($key === false || ! array_key_exists($key, $parameters))) {
                     return $matches[0];
                 }
 
-                $value = array_key_exists($i, $parameters) ? $parameters[$i] : $parameters[$key];
+                $value  = array_key_exists($i, $parameters) ? $parameters[$i] : $parameters[$key];
+                $result = DoctrineExtension::escapeFunction($value);
                 $i++;
 
-                return DoctrineExtension::escapeFunction($value);
+                return $result;
             },
             $query,
         );
@@ -160,9 +157,9 @@ class DoctrineExtension extends AbstractExtension
      */
     public function formatQuery($sql, $highlightOnly = false)
     {
-        Deprecation::trigger(
+        trigger_deprecation(
             'doctrine/doctrine-bundle',
-            'https://github.com/doctrine/DoctrineBundle/pull/1056',
+            '2.1',
             'The "%s()" method is deprecated and will be removed in doctrine-bundle 3.0.',
             __METHOD__,
         );

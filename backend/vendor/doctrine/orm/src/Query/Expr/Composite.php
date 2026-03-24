@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Doctrine\ORM\Query\Expr;
 
-use Stringable;
-
 use function implode;
 use function is_object;
 use function preg_match;
@@ -17,7 +15,8 @@ use function preg_match;
  */
 class Composite extends Base
 {
-    public function __toString(): string
+    /** @return string */
+    public function __toString()
     {
         if ($this->count() === 1) {
             return (string) $this->parts[0];
@@ -32,7 +31,8 @@ class Composite extends Base
         return implode($this->separator, $components);
     }
 
-    private function processQueryPart(string|Stringable $part): string
+    /** @param string|object $part */
+    private function processQueryPart($part): string
     {
         $queryPart = (string) $part;
 

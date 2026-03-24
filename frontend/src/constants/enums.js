@@ -17,7 +17,7 @@ export const ROLE_LABELS = {
   [ROLES.ADMIN]: 'Administrator',
   [ROLES.LIBRARIAN]: 'Bibliotekarz',
   [ROLES.STAFF]: 'Pracownik',
-  [ROLES.USER]: 'UĹĽytkownik',
+  [ROLES.USER]: 'Użytkownik',
 }
 
 export const ROLE_HIERARCHY = [ROLES.USER, ROLES.STAFF, ROLES.LIBRARIAN, ROLES.ADMIN]
@@ -35,10 +35,10 @@ export const LOAN_STATUS = {
 
 export const LOAN_STATUS_LABELS = {
   [LOAN_STATUS.ACTIVE]: 'Aktywne',
-  [LOAN_STATUS.RETURNED]: 'ZwrĂłcone',
+  [LOAN_STATUS.RETURNED]: 'Zwrócone',
   [LOAN_STATUS.OVERDUE]: 'Przeterminowane',
   [LOAN_STATUS.LOST]: 'Zgubione',
-  [LOAN_STATUS.EXTENDED]: 'PrzedĹ‚uĹĽone',
+  [LOAN_STATUS.EXTENDED]: 'Przedłużone',
 }
 
 export const LOAN_STATUS_COLORS = {
@@ -61,10 +61,10 @@ export const RESERVATION_STATUS = {
 }
 
 export const RESERVATION_STATUS_LABELS = {
-  [RESERVATION_STATUS.PENDING]: 'OczekujÄ…ca',
+  [RESERVATION_STATUS.PENDING]: 'Oczekująca',
   [RESERVATION_STATUS.READY]: 'Gotowa do odbioru',
   [RESERVATION_STATUS.CANCELLED]: 'Anulowana',
-  [RESERVATION_STATUS.EXPIRED]: 'WygasĹ‚a',
+  [RESERVATION_STATUS.EXPIRED]: 'Wygasła',
   [RESERVATION_STATUS.FULFILLED]: 'Zrealizowana',
 }
 
@@ -81,8 +81,8 @@ export const BOOK_STATUS = {
 }
 
 export const BOOK_STATUS_LABELS = {
-  [BOOK_STATUS.AVAILABLE]: 'DostÄ™pna',
-  [BOOK_STATUS.BORROWED]: 'WypoĹĽyczona',
+  [BOOK_STATUS.AVAILABLE]: 'Dostępna',
+  [BOOK_STATUS.BORROWED]: 'Wypożyczona',
   [BOOK_STATUS.RESERVED]: 'Zarezerwowana',
   [BOOK_STATUS.MAINTENANCE]: 'W konserwacji',
   [BOOK_STATUS.LOST]: 'Zgubiona',

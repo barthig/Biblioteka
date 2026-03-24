@@ -17,6 +17,7 @@ use Doctrine\ORM\Mapping\FieldMapping;
 use Doctrine\ORM\Mapping\MappingException as OrmMappingException;
 use Doctrine\Persistence\Mapping\MappingException;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use Symfony\Component\PropertyInfo\Type;
 use Symfony\Component\Validator\Constraints\Length;
 use Symfony\Component\Validator\Constraints\Valid;
 use Symfony\Component\Validator\Mapping\AutoMappingStrategy;
@@ -90,7 +91,7 @@ final class DoctrineLoader implements LoaderInterface
             }
 
             if (true === (self::getFieldMappingValue($mapping, 'unique') ?? false) && !isset($existingUniqueFields[self::getFieldMappingValue($mapping, 'fieldName')])) {
-                $metadata->addConstraint(new UniqueEntity(fields: self::getFieldMappingValue($mapping, 'fieldName')));
+                $metadata->addConstraint(new UniqueEntity(['fields' => self::getFieldMappingValue($mapping, 'fieldName')]));
                 $loaded = true;
             }
 
@@ -103,7 +104,7 @@ final class DoctrineLoader implements LoaderInterface
                     $metadata->addPropertyConstraint(self::getFieldMappingValue($mapping, 'declaredField'), new Valid());
                     $loaded = true;
                 } elseif (property_exists($className, self::getFieldMappingValue($mapping, 'fieldName')) && (!$doctrineMetadata->isMappedSuperclass || $metadata->getReflectionClass()->getProperty(self::getFieldMappingValue($mapping, 'fieldName'))->isPrivate())) {
-                    $metadata->addPropertyConstraint(self::getFieldMappingValue($mapping, 'fieldName'), new Length(max: self::getFieldMappingValue($mapping, 'length')));
+                    $metadata->addPropertyConstraint(self::getFieldMappingValue($mapping, 'fieldName'), new Length(['max' => self::getFieldMappingValue($mapping, 'length')]));
                     $loaded = true;
                 }
             } elseif (null === $lengthConstraint->max) {

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Doctrine\ORM\Query\AST\Functions;
 
 use Doctrine\ORM\Query\AST\Node;
+use Doctrine\ORM\Query\AST\SimpleArithmeticExpression;
 use Doctrine\ORM\Query\Parser;
 use Doctrine\ORM\Query\SqlWalker;
 use Doctrine\ORM\Query\TokenType;
@@ -16,12 +17,17 @@ use Doctrine\ORM\Query\TokenType;
  */
 class SubstringFunction extends FunctionNode
 {
-    public Node $stringPrimary;
+    /** @var Node */
+    public $stringPrimary;
 
-    public Node|string $firstSimpleArithmeticExpression;
-    public Node|string|null $secondSimpleArithmeticExpression = null;
+    /** @var SimpleArithmeticExpression */
+    public $firstSimpleArithmeticExpression;
 
-    public function getSql(SqlWalker $sqlWalker): string
+    /** @var SimpleArithmeticExpression|null */
+    public $secondSimpleArithmeticExpression = null;
+
+    /** @inheritDoc */
+    public function getSql(SqlWalker $sqlWalker)
     {
         $optionalSecondSimpleArithmeticExpression = null;
         if ($this->secondSimpleArithmeticExpression !== null) {
@@ -31,11 +37,12 @@ class SubstringFunction extends FunctionNode
         return $sqlWalker->getConnection()->getDatabasePlatform()->getSubstringExpression(
             $sqlWalker->walkStringPrimary($this->stringPrimary),
             $sqlWalker->walkSimpleArithmeticExpression($this->firstSimpleArithmeticExpression),
-            $optionalSecondSimpleArithmeticExpression,
+            $optionalSecondSimpleArithmeticExpression
         );
     }
 
-    public function parse(Parser $parser): void
+    /** @inheritDoc */
+    public function parse(Parser $parser)
     {
         $parser->match(TokenType::T_IDENTIFIER);
         $parser->match(TokenType::T_OPEN_PARENTHESIS);

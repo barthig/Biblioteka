@@ -14,33 +14,26 @@ namespace Symfony\Component\Config\Definition\Builder;
 /**
  * This class builds validation conditions.
  *
- * @template T of NodeDefinition
- *
  * @author Christophe Coevoet <stof@notk.org>
  */
 class ValidationBuilder
 {
-    /**
-     * @var (ExprBuilder<T>|\Closure)[]
-     */
-    public array $rules = [];
+    protected $node;
+    public $rules = [];
 
-    /**
-     * @param T $node
-     */
-    public function __construct(
-        protected NodeDefinition $node,
-    ) {
+    public function __construct(NodeDefinition $node)
+    {
+        $this->node = $node;
     }
 
     /**
      * Registers a closure to run as normalization or an expression builder to build it if null is provided.
      *
-     * @return ($closure is \Closure ? $this : ExprBuilder<T>)
+     * @return ExprBuilder|$this
      */
     public function rule(?\Closure $closure = null): ExprBuilder|static
     {
-        if ($closure) {
+        if (null !== $closure) {
             $this->rules[] = $closure;
 
             return $this;

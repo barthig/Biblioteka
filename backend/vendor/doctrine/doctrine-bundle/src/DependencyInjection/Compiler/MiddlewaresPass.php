@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Doctrine\Bundle\DoctrineBundle\DependencyInjection\Compiler;
 
 use Doctrine\Bundle\DoctrineBundle\Middleware\ConnectionNameAwareInterface;
@@ -16,7 +14,7 @@ use function array_map;
 use function array_values;
 use function is_subclass_of;
 use function sprintf;
-use function usort;
+use function uasort;
 
 final class MiddlewaresPass implements CompilerPassInterface
 {
@@ -79,7 +77,7 @@ final class MiddlewaresPass implements CompilerPassInterface
                 array_keys($middlewareRefs),
                 array_values($middlewareRefs),
             );
-            usort($middlewareRefs, static fn (array $a, array $b): int => $b[0] <=> $a[0] ?: $a[1] <=> $b[1]);
+            uasort($middlewareRefs, static fn (array $a, array $b): int => $b[0] <=> $a[0] ?: $a[1] <=> $b[1]);
             $middlewareRefs = array_map(static fn (array $value): Reference => $value[2], $middlewareRefs);
 
             $container

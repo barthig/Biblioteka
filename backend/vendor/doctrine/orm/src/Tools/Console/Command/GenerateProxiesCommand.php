@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Doctrine\ORM\Tools\Console\Command;
 
-use Doctrine\Deprecations\Deprecation;
+use Doctrine\ORM\Tools\Console\CommandCompatibility;
 use Doctrine\ORM\Tools\Console\MetadataFilter;
 use InvalidArgumentException;
 use Symfony\Component\Console\Input\InputArgument;
@@ -20,8 +20,6 @@ use function mkdir;
 use function realpath;
 use function sprintf;
 
-use const PHP_VERSION_ID;
-
 /**
  * Command to (re)generate the proxy classes used by doctrine.
  *
@@ -29,7 +27,10 @@ use const PHP_VERSION_ID;
  */
 class GenerateProxiesCommand extends AbstractEntityManagerCommand
 {
-    protected function configure(): void
+    use CommandCompatibility;
+
+    /** @return void */
+    protected function configure()
     {
         $this->setName('orm:generate-proxies')
              ->setAliases(['orm:generate:proxies'])
@@ -40,16 +41,8 @@ class GenerateProxiesCommand extends AbstractEntityManagerCommand
              ->setHelp('Generates proxy classes for entity classes.');
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output): int
+    private function doExecute(InputInterface $input, OutputInterface $output): int
     {
-        if (PHP_VERSION_ID >= 80400) {
-            Deprecation::trigger(
-                'doctrine/orm',
-                'https://github.com/doctrine/orm/pull/12005',
-                'Generating proxies is deprecated and will be impossible in Doctrine ORM 4.0.',
-            );
-        }
-
         $ui = (new SymfonyStyle($input, $output))->getErrorStyle();
 
         $em = $this->getEntityManager($input);
@@ -75,13 +68,13 @@ class GenerateProxiesCommand extends AbstractEntityManagerCommand
 
         if (! file_exists($destPath)) {
             throw new InvalidArgumentException(
-                sprintf("Proxies destination directory '<info>%s</info>' does not exist.", $em->getConfiguration()->getProxyDir()),
+                sprintf("Proxies destination directory '<info>%s</info>' does not exist.", $em->getConfiguration()->getProxyDir())
             );
         }
 
         if (! is_writable($destPath)) {
             throw new InvalidArgumentException(
-                sprintf("Proxies destination directory '<info>%s</info>' does not have write permissions.", $destPath),
+                sprintf("Proxies destination directory '<info>%s</info>' does not have write permissions.", $destPath)
             );
         }
 

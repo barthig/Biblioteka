@@ -140,7 +140,7 @@ export default function Reservations() {
     return (
       <div className="page page--centered">
         <div className="surface-card empty-state">
-          Aby zarządzać rezerwacjami, <Link to="/login">zaloguj się</Link> lub <Link to="/register">utwĂłrz konto</Link>.
+          Aby zarządzać rezerwacjami, <Link to="/login">zaloguj się</Link> lub <Link to="/register">utwórz konto</Link>.
         </div>
       </div>
     )

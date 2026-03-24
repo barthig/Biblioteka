@@ -7,9 +7,9 @@ namespace Doctrine\ORM;
 use Doctrine\Common\Collections\AbstractLazyCollection;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
-use Doctrine\Common\Collections\ReadableCollection;
 use Doctrine\Common\Collections\Selectable;
 use Doctrine\ORM\Persisters\Entity\EntityPersister;
+use ReturnTypeWillChange;
 
 use function assert;
 
@@ -26,18 +26,28 @@ use function assert;
  */
 class LazyCriteriaCollection extends AbstractLazyCollection implements Selectable
 {
-    private int|null $count = null;
+    /** @var EntityPersister */
+    protected $entityPersister;
 
-    public function __construct(
-        protected EntityPersister $entityPersister,
-        protected Criteria $criteria,
-    ) {
+    /** @var Criteria */
+    protected $criteria;
+
+    /** @var int|null */
+    private $count;
+
+    public function __construct(EntityPersister $entityPersister, Criteria $criteria)
+    {
+        $this->entityPersister = $entityPersister;
+        $this->criteria        = $criteria;
     }
 
     /**
      * Do an efficient count on the collection
+     *
+     * @return int
      */
-    public function count(): int
+    #[ReturnTypeWillChange]
+    public function count()
     {
         if ($this->isInitialized()) {
             return $this->collection->count();
@@ -53,8 +63,10 @@ class LazyCriteriaCollection extends AbstractLazyCollection implements Selectabl
 
     /**
      * check if collection is empty without loading it
+     *
+     * @return bool TRUE if the collection is empty, FALSE otherwise.
      */
-    public function isEmpty(): bool
+    public function isEmpty()
     {
         if ($this->isInitialized()) {
             return $this->collection->isEmpty();
@@ -70,7 +82,7 @@ class LazyCriteriaCollection extends AbstractLazyCollection implements Selectabl
      *
      * @return bool TRUE if the collection contains $element, FALSE otherwise.
      */
-    public function contains(mixed $element): bool
+    public function contains($element)
     {
         if ($this->isInitialized()) {
             return $this->collection->contains($element);
@@ -79,8 +91,10 @@ class LazyCriteriaCollection extends AbstractLazyCollection implements Selectabl
         return $this->entityPersister->exists($element, $this->criteria);
     }
 
-    /** @return ReadableCollection<TKey, TValue>&Selectable<TKey, TValue> */
-    public function matching(Criteria $criteria): ReadableCollection&Selectable
+    /**
+     * {@inheritDoc}
+     */
+    public function matching(Criteria $criteria)
     {
         $this->initialize();
         assert($this->collection instanceof Selectable);
@@ -88,7 +102,10 @@ class LazyCriteriaCollection extends AbstractLazyCollection implements Selectabl
         return $this->collection->matching($criteria);
     }
 
-    protected function doInitialize(): void
+    /**
+     * {@inheritDoc}
+     */
+    protected function doInitialize()
     {
         $elements         = $this->entityPersister->loadCriteria($this->criteria);
         $this->collection = new ArrayCollection($elements);

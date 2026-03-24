@@ -13,7 +13,6 @@ namespace Symfony\Component\Config\Util;
 
 use Symfony\Component\Config\Util\Exception\InvalidXmlException;
 use Symfony\Component\Config\Util\Exception\XmlParsingException;
-use Symfony\Component\Filesystem\Filesystem;
 
 /**
  * XMLUtils is a bunch of utility methods to XML operations.
@@ -80,7 +79,7 @@ class XmlUtils
                     $valid = false;
                 }
             } elseif (is_file($schemaOrCallable)) {
-                $schemaSource = (new Filesystem())->readFile($schemaOrCallable);
+                $schemaSource = file_get_contents((string) $schemaOrCallable);
                 $valid = @$dom->schemaValidateSource($schemaSource);
             } else {
                 libxml_use_internal_errors($internalErrors);
@@ -123,7 +122,7 @@ class XmlUtils
             throw new \InvalidArgumentException(\sprintf('File "%s" is not readable.', $file));
         }
 
-        $content = (new Filesystem())->readFile($file);
+        $content = @file_get_contents($file);
 
         if ('' === trim($content)) {
             throw new \InvalidArgumentException(\sprintf('File "%s" does not contain valid XML, it is empty.', $file));
@@ -156,7 +155,7 @@ class XmlUtils
      */
     public static function convertDomElementToArray(\DOMElement $element, bool $checkPrefix = true): mixed
     {
-        $prefix = $element->prefix;
+        $prefix = (string) $element->prefix;
         $empty = true;
         $config = [];
         foreach ($element->attributes as $name => $node) {
@@ -174,7 +173,7 @@ class XmlUtils
                     $nodeValue = trim($node->nodeValue);
                     $empty = false;
                 }
-            } elseif ($checkPrefix && $prefix != $node->prefix) {
+            } elseif ($checkPrefix && $prefix != (string) $node->prefix) {
                 continue;
             } elseif (!$node instanceof \DOMComment) {
                 $value = static::convertDomElementToArray($node, $checkPrefix);
@@ -239,7 +238,10 @@ class XmlUtils
         }
     }
 
-    protected static function getXmlErrors(bool $internalErrors): array
+    /**
+     * @return array
+     */
+    protected static function getXmlErrors(bool $internalErrors)
     {
         $errors = [];
         foreach (libxml_get_errors() as $error) {

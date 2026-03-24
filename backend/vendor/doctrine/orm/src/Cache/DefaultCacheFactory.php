@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace Doctrine\ORM\Cache;
 
+use Doctrine\Common\Cache\Cache as LegacyCache;
+use Doctrine\Common\Cache\Psr6\CacheAdapter;
+use Doctrine\Deprecations\Deprecation;
 use Doctrine\ORM\Cache;
-use Doctrine\ORM\Cache\Persister\Collection\CachedCollectionPersister;
 use Doctrine\ORM\Cache\Persister\Collection\NonStrictReadWriteCachedCollectionPersister;
 use Doctrine\ORM\Cache\Persister\Collection\ReadOnlyCachedCollectionPersister;
 use Doctrine\ORM\Cache\Persister\Collection\ReadWriteCachedCollectionPersister;
-use Doctrine\ORM\Cache\Persister\Entity\CachedEntityPersister;
 use Doctrine\ORM\Cache\Persister\Entity\NonStrictReadWriteCachedEntityPersister;
 use Doctrine\ORM\Cache\Persister\Entity\ReadOnlyCachedEntityPersister;
 use Doctrine\ORM\Cache\Persister\Entity\ReadWriteCachedEntityPersister;
@@ -17,53 +18,97 @@ use Doctrine\ORM\Cache\Region\DefaultRegion;
 use Doctrine\ORM\Cache\Region\FileLockRegion;
 use Doctrine\ORM\Cache\Region\UpdateTimestampCache;
 use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\ORM\Mapping\AssociationMapping;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Persisters\Collection\CollectionPersister;
 use Doctrine\ORM\Persisters\Entity\EntityPersister;
 use InvalidArgumentException;
 use LogicException;
 use Psr\Cache\CacheItemPoolInterface;
+use TypeError;
 
 use function assert;
+use function get_debug_type;
 use function sprintf;
 
 use const DIRECTORY_SEPARATOR;
 
 class DefaultCacheFactory implements CacheFactory
 {
-    private TimestampRegion|null $timestampRegion = null;
+    /** @var CacheItemPoolInterface */
+    private $cacheItemPool;
+
+    /** @var RegionsConfiguration */
+    private $regionsConfig;
+
+    /** @var TimestampRegion|null */
+    private $timestampRegion;
 
     /** @var Region[] */
-    private array $regions = [];
+    private $regions = [];
 
-    private string|null $fileLockRegionDirectory = null;
+    /** @var string|null */
+    private $fileLockRegionDirectory;
 
-    public function __construct(private readonly RegionsConfiguration $regionsConfig, private readonly CacheItemPoolInterface $cacheItemPool)
+    /** @param CacheItemPoolInterface $cacheItemPool */
+    public function __construct(RegionsConfiguration $cacheConfig, $cacheItemPool)
     {
+        if ($cacheItemPool instanceof LegacyCache) {
+            Deprecation::trigger(
+                'doctrine/orm',
+                'https://github.com/doctrine/orm/pull/9322',
+                'Passing an instance of %s to %s is deprecated, pass a %s instead.',
+                get_debug_type($cacheItemPool),
+                __METHOD__,
+                CacheItemPoolInterface::class
+            );
+
+            $this->cacheItemPool = CacheAdapter::wrap($cacheItemPool);
+        } elseif (! $cacheItemPool instanceof CacheItemPoolInterface) {
+            throw new TypeError(sprintf(
+                '%s: Parameter #2 is expected to be an instance of %s, got %s.',
+                __METHOD__,
+                CacheItemPoolInterface::class,
+                get_debug_type($cacheItemPool)
+            ));
+        } else {
+            $this->cacheItemPool = $cacheItemPool;
+        }
+
+        $this->regionsConfig = $cacheConfig;
     }
 
-    public function setFileLockRegionDirectory(string $fileLockRegionDirectory): void
+    /**
+     * @param string $fileLockRegionDirectory
+     *
+     * @return void
+     */
+    public function setFileLockRegionDirectory($fileLockRegionDirectory)
     {
-        $this->fileLockRegionDirectory = $fileLockRegionDirectory;
+        $this->fileLockRegionDirectory = (string) $fileLockRegionDirectory;
     }
 
-    public function getFileLockRegionDirectory(): string|null
+    /** @return string */
+    public function getFileLockRegionDirectory()
     {
         return $this->fileLockRegionDirectory;
     }
 
-    public function setRegion(Region $region): void
+    /** @return void */
+    public function setRegion(Region $region)
     {
         $this->regions[$region->getName()] = $region;
     }
 
-    public function setTimestampRegion(TimestampRegion $region): void
+    /** @return void */
+    public function setTimestampRegion(TimestampRegion $region)
     {
         $this->timestampRegion = $region;
     }
 
-    public function buildCachedEntityPersister(EntityManagerInterface $em, EntityPersister $persister, ClassMetadata $metadata): CachedEntityPersister
+    /**
+     * {@inheritDoc}
+     */
+    public function buildCachedEntityPersister(EntityManagerInterface $em, EntityPersister $persister, ClassMetadata $metadata)
     {
         assert($metadata->cache !== null);
         $region = $this->getRegion($metadata->cache);
@@ -88,14 +133,14 @@ class DefaultCacheFactory implements CacheFactory
         throw new InvalidArgumentException(sprintf('Unrecognized access strategy type [%s]', $usage));
     }
 
-    public function buildCachedCollectionPersister(
-        EntityManagerInterface $em,
-        CollectionPersister $persister,
-        AssociationMapping $mapping,
-    ): CachedCollectionPersister {
-        assert(isset($mapping->cache));
-        $usage  = $mapping->cache['usage'];
-        $region = $this->getRegion($mapping->cache);
+    /**
+     * {@inheritDoc}
+     */
+    public function buildCachedCollectionPersister(EntityManagerInterface $em, CollectionPersister $persister, array $mapping)
+    {
+        assert(isset($mapping['cache']));
+        $usage  = $mapping['cache']['usage'];
+        $region = $this->getRegion($mapping['cache']);
 
         if ($usage === ClassMetadata::CACHE_USAGE_READ_ONLY) {
             return new ReadOnlyCachedCollectionPersister($persister, $region, $em, $mapping);
@@ -116,7 +161,10 @@ class DefaultCacheFactory implements CacheFactory
         throw new InvalidArgumentException(sprintf('Unrecognized access strategy type [%s]', $usage));
     }
 
-    public function buildQueryCache(EntityManagerInterface $em, string|null $regionName = null): QueryCache
+    /**
+     * {@inheritDoc}
+     */
+    public function buildQueryCache(EntityManagerInterface $em, $regionName = null)
     {
         return new DefaultQueryCache(
             $em,
@@ -124,17 +172,23 @@ class DefaultCacheFactory implements CacheFactory
                 [
                     'region' => $regionName ?: Cache::DEFAULT_QUERY_REGION_NAME,
                     'usage'  => ClassMetadata::CACHE_USAGE_NONSTRICT_READ_WRITE,
-                ],
-            ),
+                ]
+            )
         );
     }
 
-    public function buildCollectionHydrator(EntityManagerInterface $em, AssociationMapping $mapping): CollectionHydrator
+    /**
+     * {@inheritDoc}
+     */
+    public function buildCollectionHydrator(EntityManagerInterface $em, array $mapping)
     {
         return new DefaultCollectionHydrator($em);
     }
 
-    public function buildEntityHydrator(EntityManagerInterface $em, ClassMetadata $metadata): EntityHydrator
+    /**
+     * {@inheritDoc}
+     */
+    public function buildEntityHydrator(EntityManagerInterface $em, ClassMetadata $metadata)
     {
         return new DefaultEntityHydrator($em);
     }
@@ -142,7 +196,7 @@ class DefaultCacheFactory implements CacheFactory
     /**
      * {@inheritDoc}
      */
-    public function getRegion(array $cache): Region
+    public function getRegion(array $cache)
     {
         if (isset($this->regions[$cache['region']])) {
             return $this->regions[$cache['region']];
@@ -159,7 +213,7 @@ class DefaultCacheFactory implements CacheFactory
             ) {
                 throw new LogicException(
                     'If you want to use a "READ_WRITE" cache an implementation of "Doctrine\ORM\Cache\ConcurrentRegion" is required, ' .
-                    'The default implementation provided by doctrine is "Doctrine\ORM\Cache\Region\FileLockRegion" if you want to use it please provide a valid directory, DefaultCacheFactory#setFileLockRegionDirectory(). ',
+                    'The default implementation provided by doctrine is "Doctrine\ORM\Cache\Region\FileLockRegion" if you want to use it please provide a valid directory, DefaultCacheFactory#setFileLockRegionDirectory(). '
                 );
             }
 
@@ -170,7 +224,10 @@ class DefaultCacheFactory implements CacheFactory
         return $this->regions[$cache['region']] = $region;
     }
 
-    public function getTimestampRegion(): TimestampRegion
+    /**
+     * {@inheritDoc}
+     */
+    public function getTimestampRegion()
     {
         if ($this->timestampRegion === null) {
             $name     = Cache::DEFAULT_TIMESTAMP_REGION_NAME;
@@ -182,7 +239,10 @@ class DefaultCacheFactory implements CacheFactory
         return $this->timestampRegion;
     }
 
-    public function createCache(EntityManagerInterface $entityManager): Cache
+    /**
+     * {@inheritDoc}
+     */
+    public function createCache(EntityManagerInterface $entityManager)
     {
         return new DefaultCache($entityManager);
     }

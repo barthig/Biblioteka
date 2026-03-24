@@ -12,6 +12,7 @@ use Doctrine\Common\Collections\Expr\Value;
 use RuntimeException;
 
 use function count;
+use function defined;
 use function str_replace;
 use function str_starts_with;
 
@@ -20,23 +21,28 @@ use function str_starts_with;
  */
 class QueryExpressionVisitor extends ExpressionVisitor
 {
-    private const OPERATOR_MAP = [
+    /** @var array<string,string> */
+    private static $operatorMap = [
         Comparison::GT => Expr\Comparison::GT,
         Comparison::GTE => Expr\Comparison::GTE,
         Comparison::LT  => Expr\Comparison::LT,
         Comparison::LTE => Expr\Comparison::LTE,
     ];
 
-    private readonly Expr $expr;
+    /** @var mixed[] */
+    private $queryAliases;
+
+    /** @var Expr */
+    private $expr;
 
     /** @var list<mixed> */
-    private array $parameters = [];
+    private $parameters = [];
 
     /** @param mixed[] $queryAliases */
-    public function __construct(
-        private readonly array $queryAliases,
-    ) {
-        $this->expr = new Expr();
+    public function __construct($queryAliases)
+    {
+        $this->queryAliases = $queryAliases;
+        $this->expr         = new Expr();
     }
 
     /**
@@ -45,25 +51,37 @@ class QueryExpressionVisitor extends ExpressionVisitor
      *
      * @return ArrayCollection<int, mixed>
      */
-    public function getParameters(): ArrayCollection
+    public function getParameters()
     {
         return new ArrayCollection($this->parameters);
     }
 
-    public function clearParameters(): void
+    /**
+     * Clears parameters.
+     *
+     * @return void
+     */
+    public function clearParameters()
     {
         $this->parameters = [];
     }
 
     /**
      * Converts Criteria expression to Query one based on static map.
+     *
+     * @param string $criteriaOperator
+     *
+     * @return string|null
      */
-    private static function convertComparisonOperator(string $criteriaOperator): string|null
+    private static function convertComparisonOperator($criteriaOperator)
     {
-        return self::OPERATOR_MAP[$criteriaOperator] ?? null;
+        return self::$operatorMap[$criteriaOperator] ?? null;
     }
 
-    public function walkCompositeExpression(CompositeExpression $expr): mixed
+    /**
+     * {@inheritDoc}
+     */
+    public function walkCompositeExpression(CompositeExpression $expr)
     {
         $expressionList = [];
 
@@ -71,15 +89,27 @@ class QueryExpressionVisitor extends ExpressionVisitor
             $expressionList[] = $this->dispatch($child);
         }
 
-        return match ($expr->getType()) {
-            CompositeExpression::TYPE_AND => new Expr\Andx($expressionList),
-            CompositeExpression::TYPE_OR => new Expr\Orx($expressionList),
-            CompositeExpression::TYPE_NOT => $this->expr->not($expressionList[0]),
-            default => throw new RuntimeException('Unknown composite ' . $expr->getType()),
-        };
+        switch ($expr->getType()) {
+            case CompositeExpression::TYPE_AND:
+                return new Expr\Andx($expressionList);
+
+            case CompositeExpression::TYPE_OR:
+                return new Expr\Orx($expressionList);
+
+            default:
+                // Multiversion support for `doctrine/collections` before and after v2.1.0
+                if (defined(CompositeExpression::class . '::TYPE_NOT') && $expr->getType() === CompositeExpression::TYPE_NOT) {
+                    return $this->expr->not($expressionList[0]);
+                }
+
+                throw new RuntimeException('Unknown composite ' . $expr->getType());
+        }
     }
 
-    public function walkComparison(Comparison $comparison): mixed
+    /**
+     * {@inheritDoc}
+     */
+    public function walkComparison(Comparison $comparison)
     {
         if (! isset($this->queryAliases[0])) {
             throw new QueryException('No aliases are set before invoking walkComparison().');
@@ -165,7 +195,7 @@ class QueryExpressionVisitor extends ExpressionVisitor
                     return new Expr\Comparison(
                         $field,
                         $operator,
-                        $placeholder,
+                        $placeholder
                     );
                 }
 
@@ -173,7 +203,10 @@ class QueryExpressionVisitor extends ExpressionVisitor
         }
     }
 
-    public function walkValue(Value $value): mixed
+    /**
+     * {@inheritDoc}
+     */
+    public function walkValue(Value $value)
     {
         return $value->getValue();
     }

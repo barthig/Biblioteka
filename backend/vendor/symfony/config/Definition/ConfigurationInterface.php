@@ -23,7 +23,7 @@ interface ConfigurationInterface
     /**
      * Generates the configuration tree builder.
      *
-     * @return TreeBuilder<'array'>
+     * @return TreeBuilder
      */
-    public function getConfigTreeBuilder(): TreeBuilder;
+    public function getConfigTreeBuilder();
 }

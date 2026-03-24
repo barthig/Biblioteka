@@ -13,20 +13,32 @@ use Doctrine\ORM\Query\SqlWalker;
  *
  * @link    www.doctrine-project.org
  *
- * @phpstan-consistent-constructor
+ * @psalm-consistent-constructor
  */
 abstract class FunctionNode extends Node
 {
-    public function __construct(public string $name)
+    /** @var string */
+    public $name;
+
+    /** @param string $name */
+    public function __construct($name)
     {
+        $this->name = $name;
     }
 
-    abstract public function getSql(SqlWalker $sqlWalker): string;
+    /** @return string */
+    abstract public function getSql(SqlWalker $sqlWalker);
 
-    public function dispatch(SqlWalker $sqlWalker): string
+    /**
+     * @param SqlWalker $sqlWalker
+     *
+     * @return string
+     */
+    public function dispatch($sqlWalker)
     {
         return $sqlWalker->walkFunction($this);
     }
 
-    abstract public function parse(Parser $parser): void;
+    /** @return void */
+    abstract public function parse(Parser $parser);
 }

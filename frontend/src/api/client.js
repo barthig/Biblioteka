@@ -154,7 +154,7 @@ const refreshAccessToken = async () => {
   
   if (!response.ok) {
     clearTokens()
-    // Intentional full reload Ä‚ËĂ˘â€šÂ¬Ă˘â‚¬ĹĄ this runs outside the React component tree
+    // Intentional full reload: this runs outside the React component tree
     // where useNavigate() is unavailable
     window.location.href = '/login'
     throw new Error('Token refresh failed')

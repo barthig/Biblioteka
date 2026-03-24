@@ -9,6 +9,8 @@ namespace Doctrine\ORM\Query\AST;
  * 2 optimization.
  *
  * @internal
+ *
+ * @psalm-inheritors ConditionalPrimary|ConditionalFactor|ConditionalTerm
  */
 interface Phase2OptimizableConditional
 {

@@ -11,21 +11,22 @@ namespace Doctrine\ORM\Query\Expr;
  */
 class Orx extends Composite
 {
-    protected string $separator = ' OR ';
+    /** @var string */
+    protected $separator = ' OR ';
 
     /** @var string[] */
-    protected array $allowedClasses = [
+    protected $allowedClasses = [
         Comparison::class,
         Func::class,
         Andx::class,
         self::class,
     ];
 
-    /** @phpstan-var list<string|Comparison|Func|Andx|self> */
-    protected array $parts = [];
+    /** @psalm-var list<string|Comparison|Func|Andx|self> */
+    protected $parts = [];
 
-    /** @phpstan-return list<string|Comparison|Func|Andx|self> */
-    public function getParts(): array
+    /** @psalm-return list<string|Comparison|Func|Andx|self> */
+    public function getParts()
     {
         return $this->parts;
     }

@@ -5,22 +5,57 @@ declare(strict_types=1);
 namespace Doctrine\ORM\Cache;
 
 use Doctrine\ORM\Exception\ORMException;
-use LogicException;
 
 use function sprintf;
 
 /**
  * Exception for cache.
  */
-class CacheException extends LogicException implements ORMException
+class CacheException extends ORMException
 {
-    public static function updateReadOnlyCollection(string $sourceEntity, string $fieldName): self
+    /**
+     * @param string $sourceEntity
+     * @param string $fieldName
+     *
+     * @return CacheException
+     */
+    public static function updateReadOnlyCollection($sourceEntity, $fieldName)
     {
         return new self(sprintf('Cannot update a readonly collection "%s#%s"', $sourceEntity, $fieldName));
     }
 
-    public static function nonCacheableEntity(string $entityName): self
+    /**
+     * @deprecated This method is not used anymore.
+     *
+     * @param string $entityName
+     *
+     * @return CacheException
+     */
+    public static function updateReadOnlyEntity($entityName)
+    {
+        return new self(sprintf('Cannot update a readonly entity "%s"', $entityName));
+    }
+
+    /**
+     * @param string $entityName
+     *
+     * @return CacheException
+     */
+    public static function nonCacheableEntity($entityName)
     {
         return new self(sprintf('Entity "%s" not configured as part of the second-level cache.', $entityName));
+    }
+
+    /**
+     * @deprecated This method is not used anymore.
+     *
+     * @param string $entityName
+     * @param string $field
+     *
+     * @return CacheException
+     */
+    public static function nonCacheableEntityAssociation($entityName, $field)
+    {
+        return new self(sprintf('Entity association field "%s#%s" not configured as part of the second-level cache.', $entityName, $field));
     }
 }

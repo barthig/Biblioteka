@@ -21,7 +21,10 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class EntityType extends DoctrineType
 {
-    public function configureOptions(OptionsResolver $resolver): void
+    /**
+     * @return void
+     */
+    public function configureOptions(OptionsResolver $resolver)
     {
         parent::configureOptions($resolver);
 

@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Doctrine\ORM\Query\AST;
 
-use Doctrine\ORM\Query\SqlWalker;
-
 /**
  * SelectExpression ::= IdentificationVariable ["." "*"] | StateFieldPathExpression |
  *                      (AggregateExpression | "(" Subselect ")") [["AS"] ["HIDDEN"] FieldAliasIdentificationVariable]
@@ -14,15 +12,32 @@ use Doctrine\ORM\Query\SqlWalker;
  */
 class SelectExpression extends Node
 {
-    public function __construct(
-        public mixed $expression,
-        public string|null $fieldIdentificationVariable,
-        public bool $hiddenAliasResultVariable = false,
-    ) {
+    /** @var mixed */
+    public $expression;
+
+    /** @var string|null */
+    public $fieldIdentificationVariable;
+
+    /** @var bool */
+    public $hiddenAliasResultVariable;
+
+    /**
+     * @param mixed       $expression
+     * @param string|null $fieldIdentificationVariable
+     * @param bool        $hiddenAliasResultVariable
+     */
+    public function __construct($expression, $fieldIdentificationVariable, $hiddenAliasResultVariable = false)
+    {
+        $this->expression                  = $expression;
+        $this->fieldIdentificationVariable = $fieldIdentificationVariable;
+        $this->hiddenAliasResultVariable   = $hiddenAliasResultVariable;
     }
 
-    public function dispatch(SqlWalker $walker): string
+    /**
+     * {@inheritDoc}
+     */
+    public function dispatch($sqlWalker)
     {
-        return $walker->walkSelectExpression($this);
+        return $sqlWalker->walkSelectExpression($this);
     }
 }

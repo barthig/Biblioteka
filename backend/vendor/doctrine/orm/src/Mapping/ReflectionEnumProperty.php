@@ -6,26 +6,42 @@ namespace Doctrine\ORM\Mapping;
 
 use BackedEnum;
 use ReflectionProperty;
+use ReturnTypeWillChange;
 use ValueError;
 
 use function array_map;
+use function get_class;
 use function is_array;
 
-/** @deprecated use Doctrine\Persistence\Reflection\EnumReflectionProperty instead */
-final class ReflectionEnumProperty extends ReflectionProperty
+class ReflectionEnumProperty extends ReflectionProperty
 {
+    /** @var ReflectionProperty */
+    private $originalReflectionProperty;
+
+    /** @var class-string<BackedEnum> */
+    private $enumType;
+
     /** @param class-string<BackedEnum> $enumType */
-    public function __construct(
-        private readonly ReflectionProperty $originalReflectionProperty,
-        private readonly string $enumType,
-    ) {
+    public function __construct(ReflectionProperty $originalReflectionProperty, string $enumType)
+    {
+        $this->originalReflectionProperty = $originalReflectionProperty;
+        $this->enumType                   = $enumType;
+
         parent::__construct(
             $originalReflectionProperty->class,
-            $originalReflectionProperty->name,
+            $originalReflectionProperty->name
         );
     }
 
-    public function getValue(object|null $object = null): int|string|array|null
+    /**
+     * {@inheritDoc}
+     *
+     * @param object|null $object
+     *
+     * @return int|string|int[]|string[]|null
+     */
+    #[ReturnTypeWillChange]
+    public function getValue($object = null)
     {
         if ($object === null) {
             return null;
@@ -38,10 +54,9 @@ final class ReflectionEnumProperty extends ReflectionProperty
         }
 
         if (is_array($enum)) {
-            return array_map(
-                static fn (BackedEnum $item): int|string => $item->value,
-                $enum,
-            );
+            return array_map(static function (BackedEnum $item): mixed {
+                return $item->value;
+            }, $enum);
         }
 
         return $enum->value;
@@ -51,11 +66,13 @@ final class ReflectionEnumProperty extends ReflectionProperty
      * @param object                                                 $object
      * @param int|string|int[]|string[]|BackedEnum|BackedEnum[]|null $value
      */
-    public function setValue(mixed $object, mixed $value = null): void
+    public function setValue($object, $value = null): void
     {
         if ($value !== null) {
             if (is_array($value)) {
-                $value = array_map(fn (int|string|BackedEnum $item): BackedEnum => $this->initializeEnumValue($object, $item), $value);
+                $value = array_map(function ($item) use ($object): BackedEnum {
+                    return $this->initializeEnumValue($object, $item);
+                }, $value);
             } else {
                 $value = $this->initializeEnumValue($object, $value);
             }
@@ -64,7 +81,11 @@ final class ReflectionEnumProperty extends ReflectionProperty
         $this->originalReflectionProperty->setValue($object, $value);
     }
 
-    private function initializeEnumValue(object $object, int|string|BackedEnum $value): BackedEnum
+    /**
+     * @param object                $object
+     * @param int|string|BackedEnum $value
+     */
+    private function initializeEnumValue($object, $value): BackedEnum
     {
         if ($value instanceof BackedEnum) {
             return $value;
@@ -76,11 +97,11 @@ final class ReflectionEnumProperty extends ReflectionProperty
             return $enumType::from($value);
         } catch (ValueError $e) {
             throw MappingException::invalidEnumValue(
-                $object::class,
+                get_class($object),
                 $this->originalReflectionProperty->name,
                 (string) $value,
                 $enumType,
-                $e,
+                $e
             );
         }
     }

@@ -11,6 +11,7 @@
 
 namespace Symfony\Bridge\Doctrine\DataCollector;
 
+use Doctrine\DBAL\Logging\DebugStack;
 use Doctrine\DBAL\Types\ConversionException;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\Persistence\ManagerRegistry;
@@ -31,15 +32,41 @@ class DoctrineDataCollector extends DataCollector
     private array $connections;
     private array $managers;
 
+    /**
+     * @var array<string, DebugStack>
+     */
+    private array $loggers = [];
+
     public function __construct(
         private ManagerRegistry $registry,
-        private DebugDataHolder $debugDataHolder,
+        private ?DebugDataHolder $debugDataHolder = null,
     ) {
         $this->connections = $registry->getConnectionNames();
         $this->managers = $registry->getManagerNames();
+
+        if (null === $debugDataHolder) {
+            trigger_deprecation('symfony/doctrine-bridge', '6.4', 'Not passing an instance of "%s" as "$debugDataHolder" to "%s()" is deprecated.', DebugDataHolder::class, __METHOD__);
+        }
     }
 
-    public function collect(Request $request, Response $response, ?\Throwable $exception = null): void
+    /**
+     * Adds the stack logger for a connection.
+     *
+     * @return void
+     *
+     * @deprecated since Symfony 6.4, use a DebugDataHolder instead.
+     */
+    public function addLogger(string $name, DebugStack $logger)
+    {
+        trigger_deprecation('symfony/doctrine-bridge', '6.4', '"%s()" is deprecated. Pass an instance of "%s" to the constructor instead.', __METHOD__, DebugDataHolder::class);
+
+        $this->loggers[$name] = $logger;
+    }
+
+    /**
+     * @return void
+     */
+    public function collect(Request $request, Response $response, ?\Throwable $exception = null)
     {
         $this->data = [
             'queries' => $this->collectQueries(),
@@ -52,40 +79,76 @@ class DoctrineDataCollector extends DataCollector
     {
         $queries = [];
 
-        foreach ($this->debugDataHolder->getData() as $name => $data) {
-            $queries[$name] = $this->sanitizeQueries($name, $data);
+        if (null !== $this->debugDataHolder) {
+            foreach ($this->debugDataHolder->getData() as $name => $data) {
+                $queries[$name] = $this->sanitizeQueries($name, $data);
+            }
+
+            return $queries;
+        }
+
+        foreach ($this->loggers as $name => $logger) {
+            $queries[$name] = $this->sanitizeQueries($name, $logger->queries);
         }
 
         return $queries;
     }
 
-    public function reset(): void
+    /**
+     * @return void
+     */
+    public function reset()
     {
         $this->data = [];
-        $this->debugDataHolder->reset();
+
+        if (null !== $this->debugDataHolder) {
+            $this->debugDataHolder->reset();
+
+            return;
+        }
+
+        foreach ($this->loggers as $logger) {
+            $logger->queries = [];
+            $logger->currentQuery = 0;
+        }
     }
 
-    public function getManagers(): array
+    /**
+     * @return array
+     */
+    public function getManagers()
     {
         return $this->data['managers'];
     }
 
-    public function getConnections(): array
+    /**
+     * @return array
+     */
+    public function getConnections()
     {
         return $this->data['connections'];
     }
 
-    public function getQueryCount(): int
+    /**
+     * @return int
+     */
+    public function getQueryCount()
     {
         return array_sum(array_map('count', $this->data['queries']));
     }
 
-    public function getQueries(): array
+    /**
+     * @return array
+     */
+    public function getQueries()
     {
         return $this->data['queries'];
     }
 
-    public function getTime(): float
+    /**
+     * @return float
+     */
+    public function getTime()
     {
         $time = 0;
         foreach ($this->data['queries'] as $queries) {
@@ -163,7 +226,8 @@ class DoctrineDataCollector extends DataCollector
                     $query['types'][$j] = $type->getBindingType();
                     try {
                         $param = $type->convertToDatabaseValue($param, $this->registry->getConnection($connectionName)->getDatabasePlatform());
-                    } catch (\TypeError|ConversionException) {
+                    } catch (\TypeError $e) {
+                    } catch (ConversionException $e) {
                     }
                 }
             }

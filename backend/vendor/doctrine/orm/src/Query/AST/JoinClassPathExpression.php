@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Doctrine\ORM\Query\AST;
 
-use Doctrine\ORM\Query\SqlWalker;
-
 /**
  * JoinClassPathExpression ::= AbstractSchemaName ["AS"] AliasIdentificationVariable
  *
@@ -13,13 +11,26 @@ use Doctrine\ORM\Query\SqlWalker;
  */
 class JoinClassPathExpression extends Node
 {
-    public function __construct(
-        public mixed $abstractSchemaName,
-        public mixed $aliasIdentificationVariable,
-    ) {
+    /** @var mixed */
+    public $abstractSchemaName;
+
+    /** @var mixed */
+    public $aliasIdentificationVariable;
+
+    /**
+     * @param mixed $abstractSchemaName
+     * @param mixed $aliasIdentificationVar
+     */
+    public function __construct($abstractSchemaName, $aliasIdentificationVar)
+    {
+        $this->abstractSchemaName          = $abstractSchemaName;
+        $this->aliasIdentificationVariable = $aliasIdentificationVar;
     }
 
-    public function dispatch(SqlWalker $walker): string
+    /**
+     * {@inheritDoc}
+     */
+    public function dispatch($walker)
     {
         return $walker->walkJoinPathExpression($this);
     }

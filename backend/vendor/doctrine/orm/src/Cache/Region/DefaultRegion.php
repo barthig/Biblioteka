@@ -4,6 +4,12 @@ declare(strict_types=1);
 
 namespace Doctrine\ORM\Cache\Region;
 
+use Closure;
+use Doctrine\Common\Cache\Cache as LegacyCache;
+use Doctrine\Common\Cache\CacheProvider;
+use Doctrine\Common\Cache\Psr6\CacheAdapter;
+use Doctrine\Common\Cache\Psr6\DoctrineProvider;
+use Doctrine\Deprecations\Deprecation;
 use Doctrine\ORM\Cache\CacheEntry;
 use Doctrine\ORM\Cache\CacheKey;
 use Doctrine\ORM\Cache\CollectionCacheEntry;
@@ -12,9 +18,12 @@ use Doctrine\ORM\Cache\Region;
 use Psr\Cache\CacheItemInterface;
 use Psr\Cache\CacheItemPoolInterface;
 use Traversable;
+use TypeError;
 
 use function array_map;
+use function get_debug_type;
 use function iterator_to_array;
+use function sprintf;
 use function strtr;
 
 /**
@@ -22,27 +31,97 @@ use function strtr;
  */
 class DefaultRegion implements Region
 {
-    private const REGION_KEY_SEPARATOR = '_';
-    private const REGION_PREFIX        = 'DC2_REGION_';
+    /** @internal since 2.11, this constant will be private in 3.0. */
+    public const REGION_KEY_SEPARATOR = '_';
+    private const REGION_PREFIX       = 'DC2_REGION_';
 
-    public function __construct(
-        private readonly string $name,
-        private readonly CacheItemPoolInterface $cacheItemPool,
-        private readonly int $lifetime = 0,
-    ) {
+    /**
+     * @deprecated since 2.11, this property will be removed in 3.0.
+     *
+     * @var LegacyCache
+     */
+    protected $cache;
+
+    /**
+     * @internal since 2.11, this property will be private in 3.0.
+     *
+     * @var string
+     */
+    protected $name;
+
+    /**
+     * @internal since 2.11, this property will be private in 3.0.
+     *
+     * @var int
+     */
+    protected $lifetime = 0;
+
+    /** @var CacheItemPoolInterface */
+    private $cacheItemPool;
+
+    /** @param CacheItemPoolInterface $cacheItemPool */
+    public function __construct(string $name, $cacheItemPool, int $lifetime = 0)
+    {
+        if ($cacheItemPool instanceof LegacyCache) {
+            Deprecation::trigger(
+                'doctrine/orm',
+                'https://github.com/doctrine/orm/pull/9322',
+                'Passing an instance of %s to %s is deprecated, pass a %s instead.',
+                get_debug_type($cacheItemPool),
+                __METHOD__,
+                CacheItemPoolInterface::class
+            );
+
+            // @phpstan-ignore property.deprecated
+            $this->cache         = $cacheItemPool;
+            $this->cacheItemPool = CacheAdapter::wrap($cacheItemPool);
+        } elseif (! $cacheItemPool instanceof CacheItemPoolInterface) {
+            throw new TypeError(sprintf(
+                '%s: Parameter #2 is expected to be an instance of %s, got %s.',
+                __METHOD__,
+                CacheItemPoolInterface::class,
+                get_debug_type($cacheItemPool)
+            ));
+        } else {
+            // @phpstan-ignore property.deprecated
+            $this->cache         = DoctrineProvider::wrap($cacheItemPool);
+            $this->cacheItemPool = $cacheItemPool;
+        }
+
+        $this->name     = $name;
+        $this->lifetime = $lifetime;
     }
 
-    public function getName(): string
+    /**
+     * {@inheritDoc}
+     */
+    public function getName()
     {
         return $this->name;
     }
 
-    public function contains(CacheKey $key): bool
+    /**
+     * @deprecated
+     *
+     * @return CacheProvider
+     */
+    public function getCache()
+    {
+        return $this->cache;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function contains(CacheKey $key)
     {
         return $this->cacheItemPool->hasItem($this->getCacheEntryKey($key));
     }
 
-    public function get(CacheKey $key): CacheEntry|null
+    /**
+     * {@inheritDoc}
+     */
+    public function get(CacheKey $key)
     {
         $item  = $this->cacheItemPool->getItem($this->getCacheEntryKey($key));
         $entry = $item->isHit() ? $item->get() : null;
@@ -54,11 +133,14 @@ class DefaultRegion implements Region
         return $entry;
     }
 
-    public function getMultiple(CollectionCacheEntry $collection): array|null
+    /**
+     * {@inheritDoc}
+     */
+    public function getMultiple(CollectionCacheEntry $collection)
     {
         $keys = array_map(
-            $this->getCacheEntryKey(...),
-            $collection->identifiers,
+            Closure::fromCallable([$this, 'getCacheEntryKey']),
+            $collection->identifiers
         );
         /** @var iterable<string, CacheItemInterface> $items */
         $items = $this->cacheItemPool->getItems($keys);
@@ -83,7 +165,12 @@ class DefaultRegion implements Region
         return $result;
     }
 
-    public function put(CacheKey $key, CacheEntry $entry, Lock|null $lock = null): bool
+    /**
+     * {@inheritDoc}
+     *
+     * @return bool
+     */
+    public function put(CacheKey $key, CacheEntry $entry, ?Lock $lock = null)
     {
         $item = $this->cacheItemPool
             ->getItem($this->getCacheEntryKey($key))
@@ -96,17 +183,32 @@ class DefaultRegion implements Region
         return $this->cacheItemPool->save($item);
     }
 
-    public function evict(CacheKey $key): bool
+    /**
+     * {@inheritDoc}
+     *
+     * @return bool
+     */
+    public function evict(CacheKey $key)
     {
         return $this->cacheItemPool->deleteItem($this->getCacheEntryKey($key));
     }
 
-    public function evictAll(): bool
+    /**
+     * {@inheritDoc}
+     *
+     * @return bool
+     */
+    public function evictAll()
     {
         return $this->cacheItemPool->clear(self::REGION_PREFIX . $this->name);
     }
 
-    private function getCacheEntryKey(CacheKey $key): string
+    /**
+     * @internal since 2.11, this method will be private in 3.0.
+     *
+     * @return string
+     */
+    protected function getCacheEntryKey(CacheKey $key)
     {
         return self::REGION_PREFIX . $this->name . self::REGION_KEY_SEPARATOR . strtr($key->hash, '{}()/\@:', '________');
     }

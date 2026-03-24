@@ -20,13 +20,25 @@ use function strcasecmp;
  */
 class TrimFunction extends FunctionNode
 {
-    public bool $leading          = false;
-    public bool $trailing         = false;
-    public bool $both             = false;
-    public string|false $trimChar = false;
-    public Node $stringPrimary;
+    /** @var bool */
+    public $leading;
 
-    public function getSql(SqlWalker $sqlWalker): string
+    /** @var bool */
+    public $trailing;
+
+    /** @var bool */
+    public $both;
+
+    /** @var string|false */
+    public $trimChar = false;
+
+    /** @var Node */
+    public $stringPrimary;
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getSql(SqlWalker $sqlWalker)
     {
         $stringPrimary = $sqlWalker->walkStringPrimary($this->stringPrimary);
         $platform      = $sqlWalker->getConnection()->getDatabasePlatform();
@@ -36,14 +48,17 @@ class TrimFunction extends FunctionNode
             return $platform->getTrimExpression(
                 $stringPrimary,
                 $trimMode,
-                $platform->quoteStringLiteral($this->trimChar),
+                $platform->quoteStringLiteral($this->trimChar)
             );
         }
 
         return $platform->getTrimExpression($stringPrimary, $trimMode);
     }
 
-    public function parse(Parser $parser): void
+    /**
+     * {@inheritDoc}
+     */
+    public function parse(Parser $parser)
     {
         $lexer = $parser->getLexer();
 
@@ -68,8 +83,8 @@ class TrimFunction extends FunctionNode
         $parser->match(TokenType::T_CLOSE_PARENTHESIS);
     }
 
-    /** @phpstan-return TrimMode::* */
-    private function getTrimMode(): TrimMode|int
+    /** @psalm-return TrimMode::* */
+    private function getTrimMode(): int
     {
         if ($this->leading) {
             return TrimMode::LEADING;

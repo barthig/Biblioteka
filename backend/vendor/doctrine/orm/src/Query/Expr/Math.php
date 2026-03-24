@@ -4,41 +4,56 @@ declare(strict_types=1);
 
 namespace Doctrine\ORM\Query\Expr;
 
-use Stringable;
-
 /**
  * Expression class for DQL math statements.
  *
  * @link    www.doctrine-project.org
  */
-class Math implements Stringable
+class Math
 {
+    /** @var mixed */
+    protected $leftExpr;
+
+    /** @var string */
+    protected $operator;
+
+    /** @var mixed */
+    protected $rightExpr;
+
     /**
      * Creates a mathematical expression with the given arguments.
+     *
+     * @param mixed  $leftExpr
+     * @param string $operator
+     * @param mixed  $rightExpr
      */
-    public function __construct(
-        protected mixed $leftExpr,
-        protected string $operator,
-        protected mixed $rightExpr,
-    ) {
+    public function __construct($leftExpr, $operator, $rightExpr)
+    {
+        $this->leftExpr  = $leftExpr;
+        $this->operator  = $operator;
+        $this->rightExpr = $rightExpr;
     }
 
-    public function getLeftExpr(): mixed
+    /** @return mixed */
+    public function getLeftExpr()
     {
         return $this->leftExpr;
     }
 
-    public function getOperator(): string
+    /** @return string */
+    public function getOperator()
     {
         return $this->operator;
     }
 
-    public function getRightExpr(): mixed
+    /** @return mixed */
+    public function getRightExpr()
     {
         return $this->rightExpr;
     }
 
-    public function __toString(): string
+    /** @return string */
+    public function __toString()
     {
         // Adjusting Left Expression
         $leftExpr = (string) $this->leftExpr;

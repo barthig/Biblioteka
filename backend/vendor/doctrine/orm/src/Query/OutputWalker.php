@@ -23,5 +23,6 @@ use Doctrine\ORM\Query\Exec\SqlFinalizer;
  */
 interface OutputWalker
 {
-    public function getFinalizer(AST\DeleteStatement|AST\UpdateStatement|AST\SelectStatement $AST): SqlFinalizer;
+    /** @param AST\DeleteStatement|AST\UpdateStatement|AST\SelectStatement $AST */
+    public function getFinalizer($AST): SqlFinalizer;
 }

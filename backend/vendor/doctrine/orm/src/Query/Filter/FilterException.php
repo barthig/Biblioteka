@@ -5,11 +5,10 @@ declare(strict_types=1);
 namespace Doctrine\ORM\Query\Filter;
 
 use Doctrine\ORM\Exception\ORMException;
-use LogicException;
 
 use function sprintf;
 
-class FilterException extends LogicException implements ORMException
+class FilterException extends ORMException
 {
     public static function cannotConvertListParameterIntoSingleValue(string $name): self
     {

@@ -11,8 +11,6 @@
 
 namespace Symfony\Component\Config\Builder;
 
-use Symfony\Component\Config\Definition\NodeInterface;
-
 /**
  * Build PHP classes to generate config.
  *
@@ -22,6 +20,7 @@ use Symfony\Component\Config\Definition\NodeInterface;
  */
 class ClassBuilder
 {
+    private string $namespace;
     private string $name;
 
     /** @var Property[] */
@@ -34,12 +33,9 @@ class ClassBuilder
     private array $implements = [];
     private bool $allowExtraKeys = false;
 
-    public function __construct(
-        private string $namespace,
-        string $name,
-        private NodeInterface $node,
-        public readonly bool $isRoot = false,
-    ) {
+    public function __construct(string $namespace, string $name)
+    {
+        $this->namespace = $namespace;
         $this->name = ucfirst($this->camelCase($name)).'Config';
     }
 
@@ -74,7 +70,7 @@ class ClassBuilder
             $use .= \sprintf('use %s;', $statement)."\n";
         }
 
-        $implements = $this->implements ? 'implements '.implode(', ', $this->implements) : '';
+        $implements = [] === $this->implements ? '' : 'implements '.implode(', ', $this->implements);
         $body = '';
         foreach ($this->properties as $property) {
             $body .= '    '.$property->getContent()."\n";
@@ -86,7 +82,7 @@ class ClassBuilder
             }
         }
 
-        return strtr('<?php
+        $content = strtr('<?php
 
 namespace NAMESPACE;
 
@@ -99,6 +95,8 @@ class CLASS IMPLEMENTS
 BODY
 }
 ', ['NAMESPACE' => $this->namespace, 'REQUIRE' => $require, 'USE' => $use, 'CLASS' => $this->getName(), 'IMPLEMENTS' => $implements, 'BODY' => $body]);
+
+        return $content;
     }
 
     public function addRequire(self $class): void
@@ -169,10 +167,5 @@ BODY
     public function shouldAllowExtraKeys(): bool
     {
         return $this->allowExtraKeys;
-    }
-
-    public function getNode(): NodeInterface
-    {
-        return $this->node;
     }
 }

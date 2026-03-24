@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Doctrine\ORM\Query\AST;
 
-use Doctrine\ORM\Query\SqlWalker;
-
 use function strtoupper;
 
 /**
@@ -15,29 +13,41 @@ use function strtoupper;
  */
 class QuantifiedExpression extends Node
 {
-    public string $type;
+    /** @var string */
+    public $type;
 
-    public function __construct(public Subselect $subselect)
+    /** @var Subselect */
+    public $subselect;
+
+    /** @param Subselect $subselect */
+    public function __construct($subselect)
     {
+        $this->subselect = $subselect;
     }
 
-    public function isAll(): bool
+    /** @return bool */
+    public function isAll()
     {
         return strtoupper($this->type) === 'ALL';
     }
 
-    public function isAny(): bool
+    /** @return bool */
+    public function isAny()
     {
         return strtoupper($this->type) === 'ANY';
     }
 
-    public function isSome(): bool
+    /** @return bool */
+    public function isSome()
     {
         return strtoupper($this->type) === 'SOME';
     }
 
-    public function dispatch(SqlWalker $walker): string
+    /**
+     * {@inheritDoc}
+     */
+    public function dispatch($sqlWalker)
     {
-        return $walker->walkQuantifiedExpression($this);
+        return $sqlWalker->walkQuantifiedExpression($this);
     }
 }

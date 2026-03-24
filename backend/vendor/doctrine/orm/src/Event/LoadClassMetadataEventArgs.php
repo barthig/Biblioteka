@@ -17,8 +17,10 @@ class LoadClassMetadataEventArgs extends BaseLoadClassMetadataEventArgs
 {
     /**
      * Retrieve associated EntityManager.
+     *
+     * @return EntityManagerInterface
      */
-    public function getEntityManager(): EntityManagerInterface
+    public function getEntityManager()
     {
         return $this->getObjectManager();
     }

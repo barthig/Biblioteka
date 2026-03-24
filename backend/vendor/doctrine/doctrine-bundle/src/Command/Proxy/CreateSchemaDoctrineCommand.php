@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Doctrine\Bundle\DoctrineBundle\Command\Proxy;
 
 use Doctrine\ORM\Tools\Console\Command\SchemaTool\CreateCommand;
@@ -29,6 +27,6 @@ class CreateSchemaDoctrineCommand extends CreateCommand
             return;
         }
 
-        $this->addOption('em', null, InputOption::VALUE_REQUIRED, 'The entity manager to use for this command');
+        $this->addOption('em', null, InputOption::VALUE_OPTIONAL, 'The entity manager to use for this command');
     }
 }

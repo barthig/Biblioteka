@@ -16,7 +16,10 @@ use function key;
  */
 class SingleScalarHydrator extends AbstractHydrator
 {
-    protected function hydrateAllData(): mixed
+    /**
+     * {@inheritDoc}
+     */
+    protected function hydrateAllData()
     {
         $data    = $this->statement()->fetchAllAssociative();
         $numRows = count($data);

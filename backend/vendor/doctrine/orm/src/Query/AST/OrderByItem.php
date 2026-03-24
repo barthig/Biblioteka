@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Doctrine\ORM\Query\AST;
 
-use Doctrine\ORM\Query\SqlWalker;
-
 use function strtoupper;
 
 /**
@@ -15,24 +13,35 @@ use function strtoupper;
  */
 class OrderByItem extends Node
 {
-    public string $type;
+    /** @var mixed */
+    public $expression;
 
-    public function __construct(public mixed $expression)
+    /** @var string */
+    public $type;
+
+    /** @param mixed $expression */
+    public function __construct($expression)
     {
+        $this->expression = $expression;
     }
 
-    public function isAsc(): bool
+    /** @return bool */
+    public function isAsc()
     {
         return strtoupper($this->type) === 'ASC';
     }
 
-    public function isDesc(): bool
+    /** @return bool */
+    public function isDesc()
     {
         return strtoupper($this->type) === 'DESC';
     }
 
-    public function dispatch(SqlWalker $walker): string
+    /**
+     * {@inheritDoc}
+     */
+    public function dispatch($sqlWalker)
     {
-        return $walker->walkOrderByItem($this);
+        return $sqlWalker->walkOrderByItem($this);
     }
 }

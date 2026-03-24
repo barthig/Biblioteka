@@ -24,49 +24,45 @@ class CountWalker extends TreeWalkerAdapter
      */
     public const HINT_DISTINCT = 'doctrine_paginator.distinct';
 
-    public function walkSelectStatement(SelectStatement $selectStatement): void
+    public function walkSelectStatement(SelectStatement $AST)
     {
-        if ($selectStatement->havingClause) {
+        if ($AST->havingClause) {
             throw new RuntimeException('Cannot count query that uses a HAVING clause. Use the output walkers for pagination');
         }
 
         // Get the root entity and alias from the AST fromClause
-        $from = $selectStatement->fromClause->identificationVariableDeclarations;
+        $from = $AST->fromClause->identificationVariableDeclarations;
 
         if (count($from) > 1) {
             throw new RuntimeException('Cannot count query which selects two FROM components, cannot make distinction');
         }
 
-        $distinct = $this->_getQuery()->getHint(self::HINT_DISTINCT);
+        $fromRoot            = reset($from);
+        $rootAlias           = $fromRoot->rangeVariableDeclaration->aliasIdentificationVariable;
+        $rootClass           = $this->getMetadataForDqlAlias($rootAlias);
+        $identifierFieldName = $rootClass->getSingleIdentifierFieldName();
 
-        $countPathExpressionOrLiteral = '*';
-        if ($distinct) {
-            $fromRoot            = reset($from);
-            $rootAlias           = $fromRoot->rangeVariableDeclaration->aliasIdentificationVariable;
-            $rootClass           = $this->getMetadataForDqlAlias($rootAlias);
-            $identifierFieldName = $rootClass->getSingleIdentifierFieldName();
-
-            $pathType = PathExpression::TYPE_STATE_FIELD;
-            if (isset($rootClass->associationMappings[$identifierFieldName])) {
-                $pathType = PathExpression::TYPE_SINGLE_VALUED_ASSOCIATION;
-            }
-
-            $countPathExpressionOrLiteral       = new PathExpression(
-                PathExpression::TYPE_STATE_FIELD | PathExpression::TYPE_SINGLE_VALUED_ASSOCIATION,
-                $rootAlias,
-                $identifierFieldName,
-            );
-            $countPathExpressionOrLiteral->type = $pathType;
+        $pathType = PathExpression::TYPE_STATE_FIELD;
+        if (isset($rootClass->associationMappings[$identifierFieldName])) {
+            $pathType = PathExpression::TYPE_SINGLE_VALUED_ASSOCIATION;
         }
 
-        $selectStatement->selectClause->selectExpressions = [
+        $pathExpression       = new PathExpression(
+            PathExpression::TYPE_STATE_FIELD | PathExpression::TYPE_SINGLE_VALUED_ASSOCIATION,
+            $rootAlias,
+            $identifierFieldName
+        );
+        $pathExpression->type = $pathType;
+
+        $distinct                             = $this->_getQuery()->getHint(self::HINT_DISTINCT);
+        $AST->selectClause->selectExpressions = [
             new SelectExpression(
-                new AggregateExpression('count', $countPathExpressionOrLiteral, $distinct),
-                null,
+                new AggregateExpression('count', $pathExpression, $distinct),
+                null
             ),
         ];
 
         // ORDER BY is not needed, only increases query execution through unnecessary sorting.
-        $selectStatement->orderByClause = null;
+        $AST->orderByClause = null;
     }
 }

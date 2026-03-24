@@ -13,7 +13,8 @@ use Doctrine\ORM\Query\SqlWalker;
  */
 final class SumFunction extends FunctionNode
 {
-    private AggregateExpression $aggregateExpression;
+    /** @var AggregateExpression */
+    private $aggregateExpression;
 
     public function getSql(SqlWalker $sqlWalker): string
     {

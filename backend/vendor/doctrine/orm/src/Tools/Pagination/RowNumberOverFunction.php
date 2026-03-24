@@ -19,21 +19,23 @@ use function trim;
  */
 class RowNumberOverFunction extends FunctionNode
 {
-    public OrderByClause $orderByClause;
+    /** @var OrderByClause */
+    public $orderByClause;
 
-    public function getSql(SqlWalker $sqlWalker): string
+    /** @inheritDoc */
+    public function getSql(SqlWalker $sqlWalker)
     {
         return 'ROW_NUMBER() OVER(' . trim($sqlWalker->walkOrderByClause(
-            $this->orderByClause,
+            $this->orderByClause
         )) . ')';
     }
 
     /**
      * @throws RowNumberOverFunctionNotEnabled
      *
-     * @inheritdoc
+     * @inheritDoc
      */
-    public function parse(Parser $parser): void
+    public function parse(Parser $parser)
     {
         throw RowNumberOverFunctionNotEnabled::create();
     }

@@ -17,8 +17,11 @@ use Doctrine\ORM\Query\SqlWalker;
  */
 class SingleTableDeleteUpdateExecutor extends AbstractSqlExecutor
 {
-    public function __construct(AST\Node $AST, SqlWalker $sqlWalker)
+    /** @param SqlWalker $sqlWalker */
+    public function __construct(AST\Node $AST, $sqlWalker)
     {
+        parent::__construct();
+
         if ($AST instanceof AST\UpdateStatement) {
             $this->sqlStatements = $sqlWalker->walkUpdateStatement($AST);
         } elseif ($AST instanceof AST\DeleteStatement) {
@@ -28,8 +31,10 @@ class SingleTableDeleteUpdateExecutor extends AbstractSqlExecutor
 
     /**
      * {@inheritDoc}
+     *
+     * @return int
      */
-    public function execute(Connection $conn, array $params, array $types): int
+    public function execute(Connection $conn, array $params, array $types)
     {
         if ($conn instanceof PrimaryReadReplicaConnection) {
             $conn->ensureConnectedToPrimary();

@@ -4,20 +4,19 @@ declare(strict_types=1);
 
 namespace Doctrine\ORM\Query\AST;
 
-use Doctrine\ORM\Query\SqlWalker;
-
-class InListExpression extends Node
+/** @phpstan-ignore class.extendsDeprecatedClass */
+class InListExpression extends InExpression
 {
-    /** @param non-empty-list<mixed> $literals */
-    public function __construct(
-        public ArithmeticExpression $expression,
-        public array $literals,
-        public bool $not = false,
-    ) {
-    }
+    /** @var non-empty-list<mixed> */
+    public $literals;
 
-    public function dispatch(SqlWalker $walker): string
+    /** @param non-empty-list<mixed> $literals */
+    public function __construct(ArithmeticExpression $expression, array $literals, bool $not = false)
     {
-        return $walker->walkInListExpression($this);
+        $this->literals = $literals;
+        $this->not      = $not;
+
+        // @phpstan-ignore staticMethod.deprecatedClass
+        parent::__construct($expression);
     }
 }

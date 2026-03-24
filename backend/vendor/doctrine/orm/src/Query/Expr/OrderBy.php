@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Doctrine\ORM\Query\Expr;
 
-use Stringable;
-
 use function count;
 use function implode;
 
@@ -14,46 +12,63 @@ use function implode;
  *
  * @link    www.doctrine-project.org
  */
-class OrderBy implements Stringable
+class OrderBy
 {
-    protected string $preSeparator  = '';
-    protected string $separator     = ', ';
-    protected string $postSeparator = '';
+    /** @var string */
+    protected $preSeparator = '';
+
+    /** @var string */
+    protected $separator = ', ';
+
+    /** @var string */
+    protected $postSeparator = '';
 
     /** @var string[] */
-    protected array $allowedClasses = [];
+    protected $allowedClasses = [];
 
-    /** @phpstan-var list<string> */
-    protected array $parts = [];
+    /** @psalm-var list<string> */
+    protected $parts = [];
 
-    public function __construct(
-        string|null $sort = null,
-        string|null $order = null,
-    ) {
+    /**
+     * @param string|null $sort
+     * @param string|null $order
+     */
+    public function __construct($sort = null, $order = null)
+    {
         if ($sort) {
             $this->add($sort, $order);
         }
     }
 
-    public function add(string $sort, string|null $order = null): void
+    /**
+     * @param string      $sort
+     * @param string|null $order
+     *
+     * @return void
+     */
+    public function add($sort, $order = null)
     {
         $order         = ! $order ? 'ASC' : $order;
         $this->parts[] = $sort . ' ' . $order;
     }
 
-    /** @phpstan-return 0|positive-int */
-    public function count(): int
+    /**
+     * @return int
+     * @psalm-return 0|positive-int
+     */
+    public function count()
     {
         return count($this->parts);
     }
 
-    /** @phpstan-return list<string> */
-    public function getParts(): array
+    /** @psalm-return list<string> */
+    public function getParts()
     {
         return $this->parts;
     }
 
-    public function __toString(): string
+    /** @return string */
+    public function __toString()
     {
         return $this->preSeparator . implode($this->separator, $this->parts) . $this->postSeparator;
     }

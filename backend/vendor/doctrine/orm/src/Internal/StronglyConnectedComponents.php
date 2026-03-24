@@ -34,7 +34,7 @@ final class StronglyConnectedComponents
      *
      * @var array<int, object>
      */
-    private array $nodes = [];
+    private $nodes = [];
 
     /**
      * DFS state for the different nodes, indexed by node object id and using one of
@@ -42,7 +42,7 @@ final class StronglyConnectedComponents
      *
      * @var array<int, self::*>
      */
-    private array $states = [];
+    private $states = [];
 
     /**
      * Edges between the nodes. The first-level key is the object id of the outgoing
@@ -50,39 +50,41 @@ final class StronglyConnectedComponents
      *
      * @var array<int, array<int, bool>>
      */
-    private array $edges = [];
+    private $edges = [];
 
     /**
      * DFS numbers, by object ID
      *
      * @var array<int, int>
      */
-    private array $dfs = [];
+    private $dfs = [];
 
     /**
      * lowlink numbers, by object ID
      *
      * @var array<int, int>
      */
-    private array $lowlink = [];
+    private $lowlink = [];
 
-    private int $maxdfs = 0;
+    /** @var int */
+    private $maxdfs = 0;
 
     /**
      * Nodes representing the SCC another node is in, indexed by lookup-node object ID
      *
      * @var array<int, object>
      */
-    private array $representingNodes = [];
+    private $representingNodes = [];
 
     /**
      * Stack with OIDs of nodes visited in the current state of the DFS
      *
      * @var list<int>
      */
-    private array $stack = [];
+    private $stack = [];
 
-    public function addNode(object $node): void
+    /** @param object $node */
+    public function addNode($node): void
     {
         $id                = spl_object_id($node);
         $this->nodes[$id]  = $node;
@@ -90,15 +92,19 @@ final class StronglyConnectedComponents
         $this->edges[$id]  = [];
     }
 
-    public function hasNode(object $node): bool
+    /** @param object $node */
+    public function hasNode($node): bool
     {
         return isset($this->nodes[spl_object_id($node)]);
     }
 
     /**
      * Adds a new edge between two nodes to the graph
+     *
+     * @param object $from
+     * @param object $to
      */
-    public function addEdge(object $from, object $to): void
+    public function addEdge($from, $to): void
     {
         $fromId = spl_object_id($from);
         $toId   = spl_object_id($to);
@@ -146,7 +152,12 @@ final class StronglyConnectedComponents
         }
     }
 
-    public function getNodeRepresentingStronglyConnectedComponent(object $node): object
+    /**
+     * @param object $node
+     *
+     * @return object
+     */
+    public function getNodeRepresentingStronglyConnectedComponent($node)
     {
         $oid = spl_object_id($node);
 

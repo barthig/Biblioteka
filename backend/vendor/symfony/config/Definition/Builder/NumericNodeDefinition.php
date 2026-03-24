@@ -16,16 +16,12 @@ use Symfony\Component\Config\Definition\Exception\InvalidDefinitionException;
 /**
  * Abstract class that contains common code of integer and float node definitions.
  *
- * @template TParent of NodeParentInterface|null = null
- *
- * @extends ScalarNodeDefinition<TParent>
- *
  * @author David Jeanmonod <david.jeanmonod@gmail.com>
  */
 abstract class NumericNodeDefinition extends ScalarNodeDefinition
 {
-    protected int|float|null $min = null;
-    protected int|float|null $max = null;
+    protected $min;
+    protected $max;
 
     /**
      * Ensures that the value is smaller than the given reference.

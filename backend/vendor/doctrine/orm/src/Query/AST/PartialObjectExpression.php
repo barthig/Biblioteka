@@ -6,10 +6,19 @@ namespace Doctrine\ORM\Query\AST;
 
 class PartialObjectExpression extends Node
 {
-    /** @param mixed[] $partialFieldSet */
-    public function __construct(
-        public string $identificationVariable,
-        public array $partialFieldSet,
-    ) {
+    /** @var string */
+    public $identificationVariable;
+
+    /** @var mixed[] */
+    public $partialFieldSet;
+
+    /**
+     * @param string  $identificationVariable
+     * @param mixed[] $partialFieldSet
+     */
+    public function __construct($identificationVariable, array $partialFieldSet)
+    {
+        $this->identificationVariable = $identificationVariable;
+        $this->partialFieldSet        = $partialFieldSet;
     }
 }

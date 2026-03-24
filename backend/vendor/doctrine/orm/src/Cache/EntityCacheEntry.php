@@ -8,26 +8,47 @@ use Doctrine\ORM\EntityManagerInterface;
 
 use function array_map;
 
+/**
+ * Entity cache entry
+ */
 class EntityCacheEntry implements CacheEntry
 {
     /**
-     * @param class-string        $class The entity class name
-     * @param array<string,mixed> $data  The entity map data
+     * The entity map data
+     *
+     * @readonly Public only for performance reasons, it should be considered immutable.
+     * @var array<string,mixed>
      */
-    public function __construct(
-        public readonly string $class,
-        public readonly array $data,
-    ) {
+    public $data;
+
+    /**
+     * The entity class name
+     *
+     * @readonly Public only for performance reasons, it should be considered immutable.
+     * @var class-string
+     */
+    public $class;
+
+    /**
+     * @param class-string        $class The entity class.
+     * @param array<string,mixed> $data  The entity data.
+     */
+    public function __construct($class, array $data)
+    {
+        $this->class = $class;
+        $this->data  = $data;
     }
 
     /**
      * Creates a new EntityCacheEntry
      *
-     * This method allows Doctrine\Common\Cache\PhpFileCache compatibility
+     * This method allow Doctrine\Common\Cache\PhpFileCache compatibility
      *
      * @param array<string,mixed> $values array containing property values
+     *
+     * @return EntityCacheEntry
      */
-    public static function __set_state(array $values): self
+    public static function __set_state(array $values)
     {
         return new self($values['class'], $values['data']);
     }
@@ -37,7 +58,7 @@ class EntityCacheEntry implements CacheEntry
      *
      * @return array<string, mixed>
      */
-    public function resolveAssociationEntries(EntityManagerInterface $em): array
+    public function resolveAssociationEntries(EntityManagerInterface $em)
     {
         return array_map(static function ($value) use ($em) {
             if (! ($value instanceof AssociationCacheEntry)) {

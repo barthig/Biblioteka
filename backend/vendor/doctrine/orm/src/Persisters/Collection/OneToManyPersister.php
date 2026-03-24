@@ -10,12 +10,12 @@ use Doctrine\DBAL\Exception as DBALException;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\ORM\EntityNotFoundException;
 use Doctrine\ORM\Mapping\MappingException;
-use Doctrine\ORM\Mapping\OneToManyAssociationMapping;
 use Doctrine\ORM\PersistentCollection;
 use Doctrine\ORM\Utility\PersisterHelper;
 
 use function array_fill;
 use function array_keys;
+use function array_merge;
 use function array_reverse;
 use function array_values;
 use function assert;
@@ -29,28 +29,36 @@ use function is_string;
  */
 class OneToManyPersister extends AbstractCollectionPersister
 {
-    public function delete(PersistentCollection $collection): void
+    /**
+     * {@inheritDoc}
+     *
+     * @return int|null
+     */
+    public function delete(PersistentCollection $collection)
     {
         // The only valid case here is when you have weak entities. In this
         // scenario, you have @OneToMany with orphanRemoval=true, and replacing
         // the entire collection with a new would trigger this operation.
-        $mapping = $this->getMapping($collection);
+        $mapping = $collection->getMapping();
 
-        if (! $mapping->orphanRemoval) {
+        if (! $mapping['orphanRemoval']) {
             // Handling non-orphan removal should never happen, as @OneToMany
             // can only be inverse side. For owning side one to many, it is
             // required to have a join table, which would classify as a ManyToManyPersister.
             return;
         }
 
-        $targetClass = $this->em->getClassMetadata($mapping->targetEntity);
+        $targetClass = $this->em->getClassMetadata($mapping['targetEntity']);
 
-        $targetClass->isInheritanceTypeJoined()
+        return $targetClass->isInheritanceTypeJoined()
             ? $this->deleteJoinedEntityCollection($collection)
             : $this->deleteEntityCollection($collection);
     }
 
-    public function update(PersistentCollection $collection): void
+    /**
+     * {@inheritDoc}
+     */
+    public function update(PersistentCollection $collection)
     {
         // This can never happen. One to many can only be inverse side.
         // For owning side one to many, it is required to have a join table,
@@ -58,38 +66,44 @@ class OneToManyPersister extends AbstractCollectionPersister
         return;
     }
 
-    public function get(PersistentCollection $collection, mixed $index): object|null
+    /**
+     * {@inheritDoc}
+     */
+    public function get(PersistentCollection $collection, $index)
     {
-        $mapping = $this->getMapping($collection);
+        $mapping = $collection->getMapping();
 
-        if (! $mapping->isIndexed()) {
+        if (! isset($mapping['indexBy'])) {
             throw new BadMethodCallException('Selecting a collection by index is only supported on indexed collections.');
         }
 
-        $persister = $this->uow->getEntityPersister($mapping->targetEntity);
+        $persister = $this->uow->getEntityPersister($mapping['targetEntity']);
 
         return $persister->load(
             [
-                $mapping->mappedBy  => $collection->getOwner(),
-                $mapping->indexBy() => $index,
+                $mapping['mappedBy'] => $collection->getOwner(),
+                $mapping['indexBy']  => $index,
             ],
             null,
             $mapping,
             [],
             null,
-            1,
+            1
         );
     }
 
-    public function count(PersistentCollection $collection): int
+    /**
+     * {@inheritDoc}
+     */
+    public function count(PersistentCollection $collection)
     {
-        $mapping   = $this->getMapping($collection);
-        $persister = $this->uow->getEntityPersister($mapping->targetEntity);
+        $mapping   = $collection->getMapping();
+        $persister = $this->uow->getEntityPersister($mapping['targetEntity']);
 
         // only works with single id identifier entities. Will throw an
         // exception in Entity Persisters if that is not the case for the
         // 'mappedBy' field.
-        $criteria = Criteria::create(true)->where(Criteria::expr()->eq($mapping->mappedBy, $collection->getOwner()));
+        $criteria = new Criteria(Criteria::expr()->eq($mapping['mappedBy'], $collection->getOwner()));
 
         return $persister->count($criteria);
     }
@@ -97,48 +111,54 @@ class OneToManyPersister extends AbstractCollectionPersister
     /**
      * {@inheritDoc}
      */
-    public function slice(PersistentCollection $collection, int $offset, int|null $length = null): array
+    public function slice(PersistentCollection $collection, $offset, $length = null)
     {
-        $mapping   = $this->getMapping($collection);
-        $persister = $this->uow->getEntityPersister($mapping->targetEntity);
+        $mapping   = $collection->getMapping();
+        $persister = $this->uow->getEntityPersister($mapping['targetEntity']);
 
         return $persister->getOneToManyCollection($mapping, $collection->getOwner(), $offset, $length);
     }
 
-    public function containsKey(PersistentCollection $collection, mixed $key): bool
+    /**
+     * {@inheritDoc}
+     */
+    public function containsKey(PersistentCollection $collection, $key)
     {
-        $mapping = $this->getMapping($collection);
+        $mapping = $collection->getMapping();
 
-        if (! $mapping->isIndexed()) {
+        if (! isset($mapping['indexBy'])) {
             throw new BadMethodCallException('Selecting a collection by index is only supported on indexed collections.');
         }
 
-        $persister = $this->uow->getEntityPersister($mapping->targetEntity);
+        $persister = $this->uow->getEntityPersister($mapping['targetEntity']);
 
         // only works with single id identifier entities. Will throw an
         // exception in Entity Persisters if that is not the case for the
         // 'mappedBy' field.
-        $criteria = Criteria::create(true);
+        $criteria = new Criteria();
 
-        $criteria->andWhere(Criteria::expr()->eq($mapping->mappedBy, $collection->getOwner()));
-        $criteria->andWhere(Criteria::expr()->eq($mapping->indexBy(), $key));
+        $criteria->andWhere(Criteria::expr()->eq($mapping['mappedBy'], $collection->getOwner()));
+        $criteria->andWhere(Criteria::expr()->eq($mapping['indexBy'], $key));
 
         return (bool) $persister->count($criteria);
     }
 
-    public function contains(PersistentCollection $collection, object $element): bool
+     /**
+      * {@inheritDoc}
+      */
+    public function contains(PersistentCollection $collection, $element)
     {
         if (! $this->isValidEntityState($element)) {
             return false;
         }
 
-        $mapping   = $this->getMapping($collection);
-        $persister = $this->uow->getEntityPersister($mapping->targetEntity);
+        $mapping   = $collection->getMapping();
+        $persister = $this->uow->getEntityPersister($mapping['targetEntity']);
 
         // only works with single id identifier entities. Will throw an
         // exception in Entity Persisters if that is not the case for the
         // 'mappedBy' field.
-        $criteria = Criteria::create(true)->where(Criteria::expr()->eq($mapping->mappedBy, $collection->getOwner()));
+        $criteria = new Criteria(Criteria::expr()->eq($mapping['mappedBy'], $collection->getOwner()));
 
         return $persister->exists($element, $criteria);
     }
@@ -146,7 +166,7 @@ class OneToManyPersister extends AbstractCollectionPersister
     /**
      * {@inheritDoc}
      */
-    public function loadCriteria(PersistentCollection $collection, Criteria $criteria): array
+    public function loadCriteria(PersistentCollection $collection, Criteria $criteria)
     {
         throw new BadMethodCallException('Filtering a collection by Criteria is not supported by this CollectionPersister.');
     }
@@ -158,18 +178,18 @@ class OneToManyPersister extends AbstractCollectionPersister
      */
     private function deleteEntityCollection(PersistentCollection $collection): int
     {
-        $mapping     = $this->getMapping($collection);
+        $mapping     = $collection->getMapping();
         $identifier  = $this->uow->getEntityIdentifier($collection->getOwner());
-        $sourceClass = $this->em->getClassMetadata($mapping->sourceEntity);
-        $targetClass = $this->em->getClassMetadata($mapping->targetEntity);
+        $sourceClass = $this->em->getClassMetadata($mapping['sourceEntity']);
+        $targetClass = $this->em->getClassMetadata($mapping['targetEntity']);
         $columns     = [];
         $parameters  = [];
         $types       = [];
 
-        foreach ($this->em->getMetadataFactory()->getOwningSide($mapping)->joinColumns as $joinColumn) {
+        foreach ($targetClass->associationMappings[$mapping['mappedBy']]['joinColumns'] as $joinColumn) {
             $columns[]    = $this->quoteStrategy->getJoinColumnName($joinColumn, $targetClass, $this->platform);
-            $parameters[] = $identifier[$sourceClass->getFieldForColumn($joinColumn->referencedColumnName)];
-            $types[]      = PersisterHelper::getTypeOfColumn($joinColumn->referencedColumnName, $sourceClass, $this->em);
+            $parameters[] = $identifier[$sourceClass->getFieldForColumn($joinColumn['referencedColumnName'])];
+            $types[]      = PersisterHelper::getTypeOfColumn($joinColumn['referencedColumnName'], $sourceClass, $this->em);
         }
 
         $statement = 'DELETE FROM ' . $this->quoteStrategy->getTableName($targetClass, $this->platform)
@@ -178,10 +198,10 @@ class OneToManyPersister extends AbstractCollectionPersister
         if ($targetClass->isInheritanceTypeSingleTable()) {
             $discriminatorColumn = $targetClass->getDiscriminatorColumn();
             $discriminatorValues = $targetClass->discriminatorValue ? [$targetClass->discriminatorValue] : array_keys($targetClass->discriminatorMap);
-            $statement          .= ' AND ' . $discriminatorColumn->name . ' IN (' . implode(', ', array_fill(0, count($discriminatorValues), '?')) . ')';
+            $statement          .= ' AND ' . $discriminatorColumn['name'] . ' IN (' . implode(', ', array_fill(0, count($discriminatorValues), '?')) . ')';
             foreach ($discriminatorValues as $discriminatorValue) {
                 $parameters[] = $discriminatorValue;
-                $types[]      = $discriminatorColumn->type;
+                $types[]      = $discriminatorColumn['type'];
             }
         }
 
@@ -202,9 +222,9 @@ class OneToManyPersister extends AbstractCollectionPersister
      */
     private function deleteJoinedEntityCollection(PersistentCollection $collection): int
     {
-        $mapping     = $this->getMapping($collection);
-        $sourceClass = $this->em->getClassMetadata($mapping->sourceEntity);
-        $targetClass = $this->em->getClassMetadata($mapping->targetEntity);
+        $mapping     = $collection->getMapping();
+        $sourceClass = $this->em->getClassMetadata($mapping['sourceEntity']);
+        $targetClass = $this->em->getClassMetadata($mapping['targetEntity']);
         $rootClass   = $this->em->getClassMetadata($targetClass->rootEntityName);
 
         // 1) Build temporary table DDL
@@ -215,7 +235,6 @@ class OneToManyPersister extends AbstractCollectionPersister
 
         foreach ($idColumnNames as $idColumnName) {
             $columnDefinitions[$idColumnName] = [
-                'name'    => $idColumnName,
                 'notnull' => true,
                 'type'    => Type::getType(PersisterHelper::getTypeOfColumn($idColumnName, $rootClass, $this->em)),
             ];
@@ -229,7 +248,7 @@ class OneToManyPersister extends AbstractCollectionPersister
         // 2) Build insert table records into temporary table
         $query = $this->em->createQuery(
             ' SELECT t0.' . implode(', t0.', $rootClass->getIdentifierFieldNames())
-            . ' FROM ' . $targetClass->name . ' t0 WHERE t0.' . $mapping->mappedBy . ' = :owner',
+            . ' FROM ' . $targetClass->name . ' t0 WHERE t0.' . $mapping['mappedBy'] . ' = :owner'
         )->setParameter('owner', $collection->getOwner());
 
         $sql = $query->getSQL();
@@ -239,7 +258,7 @@ class OneToManyPersister extends AbstractCollectionPersister
         $numDeleted = $this->conn->executeStatement($statement, $parameters);
 
         // 3) Delete records on each table in the hierarchy
-        $classNames = [...$targetClass->parentClasses, ...[$targetClass->name], ...$targetClass->subClasses];
+        $classNames = array_merge($targetClass->parentClasses, [$targetClass->name], $targetClass->subClasses);
 
         foreach (array_reverse($classNames) as $className) {
             $tableName = $this->quoteStrategy->getTableName($this->em->getClassMetadata($className), $this->platform);
@@ -257,14 +276,5 @@ class OneToManyPersister extends AbstractCollectionPersister
         assert(is_int($numDeleted));
 
         return $numDeleted;
-    }
-
-    private function getMapping(PersistentCollection $collection): OneToManyAssociationMapping
-    {
-        $mapping = $collection->getMapping();
-
-        assert($mapping->isOneToMany());
-
-        return $mapping;
     }
 }

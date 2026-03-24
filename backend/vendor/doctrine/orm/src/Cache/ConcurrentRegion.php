@@ -22,7 +22,7 @@ interface ConcurrentRegion extends Region
      *
      * @throws LockException Indicates a problem accessing the region.
      */
-    public function lock(CacheKey $key): Lock|null;
+    public function lock(CacheKey $key);
 
     /**
      * Attempts to read unlock the mapping for the given key.
@@ -30,7 +30,9 @@ interface ConcurrentRegion extends Region
      * @param CacheKey $key  The key of the item to unlock.
      * @param Lock     $lock The lock previously obtained from {@link readLock}
      *
+     * @return bool
+     *
      * @throws LockException Indicates a problem accessing the region.
      */
-    public function unlock(CacheKey $key, Lock $lock): bool;
+    public function unlock(CacheKey $key, Lock $lock);
 }

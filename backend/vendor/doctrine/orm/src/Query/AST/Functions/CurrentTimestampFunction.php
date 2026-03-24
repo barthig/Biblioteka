@@ -15,12 +15,14 @@ use Doctrine\ORM\Query\TokenType;
  */
 class CurrentTimestampFunction extends FunctionNode
 {
-    public function getSql(SqlWalker $sqlWalker): string
+    /** @inheritDoc */
+    public function getSql(SqlWalker $sqlWalker)
     {
         return $sqlWalker->getConnection()->getDatabasePlatform()->getCurrentTimestampSQL();
     }
 
-    public function parse(Parser $parser): void
+    /** @inheritDoc */
+    public function parse(Parser $parser)
     {
         $parser->match(TokenType::T_IDENTIFIER);
         $parser->match(TokenType::T_OPEN_PARENTHESIS);

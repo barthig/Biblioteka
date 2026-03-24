@@ -8,6 +8,7 @@ use ArrayIterator;
 use Countable;
 use Doctrine\Persistence\Mapping\ClassMetadata;
 use FilterIterator;
+use ReturnTypeWillChange;
 use RuntimeException;
 
 use function assert;
@@ -24,7 +25,7 @@ use function sprintf;
 class MetadataFilter extends FilterIterator implements Countable
 {
     /** @var mixed[] */
-    private array $filter = [];
+    private $filter = [];
 
     /**
      * Filter Metadatas by one or more filter options.
@@ -34,7 +35,7 @@ class MetadataFilter extends FilterIterator implements Countable
      *
      * @return ClassMetadata[]
      */
-    public static function filter(array $metadatas, array|string $filter): array
+    public static function filter(array $metadatas, $filter)
     {
         $metadatas = new MetadataFilter(new ArrayIterator($metadatas), $filter);
 
@@ -42,14 +43,16 @@ class MetadataFilter extends FilterIterator implements Countable
     }
 
     /** @param mixed[]|string $filter */
-    public function __construct(ArrayIterator $metadata, array|string $filter)
+    public function __construct(ArrayIterator $metadata, $filter)
     {
         $this->filter = (array) $filter;
 
         parent::__construct($metadata);
     }
 
-    public function accept(): bool
+    /** @return bool */
+    #[ReturnTypeWillChange]
+    public function accept()
     {
         if (count($this->filter) === 0) {
             return true;
@@ -63,7 +66,7 @@ class MetadataFilter extends FilterIterator implements Countable
 
             if ($pregResult === false) {
                 throw new RuntimeException(
-                    sprintf("Error while evaluating regex '/%s/'.", $filter),
+                    sprintf("Error while evaluating regex '/%s/'.", $filter)
                 );
             }
 
@@ -76,7 +79,8 @@ class MetadataFilter extends FilterIterator implements Countable
     }
 
     /** @return ArrayIterator<int, ClassMetadata> */
-    public function getInnerIterator(): ArrayIterator
+    #[ReturnTypeWillChange]
+    public function getInnerIterator()
     {
         $innerIterator = parent::getInnerIterator();
 
@@ -85,7 +89,9 @@ class MetadataFilter extends FilterIterator implements Countable
         return $innerIterator;
     }
 
-    public function count(): int
+    /** @return int */
+    #[ReturnTypeWillChange]
+    public function count()
     {
         return count($this->getInnerIterator());
     }

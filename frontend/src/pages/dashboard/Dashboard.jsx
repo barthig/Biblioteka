@@ -18,7 +18,7 @@ export default function Dashboard() {
   const [error, setError] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [showOnboarding, setShowOnboarding] = useState(false)
-  const { token, user } = useAuth()
+  const { token, user, loading: authLoading } = useAuth()
   const navigate = useNavigate()
   // Check for valid authentication - user must be present (token validated)
   const isAuthenticated = Boolean(user)
@@ -171,15 +171,23 @@ export default function Dashboard() {
   }
 
   useEffect(() => {
+    if (authLoading) {
+      return
+    }
+
     if (!isAuthenticated) {
       document.body.classList.add('public-home-view')
       return () => document.body.classList.remove('public-home-view')
     }
     document.body.classList.remove('public-home-view')
     return undefined
-  }, [isAuthenticated])
+  }, [authLoading, isAuthenticated])
 
   useEffect(() => {
+    if (authLoading) {
+      return
+    }
+
     if (isAuthenticated) {
       setPublicAnnouncements([])
       return
@@ -213,11 +221,11 @@ export default function Dashboard() {
     return () => {
       mounted = false
     }
-  }, [isAuthenticated])
+  }, [authLoading, isAuthenticated])
 
   // Fetch newest books for guests
   useEffect(() => {
-    if (isAuthenticated) return
+    if (authLoading || isAuthenticated) return
     let active = true
     setPublicNewArrivalsLoading(true)
     setPublicNewArrivalsError(null)
@@ -226,9 +234,14 @@ export default function Dashboard() {
       .catch(err => { if (active) setPublicNewArrivalsError(err.message || 'Nie udało się pobrać nowości') })
       .finally(() => { if (active) setPublicNewArrivalsLoading(false) })
     return () => { active = false }
-  }, [isAuthenticated])
+  }, [authLoading, isAuthenticated])
 
   useEffect(() => {
+    if (authLoading) {
+      setLoading(true)
+      return
+    }
+
     if (!isAuthenticated) {
       setStats(null)
       setAlerts([])
@@ -289,7 +302,15 @@ export default function Dashboard() {
     return () => {
       mounted = false
     }
-  }, [isAuthenticated, userId, onboardingCompleted])
+  }, [authLoading, isAuthenticated, userId, onboardingCompleted])
+
+  if (authLoading) {
+    return (
+      <div className="page">
+        <div className="surface-card empty-state">Ladowanie sesji...</div>
+      </div>
+    )
+  }
 
   if (!isAuthenticated) {
     return (

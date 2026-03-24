@@ -6,21 +6,20 @@ namespace Doctrine\ORM;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
-use Doctrine\DBAL\ArrayParameterType;
-use Doctrine\DBAL\ParameterType;
 use Doctrine\Deprecations\Deprecation;
-use Doctrine\ORM\Internal\NoUnknownNamedArguments;
+use Doctrine\ORM\Internal\CriteriaOrderings;
 use Doctrine\ORM\Query\Expr;
 use Doctrine\ORM\Query\Parameter;
 use Doctrine\ORM\Query\QueryExpressionVisitor;
 use InvalidArgumentException;
 use RuntimeException;
-use Stringable;
 
 use function array_keys;
+use function array_merge;
 use function array_unshift;
 use function assert;
-use function count;
+use function func_get_args;
+use function func_num_args;
 use function implode;
 use function in_array;
 use function is_array;
@@ -39,16 +38,38 @@ use function substr;
  * This class is responsible for building DQL query strings via an object oriented
  * PHP interface.
  */
-class QueryBuilder implements Stringable
+class QueryBuilder
 {
-    use NoUnknownNamedArguments;
+    use CriteriaOrderings;
+
+    /** @deprecated */
+    public const SELECT = 0;
+
+    /** @deprecated */
+    public const DELETE = 1;
+
+    /** @deprecated */
+    public const UPDATE = 2;
+
+    /** @deprecated */
+    public const STATE_DIRTY = 0;
+
+    /** @deprecated */
+    public const STATE_CLEAN = 1;
+
+    /**
+     * The EntityManager used by this QueryBuilder.
+     *
+     * @var EntityManagerInterface
+     */
+    private $em;
 
     /**
      * The array of DQL parts collected.
      *
-     * @phpstan-var array<string, mixed>
+     * @psalm-var array<string, mixed>
      */
-    private array $dqlParts = [
+    private $dqlParts = [
         'distinct' => false,
         'select'  => [],
         'from'    => [],
@@ -60,84 +81,94 @@ class QueryBuilder implements Stringable
         'orderBy' => [],
     ];
 
-    private QueryType $type = QueryType::Select;
+    /**
+     * The type of query this is. Can be select, update or delete.
+     *
+     * @var int
+     * @psalm-var self::SELECT|self::DELETE|self::UPDATE
+     * @phpstan-ignore classConstant.deprecated
+     */
+    private $type = self::SELECT;
+
+    /**
+     * The state of the query object. Can be dirty or clean.
+     *
+     * @var int
+     * @psalm-var self::STATE_*
+     * @phpstan-ignore classConstant.deprecated
+     */
+    private $state = self::STATE_CLEAN;
 
     /**
      * The complete DQL string for this query.
+     *
+     * @var string|null
      */
-    private string|null $dql = null;
+    private $dql;
 
     /**
      * The query parameters.
      *
-     * @phpstan-var ArrayCollection<int, Parameter>
+     * @var ArrayCollection
+     * @psalm-var ArrayCollection<int, Parameter>
      */
-    private ArrayCollection $parameters;
+    private $parameters;
 
     /**
      * The index of the first result to retrieve.
+     *
+     * @var int
      */
-    private int $firstResult = 0;
+    private $firstResult = 0;
 
     /**
      * The maximum number of results to retrieve.
+     *
+     * @var int|null
      */
-    private int|null $maxResults = null;
+    private $maxResults = null;
 
     /**
      * Keeps root entity alias names for join entities.
      *
-     * @phpstan-var array<string, string>
+     * @psalm-var array<string, string>
      */
-    private array $joinRootAliases = [];
+    private $joinRootAliases = [];
 
     /**
      * Whether to use second level cache, if available.
+     *
+     * @var bool
      */
-    protected bool $cacheable = false;
+    protected $cacheable = false;
 
     /**
      * Second level cache region name.
+     *
+     * @var string|null
      */
-    protected string|null $cacheRegion = null;
+    protected $cacheRegion;
 
     /**
      * Second level query cache mode.
      *
-     * @phpstan-var Cache::MODE_*|null
+     * @var int|null
+     * @psalm-var Cache::MODE_*|null
      */
-    protected int|null $cacheMode = null;
+    protected $cacheMode;
 
-    protected int $lifetime = 0;
-
-    /**
-     * The counter of bound parameters.
-     *
-     * @var int<0, max>
-     */
-    private int $boundCounter = 0;
-
-    /**
-     * The hints to set on the query.
-     *
-     * @var array<string, string|int|bool|iterable<mixed>|object>
-     */
-    private array $hints = [];
+    /** @var int */
+    protected $lifetime = 0;
 
     /**
      * Initializes a new <tt>QueryBuilder</tt> that uses the given <tt>EntityManager</tt>.
      *
      * @param EntityManagerInterface $em The EntityManager to use.
      */
-    public function __construct(
-        private readonly EntityManagerInterface $em,
-    ) {
-        $this->parameters = new ArrayCollection();
-    }
-
-    final protected function getType(): QueryType
+    public function __construct(EntityManagerInterface $em)
     {
-        return $this->type;
+        $this->em         = $em;
+        $this->parameters = new ArrayCollection();
     }
 
     /**
@@ -154,8 +185,10 @@ class QueryBuilder implements Stringable
      *
      * For more complex expression construction, consider storing the expression
      * builder object in a local variable.
+     *
+     * @return Query\Expr
      */
-    public function expr(): Expr
+    public function expr()
     {
         return $this->em->getExpressionBuilder();
     }
@@ -163,27 +196,35 @@ class QueryBuilder implements Stringable
     /**
      * Enable/disable second level query (result) caching for this query.
      *
+     * @param bool $cacheable
+     *
      * @return $this
      */
-    public function setCacheable(bool $cacheable): static
+    public function setCacheable($cacheable)
     {
-        $this->cacheable = $cacheable;
+        $this->cacheable = (bool) $cacheable;
 
         return $this;
     }
 
     /**
      * Are the query results enabled for second level cache?
+     *
+     * @return bool
      */
-    public function isCacheable(): bool
+    public function isCacheable()
     {
         return $this->cacheable;
     }
 
-    /** @return $this */
-    public function setCacheRegion(string $cacheRegion): static
+    /**
+     * @param string $cacheRegion
+     *
+     * @return $this
+     */
+    public function setCacheRegion($cacheRegion)
     {
-        $this->cacheRegion = $cacheRegion;
+        $this->cacheRegion = (string) $cacheRegion;
 
         return $this;
     }
@@ -193,12 +234,13 @@ class QueryBuilder implements Stringable
      *
      * @return string|null The cache region name; NULL indicates the default region.
      */
-    public function getCacheRegion(): string|null
+    public function getCacheRegion()
     {
         return $this->cacheRegion;
     }
 
-    public function getLifetime(): int
+    /** @return int */
+    public function getLifetime()
     {
         return $this->lifetime;
     }
@@ -206,72 +248,86 @@ class QueryBuilder implements Stringable
     /**
      * Sets the life-time for this query into second level cache.
      *
+     * @param int $lifetime
+     *
      * @return $this
      */
-    public function setLifetime(int $lifetime): static
+    public function setLifetime($lifetime)
     {
-        $this->lifetime = $lifetime;
+        $this->lifetime = (int) $lifetime;
 
         return $this;
     }
 
-    /** @return array<string, string|int|bool|iterable<mixed>|object> */
-    public function getHints(): array
-    {
-        return $this->hints;
-    }
-
     /**
-     * Gets the value of a query hint. If the hint name is not recognized, FALSE is returned.
-     *
-     * @return mixed The value of the hint or FALSE, if the hint name is not recognized.
+     * @return int|null
+     * @psalm-return Cache::MODE_*|null
      */
-    public function getHint(string $name): mixed
-    {
-        return $this->hints[$name] ?? false;
-    }
-
-    public function hasHint(string $name): bool
-    {
-        return isset($this->hints[$name]);
-    }
-
-    /**
-     * Adds hints for the query.
-     *
-     * @return $this
-     */
-    public function setHint(string $name, mixed $value): static
-    {
-        $this->hints[$name] = $value;
-
-        return $this;
-    }
-
-    /** @phpstan-return Cache::MODE_*|null */
-    public function getCacheMode(): int|null
+    public function getCacheMode()
     {
         return $this->cacheMode;
     }
 
     /**
-     * @phpstan-param Cache::MODE_* $cacheMode
+     * @param int $cacheMode
+     * @psalm-param Cache::MODE_* $cacheMode
      *
      * @return $this
      */
-    public function setCacheMode(int $cacheMode): static
+    public function setCacheMode($cacheMode)
     {
-        $this->cacheMode = $cacheMode;
+        $this->cacheMode = (int) $cacheMode;
 
         return $this;
     }
 
     /**
-     * Gets the associated EntityManager for this query builder.
+     * Gets the type of the currently built query.
+     *
+     * @deprecated If necessary, track the type of the query being built outside of the builder.
+     *
+     * @return int
+     * @psalm-return self::SELECT|self::DELETE|self::UPDATE
      */
-    public function getEntityManager(): EntityManagerInterface
+    public function getType()
+    {
+        Deprecation::trigger(
+            'doctrine/dbal',
+            'https://github.com/doctrine/orm/pull/9945',
+            'Relying on the type of the query being built is deprecated.'
+            . ' If necessary, track the type of the query being built outside of the builder.'
+        );
+
+        return $this->type;
+    }
+
+    /**
+     * Gets the associated EntityManager for this query builder.
+     *
+     * @return EntityManagerInterface
+     */
+    public function getEntityManager()
     {
         return $this->em;
+    }
+
+    /**
+     * Gets the state of this query builder instance.
+     *
+     * @deprecated The builder state is an internal concern.
+     *
+     * @return int Either QueryBuilder::STATE_DIRTY or QueryBuilder::STATE_CLEAN.
+     * @psalm-return self::STATE_*
+     */
+    public function getState()
+    {
+        Deprecation::trigger(
+            'doctrine/dbal',
+            'https://github.com/doctrine/orm/pull/9945',
+            'Relying on the query builder state is deprecated as it is an internal concern.'
+        );
+
+        return $this->state;
     }
 
     /**
@@ -283,14 +339,39 @@ class QueryBuilder implements Stringable
      *         ->from('User', 'u');
      *     echo $qb->getDql(); // SELECT u FROM User u
      * </code>
+     *
+     * @return string The DQL query string.
      */
-    public function getDQL(): string
+    public function getDQL()
     {
-        return $this->dql ??= match ($this->type) {
-            QueryType::Select => $this->getDQLForSelect(),
-            QueryType::Delete => $this->getDQLForDelete(),
-            QueryType::Update => $this->getDQLForUpdate(),
-        };
+        // @phpstan-ignore classConstant.deprecated
+        if ($this->dql !== null && $this->state === self::STATE_CLEAN) {
+            return $this->dql;
+        }
+
+        switch ($this->type) {
+            // @phpstan-ignore classConstant.deprecated
+            case self::DELETE:
+                $dql = $this->getDQLForDelete();
+                break;
+
+            // @phpstan-ignore classConstant.deprecated
+            case self::UPDATE:
+                $dql = $this->getDQLForUpdate();
+                break;
+
+            // @phpstan-ignore classConstant.deprecated
+            case self::SELECT:
+            default:
+                $dql = $this->getDQLForSelect();
+                break;
+        }
+
+        // @phpstan-ignore classConstant.deprecated
+        $this->state = self::STATE_CLEAN;
+        $this->dql   = $dql;
+
+        return $dql;
     }
 
     /**
@@ -303,8 +384,10 @@ class QueryBuilder implements Stringable
      *     $q = $qb->getQuery();
      *     $results = $q->execute();
      * </code>
+     *
+     * @return Query
      */
-    public function getQuery(): Query
+    public function getQuery()
     {
         $parameters = clone $this->parameters;
         $query      = $this->em->createQuery($this->getDQL())
@@ -328,10 +411,6 @@ class QueryBuilder implements Stringable
             $query->setCacheRegion($this->cacheRegion);
         }
 
-        foreach ($this->hints as $name => $value) {
-            $query->setHint($name, $value);
-        }
-
         return $query;
     }
 
@@ -350,13 +429,8 @@ class QueryBuilder implements Stringable
         } else {
             // Should never happen with correct joining order. Might be
             // thoughtful to throw exception instead.
-            $aliases = $this->getRootAliases();
-
-            if (! isset($aliases[0])) {
-                throw new RuntimeException('No alias was set before invoking getRootAlias().');
-            }
-
-            $rootAlias = $aliases[0];
+            // @phpstan-ignore method.deprecated
+            $rootAlias = $this->getRootAlias();
         }
 
         $this->joinRootAliases[$alias] = $rootAlias;
@@ -378,9 +452,11 @@ class QueryBuilder implements Stringable
      *
      * @deprecated Please use $qb->getRootAliases() instead.
      *
+     * @return string
+     *
      * @throws RuntimeException
      */
-    public function getRootAlias(): string
+    public function getRootAlias()
     {
         $aliases = $this->getRootAliases();
 
@@ -404,19 +480,17 @@ class QueryBuilder implements Stringable
      * </code>
      *
      * @return string[]
-     * @phpstan-return list<string>
+     * @psalm-return list<string>
      */
-    public function getRootAliases(): array
+    public function getRootAliases()
     {
         $aliases = [];
 
         foreach ($this->dqlParts['from'] as &$fromClause) {
             if (is_string($fromClause)) {
                 $spacePos = strrpos($fromClause, ' ');
-
-                /** @phpstan-var class-string $from */
-                $from  = substr($fromClause, 0, $spacePos);
-                $alias = substr($fromClause, $spacePos + 1);
+                $from     = substr($fromClause, 0, $spacePos);
+                $alias    = substr($fromClause, $spacePos + 1);
 
                 $fromClause = new Query\Expr\From($from, $alias);
             }
@@ -441,15 +515,15 @@ class QueryBuilder implements Stringable
      * </code>
      *
      * @return string[]
-     * @phpstan-return list<string>
+     * @psalm-return list<string>
      */
-    public function getAllAliases(): array
+    public function getAllAliases()
     {
-        return [...$this->getRootAliases(), ...array_keys($this->joinRootAliases)];
+        return array_merge($this->getRootAliases(), array_keys($this->joinRootAliases));
     }
 
     /**
-     * Gets the root entities of the query. This is the entity classes involved
+     * Gets the root entities of the query. This is the entity aliases involved
      * in the construction of the query.
      *
      * <code>
@@ -461,19 +535,17 @@ class QueryBuilder implements Stringable
      * </code>
      *
      * @return string[]
-     * @phpstan-return list<class-string>
+     * @psalm-return list<string>
      */
-    public function getRootEntities(): array
+    public function getRootEntities()
     {
         $entities = [];
 
         foreach ($this->dqlParts['from'] as &$fromClause) {
             if (is_string($fromClause)) {
                 $spacePos = strrpos($fromClause, ' ');
-
-                /** @phpstan-var class-string $from */
-                $from  = substr($fromClause, 0, $spacePos);
-                $alias = substr($fromClause, $spacePos + 1);
+                $from     = substr($fromClause, 0, $spacePos);
+                $alias    = substr($fromClause, $spacePos + 1);
 
                 $fromClause = new Query\Expr\From($from, $alias);
             }
@@ -495,12 +567,13 @@ class QueryBuilder implements Stringable
      *         ->setParameter('user_id', 1);
      * </code>
      *
-     * @param string|int                                       $key  The parameter position or name.
-     * @param ParameterType|ArrayParameterType|string|int|null $type ParameterType::*, ArrayParameterType::* or \Doctrine\DBAL\Types\Type::* constant
+     * @param string|int      $key   The parameter position or name.
+     * @param mixed           $value The parameter value.
+     * @param string|int|null $type  ParameterType::* or \Doctrine\DBAL\Types\Type::* constant
      *
      * @return $this
      */
-    public function setParameter(string|int $key, mixed $value, ParameterType|ArrayParameterType|string|int|null $type = null): static
+    public function setParameter($key, $value, $type = null)
     {
         $existingParameter = $this->getParameter($key);
 
@@ -529,12 +602,27 @@ class QueryBuilder implements Stringable
      *        )));
      * </code>
      *
-     * @phpstan-param ArrayCollection<int, Parameter> $parameters
+     * @param ArrayCollection|mixed[] $parameters The query parameters to set.
+     * @psalm-param ArrayCollection<int, Parameter>|mixed[] $parameters
      *
      * @return $this
      */
-    public function setParameters(ArrayCollection $parameters): static
+    public function setParameters($parameters)
     {
+        // BC compatibility with 2.3-
+        if (is_array($parameters)) {
+            /** @psalm-var ArrayCollection<int, Parameter> $parameterCollection */
+            $parameterCollection = new ArrayCollection();
+
+            foreach ($parameters as $key => $value) {
+                $parameter = new Parameter($key, $value);
+
+                $parameterCollection->add($parameter);
+            }
+
+            $parameters = $parameterCollection;
+        }
+
         $this->parameters = $parameters;
 
         return $this;
@@ -543,22 +631,31 @@ class QueryBuilder implements Stringable
     /**
      * Gets all defined query parameters for the query being constructed.
      *
-     * @phpstan-return ArrayCollection<int, Parameter>
+     * @return ArrayCollection The currently defined query parameters.
+     * @psalm-return ArrayCollection<int, Parameter>
      */
-    public function getParameters(): ArrayCollection
+    public function getParameters()
     {
         return $this->parameters;
     }
 
     /**
      * Gets a (previously set) query parameter of the query being constructed.
+     *
+     * @param string|int $key The key (index or name) of the bound parameter.
+     *
+     * @return Parameter|null The value of the bound parameter.
      */
-    public function getParameter(string|int $key): Parameter|null
+    public function getParameter($key)
     {
         $key = Parameter::normalizeName($key);
 
         $filteredParameters = $this->parameters->filter(
-            static fn (Parameter $parameter): bool => $key === $parameter->getName(),
+            static function (Parameter $parameter) use ($key): bool {
+                $parameterName = $parameter->getName();
+
+                return $key === $parameterName;
+            }
         );
 
         return ! $filteredParameters->isEmpty() ? $filteredParameters->first() : null;
@@ -567,9 +664,11 @@ class QueryBuilder implements Stringable
     /**
      * Sets the position of the first result to retrieve (the "offset").
      *
+     * @param int|null $firstResult The first result to return.
+     *
      * @return $this
      */
-    public function setFirstResult(int|null $firstResult): static
+    public function setFirstResult($firstResult)
     {
         $this->firstResult = (int) $firstResult;
 
@@ -578,8 +677,11 @@ class QueryBuilder implements Stringable
 
     /**
      * Gets the position of the first result the query object was set to retrieve (the "offset").
+     * Returns NULL if {@link setFirstResult} was not applied to this QueryBuilder.
+     *
+     * @return int|null The position of the first result.
      */
-    public function getFirstResult(): int
+    public function getFirstResult()
     {
         return $this->firstResult;
     }
@@ -587,12 +689,14 @@ class QueryBuilder implements Stringable
     /**
      * Sets the maximum number of results to retrieve (the "limit").
      *
+     * @param int|null $maxResults The maximum number of results to retrieve.
+     *
      * @return $this
      */
-    public function setMaxResults(int|null $maxResults): static
+    public function setMaxResults($maxResults)
     {
-        if ($this->type === QueryType::Delete || $this->type === QueryType::Update) {
-            throw new RuntimeException('Setting a limit is not supported for delete or update queries.');
+        if ($maxResults !== null) {
+            $maxResults = (int) $maxResults;
         }
 
         $this->maxResults = $maxResults;
@@ -603,8 +707,10 @@ class QueryBuilder implements Stringable
     /**
      * Gets the maximum number of results the query object was set to retrieve (the "limit").
      * Returns NULL if {@link setMaxResults} was not applied to this query builder.
+     *
+     * @return int|null Maximum number of results.
      */
-    public function getMaxResults(): int|null
+    public function getMaxResults()
     {
         return $this->maxResults;
     }
@@ -615,16 +721,19 @@ class QueryBuilder implements Stringable
      * The available parts are: 'select', 'from', 'join', 'set', 'where',
      * 'groupBy', 'having' and 'orderBy'.
      *
-     * @phpstan-param string|object|list<string>|array{join: array<int|string, object>} $dqlPart
+     * @param string              $dqlPartName The DQL part name.
+     * @param string|object|array $dqlPart     An Expr object.
+     * @param bool                $append      Whether to append (true) or replace (false).
+     * @psalm-param string|object|list<string>|array{join: array<int|string, object>} $dqlPart
      *
      * @return $this
      */
-    public function add(string $dqlPartName, string|object|array $dqlPart, bool $append = false): static
+    public function add($dqlPartName, $dqlPart, $append = false)
     {
         if ($append && ($dqlPartName === 'where' || $dqlPartName === 'having')) {
             throw new InvalidArgumentException(
                 "Using \$append = true does not have an effect with 'where' or 'having' " .
-                'parts. See QueryBuilder#andWhere() for an example for correct usage.',
+                'parts. See QueryBuilder#andWhere() for an example for correct usage.'
             );
         }
 
@@ -636,25 +745,14 @@ class QueryBuilder implements Stringable
             $dqlPart = reset($dqlPart);
         }
 
+        // This is introduced for backwards compatibility reasons.
+        // TODO: Remove for 3.0
         if ($dqlPartName === 'join') {
             $newDqlPart = [];
 
             foreach ($dqlPart as $k => $v) {
-                if (is_numeric($k)) {
-                    Deprecation::trigger(
-                        'doctrine/orm',
-                        'https://github.com/doctrine/orm/pull/12051',
-                        'Using numeric keys in %s for join parts is deprecated and will not be supported in 4.0. Use an associative array with the root alias as key instead.',
-                        __METHOD__,
-                    );
-                    $aliases = $this->getRootAliases();
-
-                    if (! isset($aliases[0])) {
-                        throw new RuntimeException('No alias was set before invoking add().');
-                    }
-
-                    $k = $aliases[0];
-                }
+                // @phpstan-ignore method.deprecated
+                $k = is_numeric($k) ? $this->getRootAlias() : $k;
 
                 $newDqlPart[$k] = $v;
             }
@@ -674,7 +772,8 @@ class QueryBuilder implements Stringable
             $this->dqlParts[$dqlPartName] = $isMultiple ? [$dqlPart] : $dqlPart;
         }
 
-        $this->dql = null;
+        // @phpstan-ignore classConstant.deprecated
+        $this->state = self::STATE_DIRTY;
 
         return $this;
     }
@@ -690,19 +789,22 @@ class QueryBuilder implements Stringable
      *         ->leftJoin('u.Phonenumbers', 'p');
      * </code>
      *
+     * @param mixed $select The selection expressions.
+     *
      * @return $this
      */
-    public function select(mixed ...$select): static
+    public function select($select = null)
     {
-        self::validateVariadicParameter($select);
+        // @phpstan-ignore classConstant.deprecated
+        $this->type = self::SELECT;
 
-        $this->type = QueryType::Select;
-
-        if ($select === []) {
+        if (empty($select)) {
             return $this;
         }
 
-        return $this->add('select', new Expr\Select($select), false);
+        $selects = is_array($select) ? $select : func_get_args();
+
+        return $this->add('select', new Expr\Select($selects), false);
     }
 
     /**
@@ -715,13 +817,18 @@ class QueryBuilder implements Stringable
      *         ->from('User', 'u');
      * </code>
      *
+     * @param bool $flag
+     *
      * @return $this
      */
-    public function distinct(bool $flag = true): static
+    public function distinct($flag = true)
     {
+        $flag = (bool) $flag;
+
         if ($this->dqlParts['distinct'] !== $flag) {
             $this->dqlParts['distinct'] = $flag;
-            $this->dql                  = null;
+            // @phpstan-ignore classConstant.deprecated
+            $this->state = self::STATE_DIRTY;
         }
 
         return $this;
@@ -738,19 +845,22 @@ class QueryBuilder implements Stringable
      *         ->leftJoin('u.Phonenumbers', 'p');
      * </code>
      *
+     * @param mixed $select The selection expression.
+     *
      * @return $this
      */
-    public function addSelect(mixed ...$select): static
+    public function addSelect($select = null)
     {
-        self::validateVariadicParameter($select);
+        // @phpstan-ignore classConstant.deprecated
+        $this->type = self::SELECT;
 
-        $this->type = QueryType::Select;
-
-        if ($select === []) {
+        if (empty($select)) {
             return $this;
         }
 
-        return $this->add('select', new Expr\Select($select), true);
+        $selects = is_array($select) ? $select : func_get_args();
+
+        return $this->add('select', new Expr\Select($selects), true);
     }
 
     /**
@@ -764,25 +874,26 @@ class QueryBuilder implements Stringable
      *         ->setParameter('user_id', 1);
      * </code>
      *
-     * @param class-string|null $delete The class/type whose instances are subject to the deletion.
-     * @param string|null       $alias  The class/type alias used in the constructed query.
+     * @param string|null $delete The class/type whose instances are subject to the deletion.
+     * @param string|null $alias  The class/type alias used in the constructed query.
      *
      * @return $this
      */
-    public function delete(string|null $delete = null, string|null $alias = null): static
+    public function delete($delete = null, $alias = null)
     {
-        $this->type = QueryType::Delete;
+        // @phpstan-ignore classConstant.deprecated
+        $this->type = self::DELETE;
 
         if (! $delete) {
             return $this;
         }
 
         if (! $alias) {
-            throw new InvalidArgumentException(sprintf(
-                '%s(): The alias for entity %s must not be omitted.',
-                __METHOD__,
-                $delete,
-            ));
+            Deprecation::trigger(
+                'doctrine/orm',
+                'https://github.com/doctrine/orm/issues/9733',
+                'Omitting the alias is deprecated and will throw an exception in Doctrine 3.0.'
+            );
         }
 
         return $this->add('from', new Expr\From($delete, $alias));
@@ -799,25 +910,26 @@ class QueryBuilder implements Stringable
      *         ->where('u.id = ?2');
      * </code>
      *
-     * @param class-string|null $update The class/type whose instances are subject to the update.
-     * @param string|null       $alias  The class/type alias used in the constructed query.
+     * @param string|null $update The class/type whose instances are subject to the update.
+     * @param string|null $alias  The class/type alias used in the constructed query.
      *
      * @return $this
      */
-    public function update(string|null $update = null, string|null $alias = null): static
+    public function update($update = null, $alias = null)
     {
-        $this->type = QueryType::Update;
+        // @phpstan-ignore classConstant.deprecated
+        $this->type = self::UPDATE;
 
         if (! $update) {
             return $this;
         }
 
         if (! $alias) {
-            throw new InvalidArgumentException(sprintf(
-                '%s(): The alias for entity %s must not be omitted.',
-                __METHOD__,
-                $update,
-            ));
+            Deprecation::trigger(
+                'doctrine/orm',
+                'https://github.com/doctrine/orm/issues/9733',
+                'Omitting the alias is deprecated and will throw an exception in Doctrine 3.0.'
+            );
         }
 
         return $this->add('from', new Expr\From($update, $alias));
@@ -833,13 +945,13 @@ class QueryBuilder implements Stringable
      *         ->from('User', 'u');
      * </code>
      *
-     * @param class-string $from    The class name.
-     * @param string       $alias   The alias of the class.
-     * @param string|null  $indexBy The index for the from.
+     * @param string      $from    The class name.
+     * @param string      $alias   The alias of the class.
+     * @param string|null $indexBy The index for the from.
      *
      * @return $this
      */
-    public function from(string $from, string $alias, string|null $indexBy = null): static
+    public function from($from, $alias, $indexBy = null)
     {
         return $this->add('from', new Expr\From($from, $alias, $indexBy), true);
     }
@@ -860,17 +972,20 @@ class QueryBuilder implements Stringable
      *         ->from('User', 'u', 'u.id');
      * </code>
      *
+     * @param string $alias   The root alias of the class.
+     * @param string $indexBy The index for the from.
+     *
      * @return $this
      *
      * @throws Query\QueryException
      */
-    public function indexBy(string $alias, string $indexBy): static
+    public function indexBy($alias, $indexBy)
     {
         $rootAliases = $this->getRootAliases();
 
         if (! in_array($alias, $rootAliases, true)) {
             throw new Query\QueryException(
-                sprintf('Specified root alias %s must be set before invoking indexBy().', $alias),
+                sprintf('Specified root alias %s must be set before invoking indexBy().', $alias)
             );
         }
 
@@ -900,17 +1015,17 @@ class QueryBuilder implements Stringable
      *         ->join('u.Phonenumbers', 'p', Expr\Join::WITH, 'p.is_primary = 1');
      * </code>
      *
-     * @phpstan-param Expr\Join::ON|Expr\Join::WITH|null $conditionType
+     * @param string                                               $join          The relationship to join.
+     * @param string                                               $alias         The alias of the join.
+     * @param string|null                                          $conditionType The condition type constant. Either ON or WITH.
+     * @param string|Expr\Comparison|Expr\Composite|Expr\Func|null $condition     The condition for the join.
+     * @param string|null                                          $indexBy       The index for the join.
+     * @psalm-param Expr\Join::ON|Expr\Join::WITH|null $conditionType
      *
      * @return $this
      */
-    public function join(
-        string $join,
-        string $alias,
-        string|null $conditionType = null,
-        string|Expr\Composite|Expr\Comparison|Expr\Func|null $condition = null,
-        string|null $indexBy = null,
-    ): static {
+    public function join($join, $alias, $conditionType = null, $condition = null, $indexBy = null)
+    {
         return $this->innerJoin($join, $alias, $conditionType, $condition, $indexBy);
     }
 
@@ -927,17 +1042,17 @@ class QueryBuilder implements Stringable
      *         ->from('User', 'u')
      *         ->innerJoin('u.Phonenumbers', 'p', Expr\Join::WITH, 'p.is_primary = 1');
      *
-     * @phpstan-param Expr\Join::ON|Expr\Join::WITH|null $conditionType
+     * @param string                                               $join          The relationship to join.
+     * @param string                                               $alias         The alias of the join.
+     * @param string|null                                          $conditionType The condition type constant. Either ON or WITH.
+     * @param string|Expr\Comparison|Expr\Composite|Expr\Func|null $condition     The condition for the join.
+     * @param string|null                                          $indexBy       The index for the join.
+     * @psalm-param Expr\Join::ON|Expr\Join::WITH|null $conditionType
      *
      * @return $this
      */
-    public function innerJoin(
-        string $join,
-        string $alias,
-        string|null $conditionType = null,
-        string|Expr\Composite|Expr\Comparison|Expr\Func|null $condition = null,
-        string|null $indexBy = null,
-    ): static {
+    public function innerJoin($join, $alias, $conditionType = null, $condition = null, $indexBy = null)
+    {
         $parentAlias = substr($join, 0, (int) strpos($join, '.'));
 
         $rootAlias = $this->findRootAlias($alias, $parentAlias);
@@ -948,7 +1063,7 @@ class QueryBuilder implements Stringable
             $alias,
             $conditionType,
             $condition,
-            $indexBy,
+            $indexBy
         );
 
         return $this->add('join', [$rootAlias => $join], true);
@@ -968,17 +1083,17 @@ class QueryBuilder implements Stringable
      *         ->leftJoin('u.Phonenumbers', 'p', Expr\Join::WITH, 'p.is_primary = 1');
      * </code>
      *
-     * @phpstan-param Expr\Join::ON|Expr\Join::WITH|null $conditionType
+     * @param string                                               $join          The relationship to join.
+     * @param string                                               $alias         The alias of the join.
+     * @param string|null                                          $conditionType The condition type constant. Either ON or WITH.
+     * @param string|Expr\Comparison|Expr\Composite|Expr\Func|null $condition     The condition for the join.
+     * @param string|null                                          $indexBy       The index for the join.
+     * @psalm-param Expr\Join::ON|Expr\Join::WITH|null $conditionType
      *
      * @return $this
      */
-    public function leftJoin(
-        string $join,
-        string $alias,
-        string|null $conditionType = null,
-        string|Expr\Composite|Expr\Comparison|Expr\Func|null $condition = null,
-        string|null $indexBy = null,
-    ): static {
+    public function leftJoin($join, $alias, $conditionType = null, $condition = null, $indexBy = null)
+    {
         $parentAlias = substr($join, 0, (int) strpos($join, '.'));
 
         $rootAlias = $this->findRootAlias($alias, $parentAlias);
@@ -989,7 +1104,7 @@ class QueryBuilder implements Stringable
             $alias,
             $conditionType,
             $condition,
-            $indexBy,
+            $indexBy
         );
 
         return $this->add('join', [$rootAlias => $join], true);
@@ -1005,9 +1120,12 @@ class QueryBuilder implements Stringable
      *         ->where('u.id = ?2');
      * </code>
      *
+     * @param string $key   The key/field to set.
+     * @param mixed  $value The value, expression, placeholder, etc.
+     *
      * @return $this
      */
-    public function set(string $key, mixed $value): static
+    public function set($key, $value)
     {
         return $this->add('set', new Expr\Comparison($key, Expr\Comparison::EQ, $value), true);
     }
@@ -1034,14 +1152,14 @@ class QueryBuilder implements Stringable
      *         ->where($or);
      * </code>
      *
+     * @param mixed $predicates The restriction predicates.
+     *
      * @return $this
      */
-    public function where(mixed ...$predicates): static
+    public function where($predicates)
     {
-        self::validateVariadicParameter($predicates);
-
-        if (! (count($predicates) === 1 && $predicates[0] instanceof Expr\Composite)) {
-            $predicates = new Expr\Andx($predicates);
+        if (! (func_num_args() === 1 && $predicates instanceof Expr\Composite)) {
+            $predicates = new Expr\Andx(func_get_args());
         }
 
         return $this->add('where', $predicates);
@@ -1061,22 +1179,23 @@ class QueryBuilder implements Stringable
      *
      * @see where()
      *
+     * @param mixed $where The query restrictions.
+     *
      * @return $this
      */
-    public function andWhere(mixed ...$where): static
+    public function andWhere()
     {
-        self::validateVariadicParameter($where);
+        $args  = func_get_args();
+        $where = $this->getDQLPart('where');
 
-        $dql = $this->getDQLPart('where');
-
-        if ($dql instanceof Expr\Andx) {
-            $dql->addMultiple($where);
+        if ($where instanceof Expr\Andx) {
+            $where->addMultiple($args);
         } else {
-            array_unshift($where, $dql);
-            $dql = new Expr\Andx($where);
+            array_unshift($args, $where);
+            $where = new Expr\Andx($args);
         }
 
-        return $this->add('where', $dql);
+        return $this->add('where', $where);
     }
 
     /**
@@ -1093,22 +1212,23 @@ class QueryBuilder implements Stringable
      *
      * @see where()
      *
+     * @param mixed $where The WHERE statement.
+     *
      * @return $this
      */
-    public function orWhere(mixed ...$where): static
+    public function orWhere()
     {
-        self::validateVariadicParameter($where);
+        $args  = func_get_args();
+        $where = $this->getDQLPart('where');
 
-        $dql = $this->getDQLPart('where');
-
-        if ($dql instanceof Expr\Orx) {
-            $dql->addMultiple($where);
+        if ($where instanceof Expr\Orx) {
+            $where->addMultiple($args);
         } else {
-            array_unshift($where, $dql);
-            $dql = new Expr\Orx($where);
+            array_unshift($args, $where);
+            $where = new Expr\Orx($args);
         }
 
-        return $this->add('where', $dql);
+        return $this->add('where', $where);
     }
 
     /**
@@ -1122,13 +1242,13 @@ class QueryBuilder implements Stringable
      *         ->groupBy('u.id');
      * </code>
      *
+     * @param string $groupBy The grouping expression.
+     *
      * @return $this
      */
-    public function groupBy(string ...$groupBy): static
+    public function groupBy($groupBy)
     {
-        self::validateVariadicParameter($groupBy);
-
-        return $this->add('groupBy', new Expr\GroupBy($groupBy));
+        return $this->add('groupBy', new Expr\GroupBy(func_get_args()));
     }
 
     /**
@@ -1142,27 +1262,27 @@ class QueryBuilder implements Stringable
      *         ->addGroupBy('u.createdAt');
      * </code>
      *
+     * @param string $groupBy The grouping expression.
+     *
      * @return $this
      */
-    public function addGroupBy(string ...$groupBy): static
+    public function addGroupBy($groupBy)
     {
-        self::validateVariadicParameter($groupBy);
-
-        return $this->add('groupBy', new Expr\GroupBy($groupBy), true);
+        return $this->add('groupBy', new Expr\GroupBy(func_get_args()), true);
     }
 
     /**
      * Specifies a restriction over the groups of the query.
      * Replaces any previous having restrictions, if any.
      *
+     * @param mixed $having The restriction over the groups.
+     *
      * @return $this
      */
-    public function having(mixed ...$having): static
+    public function having($having)
     {
-        self::validateVariadicParameter($having);
-
-        if (! (count($having) === 1 && ($having[0] instanceof Expr\Andx || $having[0] instanceof Expr\Orx))) {
-            $having = new Expr\Andx($having);
+        if (! (func_num_args() === 1 && ($having instanceof Expr\Andx || $having instanceof Expr\Orx))) {
+            $having = new Expr\Andx(func_get_args());
         }
 
         return $this->add('having', $having);
@@ -1172,53 +1292,58 @@ class QueryBuilder implements Stringable
      * Adds a restriction over the groups of the query, forming a logical
      * conjunction with any existing having restrictions.
      *
+     * @param mixed $having The restriction to append.
+     *
      * @return $this
      */
-    public function andHaving(mixed ...$having): static
+    public function andHaving($having)
     {
-        self::validateVariadicParameter($having);
+        $args   = func_get_args();
+        $having = $this->getDQLPart('having');
 
-        $dql = $this->getDQLPart('having');
-
-        if ($dql instanceof Expr\Andx) {
-            $dql->addMultiple($having);
+        if ($having instanceof Expr\Andx) {
+            $having->addMultiple($args);
         } else {
-            array_unshift($having, $dql);
-            $dql = new Expr\Andx($having);
+            array_unshift($args, $having);
+            $having = new Expr\Andx($args);
         }
 
-        return $this->add('having', $dql);
+        return $this->add('having', $having);
     }
 
     /**
      * Adds a restriction over the groups of the query, forming a logical
      * disjunction with any existing having restrictions.
      *
+     * @param mixed $having The restriction to add.
+     *
      * @return $this
      */
-    public function orHaving(mixed ...$having): static
+    public function orHaving($having)
     {
-        self::validateVariadicParameter($having);
+        $args   = func_get_args();
+        $having = $this->getDQLPart('having');
 
-        $dql = $this->getDQLPart('having');
-
-        if ($dql instanceof Expr\Orx) {
-            $dql->addMultiple($having);
+        if ($having instanceof Expr\Orx) {
+            $having->addMultiple($args);
         } else {
-            array_unshift($having, $dql);
-            $dql = new Expr\Orx($having);
+            array_unshift($args, $having);
+            $having = new Expr\Orx($args);
         }
 
-        return $this->add('having', $dql);
+        return $this->add('having', $having);
     }
 
     /**
      * Specifies an ordering for the query results.
      * Replaces any previously specified orderings, if any.
      *
+     * @param string|Expr\OrderBy $sort  The ordering expression.
+     * @param string|null         $order The ordering direction.
+     *
      * @return $this
      */
-    public function orderBy(string|Expr\OrderBy $sort, string|null $order = null): static
+    public function orderBy($sort, $order = null)
     {
         $orderBy = $sort instanceof Expr\OrderBy ? $sort : new Expr\OrderBy($sort, $order);
 
@@ -1228,9 +1353,12 @@ class QueryBuilder implements Stringable
     /**
      * Adds an ordering to the query results.
      *
+     * @param string|Expr\OrderBy $sort  The ordering expression.
+     * @param string|null         $order The ordering direction.
+     *
      * @return $this
      */
-    public function addOrderBy(string|Expr\OrderBy $sort, string|null $order = null): static
+    public function addOrderBy($sort, $order = null)
     {
         $orderBy = $sort instanceof Expr\OrderBy ? $sort : new Expr\OrderBy($sort, $order);
 
@@ -1248,7 +1376,7 @@ class QueryBuilder implements Stringable
      *
      * @throws Query\QueryException
      */
-    public function addCriteria(Criteria $criteria): static
+    public function addCriteria(Criteria $criteria)
     {
         $allAliases = $this->getAllAliases();
         if (! isset($allAliases[0])) {
@@ -1265,7 +1393,7 @@ class QueryBuilder implements Stringable
             }
         }
 
-        foreach ($criteria->orderings() as $sort => $order) {
+        foreach (self::getCriteriaOrderings($criteria) as $sort => $order) {
             $hasValidAlias = false;
             foreach ($allAliases as $alias) {
                 if (str_starts_with($sort . '.', $alias . '.')) {
@@ -1278,7 +1406,7 @@ class QueryBuilder implements Stringable
                 $sort = $allAliases[0] . '.' . $sort;
             }
 
-            $this->addOrderBy($sort, $order->value);
+            $this->addOrderBy($sort, $order);
         }
 
         // Overwrite limits only if they was set in criteria
@@ -1297,8 +1425,12 @@ class QueryBuilder implements Stringable
 
     /**
      * Gets a query part by its name.
+     *
+     * @param string $queryPartName
+     *
+     * @return mixed $queryPart
      */
-    public function getDQLPart(string $queryPartName): mixed
+    public function getDQLPart($queryPartName)
     {
         return $this->dqlParts[$queryPartName];
     }
@@ -1306,9 +1438,9 @@ class QueryBuilder implements Stringable
     /**
      * Gets all query parts.
      *
-     * @phpstan-return array<string, mixed> $dqlParts
+     * @psalm-return array<string, mixed> $dqlParts
      */
-    public function getDQLParts(): array
+    public function getDQLParts()
     {
         return $this->dqlParts;
     }
@@ -1366,7 +1498,7 @@ class QueryBuilder implements Stringable
         return $dql;
     }
 
-    /** @phpstan-param array<string, mixed> $options */
+    /** @psalm-param array<string, mixed> $options */
     private function getReducedDQLQueryPart(string $queryPartName, array $options = []): string
     {
         $queryPart = $this->getDQLPart($queryPartName);
@@ -1384,11 +1516,11 @@ class QueryBuilder implements Stringable
      * Resets DQL parts.
      *
      * @param string[]|null $parts
-     * @phpstan-param list<string>|null $parts
+     * @psalm-param list<string>|null $parts
      *
      * @return $this
      */
-    public function resetDQLParts(array|null $parts = null): static
+    public function resetDQLParts($parts = null)
     {
         if ($parts === null) {
             $parts = array_keys($this->dqlParts);
@@ -1404,56 +1536,26 @@ class QueryBuilder implements Stringable
     /**
      * Resets single DQL part.
      *
+     * @param string $part
+     *
      * @return $this
      */
-    public function resetDQLPart(string $part): static
+    public function resetDQLPart($part)
     {
         $this->dqlParts[$part] = is_array($this->dqlParts[$part]) ? [] : null;
-        $this->dql             = null;
+        // @phpstan-ignore classConstant.deprecated
+        $this->state = self::STATE_DIRTY;
 
         return $this;
     }
 
     /**
-     * Creates a new named parameter and bind the value $value to it.
-     *
-     * The parameter $value specifies the value that you want to bind. If
-     * $placeholder is not provided createNamedParameter() will automatically
-     * create a placeholder for you. An automatic placeholder will be of the
-     * name ':dcValue1', ':dcValue2' etc.
-     *
-     * Example:
-     *  <code>
-     *   $qb = $em->createQueryBuilder();
-     *   $qb
-     *      ->select('u')
-     *      ->from('User', 'u')
-     *      ->where('u.username = ' . $qb->createNamedParameter('Foo', Types::STRING))
-     *      ->orWhere('u.username = ' . $qb->createNamedParameter('Bar', Types::STRING))
-     *  </code>
-     *
-     * @param ParameterType|ArrayParameterType|string|int|null $type        ParameterType::*, ArrayParameterType::* or \Doctrine\DBAL\Types\Type::* constant
-     * @param non-empty-string|null                            $placeholder The name to bind with. The string must start with a colon ':'.
-     *
-     * @return non-empty-string the placeholder name used.
-     */
-    public function createNamedParameter(mixed $value, ParameterType|ArrayParameterType|string|int|null $type = null, string|null $placeholder = null): string
-    {
-        if ($placeholder === null) {
-            $this->boundCounter++;
-            $placeholder = ':dcValue' . $this->boundCounter;
-        }
-
-        $this->setParameter(substr($placeholder, 1), $value, $type);
-
-        return $placeholder;
-    }
-
-    /**
      * Gets a string representation of this QueryBuilder which corresponds to
      * the final DQL query being constructed.
+     *
+     * @return string The string representation of this QueryBuilder.
      */
-    public function __toString(): string
+    public function __toString()
     {
         return $this->getDQL();
     }

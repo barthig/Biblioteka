@@ -5,29 +5,40 @@ declare(strict_types=1);
 namespace Doctrine\ORM\Internal\Hydration;
 
 use Doctrine\ORM\Exception\ORMException;
-use Exception;
 
 use function implode;
 use function sprintf;
 
-class HydrationException extends Exception implements ORMException
+class HydrationException extends ORMException
 {
-    public static function nonUniqueResult(): self
+    /** @return HydrationException */
+    public static function nonUniqueResult()
     {
         return new self('The result returned by the query was not unique.');
     }
 
-    public static function parentObjectOfRelationNotFound(string $alias, string $parentAlias): self
+    /**
+     * @param string $alias
+     * @param string $parentAlias
+     *
+     * @return HydrationException
+     */
+    public static function parentObjectOfRelationNotFound($alias, $parentAlias)
     {
         return new self(sprintf(
             "The parent object of entity result with alias '%s' was not found."
             . " The parent alias is '%s'.",
             $alias,
-            $parentAlias,
+            $parentAlias
         ));
     }
 
-    public static function emptyDiscriminatorValue(string $dqlAlias): self
+    /**
+     * @param string $dqlAlias
+     *
+     * @return HydrationException
+     */
+    public static function emptyDiscriminatorValue($dqlAlias)
     {
         return new self("The DQL alias '" . $dqlAlias . "' contains an entity " .
             'of an inheritance hierarchy with an empty discriminator value. This means ' .
@@ -35,38 +46,52 @@ class HydrationException extends Exception implements ORMException
             'discriminator value in a table row.');
     }
 
-    public static function missingDiscriminatorColumn(string $entityName, string $discrColumnName, string $dqlAlias): self
+    /**
+     * @param string $entityName
+     * @param string $discrColumnName
+     * @param string $dqlAlias
+     *
+     * @return HydrationException
+     */
+    public static function missingDiscriminatorColumn($entityName, $discrColumnName, $dqlAlias)
     {
         return new self(sprintf(
             'The discriminator column "%s" is missing for "%s" using the DQL alias "%s".',
             $discrColumnName,
             $entityName,
-            $dqlAlias,
+            $dqlAlias
         ));
     }
 
-    public static function missingDiscriminatorMetaMappingColumn(string $entityName, string $discrColumnName, string $dqlAlias): self
+    /**
+     * @param string $entityName
+     * @param string $discrColumnName
+     * @param string $dqlAlias
+     *
+     * @return HydrationException
+     */
+    public static function missingDiscriminatorMetaMappingColumn($entityName, $discrColumnName, $dqlAlias)
     {
         return new self(sprintf(
             'The meta mapping for the discriminator column "%s" is missing for "%s" using the DQL alias "%s".',
             $discrColumnName,
             $entityName,
-            $dqlAlias,
+            $dqlAlias
         ));
     }
 
-    /** @param list<int|string> $discrValues */
-    public static function invalidDiscriminatorValue(string $discrValue, array $discrValues): self
+    /**
+     * @param string           $discrValue
+     * @param list<int|string> $discrValues
+     *
+     * @return HydrationException
+     */
+    public static function invalidDiscriminatorValue($discrValue, $discrValues)
     {
         return new self(sprintf(
             'The discriminator value "%s" is invalid. It must be one of "%s".',
             $discrValue,
-            implode('", "', $discrValues),
+            implode('", "', $discrValues)
         ));
-    }
-
-    public static function partialObjectHydrationDisallowed(): self
-    {
-        return new self('Hydration of entity objects is not allowed when DQL PARTIAL keyword is used.');
     }
 }

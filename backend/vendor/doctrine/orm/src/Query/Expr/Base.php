@@ -7,12 +7,11 @@ namespace Doctrine\ORM\Query\Expr;
 use InvalidArgumentException;
 use Stringable;
 
-use function array_key_exists;
 use function count;
+use function get_class;
 use function get_debug_type;
 use function implode;
 use function in_array;
-use function is_array;
 use function is_string;
 use function sprintf;
 
@@ -21,34 +20,36 @@ use function sprintf;
  *
  * @link    www.doctrine-project.org
  */
-abstract class Base implements Stringable
+abstract class Base
 {
-    protected string $preSeparator  = '(';
-    protected string $separator     = ', ';
-    protected string $postSeparator = ')';
+    /** @var string */
+    protected $preSeparator = '(';
+
+    /** @var string */
+    protected $separator = ', ';
+
+    /** @var string */
+    protected $postSeparator = ')';
 
     /** @var list<class-string> */
-    protected array $allowedClasses = [];
+    protected $allowedClasses = [];
 
     /** @var list<string|Stringable> */
-    protected array $parts = [];
+    protected $parts = [];
 
-    public function __construct(mixed $args = [])
+    /** @param mixed $args */
+    public function __construct($args = [])
     {
-        if (is_array($args) && array_key_exists(0, $args) && is_array($args[0])) {
-            $args = $args[0];
-        }
-
         $this->addMultiple($args);
     }
 
     /**
      * @param string[]|object[]|string|object $args
-     * @phpstan-param list<string|object>|string|object $args
+     * @psalm-param list<string|object>|string|object $args
      *
      * @return $this
      */
-    public function addMultiple(array|string|object $args = []): static
+    public function addMultiple($args = [])
     {
         foreach ((array) $args as $arg) {
             $this->add($arg);
@@ -58,18 +59,20 @@ abstract class Base implements Stringable
     }
 
     /**
+     * @param mixed $arg
+     *
      * @return $this
      *
      * @throws InvalidArgumentException
      */
-    public function add(mixed $arg): static
+    public function add($arg)
     {
         if ($arg !== null && (! $arg instanceof self || $arg->count() > 0)) {
             // If we decide to keep Expr\Base instances, we can use this check
-            if (! is_string($arg) && ! in_array($arg::class, $this->allowedClasses, true)) {
+            if (! is_string($arg) && ! in_array(get_class($arg), $this->allowedClasses, true)) {
                 throw new InvalidArgumentException(sprintf(
                     "Expression of type '%s' not allowed in this context.",
-                    get_debug_type($arg),
+                    get_debug_type($arg)
                 ));
             }
 
@@ -79,13 +82,17 @@ abstract class Base implements Stringable
         return $this;
     }
 
-    /** @phpstan-return 0|positive-int */
-    public function count(): int
+    /**
+     * @return int
+     * @psalm-return 0|positive-int
+     */
+    public function count()
     {
         return count($this->parts);
     }
 
-    public function __toString(): string
+    /** @return string */
+    public function __toString()
     {
         if ($this->count() === 1) {
             return (string) $this->parts[0];

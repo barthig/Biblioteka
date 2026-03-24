@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Doctrine\ORM\Query;
 
-use Doctrine\ORM\Internal\NoUnknownNamedArguments;
 use Traversable;
 
+use function func_get_args;
 use function implode;
 use function is_bool;
 use function is_float;
@@ -24,8 +24,6 @@ use function str_replace;
  */
 class Expr
 {
-    use NoUnknownNamedArguments;
-
     /**
      * Creates a conjunction of the given boolean expressions.
      *
@@ -35,15 +33,16 @@ class Expr
      *     // (u.type = ?1) AND (u.role = ?2)
      *     $expr->andX($expr->eq('u.type', ':1'), $expr->eq('u.role', ':2'));
      *
-     * @param Expr\Comparison|Expr\Func|Expr\Andx|Expr\Orx|string ...$x Optional clause. Defaults to null,
-     *                                                                  but requires at least one defined
-     *                                                                  when converting to string.
+     * @param Expr\Comparison|Expr\Func|Expr\Andx|Expr\Orx|string $x Optional clause. Defaults to null,
+     *                                                               but requires at least one defined
+     *                                                               when converting to string.
+     * @psalm-param Expr\Comparison|Expr\Func|Expr\Andx|Expr\Orx|string ...$x
+     *
+     * @return Expr\Andx
      */
-    public function andX(Expr\Comparison|Expr\Func|Expr\Andx|Expr\Orx|string ...$x): Expr\Andx
+    public function andX($x = null)
     {
-        self::validateVariadicParameter($x);
-
-        return new Expr\Andx($x);
+        return new Expr\Andx(func_get_args());
     }
 
     /**
@@ -55,29 +54,38 @@ class Expr
      *     // (u.type = ?1) OR (u.role = ?2)
      *     $q->where($q->expr()->orX('u.type = ?1', 'u.role = ?2'));
      *
-     * @param Expr\Comparison|Expr\Func|Expr\Andx|Expr\Orx|string ...$x Optional clause. Defaults to null,
-     *                                                                  but requires at least one defined
-     *                                                                  when converting to string.
+     * @param Expr\Comparison|Expr\Func|Expr\Andx|Expr\Orx|string $x Optional clause. Defaults to null,
+     *                                                               but requires at least one defined
+     *                                                               when converting to string.
+     * @psalm-param Expr\Comparison|Expr\Func|Expr\Andx|Expr\Orx|string ...$x
+     *
+     * @return Expr\Orx
      */
-    public function orX(Expr\Comparison|Expr\Func|Expr\Andx|Expr\Orx|string ...$x): Expr\Orx
+    public function orX($x = null)
     {
-        self::validateVariadicParameter($x);
-
-        return new Expr\Orx($x);
+        return new Expr\Orx(func_get_args());
     }
 
     /**
      * Creates an ASCending order expression.
+     *
+     * @param mixed $expr
+     *
+     * @return Expr\OrderBy
      */
-    public function asc(mixed $expr): Expr\OrderBy
+    public function asc($expr)
     {
         return new Expr\OrderBy($expr, 'ASC');
     }
 
     /**
      * Creates a DESCending order expression.
+     *
+     * @param mixed $expr
+     *
+     * @return Expr\OrderBy
      */
-    public function desc(mixed $expr): Expr\OrderBy
+    public function desc($expr)
     {
         return new Expr\OrderBy($expr, 'DESC');
     }
@@ -94,8 +102,10 @@ class Expr
      *
      * @param mixed $x Left expression.
      * @param mixed $y Right expression.
+     *
+     * @return Expr\Comparison
      */
-    public function eq(mixed $x, mixed $y): Expr\Comparison
+    public function eq($x, $y)
     {
         return new Expr\Comparison($x, Expr\Comparison::EQ, $y);
     }
@@ -111,8 +121,10 @@ class Expr
      *
      * @param mixed $x Left expression.
      * @param mixed $y Right expression.
+     *
+     * @return Expr\Comparison
      */
-    public function neq(mixed $x, mixed $y): Expr\Comparison
+    public function neq($x, $y)
     {
         return new Expr\Comparison($x, Expr\Comparison::NEQ, $y);
     }
@@ -128,8 +140,10 @@ class Expr
      *
      * @param mixed $x Left expression.
      * @param mixed $y Right expression.
+     *
+     * @return Expr\Comparison
      */
-    public function lt(mixed $x, mixed $y): Expr\Comparison
+    public function lt($x, $y)
     {
         return new Expr\Comparison($x, Expr\Comparison::LT, $y);
     }
@@ -145,8 +159,10 @@ class Expr
      *
      * @param mixed $x Left expression.
      * @param mixed $y Right expression.
+     *
+     * @return Expr\Comparison
      */
-    public function lte(mixed $x, mixed $y): Expr\Comparison
+    public function lte($x, $y)
     {
         return new Expr\Comparison($x, Expr\Comparison::LTE, $y);
     }
@@ -162,8 +178,10 @@ class Expr
      *
      * @param mixed $x Left expression.
      * @param mixed $y Right expression.
+     *
+     * @return Expr\Comparison
      */
-    public function gt(mixed $x, mixed $y): Expr\Comparison
+    public function gt($x, $y)
     {
         return new Expr\Comparison($x, Expr\Comparison::GT, $y);
     }
@@ -179,8 +197,10 @@ class Expr
      *
      * @param mixed $x Left expression.
      * @param mixed $y Right expression.
+     *
+     * @return Expr\Comparison
      */
-    public function gte(mixed $x, mixed $y): Expr\Comparison
+    public function gte($x, $y)
     {
         return new Expr\Comparison($x, Expr\Comparison::GTE, $y);
     }
@@ -189,8 +209,10 @@ class Expr
      * Creates an instance of AVG() function, with the given argument.
      *
      * @param mixed $x Argument to be used in AVG() function.
+     *
+     * @return Expr\Func
      */
-    public function avg(mixed $x): Expr\Func
+    public function avg($x)
     {
         return new Expr\Func('AVG', [$x]);
     }
@@ -199,8 +221,10 @@ class Expr
      * Creates an instance of MAX() function, with the given argument.
      *
      * @param mixed $x Argument to be used in MAX() function.
+     *
+     * @return Expr\Func
      */
-    public function max(mixed $x): Expr\Func
+    public function max($x)
     {
         return new Expr\Func('MAX', [$x]);
     }
@@ -209,8 +233,10 @@ class Expr
      * Creates an instance of MIN() function, with the given argument.
      *
      * @param mixed $x Argument to be used in MIN() function.
+     *
+     * @return Expr\Func
      */
-    public function min(mixed $x): Expr\Func
+    public function min($x)
     {
         return new Expr\Func('MIN', [$x]);
     }
@@ -219,8 +245,10 @@ class Expr
      * Creates an instance of COUNT() function, with the given argument.
      *
      * @param mixed $x Argument to be used in COUNT() function.
+     *
+     * @return Expr\Func
      */
-    public function count(mixed $x): Expr\Func
+    public function count($x)
     {
         return new Expr\Func('COUNT', [$x]);
     }
@@ -228,21 +256,23 @@ class Expr
     /**
      * Creates an instance of COUNT(DISTINCT) function, with the given argument.
      *
-     * @param mixed ...$x Argument to be used in COUNT(DISTINCT) function.
+     * @param mixed $x Argument to be used in COUNT(DISTINCT) function.
+     *
+     * @return string
      */
-    public function countDistinct(mixed ...$x): string
+    public function countDistinct($x)
     {
-        self::validateVariadicParameter($x);
-
-        return 'COUNT(DISTINCT ' . implode(', ', $x) . ')';
+        return 'COUNT(DISTINCT ' . implode(', ', func_get_args()) . ')';
     }
 
     /**
      * Creates an instance of EXISTS() function, with the given DQL Subquery.
      *
      * @param mixed $subquery DQL Subquery to be used in EXISTS() function.
+     *
+     * @return Expr\Func
      */
-    public function exists(mixed $subquery): Expr\Func
+    public function exists($subquery)
     {
         return new Expr\Func('EXISTS', [$subquery]);
     }
@@ -251,8 +281,10 @@ class Expr
      * Creates an instance of ALL() function, with the given DQL Subquery.
      *
      * @param mixed $subquery DQL Subquery to be used in ALL() function.
+     *
+     * @return Expr\Func
      */
-    public function all(mixed $subquery): Expr\Func
+    public function all($subquery)
     {
         return new Expr\Func('ALL', [$subquery]);
     }
@@ -261,8 +293,10 @@ class Expr
      * Creates a SOME() function expression with the given DQL subquery.
      *
      * @param mixed $subquery DQL Subquery to be used in SOME() function.
+     *
+     * @return Expr\Func
      */
-    public function some(mixed $subquery): Expr\Func
+    public function some($subquery)
     {
         return new Expr\Func('SOME', [$subquery]);
     }
@@ -271,8 +305,10 @@ class Expr
      * Creates an ANY() function expression with the given DQL subquery.
      *
      * @param mixed $subquery DQL Subquery to be used in ANY() function.
+     *
+     * @return Expr\Func
      */
-    public function any(mixed $subquery): Expr\Func
+    public function any($subquery)
     {
         return new Expr\Func('ANY', [$subquery]);
     }
@@ -281,8 +317,10 @@ class Expr
      * Creates a negation expression of the given restriction.
      *
      * @param mixed $restriction Restriction to be used in NOT() function.
+     *
+     * @return Expr\Func
      */
-    public function not(mixed $restriction): Expr\Func
+    public function not($restriction)
     {
         return new Expr\Func('NOT', [$restriction]);
     }
@@ -291,16 +329,21 @@ class Expr
      * Creates an ABS() function expression with the given argument.
      *
      * @param mixed $x Argument to be used in ABS() function.
+     *
+     * @return Expr\Func
      */
-    public function abs(mixed $x): Expr\Func
+    public function abs($x)
     {
         return new Expr\Func('ABS', [$x]);
     }
 
     /**
      * Creates a MOD($x, $y) function expression to return the remainder of $x divided by $y.
+     *
+     * @param mixed $x
+     * @param mixed $y
      */
-    public function mod(mixed $x, mixed $y): Expr\Func
+    public function mod($x, $y): Expr\Func
     {
         return new Expr\Func('MOD', [$x, $y]);
     }
@@ -317,8 +360,10 @@ class Expr
      *
      * @param mixed $x Left expression.
      * @param mixed $y Right expression.
+     *
+     * @return Expr\Math
      */
-    public function prod(mixed $x, mixed $y): Expr\Math
+    public function prod($x, $y)
     {
         return new Expr\Math($x, '*', $y);
     }
@@ -334,8 +379,10 @@ class Expr
      *
      * @param mixed $x Left expression.
      * @param mixed $y Right expression.
+     *
+     * @return Expr\Math
      */
-    public function diff(mixed $x, mixed $y): Expr\Math
+    public function diff($x, $y)
     {
         return new Expr\Math($x, '-', $y);
     }
@@ -351,8 +398,10 @@ class Expr
      *
      * @param mixed $x Left expression.
      * @param mixed $y Right expression.
+     *
+     * @return Expr\Math
      */
-    public function sum(mixed $x, mixed $y): Expr\Math
+    public function sum($x, $y)
     {
         return new Expr\Math($x, '+', $y);
     }
@@ -368,8 +417,10 @@ class Expr
      *
      * @param mixed $x Left expression.
      * @param mixed $y Right expression.
+     *
+     * @return Expr\Math
      */
-    public function quot(mixed $x, mixed $y): Expr\Math
+    public function quot($x, $y)
     {
         return new Expr\Math($x, '/', $y);
     }
@@ -378,8 +429,10 @@ class Expr
      * Creates a SQRT() function expression with the given argument.
      *
      * @param mixed $x Argument to be used in SQRT() function.
+     *
+     * @return Expr\Func
      */
-    public function sqrt(mixed $x): Expr\Func
+    public function sqrt($x)
     {
         return new Expr\Func('SQRT', [$x]);
     }
@@ -389,8 +442,10 @@ class Expr
      *
      * @param string $x Field in string format to be restricted by IN() function.
      * @param mixed  $y Argument to be used in IN() function.
+     *
+     * @return Expr\Func
      */
-    public function in(string $x, mixed $y): Expr\Func
+    public function in($x, $y)
     {
         if (is_iterable($y)) {
             if ($y instanceof Traversable) {
@@ -412,8 +467,10 @@ class Expr
      *
      * @param string $x Field in string format to be restricted by NOT IN() function.
      * @param mixed  $y Argument to be used in NOT IN() function.
+     *
+     * @return Expr\Func
      */
-    public function notIn(string $x, mixed $y): Expr\Func
+    public function notIn($x, $y)
     {
         if (is_iterable($y)) {
             if ($y instanceof Traversable) {
@@ -434,8 +491,10 @@ class Expr
      * Creates an IS NULL expression with the given arguments.
      *
      * @param string $x Field in string format to be restricted by IS NULL.
+     *
+     * @return string
      */
-    public function isNull(string $x): string
+    public function isNull($x)
     {
         return $x . ' IS NULL';
     }
@@ -444,8 +503,10 @@ class Expr
      * Creates an IS NOT NULL expression with the given arguments.
      *
      * @param string $x Field in string format to be restricted by IS NOT NULL.
+     *
+     * @return string
      */
-    public function isNotNull(string $x): string
+    public function isNotNull($x)
     {
         return $x . ' IS NOT NULL';
     }
@@ -455,8 +516,10 @@ class Expr
      *
      * @param string $x Field in string format to be inspected by LIKE() comparison.
      * @param mixed  $y Argument to be used in LIKE() comparison.
+     *
+     * @return Expr\Comparison
      */
-    public function like(string $x, mixed $y): Expr\Comparison
+    public function like($x, $y)
     {
         return new Expr\Comparison($x, 'LIKE', $y);
     }
@@ -466,8 +529,10 @@ class Expr
      *
      * @param string $x Field in string format to be inspected by LIKE() comparison.
      * @param mixed  $y Argument to be used in LIKE() comparison.
+     *
+     * @return Expr\Comparison
      */
-    public function notLike(string $x, mixed $y): Expr\Comparison
+    public function notLike($x, $y)
     {
         return new Expr\Comparison($x, 'NOT LIKE', $y);
     }
@@ -475,13 +540,14 @@ class Expr
     /**
      * Creates a CONCAT() function expression with the given arguments.
      *
-     * @param mixed ...$x Arguments to be used in CONCAT() function.
+     * @param mixed $x     First argument to be used in CONCAT() function.
+     * @param mixed $y,... Other arguments to be used in CONCAT() function.
+     *
+     * @return Expr\Func
      */
-    public function concat(mixed ...$x): Expr\Func
+    public function concat($x, $y)
     {
-        self::validateVariadicParameter($x);
-
-        return new Expr\Func('CONCAT', $x);
+        return new Expr\Func('CONCAT', func_get_args());
     }
 
     /**
@@ -490,8 +556,10 @@ class Expr
      * @param mixed    $x    Argument to be used as string to be cropped by SUBSTRING() function.
      * @param int      $from Initial offset to start cropping string. May accept negative values.
      * @param int|null $len  Length of crop. May accept negative values.
+     *
+     * @return Expr\Func
      */
-    public function substring(mixed $x, int $from, int|null $len = null): Expr\Func
+    public function substring($x, $from, $len = null)
     {
         $args = [$x, $from];
         if ($len !== null) {
@@ -508,7 +576,7 @@ class Expr
      *
      * @return Expr\Func A LOWER function expression.
      */
-    public function lower(mixed $x): Expr\Func
+    public function lower($x)
     {
         return new Expr\Func('LOWER', [$x]);
     }
@@ -520,7 +588,7 @@ class Expr
      *
      * @return Expr\Func An UPPER function expression.
      */
-    public function upper(mixed $x): Expr\Func
+    public function upper($x)
     {
         return new Expr\Func('UPPER', [$x]);
     }
@@ -532,7 +600,7 @@ class Expr
      *
      * @return Expr\Func A LENGTH function expression.
      */
-    public function length(mixed $x): Expr\Func
+    public function length($x)
     {
         return new Expr\Func('LENGTH', [$x]);
     }
@@ -541,8 +609,10 @@ class Expr
      * Creates a literal expression of the given argument.
      *
      * @param scalar $literal Argument to be converted to literal.
+     *
+     * @return Expr\Literal
      */
-    public function literal(bool|string|int|float $literal): Expr\Literal
+    public function literal($literal)
     {
         return new Expr\Literal($this->quoteLiteral($literal));
     }
@@ -552,7 +622,7 @@ class Expr
      *
      * @param scalar $literal The literal value.
      */
-    private function quoteLiteral(bool|string|int|float $literal): string
+    private function quoteLiteral($literal): string
     {
         if (is_int($literal) || is_float($literal)) {
             return (string) $literal;
@@ -574,7 +644,7 @@ class Expr
      *
      * @return string A BETWEEN expression.
      */
-    public function between(mixed $val, int|string $x, int|string $y): string
+    public function between($val, $x, $y)
     {
         return $val . ' BETWEEN ' . $x . ' AND ' . $y;
     }
@@ -586,7 +656,7 @@ class Expr
      *
      * @return Expr\Func a TRIM expression.
      */
-    public function trim(mixed $x): Expr\Func
+    public function trim($x)
     {
         return new Expr\Func('TRIM', $x);
     }
@@ -596,8 +666,10 @@ class Expr
      *
      * @param string $x Value to be checked
      * @param string $y Value to be checked against
+     *
+     * @return Expr\Comparison
      */
-    public function isMemberOf(string $x, string $y): Expr\Comparison
+    public function isMemberOf($x, $y)
     {
         return new Expr\Comparison($x, 'MEMBER OF', $y);
     }
@@ -607,8 +679,10 @@ class Expr
      *
      * @param string $x Value to be checked
      * @param string $y Value to be checked against
+     *
+     * @return Expr\Comparison
      */
-    public function isInstanceOf(string $x, string $y): Expr\Comparison
+    public function isInstanceOf($x, $y)
     {
         return new Expr\Comparison($x, 'INSTANCE OF', $y);
     }

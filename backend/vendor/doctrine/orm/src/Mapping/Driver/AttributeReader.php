@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Doctrine\ORM\Mapping\Driver;
 
 use Attribute;
-use Doctrine\ORM\Mapping\MappingAttribute;
+use Doctrine\ORM\Mapping\Annotation;
 use LogicException;
 use ReflectionAttribute;
 use ReflectionClass;
@@ -20,13 +20,13 @@ use function sprintf;
 /** @internal */
 final class AttributeReader
 {
-    /** @var array<class-string<MappingAttribute>, bool> */
+    /** @var array<class-string<Annotation>,bool> */
     private array $isRepeatableAttribute = [];
 
     /**
-     * @phpstan-return class-string-map<T, T|RepeatableAttributeCollection<T>>
+     * @psalm-return class-string-map<T, T|RepeatableAttributeCollection<T>>
      *
-     * @template T of MappingAttribute
+     * @template T of Annotation
      */
     public function getClassAttributes(ReflectionClass $class): array
     {
@@ -36,7 +36,7 @@ final class AttributeReader
     /**
      * @return class-string-map<T, T|RepeatableAttributeCollection<T>>
      *
-     * @template T of MappingAttribute
+     * @template T of Annotation
      */
     public function getMethodAttributes(ReflectionMethod $method): array
     {
@@ -46,7 +46,7 @@ final class AttributeReader
     /**
      * @return class-string-map<T, T|RepeatableAttributeCollection<T>>
      *
-     * @template T of MappingAttribute
+     * @template T of Annotation
      */
     public function getPropertyAttributes(ReflectionProperty $property): array
     {
@@ -58,14 +58,14 @@ final class AttributeReader
      *
      * @return T|null
      *
-     * @template T of MappingAttribute
+     * @template T of Annotation
      */
-    public function getPropertyAttribute(ReflectionProperty $property, string $attributeName)
+    public function getPropertyAttribute(ReflectionProperty $property, $attributeName)
     {
         if ($this->isRepeatable($attributeName)) {
             throw new LogicException(sprintf(
                 'The attribute "%s" is repeatable. Call getPropertyAttributeCollection() instead.',
-                $attributeName,
+                $attributeName
             ));
         }
 
@@ -77,16 +77,16 @@ final class AttributeReader
      *
      * @return RepeatableAttributeCollection<T>
      *
-     * @template T of MappingAttribute
+     * @template T of Annotation
      */
     public function getPropertyAttributeCollection(
         ReflectionProperty $property,
-        string $attributeName,
+        string $attributeName
     ): RepeatableAttributeCollection {
         if (! $this->isRepeatable($attributeName)) {
             throw new LogicException(sprintf(
                 'The attribute "%s" is not repeatable. Call getPropertyAttribute() instead.',
-                $attributeName,
+                $attributeName
             ));
         }
 
@@ -98,7 +98,7 @@ final class AttributeReader
      *
      * @return class-string-map<T, T|RepeatableAttributeCollection<T>>
      *
-     * @template T of MappingAttribute
+     * @template T of Annotation
      */
     private function convertToAttributeInstances(array $attributes): array
     {
@@ -108,12 +108,12 @@ final class AttributeReader
             $attributeName = $attribute->getName();
             assert(is_string($attributeName));
             // Make sure we only get Doctrine Attributes
-            if (! is_subclass_of($attributeName, MappingAttribute::class)) {
+            if (! is_subclass_of($attributeName, Annotation::class)) {
                 continue;
             }
 
             $instance = $attribute->newInstance();
-            assert($instance instanceof MappingAttribute);
+            assert($instance instanceof Annotation);
 
             if ($this->isRepeatable($attributeName)) {
                 if (! isset($instances[$attributeName])) {
@@ -131,7 +131,7 @@ final class AttributeReader
         return $instances;
     }
 
-    /** @param class-string<MappingAttribute> $attributeClassName */
+    /** @param class-string<Annotation> $attributeClassName */
     private function isRepeatable(string $attributeClassName): bool
     {
         if (isset($this->isRepeatableAttribute[$attributeClassName])) {

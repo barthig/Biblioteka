@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Doctrine\ORM\Tools\Console\Command;
 
+use Doctrine\ORM\Tools\Console\CommandCompatibility;
 use Doctrine\ORM\Tools\Debug;
 use LogicException;
 use RuntimeException;
@@ -27,7 +28,10 @@ use function strtoupper;
  */
 class RunDqlCommand extends AbstractEntityManagerCommand
 {
-    protected function configure(): void
+    use CommandCompatibility;
+
+    /** @return void */
+    protected function configure()
     {
         $this->setName('orm:run-dql')
              ->setDescription('Executes arbitrary DQL directly from the command line')
@@ -39,24 +43,25 @@ class RunDqlCommand extends AbstractEntityManagerCommand
              ->addOption('depth', null, InputOption::VALUE_REQUIRED, 'Dumping depth of Entity graph.', 7)
              ->addOption('show-sql', null, InputOption::VALUE_NONE, 'Dump generated SQL instead of executing query')
              ->setHelp(<<<'EOT'
-                The <info>%command.name%</info> command executes the given DQL query and
-                outputs the results:
+The <info>%command.name%</info> command executes the given DQL query and
+outputs the results:
 
-                <info>php %command.full_name% "SELECT u FROM App\Entity\User u"</info>
+<info>php %command.full_name% "SELECT u FROM App\Entity\User u"</info>
 
-                You can also optionally specify some additional options like what type of
-                hydration to use when executing the query:
+You can also optionally specify some additional options like what type of
+hydration to use when executing the query:
 
-                <info>php %command.full_name% "SELECT u FROM App\Entity\User u" --hydrate=array</info>
+<info>php %command.full_name% "SELECT u FROM App\Entity\User u" --hydrate=array</info>
 
-                Additionally you can specify the first result and maximum amount of results to
-                show:
+Additionally you can specify the first result and maximum amount of results to
+show:
 
-                <info>php %command.full_name% "SELECT u FROM App\Entity\User u" --first-result=0 --max-result=30</info>
-                EOT);
+<info>php %command.full_name% "SELECT u FROM App\Entity\User u" --first-result=0 --max-result=30</info>
+EOT
+             );
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output): int
+    private function doExecute(InputInterface $input, OutputInterface $output): int
     {
         $ui = new SymfonyStyle($input, $output);
 
@@ -79,7 +84,7 @@ class RunDqlCommand extends AbstractEntityManagerCommand
         if (! defined($hydrationMode)) {
             throw new RuntimeException(sprintf(
                 "Hydration mode '%s' does not exist. It should be either: object. array, scalar or single-scalar.",
-                $hydrationModeName,
+                $hydrationModeName
             ));
         }
 

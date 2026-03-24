@@ -14,21 +14,23 @@ interface ManagerRegistry extends ConnectionRegistry
      *
      * @return string The default object manager name.
      */
-    public function getDefaultManagerName(): string;
+    public function getDefaultManagerName();
 
     /**
      * Gets a named object manager.
      *
      * @param string|null $name The object manager name (null for the default one).
+     *
+     * @return ObjectManager
      */
-    public function getManager(string|null $name = null): ObjectManager;
+    public function getManager(?string $name = null);
 
     /**
      * Gets an array of all registered object managers.
      *
      * @return array<string, ObjectManager> An array of ObjectManager instances
      */
-    public function getManagers(): array;
+    public function getManagers();
 
     /**
      * Resets a named object manager.
@@ -44,8 +46,10 @@ interface ManagerRegistry extends ConnectionRegistry
      * to avoid this problem.
      *
      * @param string|null $name The object manager name (null for the default one).
+     *
+     * @return ObjectManager
      */
-    public function resetManager(string|null $name = null): ObjectManager;
+    public function resetManager(?string $name = null);
 
     /**
      * Gets all object manager names and associated service IDs. A service ID
@@ -55,28 +59,31 @@ interface ManagerRegistry extends ConnectionRegistry
      * @return array<string,string> An array with object manager names as keys,
      *                              and service IDs as values.
      */
-    public function getManagerNames(): array;
+    public function getManagerNames();
 
     /**
      * Gets the ObjectRepository for a persistent object.
      *
      * @param string      $persistentObject      The name of the persistent object.
      * @param string|null $persistentManagerName The object manager name (null for the default one).
-     * @phpstan-param class-string<T> $persistentObject
+     * @psalm-param class-string<T> $persistentObject
      *
-     * @phpstan-return ObjectRepository<T>
+     * @return ObjectRepository
+     * @psalm-return ObjectRepository<T>
      *
      * @template T of object
      */
     public function getRepository(
         string $persistentObject,
-        string|null $persistentManagerName = null,
-    ): ObjectRepository;
+        ?string $persistentManagerName = null
+    );
 
     /**
      * Gets the object manager associated with a given class.
      *
      * @param class-string $class A persistent object class name.
+     *
+     * @return ObjectManager|null
      */
-    public function getManagerForClass(string $class): ObjectManager|null;
+    public function getManagerForClass(string $class);
 }

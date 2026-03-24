@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { clearTokens, setTokens } from '../api/client'
 import { authService } from '../services/authService'
 import { applyUiPreferences, clearUiPreferences, loadStoredUiPreferences, storeUiPreferences } from '../utils/uiPreferences'
 import { logger } from '../utils/logger'
@@ -87,7 +88,7 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     if (token) {
-      localStorage.setItem('token', token)
+      setTokens(token, refreshToken || getStoredTokenValue('refreshToken'))
       
       // Decode JWT and set user immediately (no backend call needed)
       const decoded = decodeJwt(token)
@@ -117,7 +118,7 @@ export function AuthProvider({ children }) {
         setUser(null)
       }
     } else {
-      localStorage.removeItem('token')
+      clearTokens()
       setUser(null)
       clearUiPreferences()
       applyUiPreferences({ theme: 'auto', fontSize: 'standard', language: 'pl' })
@@ -148,15 +149,12 @@ export function AuthProvider({ children }) {
   }, [navigate, isInitialized])
 
   function login(tokenValue, refreshTokenValue) {
-    if (tokenValue) {
-      localStorage.setItem('token', tokenValue)
-    } else {
-      localStorage.removeItem('token')
-    }
+    setTokens(tokenValue, refreshTokenValue || null)
     setToken(tokenValue)
     if (refreshTokenValue) {
-      localStorage.setItem('refreshToken', refreshTokenValue)
       setRefreshToken(refreshTokenValue)
+    } else {
+      setRefreshToken(null)
     }
     
     // Immediately decode JWT and set user (no waiting)
@@ -178,6 +176,7 @@ export function AuthProvider({ children }) {
     } catch (err) {
       // Ignore logout errors, still clear local session
     }
+    clearTokens()
     setToken(null)
     setRefreshToken(null)
     setUser(null)
@@ -186,6 +185,7 @@ export function AuthProvider({ children }) {
 
   async function logoutAll() {
     await authService.logoutAll()
+    clearTokens()
     setToken(null)
     setRefreshToken(null)
     setUser(null)
@@ -222,4 +222,12 @@ export function AuthProvider({ children }) {
 
 export function useAuth() {
   return useContext(AuthContext)
+}
+
+function getStoredTokenValue(key) {
+  try {
+    return localStorage.getItem(key)
+  } catch {
+    return null
+  }
 }

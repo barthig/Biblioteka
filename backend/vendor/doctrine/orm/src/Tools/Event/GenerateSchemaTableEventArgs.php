@@ -16,24 +16,36 @@ use Doctrine\ORM\Mapping\ClassMetadata;
  */
 class GenerateSchemaTableEventArgs extends EventArgs
 {
-    public function __construct(
-        private readonly ClassMetadata $classMetadata,
-        private readonly Schema $schema,
-        private readonly Table $classTable,
-    ) {
+    /** @var ClassMetadata */
+    private $classMetadata;
+
+    /** @var Schema */
+    private $schema;
+
+    /** @var Table */
+    private $classTable;
+
+    public function __construct(ClassMetadata $classMetadata, Schema $schema, Table $classTable)
+    {
+        $this->classMetadata = $classMetadata;
+        $this->schema        = $schema;
+        $this->classTable    = $classTable;
     }
 
-    public function getClassMetadata(): ClassMetadata
+    /** @return ClassMetadata */
+    public function getClassMetadata()
     {
         return $this->classMetadata;
     }
 
-    public function getSchema(): Schema
+    /** @return Schema */
+    public function getSchema()
     {
         return $this->schema;
     }
 
-    public function getClassTable(): Table
+    /** @return Table */
+    public function getClassTable()
     {
         return $this->classTable;
     }

@@ -20,14 +20,20 @@ class SingleSelectSqlFinalizer implements SqlFinalizer
 {
     use LockSqlHelper;
 
-    public function __construct(private string $sql)
+    /** @var string */
+    private $sql;
+
+    public function __construct(string $sql)
     {
+        $this->sql = $sql;
     }
 
     /**
      * This method exists temporarily to support old SqlWalker interfaces.
      *
      * @internal
+     *
+     * @psalm-internal Doctrine\ORM
      */
     public function finalizeSql(Query $query): string
     {

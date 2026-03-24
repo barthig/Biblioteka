@@ -17,6 +17,7 @@ use function count;
 use function end;
 use function explode;
 use function extension_loaded;
+use function get_class;
 use function html_entity_decode;
 use function ini_get;
 use function ini_set;
@@ -52,7 +53,7 @@ final class Debug
      * @param mixed $var      The variable to dump.
      * @param int   $maxDepth The maximum nesting level for object properties.
      */
-    public static function dump(mixed $var, int $maxDepth = 2): string
+    public static function dump($var, int $maxDepth = 2): string
     {
         $html = ini_get('html_errors');
 
@@ -87,14 +88,19 @@ final class Debug
         return $dumpText;
     }
 
-    public static function export(mixed $var, int $maxDepth): mixed
+    /**
+     * @param mixed $var
+     *
+     * @return mixed
+     */
+    public static function export($var, int $maxDepth)
     {
         if ($var instanceof Collection) {
             $var = $var->toArray();
         }
 
         if (! $maxDepth) {
-            return is_object($var) ? $var::class
+            return is_object($var) ? get_class($var)
                 : (is_array($var) ? 'Array(' . count($var) . ')' : $var);
         }
 
@@ -114,7 +120,7 @@ final class Debug
 
         $return = new stdClass();
         if ($var instanceof DateTimeInterface) {
-            $return->__CLASS__ = $var::class;
+            $return->__CLASS__ = get_class($var);
             $return->date      = $var->format('c');
             $return->timezone  = $var->getTimezone()->getName();
 
@@ -138,8 +144,12 @@ final class Debug
     /**
      * Fill the $return variable with class attributes
      * Based on obj2array function from {@see https://secure.php.net/manual/en/function.get-object-vars.php#47075}
+     *
+     * @param object $var
+     *
+     * @return mixed
      */
-    private static function fillReturnWithClassAttributes(object $var, stdClass $return, int $maxDepth): stdClass
+    private static function fillReturnWithClassAttributes($var, stdClass $return, int $maxDepth)
     {
         $clone = (array) $var;
 

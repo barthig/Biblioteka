@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Doctrine\Bundle\DoctrineBundle\Mapping;
 
 use Doctrine\ORM\Mapping\ClassMetadata;
@@ -23,9 +21,11 @@ use function strpos;
  */
 class DisconnectedMetadataFactory
 {
-    public function __construct(
-        private readonly ManagerRegistry $registry,
-    ) {
+    private ManagerRegistry $registry;
+
+    public function __construct(ManagerRegistry $registry)
+    {
+        $this->registry = $registry;
     }
 
     /**

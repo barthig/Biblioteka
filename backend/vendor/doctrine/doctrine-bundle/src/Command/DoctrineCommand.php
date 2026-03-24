@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Doctrine\Bundle\DoctrineBundle\Command;
 
 use Doctrine\DBAL\Connection;
@@ -20,10 +18,13 @@ use function assert;
  */
 abstract class DoctrineCommand extends Command
 {
-    public function __construct(
-        private readonly ManagerRegistry $doctrine,
-    ) {
+    private ManagerRegistry $doctrine;
+
+    public function __construct(ManagerRegistry $doctrine)
+    {
         parent::__construct();
+
+        $this->doctrine = $doctrine;
     }
 
     /**

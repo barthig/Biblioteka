@@ -16,7 +16,6 @@ use RuntimeException;
 
 use function array_diff;
 use function array_keys;
-use function assert;
 use function count;
 use function implode;
 use function reset;
@@ -35,17 +34,27 @@ use function sprintf;
  * are able to cache subqueries. By keeping the ORDER BY clause intact, the limitSubQuery
  * that will most likely be executed next can be read from the native SQL cache.
  *
- * @phpstan-import-type QueryComponent from Parser
+ * @psalm-import-type QueryComponent from Parser
  */
 class CountOutputWalker extends SqlOutputWalker
 {
-    private readonly AbstractPlatform $platform;
-    private readonly ResultSetMapping $rsm;
+    /** @var AbstractPlatform */
+    private $platform;
+
+    /** @var ResultSetMapping */
+    private $rsm;
 
     /**
-     * {@inheritDoc}
+     * Stores various parameters that are otherwise unavailable
+     * because Doctrine\ORM\Query\SqlWalker keeps everything private without
+     * accessors.
+     *
+     * @param Query        $query
+     * @param ParserResult $parserResult
+     * @param mixed[]      $queryComponents
+     * @psalm-param array<string, QueryComponent> $queryComponents
      */
-    public function __construct(Query $query, ParserResult $parserResult, array $queryComponents)
+    public function __construct($query, $parserResult, array $queryComponents)
     {
         $this->platform = $query->getEntityManager()->getConnection()->getDatabasePlatform();
         $this->rsm      = $parserResult->getResultSetMapping();
@@ -53,18 +62,18 @@ class CountOutputWalker extends SqlOutputWalker
         parent::__construct($query, $parserResult, $queryComponents);
     }
 
-    protected function createSqlForFinalizer(SelectStatement $selectStatement): string
+    protected function createSqlForFinalizer(SelectStatement $AST): string
     {
         if ($this->platform instanceof SQLServerPlatform) {
-            $selectStatement->orderByClause = null;
+            $AST->orderByClause = null;
         }
 
-        $sql = parent::createSqlForFinalizer($selectStatement);
+        $sql = parent::createSqlForFinalizer($AST);
 
-        if ($selectStatement->groupByClause) {
+        if ($AST->groupByClause) {
             return sprintf(
                 'SELECT COUNT(*) AS dctrn_count FROM (%s) dctrn_table',
-                $sql,
+                $sql
             );
         }
 
@@ -74,7 +83,7 @@ class CountOutputWalker extends SqlOutputWalker
         // so for now, It's not supported.
 
         // Get the root entity and alias from the AST fromClause
-        $from = $selectStatement->fromClause->identificationVariableDeclarations;
+        $from = $AST->fromClause->identificationVariableDeclarations;
         if (count($from) > 1) {
             throw new RuntimeException('Cannot count query which selects two FROM components, cannot make distinction');
         }
@@ -96,9 +105,7 @@ class CountOutputWalker extends SqlOutputWalker
             }
 
             if (isset($rootClass->associationMappings[$property])) {
-                $association = $rootClass->associationMappings[$property];
-                assert($association->isToOneOwningSide());
-                $joinColumn = $association->joinColumns[0]->name;
+                $joinColumn = $rootClass->associationMappings[$property]['joinColumns'][0]['name'];
 
                 foreach (array_keys($this->rsm->metaMappings, $joinColumn, true) as $alias) {
                     if ($this->rsm->columnOwnerMap[$alias] === $rootAlias) {
@@ -111,7 +118,7 @@ class CountOutputWalker extends SqlOutputWalker
         if (count($rootIdentifier) !== count($sqlIdentifier)) {
             throw new RuntimeException(sprintf(
                 'Not all identifier properties can be found in the ResultSetMapping: %s',
-                implode(', ', array_diff($rootIdentifier, array_keys($sqlIdentifier))),
+                implode(', ', array_diff($rootIdentifier, array_keys($sqlIdentifier)))
             ));
         }
 
@@ -119,7 +126,7 @@ class CountOutputWalker extends SqlOutputWalker
         return sprintf(
             'SELECT COUNT(*) AS dctrn_count FROM (SELECT DISTINCT %s FROM (%s) dctrn_result) dctrn_table',
             implode(', ', $sqlIdentifier),
-            $sql,
+            $sql
         );
     }
 }

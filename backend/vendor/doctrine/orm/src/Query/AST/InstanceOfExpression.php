@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Doctrine\ORM\Query\AST;
 
-use Doctrine\ORM\Query\SqlWalker;
+use Doctrine\Deprecations\Deprecation;
+
+use function func_num_args;
 
 /**
  * InstanceOfExpression ::= IdentificationVariable ["NOT"] "INSTANCE" ["OF"] (InstanceOfParameter | "(" InstanceOfParameter {"," InstanceOfParameter}* ")")
@@ -14,16 +16,40 @@ use Doctrine\ORM\Query\SqlWalker;
  */
 class InstanceOfExpression extends Node
 {
-    /** @param non-empty-list<InputParameter|string> $value */
-    public function __construct(
-        public string $identificationVariable,
-        public array $value,
-        public bool $not = false,
-    ) {
+    /** @var bool */
+    public $not;
+
+    /** @var string */
+    public $identificationVariable;
+
+    /** @var non-empty-list<InputParameter|string> */
+    public $value;
+
+    /**
+     * @param string                                $identVariable
+     * @param non-empty-list<InputParameter|string> $value
+     */
+    public function __construct($identVariable, array $value = [], bool $not = false)
+    {
+        if (func_num_args() < 2) {
+            Deprecation::trigger(
+                'doctrine/orm',
+                'https://github.com/doctrine/orm/pull/10267',
+                'Not passing a value for $value to %s() is deprecated.',
+                __METHOD__
+            );
+        }
+
+        $this->identificationVariable = $identVariable;
+        $this->value                  = $value;
+        $this->not                    = $not;
     }
 
-    public function dispatch(SqlWalker $walker): string
+    /**
+     * {@inheritDoc}
+     */
+    public function dispatch($sqlWalker)
     {
-        return $walker->walkInstanceOfExpression($this);
+        return $sqlWalker->walkInstanceOfExpression($this);
     }
 }

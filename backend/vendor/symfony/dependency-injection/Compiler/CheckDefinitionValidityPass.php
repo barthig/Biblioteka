@@ -33,9 +33,11 @@ class CheckDefinitionValidityPass implements CompilerPassInterface
     /**
      * Processes the ContainerBuilder to validate the Definition.
      *
+     * @return void
+     *
      * @throws RuntimeException When the Definition is invalid
      */
-    public function process(ContainerBuilder $container): void
+    public function process(ContainerBuilder $container)
     {
         foreach ($container->getDefinitions() as $id => $definition) {
             if ($definition->hasErrors()) {
@@ -70,7 +72,7 @@ class CheckDefinitionValidityPass implements CompilerPassInterface
                 }
             }
 
-            if ($definition->isPublic()) {
+            if ($definition->isPublic() && !$definition->isPrivate()) {
                 $resolvedId = $container->resolveEnvPlaceholders($id, null, $usedEnvs);
                 if (null !== $usedEnvs) {
                     throw new EnvParameterException([$resolvedId], null, 'A service name ("%s") cannot contain dynamic values.');
@@ -79,7 +81,7 @@ class CheckDefinitionValidityPass implements CompilerPassInterface
         }
 
         foreach ($container->getAliases() as $id => $alias) {
-            if ($alias->isPublic()) {
+            if ($alias->isPublic() && !$alias->isPrivate()) {
                 $resolvedId = $container->resolveEnvPlaceholders($id, null, $usedEnvs);
                 if (null !== $usedEnvs) {
                     throw new EnvParameterException([$resolvedId], null, 'An alias name ("%s") cannot contain dynamic values.');

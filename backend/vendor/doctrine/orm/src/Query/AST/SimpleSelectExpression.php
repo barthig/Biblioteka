@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Doctrine\ORM\Query\AST;
 
-use Doctrine\ORM\Query\SqlWalker;
-
 /**
  * SimpleSelectExpression ::= StateFieldPathExpression | IdentificationVariable
  *                          | (AggregateExpression [["AS"] FieldAliasIdentificationVariable])
@@ -14,14 +12,23 @@ use Doctrine\ORM\Query\SqlWalker;
  */
 class SimpleSelectExpression extends Node
 {
-    public string|null $fieldIdentificationVariable = null;
+    /** @var Node|string */
+    public $expression;
 
-    public function __construct(public Node|string $expression)
+    /** @var string */
+    public $fieldIdentificationVariable;
+
+    /** @param Node|string $expression */
+    public function __construct($expression)
     {
+        $this->expression = $expression;
     }
 
-    public function dispatch(SqlWalker $walker): string
+    /**
+     * {@inheritDoc}
+     */
+    public function dispatch($sqlWalker)
     {
-        return $walker->walkSimpleSelectExpression($this);
+        return $sqlWalker->walkSimpleSelectExpression($this);
     }
 }

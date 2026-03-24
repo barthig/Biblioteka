@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 namespace Doctrine\ORM\Exception;
 
-use Exception;
-
+use function get_class;
 use function sprintf;
 
-final class EntityIdentityCollisionException extends Exception implements ORMException
+final class EntityIdentityCollisionException extends ORMException
 {
-    public static function create(object $existingEntity, object $newEntity, string $idHash): self
+    /**
+     * @param object $existingEntity
+     * @param object $newEntity
+     */
+    public static function create($existingEntity, $newEntity, string $idHash): self
     {
         return new self(
             sprintf(
@@ -30,10 +33,10 @@ entity.
 Otherwise, it might be an ORM-internal inconsistency, please report it.
 EXCEPTION
                 ,
-                $newEntity::class,
+                get_class($newEntity),
                 $idHash,
-                $existingEntity::class,
-            ),
+                get_class($existingEntity)
+            )
         );
     }
 }

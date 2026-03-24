@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Doctrine\ORM\Query\Expr;
 
-use Stringable;
-
 use function strtoupper;
 
 /**
@@ -13,61 +11,102 @@ use function strtoupper;
  *
  * @link    www.doctrine-project.org
  */
-class Join implements Stringable
+class Join
 {
-    final public const INNER_JOIN = 'INNER';
-    final public const LEFT_JOIN  = 'LEFT';
+    public const INNER_JOIN = 'INNER';
+    public const LEFT_JOIN  = 'LEFT';
 
-    final public const ON   = 'ON';
-    final public const WITH = 'WITH';
+    public const ON   = 'ON';
+    public const WITH = 'WITH';
 
     /**
-     * @phpstan-param self::INNER_JOIN|self::LEFT_JOIN $joinType
-     * @phpstan-param self::ON|self::WITH|null $conditionType
+     * @var string
+     * @psalm-var self::INNER_JOIN|self::LEFT_JOIN
      */
-    public function __construct(
-        protected string $joinType,
-        protected string $join,
-        protected string|null $alias = null,
-        protected string|null $conditionType = null,
-        protected string|Comparison|Composite|Func|null $condition = null,
-        protected string|null $indexBy = null,
-    ) {
+    protected $joinType;
+
+    /** @var string */
+    protected $join;
+
+    /** @var string|null */
+    protected $alias;
+
+    /**
+     * @var string|null
+     * @psalm-var self::ON|self::WITH|null
+     */
+    protected $conditionType;
+
+    /** @var string|Comparison|Composite|Func|null */
+    protected $condition;
+
+    /** @var string|null */
+    protected $indexBy;
+
+    /**
+     * @param string                                $joinType      The condition type constant. Either INNER_JOIN or LEFT_JOIN.
+     * @param string                                $join          The relationship to join.
+     * @param string|null                           $alias         The alias of the join.
+     * @param string|null                           $conditionType The condition type constant. Either ON or WITH.
+     * @param string|Comparison|Composite|Func|null $condition     The condition for the join.
+     * @param string|null                           $indexBy       The index for the join.
+     * @psalm-param self::INNER_JOIN|self::LEFT_JOIN $joinType
+     * @psalm-param self::ON|self::WITH|null $conditionType
+     */
+    public function __construct($joinType, $join, $alias = null, $conditionType = null, $condition = null, $indexBy = null)
+    {
+        $this->joinType      = $joinType;
+        $this->join          = $join;
+        $this->alias         = $alias;
+        $this->conditionType = $conditionType;
+        $this->condition     = $condition;
+        $this->indexBy       = $indexBy;
     }
 
-    /** @phpstan-return self::INNER_JOIN|self::LEFT_JOIN */
-    public function getJoinType(): string
+    /**
+     * @return string
+     * @psalm-return self::INNER_JOIN|self::LEFT_JOIN
+     */
+    public function getJoinType()
     {
         return $this->joinType;
     }
 
-    public function getJoin(): string
+    /** @return string */
+    public function getJoin()
     {
         return $this->join;
     }
 
-    public function getAlias(): string|null
+    /** @return string|null */
+    public function getAlias()
     {
         return $this->alias;
     }
 
-    /** @phpstan-return self::ON|self::WITH|null */
-    public function getConditionType(): string|null
+    /**
+     * @return string|null
+     * @psalm-return self::ON|self::WITH|null
+     */
+    public function getConditionType()
     {
         return $this->conditionType;
     }
 
-    public function getCondition(): string|Comparison|Composite|Func|null
+    /** @return string|Comparison|Composite|Func|null */
+    public function getCondition()
     {
         return $this->condition;
     }
 
-    public function getIndexBy(): string|null
+    /** @return string|null */
+    public function getIndexBy()
     {
         return $this->indexBy;
     }
 
-    public function __toString(): string
+    /** @return string */
+    public function __toString()
     {
         return strtoupper($this->joinType) . ' JOIN ' . $this->join
              . ($this->alias ? ' ' . $this->alias : '')

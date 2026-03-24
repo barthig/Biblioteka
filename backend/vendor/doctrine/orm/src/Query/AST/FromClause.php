@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Doctrine\ORM\Query\AST;
 
-use Doctrine\ORM\Query\SqlWalker;
-
 /**
  * FromClause ::= "FROM" IdentificationVariableDeclaration {"," IdentificationVariableDeclaration}
  *
@@ -13,13 +11,20 @@ use Doctrine\ORM\Query\SqlWalker;
  */
 class FromClause extends Node
 {
+    /** @var mixed[] */
+    public $identificationVariableDeclarations = [];
+
     /** @param mixed[] $identificationVariableDeclarations */
-    public function __construct(public array $identificationVariableDeclarations)
+    public function __construct(array $identificationVariableDeclarations)
     {
+        $this->identificationVariableDeclarations = $identificationVariableDeclarations;
     }
 
-    public function dispatch(SqlWalker $walker): string
+    /**
+     * {@inheritDoc}
+     */
+    public function dispatch($sqlWalker)
     {
-        return $walker->walkFromClause($this);
+        return $sqlWalker->walkFromClause($this);
     }
 }

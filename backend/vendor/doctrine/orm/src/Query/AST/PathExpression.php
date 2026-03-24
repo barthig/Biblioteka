@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Doctrine\ORM\Query\AST;
 
-use Doctrine\ORM\Query\SqlWalker;
-
 /**
  * AssociationPathExpression ::= CollectionValuedPathExpression | SingleValuedAssociationPathExpression
  * SingleValuedPathExpression ::= StateFieldPathExpression | SingleValuedAssociationPathExpression
@@ -17,22 +15,45 @@ use Doctrine\ORM\Query\SqlWalker;
  */
 class PathExpression extends Node
 {
-    final public const TYPE_COLLECTION_VALUED_ASSOCIATION = 2;
-    final public const TYPE_SINGLE_VALUED_ASSOCIATION     = 4;
-    final public const TYPE_STATE_FIELD                   = 8;
+    public const TYPE_COLLECTION_VALUED_ASSOCIATION = 2;
+    public const TYPE_SINGLE_VALUED_ASSOCIATION     = 4;
+    public const TYPE_STATE_FIELD                   = 8;
 
-    /** @phpstan-var self::TYPE_*|null */
-    public int|null $type = null;
+    /**
+     * @var int|null
+     * @psalm-var self::TYPE_*|null
+     */
+    public $type;
 
-    /** @phpstan-param int-mask-of<self::TYPE_*> $expectedType */
-    public function __construct(
-        public int $expectedType,
-        public string $identificationVariable,
-        public string|null $field = null,
-    ) {
+    /**
+     * @var int
+     * @psalm-var int-mask-of<self::TYPE_*>
+     */
+    public $expectedType;
+
+    /** @var string */
+    public $identificationVariable;
+
+    /** @var string|null */
+    public $field;
+
+    /**
+     * @param int         $expectedType
+     * @param string      $identificationVariable
+     * @param string|null $field
+     * @psalm-param int-mask-of<self::TYPE_*> $expectedType
+     */
+    public function __construct($expectedType, $identificationVariable, $field = null)
+    {
+        $this->expectedType           = $expectedType;
+        $this->identificationVariable = $identificationVariable;
+        $this->field                  = $field;
     }
 
-    public function dispatch(SqlWalker $walker): string
+    /**
+     * {@inheritDoc}
+     */
+    public function dispatch($walker)
     {
         return $walker->walkPathExpression($this);
     }

@@ -156,7 +156,7 @@ export default function BookDetails() {
           userRating: data.userRating || null
         })
       } catch (err) {
-        setRatingsError(err.message || 'Nie udaĹ‚o siÄ™ pobraÄ‡ ocen')
+        setRatingsError(err.message || 'Nie udało się pobrać ocen')
         logger.error('Failed to load ratings:', err)
       }
     }

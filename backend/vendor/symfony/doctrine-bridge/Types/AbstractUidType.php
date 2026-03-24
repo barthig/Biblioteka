@@ -90,7 +90,12 @@ abstract class AbstractUidType extends Type
 
     private function hasNativeGuidType(AbstractPlatform $platform): bool
     {
-        return $platform->getGuidTypeDeclarationSQL([]) !== $platform->getStringTypeDeclarationSQL(['fixed' => true, 'length' => 36]);
+        // Compatibility with DBAL < 3.4
+        $method = method_exists($platform, 'getStringTypeDeclarationSQL')
+            ? 'getStringTypeDeclarationSQL'
+            : 'getVarcharTypeDeclarationSQL';
+
+        return $platform->getGuidTypeDeclarationSQL([]) !== $platform->$method(['fixed' => true, 'length' => 36]);
     }
 
     private function throwInvalidType(mixed $value): never

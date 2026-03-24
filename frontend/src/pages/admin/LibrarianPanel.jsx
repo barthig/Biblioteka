@@ -4,6 +4,7 @@ import { useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { apiFetch } from '../../api'
 import { useAuth } from '../../context/AuthContext'
+import { useResourceCache } from '../../context/ResourceCacheContext'
 import LibrarianDashboard from './LibrarianDashboard'
 import PageHeader from '../../components/ui/PageHeader'
 import StatGrid from '../../components/ui/StatGrid'
@@ -13,6 +14,7 @@ import { logger } from '../../utils/logger'
 
 export default function LibrarianPanel() {
   const { user } = useAuth()
+  const { getCachedResource, setCachedResource, invalidateResource } = useResourceCache()
   const [searchParams] = useSearchParams()
   const isAdmin = user?.roles?.includes('ROLE_ADMIN')
   const [activeTab, setActiveTab] = useState('dashboard')
@@ -103,6 +105,7 @@ export default function LibrarianPanel() {
   const [editErrors, setEditErrors] = useState({})
 
   const [returnModal, setReturnModal] = useState({ show: false, loan: null, fine: null })
+  const CACHE_TTL = 120000
 
   useEffect(() => {
     const tab = searchParams.get('tab')
@@ -269,8 +272,16 @@ export default function LibrarianPanel() {
     setLoading(true)
     setError(null)
     try {
+      const cacheKey = 'librarian:/api/loans'
+      const cached = getCachedResource(cacheKey, CACHE_TTL)
+      if (typeof cached !== 'undefined') {
+        setLoans(cached)
+        return
+      }
       const data = await apiFetch('/api/loans')
-      setLoans(Array.isArray(data) ? data : data.data || [])
+      const nextLoans = Array.isArray(data) ? data : data.data || []
+      setCachedResource(cacheKey, nextLoans)
+      setLoans(nextLoans)
     } catch (err) {
       setError(err.message || 'Nie udało się pobrać wypożyczeń')
     } finally {
@@ -308,13 +319,21 @@ export default function LibrarianPanel() {
     setLoading(true)
     setError(null)
     try {
+      const cacheKey = 'librarian:/api/statistics/dashboard'
+      const cached = getCachedResource(cacheKey, CACHE_TTL)
+      if (typeof cached !== 'undefined') {
+        setStats(cached)
+        return
+      }
       const data = await apiFetch('/api/statistics/dashboard')
-      setStats({
+      const nextStats = {
         activeLoans: data?.activeLoans ?? 0,
         overdueLoans: data?.overdueLoans ?? 0,
         totalUsers: data?.totalUsers ?? 0,
         availableCopies: data?.availableCopies ?? 0
-      })
+      }
+      setCachedResource(cacheKey, nextStats)
+      setStats(nextStats)
     } catch (err) {
       setError(err.message || 'Nie udało się pobrać statystyk')
     } finally {
@@ -326,12 +345,20 @@ export default function LibrarianPanel() {
     setLibrarySettingsLoading(true)
     setError(null)
     try {
+      const cacheKey = 'librarian:/api/settings'
+      const cached = getCachedResource(cacheKey, CACHE_TTL)
+      if (typeof cached !== 'undefined') {
+        setLibrarySettings(cached)
+        return
+      }
       const data = await apiFetch('/api/settings')
-      setLibrarySettings({
+      const nextSettings = {
         loanLimitPerUser: data?.loanLimitPerUser ?? '',
         loanDurationDays: data?.loanDurationDays ?? '',
         notificationsEnabled: !!data?.notificationsEnabled
-      })
+      }
+      setCachedResource(cacheKey, nextSettings)
+      setLibrarySettings(nextSettings)
     } catch (err) {
       setError(err.message || 'Nie udało się pobrać ustawień')
     } finally {
@@ -359,6 +386,7 @@ export default function LibrarianPanel() {
         loanDurationDays: data?.settings?.loanDurationDays ?? payload.loanDurationDays,
         notificationsEnabled: data?.settings?.notificationsEnabled ?? payload.notificationsEnabled
       })
+      invalidateResource('librarian:/api/settings')
       setSuccess('Zapisano ustawienia')
     } catch (err) {
       setError(err.message || 'Nie udało się zapisać ustawień')
@@ -371,8 +399,16 @@ export default function LibrarianPanel() {
     try {
       // Pobierz rezerwacje zgodnie z wybranym filtrem lub wszystkie jeśli ALL
       const statusParam = reservationStatusFilter === 'ALL' ? '' : `&status=${reservationStatusFilter}`
+      const cacheKey = `librarian:/api/reservations?history=true&limit=100${statusParam}`
+      const cached = getCachedResource(cacheKey, CACHE_TTL)
+      if (typeof cached !== 'undefined') {
+        setReservations(cached)
+        return
+      }
       const data = await apiFetch(`/api/reservations?history=true&limit=100${statusParam}`)
-      setReservations(Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [])
+      const nextReservations = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : []
+      setCachedResource(cacheKey, nextReservations)
+      setReservations(nextReservations)
     } catch (err) {
       setError(err.message || 'Nie udało się pobrać rezerwacji')
     } finally {
@@ -387,6 +423,7 @@ export default function LibrarianPanel() {
     setSuccess(null)
     try {
       await apiFetch(`/api/reservations/${reservationId}`, { method: 'DELETE' })
+      invalidateResource('librarian:/api/reservations*')
       setSuccess('Rezerwacja została anulowana')
       loadReservations()
     } catch (err) {
@@ -403,6 +440,9 @@ export default function LibrarianPanel() {
     setSuccess(null)
     try {
       await apiFetch(`/api/reservations/${reservationId}/fulfill`, { method: 'POST' })
+      invalidateResource('librarian:/api/reservations*')
+      invalidateResource('librarian:/api/loans')
+      invalidateResource('librarian:/api/statistics/dashboard')
       setSuccess('Rezerwacja została zrealizowana')
       loadReservations()
     } catch (err) {
@@ -419,6 +459,7 @@ export default function LibrarianPanel() {
     setSuccess(null)
     try {
       await apiFetch(`/api/reservations/${reservationId}/prepare`, { method: 'POST' })
+      invalidateResource('librarian:/api/reservations*')
       setSuccess('Rezerwacja została oznaczona jako przygotowana. Powiadomienie wysłane.')
       loadReservations()
     } catch (err) {
@@ -472,8 +513,16 @@ export default function LibrarianPanel() {
     setLoading(true)
     setError(null)
     try {
+      const cacheKey = 'librarian:/api/fines?limit=50'
+      const cached = getCachedResource(cacheKey, CACHE_TTL)
+      if (typeof cached !== 'undefined') {
+        setFines(cached)
+        return
+      }
       const data = await apiFetch('/api/fines?limit=50')
-      setFines(Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [])
+      const nextFines = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : []
+      setCachedResource(cacheKey, nextFines)
+      setFines(nextFines)
     } catch (err) {
       setError(err.message || 'Nie udało się pobrać opłat')
     } finally {
@@ -501,6 +550,7 @@ export default function LibrarianPanel() {
           reason: fineForm.reason.trim()
         })
       })
+      invalidateResource('librarian:/api/fines?limit=50')
       setSuccess('Opłata została utworzona')
       setFineForm({ userId: '', loanId: '', amount: '', currency: 'PLN', reason: '' })
       setFineUserQuery('')
@@ -519,6 +569,7 @@ export default function LibrarianPanel() {
     setSuccess(null)
     try {
       await apiFetch(`/api/fines/${fineId}/pay`, { method: 'POST' })
+      invalidateResource('librarian:/api/fines?limit=50')
       setSuccess('Opłata została oznaczona jako opłacona')
       loadFines()
     } catch (err) {
@@ -532,6 +583,7 @@ export default function LibrarianPanel() {
     setSuccess(null)
     try {
       await apiFetch(`/api/fines/${fineId}`, { method: 'DELETE' })
+      invalidateResource('librarian:/api/fines?limit=50')
       setSuccess('Opłata została anulowana')
       loadFines()
     } catch (err) {
@@ -746,6 +798,8 @@ export default function LibrarianPanel() {
           dueDate: loanForm.dueDate
         })
       })
+      invalidateResource('librarian:/api/loans')
+      invalidateResource('librarian:/api/statistics/dashboard')
 
       setSuccess('Wypożyczenie zostało utworzone')
       setLoanForm({ userId: '', bookId: '', copyId: '', dueDate: '' })
@@ -791,6 +845,9 @@ export default function LibrarianPanel() {
 
     try {
       await apiFetch(`/api/loans/${loan.id}/return`, { method: 'PUT' })
+      invalidateResource('librarian:/api/loans')
+      invalidateResource('librarian:/api/statistics/dashboard')
+      invalidateResource('librarian:/api/fines?limit=50')
       if (fine) {
         setSuccess(`Zwrot po terminie. Kara: ${fine.amount.toFixed(2)} PLN za ${fine.days} dni.`)
       } else {
@@ -806,8 +863,16 @@ export default function LibrarianPanel() {
 
   async function loadCollections() {
     try {
+      const cacheKey = 'librarian:/api/collections'
+      const cached = getCachedResource(cacheKey, CACHE_TTL)
+      if (typeof cached !== 'undefined') {
+        setCollections(cached)
+        return
+      }
       const data = await apiFetch('/api/collections')
-      setCollections(data.collections || [])
+      const nextCollections = data.collections || []
+      setCachedResource(cacheKey, nextCollections)
+      setCollections(nextCollections)
     } catch (err) {
       setError(err.message)
     }
@@ -846,6 +911,7 @@ export default function LibrarianPanel() {
         setSuccess('Kolekcja utworzona')
       }
 
+      invalidateResource('librarian:/api/collections')
       setCollectionForm({ name: '', description: '', featured: false, displayOrder: 0, bookIds: [] })
       setEditingCollection(null)
       loadCollections()
@@ -861,6 +927,7 @@ export default function LibrarianPanel() {
 
     try {
       await apiFetch(`/api/collections/${id}`, { method: 'DELETE' })
+      invalidateResource('librarian:/api/collections')
       setSuccess('Kolekcja usunieta')
       loadCollections()
     } catch (err) {

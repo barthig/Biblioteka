@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Doctrine\ORM\Internal\Hydration;
 
 use BackedEnum;
+use Doctrine\DBAL\Driver\ResultStatement;
+use Doctrine\DBAL\ForwardCompatibility\Result as ForwardCompatibilityResult;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Result;
 use Doctrine\DBAL\Types\Type;
+use Doctrine\Deprecations\Deprecation;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Events;
 use Doctrine\ORM\Mapping\ClassMetadata;
@@ -17,94 +20,163 @@ use Doctrine\ORM\UnitOfWork;
 use Generator;
 use LogicException;
 use ReflectionClass;
-use ReflectionEnum;
+use TypeError;
 
-use function array_key_exists;
-use function array_keys;
 use function array_map;
 use function array_merge;
 use function count;
-use function current;
 use function end;
+use function get_debug_type;
 use function in_array;
 use function is_array;
-use function is_object;
-use function ksort;
+use function sprintf;
 
 /**
  * Base class for all hydrators. A hydrator is a class that provides some form
  * of transformation of an SQL result set into another structure.
- *
- * @phpstan-consistent-constructor
  */
 abstract class AbstractHydrator
 {
     /**
      * The ResultSetMapping.
+     *
+     * @var ResultSetMapping|null
      */
-    protected ResultSetMapping|null $rsm = null;
+    protected $_rsm;
+
+    /**
+     * The EntityManager instance.
+     *
+     * @var EntityManagerInterface
+     */
+    protected $_em;
 
     /**
      * The dbms Platform instance.
+     *
+     * @var AbstractPlatform
      */
-    protected AbstractPlatform $platform;
+    protected $_platform;
 
     /**
      * The UnitOfWork of the associated EntityManager.
+     *
+     * @var UnitOfWork
      */
-    protected UnitOfWork $uow;
+    protected $_uow;
 
     /**
      * Local ClassMetadata cache to avoid going to the EntityManager all the time.
      *
      * @var array<string, ClassMetadata<object>>
      */
-    protected array $metadataCache = [];
+    protected $_metadataCache = [];
 
     /**
      * The cache used during row-by-row hydration.
      *
      * @var array<string, mixed[]|null>
      */
-    protected array $cache = [];
+    protected $_cache = [];
 
     /**
      * The statement that provides the data to hydrate.
+     *
+     * @var Result|null
      */
-    protected Result|null $stmt = null;
+    protected $_stmt;
 
     /**
      * The query hints.
      *
      * @var array<string, mixed>
      */
-    protected array $hints = [];
+    protected $_hints = [];
 
     /**
      * Initializes a new instance of a class derived from <tt>AbstractHydrator</tt>.
+     *
+     * @param EntityManagerInterface $em The EntityManager to use.
      */
-    public function __construct(protected EntityManagerInterface $em)
+    public function __construct(EntityManagerInterface $em)
     {
-        $this->platform = $em->getConnection()->getDatabasePlatform();
-        $this->uow      = $em->getUnitOfWork();
+        $this->_em       = $em;
+        $this->_platform = $em->getConnection()->getDatabasePlatform();
+        $this->_uow      = $em->getUnitOfWork();
     }
 
     /**
      * Initiates a row-by-row hydration.
      *
-     * @phpstan-param array<string, mixed> $hints
+     * @deprecated
+     *
+     * @param Result|ResultStatement $stmt
+     * @param ResultSetMapping       $resultSetMapping
+     * @psalm-param array<string, mixed> $hints
+     *
+     * @return IterableResult
+     */
+    public function iterate($stmt, $resultSetMapping, array $hints = [])
+    {
+        Deprecation::trigger(
+            'doctrine/orm',
+            'https://github.com/doctrine/orm/issues/8463',
+            'Method %s() is deprecated and will be removed in Doctrine ORM 3.0. Use toIterable() instead.',
+            __METHOD__
+        );
+
+        $this->_stmt  = $stmt instanceof ResultStatement ? ForwardCompatibilityResult::ensure($stmt) : $stmt;
+        $this->_rsm   = $resultSetMapping;
+        $this->_hints = $hints;
+
+        $evm = $this->_em->getEventManager();
+
+        $evm->addEventListener([Events::onClear], $this);
+
+        $this->prepare();
+
+        return new IterableResult($this);
+    }
+
+    /**
+     * Initiates a row-by-row hydration.
+     *
+     * @param Result|ResultStatement $stmt
+     * @psalm-param array<string, mixed> $hints
      *
      * @return Generator<array-key, mixed>
      *
      * @final
      */
-    final public function toIterable(Result $stmt, ResultSetMapping $resultSetMapping, array $hints = []): Generator
+    public function toIterable($stmt, ResultSetMapping $resultSetMapping, array $hints = []): iterable
     {
-        $this->stmt  = $stmt;
-        $this->rsm   = $resultSetMapping;
-        $this->hints = $hints;
+        if (! $stmt instanceof Result) {
+            if (! $stmt instanceof ResultStatement) {
+                throw new TypeError(sprintf(
+                    '%s: Expected parameter $stmt to be an instance of %s or %s, got %s',
+                    __METHOD__,
+                    Result::class,
+                    ResultStatement::class,
+                    get_debug_type($stmt)
+                ));
+            }
 
-        $evm = $this->em->getEventManager();
+            Deprecation::trigger(
+                'doctrine/orm',
+                'https://github.com/doctrine/orm/pull/8796',
+                '%s: Passing a result as $stmt that does not implement %s is deprecated and will cause a TypeError on 3.0',
+                __METHOD__,
+                Result::class
+            );
+
+            $stmt = ForwardCompatibilityResult::ensure($stmt);
+        }
+
+        $this->_stmt  = $stmt;
+        $this->_rsm   = $resultSetMapping;
+        $this->_hints = $hints;
+
+        $evm = $this->_em->getEventManager();
 
         $evm->addEventListener([Events::onClear], $this);
 
@@ -129,10 +201,8 @@ abstract class AbstractHydrator
                     } else {
                         yield from $result;
                     }
-                } elseif (is_object(current($result))) {
-                    yield $result;
                 } else {
-                    yield array_merge(...$result);
+                    yield $result;
                 }
             }
         } finally {
@@ -142,34 +212,60 @@ abstract class AbstractHydrator
 
     final protected function statement(): Result
     {
-        if ($this->stmt === null) {
+        if ($this->_stmt === null) {
             throw new LogicException('Uninitialized _stmt property');
         }
 
-        return $this->stmt;
+        return $this->_stmt;
     }
 
     final protected function resultSetMapping(): ResultSetMapping
     {
-        if ($this->rsm === null) {
+        if ($this->_rsm === null) {
             throw new LogicException('Uninitialized _rsm property');
         }
 
-        return $this->rsm;
+        return $this->_rsm;
     }
 
     /**
      * Hydrates all rows returned by the passed statement instance at once.
      *
-     * @phpstan-param array<string, string> $hints
+     * @param Result|ResultStatement $stmt
+     * @param ResultSetMapping       $resultSetMapping
+     * @psalm-param array<string, string> $hints
+     *
+     * @return mixed[]
      */
-    public function hydrateAll(Result $stmt, ResultSetMapping $resultSetMapping, array $hints = []): mixed
+    public function hydrateAll($stmt, $resultSetMapping, array $hints = [])
     {
-        $this->stmt  = $stmt;
-        $this->rsm   = $resultSetMapping;
-        $this->hints = $hints;
+        if (! $stmt instanceof Result) {
+            if (! $stmt instanceof ResultStatement) {
+                throw new TypeError(sprintf(
+                    '%s: Expected parameter $stmt to be an instance of %s or %s, got %s',
+                    __METHOD__,
+                    Result::class,
+                    ResultStatement::class,
+                    get_debug_type($stmt)
+                ));
+            }
 
-        $this->em->getEventManager()->addEventListener([Events::onClear], $this);
+            Deprecation::trigger(
+                'doctrine/orm',
+                'https://github.com/doctrine/orm/pull/8796',
+                '%s: Passing a result as $stmt that does not implement %s is deprecated and will cause a TypeError on 3.0',
+                __METHOD__,
+                Result::class
+            );
+
+            $stmt = ForwardCompatibilityResult::ensure($stmt);
+        }
+
+        $this->_stmt  = $stmt;
+        $this->_rsm   = $resultSetMapping;
+        $this->_hints = $hints;
+
+        $this->_em->getEventManager()->addEventListener([Events::onClear], $this);
         $this->prepare();
 
         try {
@@ -182,36 +278,76 @@ abstract class AbstractHydrator
     }
 
     /**
+     * Hydrates a single row returned by the current statement instance during
+     * row-by-row hydration with {@link iterate()} or {@link toIterable()}.
+     *
+     * @deprecated
+     *
+     * @return mixed[]|false
+     */
+    public function hydrateRow()
+    {
+        Deprecation::triggerIfCalledFromOutside(
+            'doctrine/orm',
+            'https://github.com/doctrine/orm/pull/9072',
+            '%s is deprecated.',
+            __METHOD__
+        );
+
+        $row = $this->statement()->fetchAssociative();
+
+        if ($row === false) {
+            $this->cleanup();
+
+            return false;
+        }
+
+        $result = [];
+
+        $this->hydrateRowData($row, $result);
+
+        return $result;
+    }
+
+    /**
      * When executed in a hydrate() loop we have to clear internal state to
      * decrease memory consumption.
+     *
+     * @param mixed $eventArgs
+     *
+     * @return void
      */
-    public function onClear(mixed $eventArgs): void
+    public function onClear($eventArgs)
     {
     }
 
     /**
      * Executes one-time preparation tasks, once each time hydration is started
-     * through {@link hydrateAll} or {@link toIterable()}.
+     * through {@link hydrateAll} or {@link iterate()}.
+     *
+     * @return void
      */
-    protected function prepare(): void
+    protected function prepare()
     {
     }
 
     /**
      * Executes one-time cleanup tasks at the end of a hydration that was initiated
-     * through {@link hydrateAll} or {@link toIterable()}.
+     * through {@link hydrateAll} or {@link iterate()}.
+     *
+     * @return void
      */
-    protected function cleanup(): void
+    protected function cleanup()
     {
         $this->statement()->free();
 
-        $this->stmt          = null;
-        $this->rsm           = null;
-        $this->cache         = [];
-        $this->metadataCache = [];
+        $this->_stmt          = null;
+        $this->_rsm           = null;
+        $this->_cache         = [];
+        $this->_metadataCache = [];
 
         $this
-            ->em
+            ->_em
             ->getEventManager()
             ->removeEventListener([Events::onClear], $this);
     }
@@ -228,17 +364,21 @@ abstract class AbstractHydrator
      * @param mixed[] $row    The row data.
      * @param mixed[] $result The result to fill.
      *
+     * @return void
+     *
      * @throws HydrationException
      */
-    protected function hydrateRowData(array $row, array &$result): void
+    protected function hydrateRowData(array $row, array &$result)
     {
         throw new HydrationException('hydrateRowData() not implemented by this hydrator.');
     }
 
     /**
      * Hydrates all rows from the current statement instance at once.
+     *
+     * @return mixed[]
      */
-    abstract protected function hydrateAllData(): mixed;
+    abstract protected function hydrateAllData();
 
     /**
      * Processes a row of the result set.
@@ -250,37 +390,25 @@ abstract class AbstractHydrator
      * the values applied. Scalar values are kept in a specific key 'scalars'.
      *
      * @param mixed[] $data SQL Result Row.
-     * @phpstan-param array<string, string> $id                 Dql-Alias => ID-Hash.
-     * @phpstan-param array<string, bool>   $nonemptyComponents Does this DQL-Alias has at least one non NULL value?
+     * @psalm-param array<string, string> $id                 Dql-Alias => ID-Hash.
+     * @psalm-param array<string, bool>   $nonemptyComponents Does this DQL-Alias has at least one non NULL value?
      *
      * @return array<string, array<string, mixed>> An array with all the fields
      *                                             (name => value) of the data
      *                                             row, grouped by their
      *                                             component alias.
-     * @phpstan-return array{
+     * @psalm-return array{
      *                   data: array<array-key, array>,
      *                   newObjects?: array<array-key, array{
-     *                       class: ReflectionClass,
-     *                       args: array,
-     *                       obj: object
+     *                       class: mixed,
+     *                       args?: array
      *                   }>,
      *                   scalars?: array
      *               }
      */
-    protected function gatherRowData(array $data, array &$id, array &$nonemptyComponents): array
+    protected function gatherRowData(array $data, array &$id, array &$nonemptyComponents)
     {
-        $rowData = ['data' => [], 'newObjects' => []];
-
-        foreach ($this->rsm->newObjectMappings as $mapping) {
-            if (! array_key_exists($mapping['objIndex'], $this->rsm->newObject)) {
-                $this->rsm->newObject[$mapping['objIndex']] = $mapping['className'];
-            }
-        }
-
-        foreach ($this->rsm->newObject as $objIndex => $newObject) {
-            $rowData['newObjects'][$objIndex]['class'] = new ReflectionClass($newObject);
-            $rowData['newObjects'][$objIndex]['args']  = [];
-        }
+        $rowData = ['data' => []];
 
         foreach ($data as $key => $value) {
             $cacheKeyInfo = $this->hydrateColumnInfo($key);
@@ -295,18 +423,19 @@ abstract class AbstractHydrator
                     $argIndex = $cacheKeyInfo['argIndex'];
                     $objIndex = $cacheKeyInfo['objIndex'];
                     $type     = $cacheKeyInfo['type'];
-                    $value    = $type->convertToPHPValue($value, $this->platform);
+                    $value    = $type->convertToPHPValue($value, $this->_platform);
 
                     if ($value !== null && isset($cacheKeyInfo['enumType'])) {
                         $value = $this->buildEnum($value, $cacheKeyInfo['enumType']);
                     }
 
+                    $rowData['newObjects'][$objIndex]['class']           = $cacheKeyInfo['class'];
                     $rowData['newObjects'][$objIndex]['args'][$argIndex] = $value;
                     break;
 
                 case isset($cacheKeyInfo['isScalar']):
                     $type  = $cacheKeyInfo['type'];
-                    $value = $type->convertToPHPValue($value, $this->platform);
+                    $value = $type->convertToPHPValue($value, $this->_platform);
 
                     if ($value !== null && isset($cacheKeyInfo['enumType'])) {
                         $value = $this->buildEnum($value, $cacheKeyInfo['enumType']);
@@ -338,7 +467,7 @@ abstract class AbstractHydrator
                     }
 
                     $rowData['data'][$dqlAlias][$fieldName] = $type
-                        ? $type->convertToPHPValue($value, $this->platform)
+                        ? $type->convertToPHPValue($value, $this->_platform)
                         : $value;
 
                     if ($rowData['data'][$dqlAlias][$fieldName] !== null && isset($cacheKeyInfo['enumType'])) {
@@ -354,43 +483,7 @@ abstract class AbstractHydrator
             }
         }
 
-        $nestedEntities = [];
-        /**@var string $argAlias */
-        foreach ($this->resultSetMapping()->nestedNewObjectArguments as ['ownerIndex' => $ownerIndex, 'argIndex' => $argIndex, 'argAlias' => $argAlias]) {
-            if (array_key_exists($argAlias, $rowData['newObjects'])) {
-                ksort($rowData['newObjects'][$argAlias]['args']);
-                $rowData['newObjects'][$ownerIndex]['args'][$argIndex] = $rowData['newObjects'][$argAlias]['class']->newInstanceArgs($rowData['newObjects'][$argAlias]['args']);
-                unset($rowData['newObjects'][$argAlias]);
-            } elseif (array_key_exists($argAlias, $rowData['data'])) {
-                if (! array_key_exists($argAlias, $nestedEntities)) {
-                    $nestedEntities[$argAlias]  = '';
-                    $rowData['data'][$argAlias] = $this->hydrateNestedEntity($rowData['data'][$argAlias], $argAlias);
-                }
-
-                $rowData['newObjects'][$ownerIndex]['args'][$argIndex] = $rowData['data'][$argAlias];
-            } else {
-                throw new LogicException($argAlias . ' does not exist');
-            }
-        }
-
-        foreach (array_keys($nestedEntities) as $entity) {
-            unset($rowData['data'][$entity]);
-        }
-
-        foreach ($rowData['newObjects'] as $objIndex => $newObject) {
-            ksort($rowData['newObjects'][$objIndex]['args']);
-            $obj = $rowData['newObjects'][$objIndex]['class']->newInstanceArgs($rowData['newObjects'][$objIndex]['args']);
-
-            $rowData['newObjects'][$objIndex]['obj'] = $obj;
-        }
-
         return $rowData;
-    }
-
-    /** @param mixed[] $data pre-hydrated SQL Result Row. */
-    protected function hydrateNestedEntity(array $data, string $dqlAlias): mixed
-    {
-        return $data;
     }
 
     /**
@@ -402,12 +495,12 @@ abstract class AbstractHydrator
      * of elements as before.
      *
      * @param mixed[] $data
-     * @phpstan-param array<string, mixed> $data
+     * @psalm-param array<string, mixed> $data
      *
      * @return mixed[] The processed row.
-     * @phpstan-return array<string, mixed>
+     * @psalm-return array<string, mixed>
      */
-    protected function gatherScalarRowData(array &$data): array
+    protected function gatherScalarRowData(&$data)
     {
         $rowData = [];
 
@@ -423,7 +516,7 @@ abstract class AbstractHydrator
             // erroneous behavior exists since 2.0 and we're forced to keep compatibility.
             if (! isset($cacheKeyInfo['isScalar'])) {
                 $type  = $cacheKeyInfo['type'];
-                $value = $type ? $type->convertToPHPValue($value, $this->platform) : $value;
+                $value = $type ? $type->convertToPHPValue($value, $this->_platform) : $value;
 
                 $fieldName = $cacheKeyInfo['dqlAlias'] . '_' . $fieldName;
             }
@@ -440,92 +533,93 @@ abstract class AbstractHydrator
      * @param string $key Column name
      *
      * @return mixed[]|null
-     * @phpstan-return array<string, mixed>|null
+     * @psalm-return array<string, mixed>|null
      */
-    protected function hydrateColumnInfo(string $key): array|null
+    protected function hydrateColumnInfo($key)
     {
-        if (isset($this->cache[$key])) {
-            return $this->cache[$key];
+        if (isset($this->_cache[$key])) {
+            return $this->_cache[$key];
         }
 
         switch (true) {
             // NOTE: Most of the times it's a field mapping, so keep it first!!!
-            case isset($this->rsm->fieldMappings[$key]):
-                $classMetadata = $this->getClassMetadata($this->rsm->declaringClasses[$key]);
-                $fieldName     = $this->rsm->fieldMappings[$key];
+            case isset($this->_rsm->fieldMappings[$key]):
+                $classMetadata = $this->getClassMetadata($this->_rsm->declaringClasses[$key]);
+                $fieldName     = $this->_rsm->fieldMappings[$key];
                 $fieldMapping  = $classMetadata->fieldMappings[$fieldName];
-                $ownerMap      = $this->rsm->columnOwnerMap[$key];
+                $ownerMap      = $this->_rsm->columnOwnerMap[$key];
                 $columnInfo    = [
                     'isIdentifier' => in_array($fieldName, $classMetadata->identifier, true),
                     'fieldName'    => $fieldName,
-                    'type'         => Type::getType($fieldMapping->type),
+                    'type'         => Type::getType($fieldMapping['type']),
                     'dqlAlias'     => $ownerMap,
-                    'enumType'     => $this->rsm->enumMappings[$key] ?? null,
+                    'enumType'     => $this->_rsm->enumMappings[$key] ?? null,
                 ];
 
                 // the current discriminator value must be saved in order to disambiguate fields hydration,
                 // should there be field name collisions
-                if ($classMetadata->parentClasses && isset($this->rsm->discriminatorColumns[$ownerMap])) {
-                    return $this->cache[$key] = array_merge(
+                if ($classMetadata->parentClasses && isset($this->_rsm->discriminatorColumns[$ownerMap])) {
+                    return $this->_cache[$key] = array_merge(
                         $columnInfo,
                         [
-                            'discriminatorColumn' => $this->rsm->discriminatorColumns[$ownerMap],
+                            'discriminatorColumn' => $this->_rsm->discriminatorColumns[$ownerMap],
                             'discriminatorValue'  => $classMetadata->discriminatorValue,
                             'discriminatorValues' => $this->getDiscriminatorValues($classMetadata),
-                        ],
+                        ]
                     );
                 }
 
-                return $this->cache[$key] = $columnInfo;
+                return $this->_cache[$key] = $columnInfo;
 
-            case isset($this->rsm->newObjectMappings[$key]):
+            case isset($this->_rsm->newObjectMappings[$key]):
                 // WARNING: A NEW object is also a scalar, so it must be declared before!
-                $mapping = $this->rsm->newObjectMappings[$key];
+                $mapping = $this->_rsm->newObjectMappings[$key];
 
-                return $this->cache[$key] = [
+                return $this->_cache[$key] = [
                     'isScalar'             => true,
                     'isNewObjectParameter' => true,
-                    'fieldName'            => $this->rsm->scalarMappings[$key],
-                    'type'                 => Type::getType($this->rsm->typeMappings[$key]),
+                    'fieldName'            => $this->_rsm->scalarMappings[$key],
+                    'type'                 => Type::getType($this->_rsm->typeMappings[$key]),
                     'argIndex'             => $mapping['argIndex'],
                     'objIndex'             => $mapping['objIndex'],
-                    'enumType'             => $this->rsm->enumMappings[$key] ?? null,
+                    'class'                => new ReflectionClass($mapping['className']),
+                    'enumType'             => $this->_rsm->enumMappings[$key] ?? null,
                 ];
 
-            case isset($this->rsm->scalarMappings[$key], $this->hints[LimitSubqueryWalker::FORCE_DBAL_TYPE_CONVERSION]):
-                return $this->cache[$key] = [
-                    'fieldName' => $this->rsm->scalarMappings[$key],
-                    'type'      => Type::getType($this->rsm->typeMappings[$key]),
+            case isset($this->_rsm->scalarMappings[$key], $this->_hints[LimitSubqueryWalker::FORCE_DBAL_TYPE_CONVERSION]):
+                return $this->_cache[$key] = [
+                    'fieldName' => $this->_rsm->scalarMappings[$key],
+                    'type'      => Type::getType($this->_rsm->typeMappings[$key]),
                     'dqlAlias'  => '',
-                    'enumType'  => $this->rsm->enumMappings[$key] ?? null,
+                    'enumType'  => $this->_rsm->enumMappings[$key] ?? null,
                 ];
 
-            case isset($this->rsm->scalarMappings[$key]):
-                return $this->cache[$key] = [
+            case isset($this->_rsm->scalarMappings[$key]):
+                return $this->_cache[$key] = [
                     'isScalar'  => true,
-                    'fieldName' => $this->rsm->scalarMappings[$key],
-                    'type'      => Type::getType($this->rsm->typeMappings[$key]),
-                    'enumType'  => $this->rsm->enumMappings[$key] ?? null,
+                    'fieldName' => $this->_rsm->scalarMappings[$key],
+                    'type'      => Type::getType($this->_rsm->typeMappings[$key]),
+                    'enumType'  => $this->_rsm->enumMappings[$key] ?? null,
                 ];
 
-            case isset($this->rsm->metaMappings[$key]):
+            case isset($this->_rsm->metaMappings[$key]):
                 // Meta column (has meaning in relational schema only, i.e. foreign keys or discriminator columns).
-                $fieldName = $this->rsm->metaMappings[$key];
-                $dqlAlias  = $this->rsm->columnOwnerMap[$key];
-                $type      = isset($this->rsm->typeMappings[$key])
-                    ? Type::getType($this->rsm->typeMappings[$key])
+                $fieldName = $this->_rsm->metaMappings[$key];
+                $dqlAlias  = $this->_rsm->columnOwnerMap[$key];
+                $type      = isset($this->_rsm->typeMappings[$key])
+                    ? Type::getType($this->_rsm->typeMappings[$key])
                     : null;
 
                 // Cache metadata fetch
-                $this->getClassMetadata($this->rsm->aliasMap[$dqlAlias]);
+                $this->getClassMetadata($this->_rsm->aliasMap[$dqlAlias]);
 
-                return $this->cache[$key] = [
-                    'isIdentifier' => isset($this->rsm->isIdentifierColumn[$dqlAlias][$key]),
+                return $this->_cache[$key] = [
+                    'isIdentifier' => isset($this->_rsm->isIdentifierColumn[$dqlAlias][$key]),
                     'isMetaColumn' => true,
                     'fieldName'    => $fieldName,
                     'type'         => $type,
                     'dqlAlias'     => $dqlAlias,
-                    'enumType'     => $this->rsm->enumMappings[$key] ?? null,
+                    'enumType'     => $this->_rsm->enumMappings[$key] ?? null,
                 ];
         }
 
@@ -536,13 +630,15 @@ abstract class AbstractHydrator
 
     /**
      * @return string[]
-     * @phpstan-return non-empty-list<string>
+     * @psalm-return non-empty-list<string>
      */
     private function getDiscriminatorValues(ClassMetadata $classMetadata): array
     {
         $values = array_map(
-            fn (string $subClass): string => (string) $this->getClassMetadata($subClass)->discriminatorValue,
-            $classMetadata->subClasses,
+            function (string $subClass): string {
+                return (string) $this->getClassMetadata($subClass)->discriminatorValue;
+            },
+            $classMetadata->subClasses
         );
 
         $values[] = (string) $classMetadata->discriminatorValue;
@@ -552,63 +648,65 @@ abstract class AbstractHydrator
 
     /**
      * Retrieve ClassMetadata associated to entity class name.
+     *
+     * @param string $className
+     *
+     * @return ClassMetadata
      */
-    protected function getClassMetadata(string $className): ClassMetadata
+    protected function getClassMetadata($className)
     {
-        if (! isset($this->metadataCache[$className])) {
-            $this->metadataCache[$className] = $this->em->getClassMetadata($className);
+        if (! isset($this->_metadataCache[$className])) {
+            $this->_metadataCache[$className] = $this->_em->getClassMetadata($className);
         }
 
-        return $this->metadataCache[$className];
+        return $this->_metadataCache[$className];
     }
 
     /**
      * Register entity as managed in UnitOfWork.
      *
+     * @param object  $entity
      * @param mixed[] $data
+     *
+     * @return void
      *
      * @todo The "$id" generation is the same of UnitOfWork#createEntity. Remove this duplication somehow
      */
-    protected function registerManaged(ClassMetadata $class, object $entity, array $data): void
+    protected function registerManaged(ClassMetadata $class, $entity, array $data)
     {
         if ($class->isIdentifierComposite) {
             $id = [];
 
             foreach ($class->identifier as $fieldName) {
-                $id[$fieldName] = isset($class->associationMappings[$fieldName]) && $class->associationMappings[$fieldName]->isToOneOwningSide()
-                    ? $data[$class->associationMappings[$fieldName]->joinColumns[0]->name]
+                $id[$fieldName] = isset($class->associationMappings[$fieldName])
+                    ? $data[$class->associationMappings[$fieldName]['joinColumns'][0]['name']]
                     : $data[$fieldName];
             }
         } else {
             $fieldName = $class->identifier[0];
             $id        = [
-                $fieldName => isset($class->associationMappings[$fieldName]) && $class->associationMappings[$fieldName]->isToOneOwningSide()
-                    ? $data[$class->associationMappings[$fieldName]->joinColumns[0]->name]
+                $fieldName => isset($class->associationMappings[$fieldName])
+                    ? $data[$class->associationMappings[$fieldName]['joinColumns'][0]['name']]
                     : $data[$fieldName],
             ];
         }
 
-        $this->em->getUnitOfWork()->registerManaged($entity, $id, $data);
+        $this->_em->getUnitOfWork()->registerManaged($entity, $id, $data);
     }
 
     /**
+     * @param mixed                    $value
      * @param class-string<BackedEnum> $enumType
      *
      * @return BackedEnum|array<BackedEnum>
      */
-    final protected function buildEnum(mixed $value, string $enumType): BackedEnum|array
+    final protected function buildEnum($value, string $enumType)
     {
-        $reflection  = new ReflectionEnum($enumType);
-        $isIntBacked = $reflection->isBacked() && $reflection->getBackingType()->getName() === 'int';
-
         if (is_array($value)) {
-            return array_map(
-                static fn ($value) => $enumType::from($isIntBacked ? (int) $value : $value),
-                $value,
-            );
+            return array_map(static function ($value) use ($enumType): BackedEnum {
+                return $enumType::from($value);
+            }, $value);
         }
-
-        $value = $isIntBacked ? (int) $value : $value;
 
         return $enumType::from($value);
     }

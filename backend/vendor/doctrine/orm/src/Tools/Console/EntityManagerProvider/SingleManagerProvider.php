@@ -9,10 +9,16 @@ use Doctrine\ORM\Tools\Console\EntityManagerProvider;
 
 final class SingleManagerProvider implements EntityManagerProvider
 {
-    public function __construct(
-        private readonly EntityManagerInterface $entityManager,
-        private readonly string $defaultManagerName = 'default',
-    ) {
+    /** @var EntityManagerInterface */
+    private $entityManager;
+
+    /** @var string */
+    private $defaultManagerName;
+
+    public function __construct(EntityManagerInterface $entityManager, string $defaultManagerName = 'default')
+    {
+        $this->entityManager      = $entityManager;
+        $this->defaultManagerName = $defaultManagerName;
     }
 
     public function getDefaultManager(): EntityManagerInterface

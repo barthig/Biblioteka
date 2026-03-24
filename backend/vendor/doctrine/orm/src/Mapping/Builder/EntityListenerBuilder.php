@@ -16,8 +16,8 @@ use function get_class_methods;
  */
 class EntityListenerBuilder
 {
-    /** Hash-map to handle event names. */
-    private const EVENTS = [
+    /** @var array<string,bool> Hash-map to handle event names. */
+    private static $events = [
         Events::preRemove   => true,
         Events::postRemove  => true,
         Events::prePersist  => true,
@@ -34,9 +34,11 @@ class EntityListenerBuilder
      * @param ClassMetadata $metadata  The entity metadata.
      * @param string        $className The listener class name.
      *
+     * @return void
+     *
      * @throws MappingException When the listener class not found.
      */
-    public static function bindEntityListener(ClassMetadata $metadata, string $className): void
+    public static function bindEntityListener(ClassMetadata $metadata, $className)
     {
         $class = $metadata->fullyQualifiedClassName($className);
 
@@ -45,7 +47,7 @@ class EntityListenerBuilder
         }
 
         foreach (get_class_methods($class) as $method) {
-            if (! isset(self::EVENTS[$method])) {
+            if (! isset(self::$events[$method])) {
                 continue;
             }
 

@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Doctrine\ORM\Query\AST;
 
-use Doctrine\ORM\Query\SqlWalker;
-
 /**
  * ConditionalFactor ::= ["NOT"] ConditionalPrimary
  *
@@ -13,14 +11,24 @@ use Doctrine\ORM\Query\SqlWalker;
  */
 class ConditionalFactor extends Node implements Phase2OptimizableConditional
 {
-    public function __construct(
-        public ConditionalPrimary $conditionalPrimary,
-        public bool $not = false,
-    ) {
+    /** @var bool */
+    public $not = false;
+
+    /** @var ConditionalPrimary */
+    public $conditionalPrimary;
+
+    /** @param ConditionalPrimary $conditionalPrimary */
+    public function __construct($conditionalPrimary, bool $not = false)
+    {
+        $this->conditionalPrimary = $conditionalPrimary;
+        $this->not                = $not;
     }
 
-    public function dispatch(SqlWalker $walker): string
+    /**
+     * {@inheritDoc}
+     */
+    public function dispatch($sqlWalker)
     {
-        return $walker->walkConditionalFactor($this);
+        return $sqlWalker->walkConditionalFactor($this);
     }
 }

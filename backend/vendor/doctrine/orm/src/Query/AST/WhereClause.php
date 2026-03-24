@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Doctrine\ORM\Query\AST;
 
-use Doctrine\ORM\Query\SqlWalker;
-
 /**
  * WhereClause ::= "WHERE" ConditionalExpression
  *
@@ -13,12 +11,20 @@ use Doctrine\ORM\Query\SqlWalker;
  */
 class WhereClause extends Node
 {
-    public function __construct(public ConditionalExpression|Phase2OptimizableConditional $conditionalExpression)
+    /** @var ConditionalExpression|Phase2OptimizableConditional */
+    public $conditionalExpression;
+
+    /** @param ConditionalExpression|Phase2OptimizableConditional $conditionalExpression */
+    public function __construct($conditionalExpression)
     {
+        $this->conditionalExpression = $conditionalExpression;
     }
 
-    public function dispatch(SqlWalker $walker): string
+    /**
+     * {@inheritDoc}
+     */
+    public function dispatch($sqlWalker)
     {
-        return $walker->walkWhereClause($this);
+        return $sqlWalker->walkWhereClause($this);
     }
 }

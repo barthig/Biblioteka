@@ -14,18 +14,25 @@ use Doctrine\Persistence\ObjectManager;
  */
 class ManagerEventArgs extends EventArgs
 {
-    /** @phpstan-param TObjectManager $objectManager */
-    public function __construct(
-        private readonly ObjectManager $objectManager,
-    ) {
+    /**
+     * @var ObjectManager
+     * @psalm-var TObjectManager
+     */
+    private $objectManager;
+
+    /** @psalm-param TObjectManager $objectManager */
+    public function __construct(ObjectManager $objectManager)
+    {
+        $this->objectManager = $objectManager;
     }
 
     /**
      * Retrieves the associated ObjectManager.
      *
-     * @phpstan-return TObjectManager
+     * @return ObjectManager
+     * @psalm-return TObjectManager
      */
-    public function getObjectManager(): ObjectManager
+    public function getObjectManager()
     {
         return $this->objectManager;
     }

@@ -1,13 +1,12 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Doctrine\Bundle\DoctrineBundle\Command\Proxy;
 
-use Doctrine\Deprecations\Deprecation;
 use Doctrine\ORM\Tools\Console\EntityManagerProvider;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+
+use function trigger_deprecation;
 
 /**
  * @internal
@@ -15,14 +14,17 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 trait OrmProxyCommand
 {
-    public function __construct(
-        private readonly EntityManagerProvider|null $entityManagerProvider = null,
-    ) {
+    private ?EntityManagerProvider $entityManagerProvider;
+
+    public function __construct(?EntityManagerProvider $entityManagerProvider = null)
+    {
         parent::__construct($entityManagerProvider);
 
-        Deprecation::trigger(
+        $this->entityManagerProvider = $entityManagerProvider;
+
+        trigger_deprecation(
             'doctrine/doctrine-bundle',
-            'https://github.com/doctrine/DoctrineBundle/pull/1581',
+            '2.8',
             'Class "%s" is deprecated. Use "%s" instead.',
             self::class,
             parent::class,
@@ -32,7 +34,6 @@ trait OrmProxyCommand
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         if (! $this->entityManagerProvider) {
-            /* @phpstan-ignore argument.type (ORM < 3 specific) */
             DoctrineCommandHelper::setApplicationEntityManager($this->getApplication(), $input->getOption('em'));
         }
 

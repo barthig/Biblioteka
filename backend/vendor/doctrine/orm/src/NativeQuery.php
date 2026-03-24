@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace Doctrine\ORM;
 
-use Doctrine\DBAL\Result;
-use Doctrine\ORM\Query\ParameterTypeInferer;
-
 use function array_values;
 use function is_int;
 use function key;
@@ -19,22 +16,35 @@ use function ksort;
  */
 class NativeQuery extends AbstractQuery
 {
-    private string $sql;
+    /** @var string */
+    private $sql;
 
-    /** @return $this */
-    public function setSQL(string $sql): self
+    /**
+     * Sets the SQL of the query.
+     *
+     * @param string $sql
+     *
+     * @return $this
+     */
+    public function setSQL($sql): self
     {
         $this->sql = $sql;
 
         return $this;
     }
 
+    /**
+     * Gets the SQL query.
+     */
     public function getSQL(): string
     {
         return $this->sql;
     }
 
-    protected function _doExecute(): Result|int
+    /**
+     * {@inheritDoc}
+     */
+    protected function _doExecute()
     {
         $parameters = [];
         $types      = [];
@@ -52,7 +62,7 @@ class NativeQuery extends AbstractQuery
             $value = $this->processParameterValue($parameter->getValue());
             $type  = $parameter->getValue() === $value
                 ? $parameter->getType()
-                : ParameterTypeInferer::inferType($value);
+                : Query\ParameterTypeInferer::inferType($value);
 
             $parameters[$name] = $value;
             $types[$name]      = $type;
@@ -66,11 +76,11 @@ class NativeQuery extends AbstractQuery
             $types      = array_values($types);
         }
 
-        return $this->em->getConnection()->executeQuery(
+        return $this->_em->getConnection()->executeQuery(
             $this->sql,
             $parameters,
             $types,
-            $this->queryCacheProfile,
+            $this->_queryCacheProfile
         );
     }
 }

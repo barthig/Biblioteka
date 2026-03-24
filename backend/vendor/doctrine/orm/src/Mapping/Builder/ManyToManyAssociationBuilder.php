@@ -11,13 +11,18 @@ namespace Doctrine\ORM\Mapping\Builder;
  */
 class ManyToManyAssociationBuilder extends OneToManyAssociationBuilder
 {
-    private string|null $joinTableName = null;
+    /** @var string|null */
+    private $joinTableName;
 
     /** @var mixed[] */
-    private array $inverseJoinColumns = [];
+    private $inverseJoinColumns = [];
 
-    /** @return $this */
-    public function setJoinTable(string $name): static
+    /**
+     * @param string $name
+     *
+     * @return $this
+     */
+    public function setJoinTable($name)
     {
         $this->joinTableName = $name;
 
@@ -25,45 +30,23 @@ class ManyToManyAssociationBuilder extends OneToManyAssociationBuilder
     }
 
     /**
-     * Add Join Columns.
-     *
-     * @return $this
-     */
-    public function addJoinColumn(
-        string $columnName,
-        string $referencedColumnName,
-        bool $nullable = true,
-        bool $unique = false,
-        string|null $onDelete = null,
-        string|null $columnDef = null,
-    ): static {
-        $this->joinColumns[] = [
-            'name' => $columnName,
-            'referencedColumnName' => $referencedColumnName,
-            'unique' => $unique,
-            'onDelete' => $onDelete,
-            'columnDefinition' => $columnDef,
-        ];
-
-        return $this;
-    }
-
-    /**
      * Adds Inverse Join Columns.
      *
+     * @param string      $columnName
+     * @param string      $referencedColumnName
+     * @param bool        $nullable
+     * @param bool        $unique
+     * @param string|null $onDelete
+     * @param string|null $columnDef
+     *
      * @return $this
      */
-    public function addInverseJoinColumn(
-        string $columnName,
-        string $referencedColumnName,
-        bool $nullable = true,
-        bool $unique = false,
-        string|null $onDelete = null,
-        string|null $columnDef = null,
-    ): static {
+    public function addInverseJoinColumn($columnName, $referencedColumnName, $nullable = true, $unique = false, $onDelete = null, $columnDef = null)
+    {
         $this->inverseJoinColumns[] = [
             'name' => $columnName,
             'referencedColumnName' => $referencedColumnName,
+            'nullable' => $nullable,
             'unique' => $unique,
             'onDelete' => $onDelete,
             'columnDefinition' => $columnDef,
@@ -72,7 +55,8 @@ class ManyToManyAssociationBuilder extends OneToManyAssociationBuilder
         return $this;
     }
 
-    public function build(): ClassMetadataBuilder
+    /** @return ClassMetadataBuilder */
+    public function build()
     {
         $mapping              = $this->mapping;
         $mapping['joinTable'] = [];

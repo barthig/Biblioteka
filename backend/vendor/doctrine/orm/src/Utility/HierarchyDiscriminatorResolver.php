@@ -19,11 +19,11 @@ final class HierarchyDiscriminatorResolver
      * it extracts all the discriminators from the child classes and returns them
      *
      * @return null[]
-     * @phpstan-return array<array-key, null>
+     * @psalm-return array<array-key, null>
      */
     public static function resolveDiscriminatorsForClass(
         ClassMetadata $rootClassMetadata,
-        EntityManagerInterface $entityManager,
+        EntityManagerInterface $entityManager
     ): array {
         $hierarchyClasses   = $rootClassMetadata->subClasses;
         $hierarchyClasses[] = $rootClassMetadata->name;

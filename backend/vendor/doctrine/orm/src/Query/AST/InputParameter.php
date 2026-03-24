@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Doctrine\ORM\Query\AST;
 
 use Doctrine\ORM\Query\QueryException;
-use Doctrine\ORM\Query\SqlWalker;
 
 use function is_numeric;
 use function strlen;
@@ -13,11 +12,18 @@ use function substr;
 
 class InputParameter extends Node
 {
-    public bool $isNamed;
-    public string $name;
+    /** @var bool */
+    public $isNamed;
 
-    /** @throws QueryException */
-    public function __construct(string $value)
+    /** @var string */
+    public $name;
+
+    /**
+     * @param string $value
+     *
+     * @throws QueryException
+     */
+    public function __construct($value)
     {
         if (strlen($value) === 1) {
             throw QueryException::invalidParameterFormat($value);
@@ -28,7 +34,10 @@ class InputParameter extends Node
         $this->name    = $param;
     }
 
-    public function dispatch(SqlWalker $walker): string
+    /**
+     * {@inheritDoc}
+     */
+    public function dispatch($walker)
     {
         return $walker->walkInputParameter($this);
     }

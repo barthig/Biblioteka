@@ -22,17 +22,20 @@ use Symfony\Component\Config\Definition\Exception\UnsetKeyException;
  */
 class ArrayNode extends BaseNode implements PrototypeNodeInterface
 {
-    protected array $xmlRemappings = [];
-    protected array $children = [];
-    protected bool $allowFalse = false;
-    protected bool $allowNewKeys = true;
-    protected bool $addIfNotSet = false;
-    protected bool $performDeepMerging = true;
-    protected bool $ignoreExtraKeys = false;
-    protected bool $removeExtraKeys = true;
-    protected bool $normalizeKeys = true;
+    protected $xmlRemappings = [];
+    protected $children = [];
+    protected $allowFalse = false;
+    protected $allowNewKeys = true;
+    protected $addIfNotSet = false;
+    protected $performDeepMerging = true;
+    protected $ignoreExtraKeys = false;
+    protected $removeExtraKeys = true;
+    protected $normalizeKeys = true;
 
-    public function setNormalizeKeys(bool $normalizeKeys): void
+    /**
+     * @return void
+     */
+    public function setNormalizeKeys(bool $normalizeKeys)
     {
         $this->normalizeKeys = $normalizeKeys;
     }
@@ -77,8 +80,10 @@ class ArrayNode extends BaseNode implements PrototypeNodeInterface
      * Sets the xml remappings that should be performed.
      *
      * @param array $remappings An array of the form [[string, string]]
+     *
+     * @return void
      */
-    public function setXmlRemappings(array $remappings): void
+    public function setXmlRemappings(array $remappings)
     {
         $this->xmlRemappings = $remappings;
     }
@@ -96,42 +101,42 @@ class ArrayNode extends BaseNode implements PrototypeNodeInterface
     /**
      * Sets whether to add default values for this array if it has not been
      * defined in any of the configuration files.
+     *
+     * @return void
      */
-    public function setAddIfNotSet(bool $boolean): void
+    public function setAddIfNotSet(bool $boolean)
     {
         $this->addIfNotSet = $boolean;
     }
 
     /**
      * Sets whether false is allowed as value indicating that the array should be unset.
+     *
+     * @return void
      */
-    public function setAllowFalse(bool $allow): void
+    public function setAllowFalse(bool $allow)
     {
         $this->allowFalse = $allow;
     }
 
     /**
      * Sets whether new keys can be defined in subsequent configurations.
+     *
+     * @return void
      */
-    public function setAllowNewKeys(bool $allow): void
+    public function setAllowNewKeys(bool $allow)
     {
         $this->allowNewKeys = $allow;
     }
 
     /**
      * Sets if deep merging should occur.
+     *
+     * @return void
      */
-    public function setPerformDeepMerging(bool $boolean): void
+    public function setPerformDeepMerging(bool $boolean)
     {
         $this->performDeepMerging = $boolean;
-    }
-
-    /**
-     * Whether deep merging should occur.
-     */
-    public function shouldPerformDeepMerging(): bool
-    {
-        return $this->performDeepMerging;
     }
 
     /**
@@ -139,8 +144,10 @@ class ArrayNode extends BaseNode implements PrototypeNodeInterface
      *
      * @param bool $boolean To allow extra keys
      * @param bool $remove  To remove extra keys
+     *
+     * @return void
      */
-    public function setIgnoreExtraKeys(bool $boolean, bool $remove = true): void
+    public function setIgnoreExtraKeys(bool $boolean, bool $remove = true)
     {
         $this->ignoreExtraKeys = $boolean;
         $this->removeExtraKeys = $this->ignoreExtraKeys && $remove;
@@ -154,7 +161,10 @@ class ArrayNode extends BaseNode implements PrototypeNodeInterface
         return $this->ignoreExtraKeys;
     }
 
-    public function setName(string $name): void
+    /**
+     * @return void
+     */
+    public function setName(string $name)
     {
         $this->name = $name;
     }
@@ -183,10 +193,12 @@ class ArrayNode extends BaseNode implements PrototypeNodeInterface
     /**
      * Adds a child node.
      *
+     * @return void
+     *
      * @throws \InvalidArgumentException when the child node has no name
      * @throws \InvalidArgumentException when the child node's name is not unique
      */
-    public function addChild(NodeInterface $node): void
+    public function addChild(NodeInterface $node)
     {
         $name = $node->getName();
         if ('' === $name) {
@@ -206,7 +218,7 @@ class ArrayNode extends BaseNode implements PrototypeNodeInterface
     protected function finalizeValue(mixed $value): mixed
     {
         if (false === $value) {
-            throw new UnsetKeyException(\sprintf('Unsetting key for path "%s", value: false.', $this->getPath()));
+            throw new UnsetKeyException(\sprintf('Unsetting key for path "%s", value: %s.', $this->getPath(), json_encode($value)));
         }
 
         foreach ($this->children as $name => $child) {
@@ -246,7 +258,10 @@ class ArrayNode extends BaseNode implements PrototypeNodeInterface
         return $value;
     }
 
-    protected function validateType(mixed $value): void
+    /**
+     * @return void
+     */
+    protected function validateType(mixed $value)
     {
         if (!\is_array($value) && (!$this->allowFalse || false !== $value)) {
             $ex = new InvalidTypeException(\sprintf('Invalid type for path "%s". Expected "array", but got "%s"', $this->getPath(), get_debug_type($value)));
@@ -351,13 +366,6 @@ class ArrayNode extends BaseNode implements PrototypeNodeInterface
             return $rightSide;
         }
 
-        if ($this->getAttribute('auto_enable')
-            && \is_array($leftSide) && \is_array($rightSide)
-            && !\array_key_exists('enabled', $leftSide) && !\array_key_exists('enabled', $rightSide)
-        ) {
-            $rightSide['enabled'] = true;
-        }
-
         foreach ($rightSide as $k => $v) {
             // no conflict
             if (!\array_key_exists($k, $leftSide)) {
@@ -368,12 +376,7 @@ class ArrayNode extends BaseNode implements PrototypeNodeInterface
                     throw $ex;
                 }
 
-                if (\is_array($v) && ($this->children[$k] ?? null) instanceof self) {
-                    // Ensure child's merge is called to handle auto_enable recursively
-                    $leftSide[$k] = $this->children[$k]->merge([], $v);
-                } else {
-                    $leftSide[$k] = $v;
-                }
+                $leftSide[$k] = $v;
                 continue;
             }
 

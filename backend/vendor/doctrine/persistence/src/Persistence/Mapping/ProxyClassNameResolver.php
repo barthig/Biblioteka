@@ -9,9 +9,9 @@ use Doctrine\Persistence\Proxy;
 interface ProxyClassNameResolver
 {
     /**
-     * @phpstan-param class-string<Proxy<T>>|class-string<T> $className
+     * @psalm-param class-string<Proxy<T>>|class-string<T> $className
      *
-     * @phpstan-return class-string<T>
+     * @psalm-return class-string<T>
      *
      * @template T of object
      */

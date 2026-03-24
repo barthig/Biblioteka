@@ -25,10 +25,13 @@ use Symfony\Component\Messenger\Middleware\StackInterface;
  */
 abstract class AbstractDoctrineMiddleware implements MiddlewareInterface
 {
-    public function __construct(
-        protected ManagerRegistry $managerRegistry,
-        protected ?string $entityManagerName = null,
-    ) {
+    protected ManagerRegistry $managerRegistry;
+    protected ?string $entityManagerName;
+
+    public function __construct(ManagerRegistry $managerRegistry, ?string $entityManagerName = null)
+    {
+        $this->managerRegistry = $managerRegistry;
+        $this->entityManagerName = $entityManagerName;
     }
 
     final public function handle(Envelope $envelope, StackInterface $stack): Envelope

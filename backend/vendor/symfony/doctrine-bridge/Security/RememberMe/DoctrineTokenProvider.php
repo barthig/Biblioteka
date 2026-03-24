@@ -12,10 +12,9 @@
 namespace Symfony\Bridge\Doctrine\Security\RememberMe;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Driver\Result as DriverResult;
 use Doctrine\DBAL\ParameterType;
-use Doctrine\DBAL\Schema\Name\Identifier;
-use Doctrine\DBAL\Schema\Name\UnqualifiedName;
-use Doctrine\DBAL\Schema\PrimaryKeyConstraint;
+use Doctrine\DBAL\Result;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\DBAL\Types\Types;
 use Symfony\Component\Security\Core\Authentication\RememberMe\PersistentToken;
@@ -41,8 +40,10 @@ use Symfony\Component\Security\Core\Exception\TokenNotFoundException;
  *         `class`    varchar(100) NOT NULL,
  *         `username` varchar(200) NOT NULL
  *     );
+ *
+ * @final since Symfony 6.4
  */
-final class DoctrineTokenProvider implements TokenProviderInterface, TokenVerifierInterface
+class DoctrineTokenProvider implements TokenProviderInterface, TokenVerifierInterface
 {
     public function __construct(
         private readonly Connection $conn,
@@ -57,14 +58,21 @@ final class DoctrineTokenProvider implements TokenProviderInterface, TokenVerifi
         $stmt = $this->conn->executeQuery($sql, $paramValues, $paramTypes);
 
         // fetching numeric because column name casing depends on platform, eg. Oracle converts all not quoted names to uppercase
-        $row = $stmt->fetchNumeric() ?: throw new TokenNotFoundException('No token found.');
+        $row = $stmt instanceof Result || $stmt instanceof DriverResult ? $stmt->fetchNumeric() : $stmt->fetch(\PDO::FETCH_NUM);
 
-        [$class, $username, $value, $last_used] = $row;
+        if ($row) {
+            [$class, $username, $value, $last_used] = $row;
 
-        return new PersistentToken($class, $username, $series, $value, new \DateTimeImmutable($last_used));
+            return new PersistentToken($class, $username, $series, $value, new \DateTimeImmutable($last_used));
+        }
+
+        throw new TokenNotFoundException('No token found.');
     }
 
-    public function deleteTokenBySeries(string $series): void
+    /**
+     * @return void
+     */
+    public function deleteTokenBySeries(string $series)
     {
         $sql = 'DELETE FROM rememberme_token WHERE series=:series';
         $paramValues = ['series' => $series];
@@ -91,7 +99,10 @@ final class DoctrineTokenProvider implements TokenProviderInterface, TokenVerifi
         }
     }
 
-    public function createNewToken(PersistentTokenInterface $token): void
+    /**
+     * @return void
+     */
+    public function createNewToken(PersistentTokenInterface $token)
     {
         $sql = 'INSERT INTO rememberme_token (class, username, series, value, lastUsed) VALUES (:class, :username, :series, :value, :lastUsed)';
         $paramValues = [
@@ -175,12 +186,16 @@ final class DoctrineTokenProvider implements TokenProviderInterface, TokenVerifi
 
     /**
      * Adds the Table to the Schema if "remember me" uses this Connection.
+     *
+     * @param \Closure $isSameDatabase
      */
-    public function configureSchema(Schema $schema, Connection $forConnection, \Closure $isSameDatabase): void
+    public function configureSchema(Schema $schema, Connection $forConnection/* , \Closure $isSameDatabase */): void
     {
         if ($schema->hasTable('rememberme_token')) {
             return;
         }
+
+        $isSameDatabase = 2 < \func_num_args() ? func_get_arg(2) : static fn () => false;
 
         if ($forConnection !== $this->conn && !$isSameDatabase($this->conn->executeStatement(...))) {
             return;
@@ -197,11 +212,6 @@ final class DoctrineTokenProvider implements TokenProviderInterface, TokenVerifi
         $table->addColumn('lastUsed', Types::DATETIME_IMMUTABLE);
         $table->addColumn('class', Types::STRING, ['length' => 100]);
         $table->addColumn('username', Types::STRING, ['length' => 200]);
-
-        if (class_exists(PrimaryKeyConstraint::class)) {
-            $table->addPrimaryKeyConstraint(new PrimaryKeyConstraint(null, [new UnqualifiedName(Identifier::unquoted('series'))], true));
-        } else {
-            $table->setPrimaryKey(['series']);
-        }
+        $table->setPrimaryKey(['series']);
     }
 }

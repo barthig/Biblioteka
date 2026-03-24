@@ -19,17 +19,17 @@ interface ObjectRepository
      * @param mixed $id The identifier.
      *
      * @return object|null The object.
-     * @phpstan-return T|null
+     * @psalm-return T|null
      */
-    public function find(mixed $id): object|null;
+    public function find($id);
 
     /**
      * Finds all objects in the repository.
      *
      * @return array<int, object> The objects.
-     * @phpstan-return T[]
+     * @psalm-return T[]
      */
-    public function findAll(): array;
+    public function findAll();
 
     /**
      * Finds objects by a set of criteria.
@@ -40,19 +40,19 @@ interface ObjectRepository
      *
      * @param array<string, mixed>       $criteria
      * @param array<string, string>|null $orderBy
-     * @phpstan-param array<string, 'asc'|'desc'|'ASC'|'DESC'>|null $orderBy
+     * @psalm-param array<string, 'asc'|'desc'|'ASC'|'DESC'>|null $orderBy
      *
      * @return array<int, object> The objects.
-     * @phpstan-return T[]
+     * @psalm-return T[]
      *
      * @throws UnexpectedValueException
      */
     public function findBy(
         array $criteria,
-        array|null $orderBy = null,
-        int|null $limit = null,
-        int|null $offset = null,
-    ): array;
+        ?array $orderBy = null,
+        ?int $limit = null,
+        ?int $offset = null
+    );
 
     /**
      * Finds a single object by a set of criteria.
@@ -60,14 +60,14 @@ interface ObjectRepository
      * @param array<string, mixed> $criteria The criteria.
      *
      * @return object|null The object.
-     * @phpstan-return T|null
+     * @psalm-return T|null
      */
-    public function findOneBy(array $criteria): object|null;
+    public function findOneBy(array $criteria);
 
     /**
      * Returns the class name of the object managed by the repository.
      *
-     * @phpstan-return class-string<T>
+     * @psalm-return class-string<T>
      */
-    public function getClassName(): string;
+    public function getClassName();
 }

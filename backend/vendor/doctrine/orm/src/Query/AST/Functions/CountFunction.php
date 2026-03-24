@@ -16,7 +16,8 @@ use Doctrine\ORM\Query\SqlWalker;
  */
 final class CountFunction extends FunctionNode implements TypedExpression
 {
-    private AggregateExpression $aggregateExpression;
+    /** @var AggregateExpression */
+    private $aggregateExpression;
 
     public function getSql(SqlWalker $sqlWalker): string
     {

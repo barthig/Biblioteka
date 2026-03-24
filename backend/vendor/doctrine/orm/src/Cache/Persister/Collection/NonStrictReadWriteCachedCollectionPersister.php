@@ -11,7 +11,10 @@ use function spl_object_id;
 
 class NonStrictReadWriteCachedCollectionPersister extends AbstractCollectionPersister
 {
-    public function afterTransactionComplete(): void
+    /**
+     * {@inheritDoc}
+     */
+    public function afterTransactionComplete()
     {
         if (isset($this->queuedCache['update'])) {
             foreach ($this->queuedCache['update'] as $item) {
@@ -28,22 +31,31 @@ class NonStrictReadWriteCachedCollectionPersister extends AbstractCollectionPers
         $this->queuedCache = [];
     }
 
-    public function afterTransactionRolledBack(): void
+    /**
+     * {@inheritDoc}
+     */
+    public function afterTransactionRolledBack()
     {
         $this->queuedCache = [];
     }
 
-    public function delete(PersistentCollection $collection): void
+    /**
+     * {@inheritDoc}
+     */
+    public function delete(PersistentCollection $collection)
     {
         $ownerId = $this->uow->getEntityIdentifier($collection->getOwner());
-        $key     = new CollectionCacheKey($this->sourceEntity->rootEntityName, $this->association->fieldName, $ownerId, $this->filters->getHash());
+        $key     = new CollectionCacheKey($this->sourceEntity->rootEntityName, $this->association['fieldName'], $ownerId);
 
         $this->persister->delete($collection);
 
         $this->queuedCache['delete'][spl_object_id($collection)] = $key;
     }
 
-    public function update(PersistentCollection $collection): void
+    /**
+     * {@inheritDoc}
+     */
+    public function update(PersistentCollection $collection)
     {
         $isInitialized = $collection->isInitialized();
         $isDirty       = $collection->isDirty();
@@ -53,10 +65,10 @@ class NonStrictReadWriteCachedCollectionPersister extends AbstractCollectionPers
         }
 
         $ownerId = $this->uow->getEntityIdentifier($collection->getOwner());
-        $key     = new CollectionCacheKey($this->sourceEntity->rootEntityName, $this->association->fieldName, $ownerId, $this->filters->getHash());
+        $key     = new CollectionCacheKey($this->sourceEntity->rootEntityName, $this->association['fieldName'], $ownerId);
 
        // Invalidate non initialized collections OR ordered collection
-        if ($isDirty && ! $isInitialized || $this->association->isOrdered()) {
+        if ($isDirty && ! $isInitialized || isset($this->association['orderBy'])) {
             $this->persister->update($collection);
 
             $this->queuedCache['delete'][spl_object_id($collection)] = $key;

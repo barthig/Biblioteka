@@ -26,7 +26,10 @@ class DoctrineValidationPass implements CompilerPassInterface
     ) {
     }
 
-    public function process(ContainerBuilder $container): void
+    /**
+     * @return void
+     */
+    public function process(ContainerBuilder $container)
     {
         $this->updateValidatorMappingFiles($container, 'xml', 'xml');
         $this->updateValidatorMappingFiles($container, 'yaml', 'yml');

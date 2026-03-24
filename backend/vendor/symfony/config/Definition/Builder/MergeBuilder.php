@@ -14,21 +14,17 @@ namespace Symfony\Component\Config\Definition\Builder;
 /**
  * This class builds merge conditions.
  *
- * @template T of NodeDefinition
- *
  * @author Johannes M. Schmitt <schmittjoh@gmail.com>
  */
 class MergeBuilder
 {
-    public bool $allowFalse = false;
-    public bool $allowOverwrite = true;
+    protected $node;
+    public $allowFalse = false;
+    public $allowOverwrite = true;
 
-    /**
-     * @param T $node
-     */
-    public function __construct(
-        protected NodeDefinition $node,
-    ) {
+    public function __construct(NodeDefinition $node)
+    {
+        $this->node = $node;
     }
 
     /**
@@ -57,10 +53,8 @@ class MergeBuilder
 
     /**
      * Returns the related node.
-     *
-     * @return T
      */
-    public function end(): NodeDefinition
+    public function end(): NodeDefinition|ArrayNodeDefinition|VariableNodeDefinition
     {
         return $this->node;
     }

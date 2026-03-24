@@ -19,43 +19,58 @@ abstract class AbstractEntityInheritancePersister extends BasicEntityPersister
     /**
      * {@inheritDoc}
      */
-    protected function prepareInsertData(object $entity): array
+    protected function prepareInsertData($entity)
     {
         $data = parent::prepareInsertData($entity);
 
         // Populate the discriminator column
-        $discColumn                                                        = $this->class->getDiscriminatorColumn();
-        $this->columnTypes[$discColumn->name]                              = $discColumn->type;
-        $data[$this->getDiscriminatorColumnTableName()][$discColumn->name] = $this->class->discriminatorValue;
+        $discColumn                                                          = $this->class->getDiscriminatorColumn();
+        $this->columnTypes[$discColumn['name']]                              = $discColumn['type'];
+        $data[$this->getDiscriminatorColumnTableName()][$discColumn['name']] = $this->class->discriminatorValue;
 
         return $data;
     }
 
     /**
      * Gets the name of the table that contains the discriminator column.
+     *
+     * @return string The table name.
      */
-    abstract protected function getDiscriminatorColumnTableName(): string;
+    abstract protected function getDiscriminatorColumnTableName();
 
-    protected function getSelectColumnSQL(string $field, ClassMetadata $class, string $alias = 'r'): string
+    /**
+     * {@inheritDoc}
+     */
+    protected function getSelectColumnSQL($field, ClassMetadata $class, $alias = 'r')
     {
         $tableAlias   = $alias === 'r' ? '' : $alias;
         $fieldMapping = $class->fieldMappings[$field];
-        $columnAlias  = $this->getSQLColumnAlias($fieldMapping->columnName);
+        $columnAlias  = $this->getSQLColumnAlias($fieldMapping['columnName']);
         $sql          = sprintf(
             '%s.%s',
             $this->getSQLTableAlias($class->name, $tableAlias),
-            $this->quoteStrategy->getColumnName($field, $class, $this->platform),
+            $this->quoteStrategy->getColumnName($field, $class, $this->platform)
         );
 
         $this->currentPersisterContext->rsm->addFieldResult($alias, $columnAlias, $field, $class->name);
 
-        $type = Type::getType($fieldMapping->type);
-        $sql  = $type->convertToPHPValueSQL($sql, $this->platform);
+        if (isset($fieldMapping['requireSQLConversion'])) {
+            $type = Type::getType($fieldMapping['type']);
+            $sql  = $type->convertToPHPValueSQL($sql, $this->platform);
+        }
 
         return $sql . ' AS ' . $columnAlias;
     }
 
-    protected function getSelectJoinColumnSQL(string $tableAlias, string $joinColumnName, string $quotedColumnName, string $type): string
+    /**
+     * @param string $tableAlias
+     * @param string $joinColumnName
+     * @param string $quotedColumnName
+     * @param string $type
+     *
+     * @return string
+     */
+    protected function getSelectJoinColumnSQL($tableAlias, $joinColumnName, $quotedColumnName, $type)
     {
         $columnAlias = $this->getSQLColumnAlias($joinColumnName);
 

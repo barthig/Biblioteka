@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Doctrine\ORM\Tools\Console\Command\ClearCache;
 
 use Doctrine\ORM\Tools\Console\Command\AbstractEntityManagerCommand;
+use Doctrine\ORM\Tools\Console\CommandCompatibility;
 use InvalidArgumentException;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -18,7 +19,10 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  */
 class MetadataCommand extends AbstractEntityManagerCommand
 {
-    protected function configure(): void
+    use CommandCompatibility;
+
+    /** @return void */
+    protected function configure()
     {
         $this->setName('orm:clear-cache:metadata')
              ->setDescription('Clear all metadata cache of the various cache drivers')
@@ -26,10 +30,11 @@ class MetadataCommand extends AbstractEntityManagerCommand
              ->addOption('flush', null, InputOption::VALUE_NONE, 'If defined, cache entries will be flushed instead of deleted/invalidated.')
              ->setHelp(<<<'EOT'
 The <info>%command.name%</info> command is meant to clear the metadata cache of associated Entity Manager.
-EOT);
+EOT
+             );
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output): int
+    private function doExecute(InputInterface $input, OutputInterface $output): int
     {
         $ui = (new SymfonyStyle($input, $output))->getErrorStyle();
 

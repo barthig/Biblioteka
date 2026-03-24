@@ -14,7 +14,7 @@ class ScalarHydrator extends AbstractHydrator
     /**
      * {@inheritDoc}
      */
-    protected function hydrateAllData(): array
+    protected function hydrateAllData()
     {
         $result = [];
 
@@ -28,7 +28,7 @@ class ScalarHydrator extends AbstractHydrator
     /**
      * {@inheritDoc}
      */
-    protected function hydrateRowData(array $row, array &$result): void
+    protected function hydrateRowData(array $row, array &$result)
     {
         $result[] = $this->gatherScalarRowData($row);
     }

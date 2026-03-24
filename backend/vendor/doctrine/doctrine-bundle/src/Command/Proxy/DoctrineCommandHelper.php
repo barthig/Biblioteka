@@ -1,16 +1,14 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Doctrine\Bundle\DoctrineBundle\Command\Proxy;
 
-use Doctrine\Deprecations\Deprecation;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\Console\EntityManagerProvider;
 use Doctrine\ORM\Tools\Console\Helper\EntityManagerHelper;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
 
 use function assert;
+use function trigger_deprecation;
 
 /**
  * Provides some helper and convenience methods to configure doctrine commands in the context of bundles
@@ -30,12 +28,13 @@ abstract class DoctrineCommandHelper
         $em = $application->getKernel()->getContainer()->get('doctrine')->getManager($emName);
         assert($em instanceof EntityManagerInterface);
         $helperSet = $application->getHelperSet();
-        /* @phpstan-ignore class.notFound, argument.type (ORM < 3 specific) */
+        /** @psalm-suppress InvalidArgument ORM < 3 specific */
+        /* @phpstan-ignore class.notFound */
         $helperSet->set(new EntityManagerHelper($em), 'em');
 
-        Deprecation::trigger(
+        trigger_deprecation(
             'doctrine/doctrine-bundle',
-            'https://github.com/doctrine/DoctrineBundle/pull/1513',
+            '2.7',
             'Providing an EntityManager using "%s" is deprecated. Use an instance of "%s" instead.',
             /* @phpstan-ignore class.notFound */
             EntityManagerHelper::class,

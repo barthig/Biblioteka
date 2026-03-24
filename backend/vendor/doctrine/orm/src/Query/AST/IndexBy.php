@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Doctrine\ORM\Query\AST;
 
-use Doctrine\ORM\Query\SqlWalker;
-
 /**
  * IndexBy ::= "INDEX" "BY" SingleValuedPathExpression
  *
@@ -13,14 +11,27 @@ use Doctrine\ORM\Query\SqlWalker;
  */
 class IndexBy extends Node
 {
-    public function __construct(public PathExpression $singleValuedPathExpression)
+    /** @var PathExpression */
+    public $singleValuedPathExpression = null;
+
+    /**
+     * @deprecated
+     *
+     * @var PathExpression
+     */
+    public $simpleStateFieldPathExpression = null;
+
+    public function __construct(PathExpression $singleValuedPathExpression)
     {
+        // @phpstan-ignore property.deprecated
+        $this->singleValuedPathExpression = $this->simpleStateFieldPathExpression = $singleValuedPathExpression;
     }
 
-    public function dispatch(SqlWalker $walker): string
+    /**
+     * {@inheritDoc}
+     */
+    public function dispatch($sqlWalker)
     {
-        $walker->walkIndexBy($this);
-
-        return '';
+        return $sqlWalker->walkIndexBy($this);
     }
 }

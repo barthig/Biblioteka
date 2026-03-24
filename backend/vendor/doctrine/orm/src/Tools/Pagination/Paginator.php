@@ -15,6 +15,7 @@ use Doctrine\ORM\Query\Parser;
 use Doctrine\ORM\Query\ResultSetMapping;
 use Doctrine\ORM\QueryBuilder;
 use IteratorAggregate;
+use ReturnTypeWillChange;
 use Traversable;
 
 use function array_key_exists;
@@ -35,26 +36,38 @@ class Paginator implements Countable, IteratorAggregate
 
     public const HINT_ENABLE_DISTINCT = 'paginator.distinct.enable';
 
-    private readonly Query $query;
-    private bool|null $useOutputWalkers = null;
-    private int|null $count             = null;
+    /** @var Query */
+    private $query;
 
-    /** @param bool $fetchJoinCollection Whether the query joins a collection (true by default). */
-    public function __construct(
-        Query|QueryBuilder $query,
-        private readonly bool $fetchJoinCollection = true,
-    ) {
+    /** @var bool */
+    private $fetchJoinCollection;
+
+    /** @var bool|null */
+    private $useOutputWalkers;
+
+    /** @var int|null */
+    private $count;
+
+    /**
+     * @param Query|QueryBuilder $query               A Doctrine ORM query or query builder.
+     * @param bool               $fetchJoinCollection Whether the query joins a collection (true by default).
+     */
+    public function __construct($query, $fetchJoinCollection = true)
+    {
         if ($query instanceof QueryBuilder) {
             $query = $query->getQuery();
         }
 
-        $this->query = $query;
+        $this->query               = $query;
+        $this->fetchJoinCollection = (bool) $fetchJoinCollection;
     }
 
     /**
      * Returns the query.
+     *
+     * @return Query
      */
-    public function getQuery(): Query
+    public function getQuery()
     {
         return $this->query;
     }
@@ -64,15 +77,17 @@ class Paginator implements Countable, IteratorAggregate
      *
      * @return bool Whether the query joins a collection.
      */
-    public function getFetchJoinCollection(): bool
+    public function getFetchJoinCollection()
     {
         return $this->fetchJoinCollection;
     }
 
     /**
      * Returns whether the paginator will use an output walker.
+     *
+     * @return bool|null
      */
-    public function getUseOutputWalkers(): bool|null
+    public function getUseOutputWalkers()
     {
         return $this->useOutputWalkers;
     }
@@ -80,21 +95,30 @@ class Paginator implements Countable, IteratorAggregate
     /**
      * Sets whether the paginator will use an output walker.
      *
+     * @param bool|null $useOutputWalkers
+     *
      * @return $this
+     * @psalm-return static<T>
      */
-    public function setUseOutputWalkers(bool|null $useOutputWalkers): static
+    public function setUseOutputWalkers($useOutputWalkers)
     {
         $this->useOutputWalkers = $useOutputWalkers;
 
         return $this;
     }
 
-    public function count(): int
+    /**
+     * {@inheritDoc}
+     *
+     * @return int
+     */
+    #[ReturnTypeWillChange]
+    public function count()
     {
         if ($this->count === null) {
             try {
                 $this->count = (int) array_sum(array_map('current', $this->getCountQuery()->getScalarResult()));
-            } catch (NoResultException) {
+            } catch (NoResultException $e) {
                 $this->count = 0;
             }
         }
@@ -105,9 +129,11 @@ class Paginator implements Countable, IteratorAggregate
     /**
      * {@inheritDoc}
      *
-     * @phpstan-return Traversable<array-key, T>
+     * @return Traversable
+     * @psalm-return Traversable<array-key, T>
      */
-    public function getIterator(): Traversable
+    #[ReturnTypeWillChange]
+    public function getIterator()
     {
         $offset = $this->query->getFirstResult();
         $length = $this->query->getMaxResults();
@@ -202,22 +228,7 @@ class Paginator implements Countable, IteratorAggregate
      */
     private function getCountQuery(): Query
     {
-        /*
-            As opposed to using self::cloneQuery, the following code does not transfer
-            a potentially existing result set mapping (either set directly by the user,
-            or taken from the parser result from a previous invocation of Query::parse())
-            to the new query object. This is fine, since we are going to completely change the
-            select clause, so a previously existing result set mapping (RSM) is probably wrong anyway.
-            In the case of using output walkers, we are even creating a new RSM down below.
-            In the case of using a tree walker, we want to have a new RSM created by the parser.
-        */
-        $countQuery = new Query($this->query->getEntityManager());
-        $countQuery->setDQL($this->query->getDQL());
-        $countQuery->setParameters(clone $this->query->getParameters());
-        $countQuery->setCacheable(false);
-        foreach ($this->query->getHints() as $name => $value) {
-            $countQuery->setHint($name, $value);
-        }
+        $countQuery = $this->cloneQuery($this->query);
 
         if (! $countQuery->hasHint(CountWalker::HINT_DISTINCT)) {
             $countQuery->setHint(CountWalker::HINT_DISTINCT, true);
@@ -273,6 +284,8 @@ class Paginator implements Countable, IteratorAggregate
         $type       = $query->getSQL();
         assert(is_string($type));
 
-        return array_map(static fn ($id): mixed => $connection->convertToDatabaseValue($id, $type), $identifiers);
+        return array_map(static function ($id) use ($connection, $type) {
+            return $connection->convertToDatabaseValue($id, $type);
+        }, $identifiers);
     }
 }

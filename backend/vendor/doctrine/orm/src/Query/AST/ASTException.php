@@ -13,7 +13,12 @@ use function get_debug_type;
  */
 class ASTException extends QueryException
 {
-    public static function noDispatchForNode(Node $node): self
+    /**
+     * @param Node $node
+     *
+     * @return ASTException
+     */
+    public static function noDispatchForNode($node)
     {
         return new self('Double-dispatch for node ' . get_debug_type($node) . ' is not supported.');
     }

@@ -10,7 +10,7 @@ export const API_RETRY_ATTEMPTS = 3
 // App metadata
 export const APP_NAME = 'Biblioteka'
 export const APP_VERSION = '1.0.0'
-export const APP_DESCRIPTION = 'System zarzÄ…dzania bibliotekÄ…'
+export const APP_DESCRIPTION = 'System zarządzania biblioteką'
 
 // Local storage keys
 export const STORAGE_KEYS = {

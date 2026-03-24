@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Doctrine\ORM\Query\AST;
 
-use Doctrine\ORM\Query\SqlWalker;
-
 /**
  * Subselect ::= SimpleSelectClause SubselectFromClause [WhereClause] [GroupByClause] [HavingClause] [OrderByClause]
  *
@@ -13,20 +11,39 @@ use Doctrine\ORM\Query\SqlWalker;
  */
 class Subselect extends Node
 {
-    public WhereClause|null $whereClause = null;
+    /** @var SimpleSelectClause */
+    public $simpleSelectClause;
 
-    public GroupByClause|null $groupByClause = null;
+    /** @var SubselectFromClause */
+    public $subselectFromClause;
 
-    public HavingClause|null $havingClause = null;
+    /** @var WhereClause|null */
+    public $whereClause;
 
-    public OrderByClause|null $orderByClause = null;
+    /** @var GroupByClause|null */
+    public $groupByClause;
 
-    public function __construct(public SimpleSelectClause $simpleSelectClause, public SubselectFromClause $subselectFromClause)
+    /** @var HavingClause|null */
+    public $havingClause;
+
+    /** @var OrderByClause|null */
+    public $orderByClause;
+
+    /**
+     * @param SimpleSelectClause  $simpleSelectClause
+     * @param SubselectFromClause $subselectFromClause
+     */
+    public function __construct($simpleSelectClause, $subselectFromClause)
     {
+        $this->simpleSelectClause  = $simpleSelectClause;
+        $this->subselectFromClause = $subselectFromClause;
     }
 
-    public function dispatch(SqlWalker $walker): string
+    /**
+     * {@inheritDoc}
+     */
+    public function dispatch($sqlWalker)
     {
-        return $walker->walkSubselect($this);
+        return $sqlWalker->walkSubselect($this);
     }
 }

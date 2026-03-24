@@ -15,10 +15,10 @@ use Doctrine\Common\Collections\Expr\Value;
 class SqlValueVisitor extends ExpressionVisitor
 {
     /** @var mixed[] */
-    private array $values = [];
+    private $values = [];
 
     /** @var mixed[][] */
-    private array $types = [];
+    private $types = [];
 
     /**
      * Converts a comparison expression into the target query language output.
@@ -63,9 +63,9 @@ class SqlValueVisitor extends ExpressionVisitor
      * Returns the Parameters and Types necessary for matching the last visited expression.
      *
      * @return mixed[][]
-     * @phpstan-return array{0: array, 1: array<array<mixed>>}
+     * @psalm-return array{0: array, 1: array<array<mixed>>}
      */
-    public function getParamsAndTypes(): array
+    public function getParamsAndTypes()
     {
         return [$this->values, $this->types];
     }
@@ -73,16 +73,25 @@ class SqlValueVisitor extends ExpressionVisitor
     /**
      * Returns the value from a Comparison. In case of a CONTAINS comparison,
      * the value is wrapped in %-signs, because it will be used in a LIKE clause.
+     *
+     * @return mixed
      */
-    protected function getValueFromComparison(Comparison $comparison): mixed
+    protected function getValueFromComparison(Comparison $comparison)
     {
         $value = $comparison->getValue()->getValue();
 
-        return match ($comparison->getOperator()) {
-            Comparison::CONTAINS => '%' . $value . '%',
-            Comparison::STARTS_WITH => $value . '%',
-            Comparison::ENDS_WITH => '%' . $value,
-            default => $value,
-        };
+        switch ($comparison->getOperator()) {
+            case Comparison::CONTAINS:
+                return '%' . $value . '%';
+
+            case Comparison::STARTS_WITH:
+                return $value . '%';
+
+            case Comparison::ENDS_WITH:
+                return '%' . $value;
+
+            default:
+                return $value;
+        }
     }
 }
