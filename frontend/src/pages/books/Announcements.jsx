@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import { apiFetch } from '../../api'
+import { useNavigate, useParams } from 'react-router-dom'
 import { FaBullhorn, FaPlus } from 'react-icons/fa'
+import { apiFetch } from '../../api'
 import { useAuth } from '../../context/AuthContext'
 import { announcementService } from '../../services/announcementService'
 import PageHeader from '../../components/ui/PageHeader'
@@ -14,10 +14,10 @@ const EVENT_KEYWORDS = [
   'warsztat',
   'warsztaty',
   'konkurs',
-  'wydarzen',
   'wydarzenie',
+  'wydarzenia',
   'klub',
-  'prelekcj',
+  'prelekcja',
   'seminarium',
   'panel dyskusyjny',
   'czytanie'
@@ -62,7 +62,6 @@ export default function Announcements() {
   const [actionMessage, setActionMessage] = useState(null)
   const [actionError, setActionError] = useState(null)
   const [currentPage, setCurrentPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
   const [refreshKey, setRefreshKey] = useState(0)
   const [form, setForm] = useState({
     title: '',
@@ -77,9 +76,8 @@ export default function Announcements() {
   const [formLoading, setFormLoading] = useState(false)
   const [showForm, setShowForm] = useState(false)
 
-  const isAdmin = user?.roles?.includes('ROLE_ADMIN')
-  const isLibrarian = user?.roles?.includes('ROLE_LIBRARIAN')
-  const canManage = isAdmin || isLibrarian
+  const roles = user?.roles || []
+  const canManage = roles.includes('ROLE_ADMIN') || roles.includes('ROLE_LIBRARIAN')
 
   useEffect(() => {
     const abortController = new AbortController()
@@ -101,13 +99,12 @@ export default function Announcements() {
           const announcementsArray = data.data || data.items || data || []
           if (!abortController.signal.aborted) {
             setAnnouncements(announcementsArray)
-            setTotalPages(data.meta?.totalPages || data.totalPages || 1)
           }
         }
       } catch (err) {
         logger.error('Błąd ładowania ogłoszeń:', err)
         if (!abortController.signal.aborted) {
-          setError(err.message || 'Nie udało się załadować ogłoszeń')
+          setError(err.message || 'Nie udało się załadować ogłoszeń.')
           setAnnouncements([])
         }
       } finally {
@@ -122,7 +119,7 @@ export default function Announcements() {
     return () => {
       abortController.abort()
     }
-  }, [id, currentPage, refreshKey])
+  }, [currentPage, id, refreshKey])
 
   const { events, notices } = useMemo(() => {
     const eventList = []
@@ -174,8 +171,7 @@ export default function Announcements() {
         setFormError('Nieprawidłowa data lub godzina wydarzenia.')
         return
       }
-      const now = new Date()
-      if (eventDateTime <= now) {
+      if (eventDateTime <= new Date()) {
         setFormError('Data wydarzenia musi być w przyszłości.')
         return
       }
@@ -201,7 +197,7 @@ export default function Announcements() {
       if (created?.id) {
         await apiFetch(`/api/announcements/${created.id}/publish`, { method: 'POST' })
       }
-      setFormSuccess('Ogloszenie zostalo dodane.')
+      setFormSuccess('Ogłoszenie zostało dodane.')
       resetForm()
       setCurrentPage(1)
       setRefreshKey(prev => prev + 1)
@@ -241,7 +237,7 @@ export default function Announcements() {
           subtitle={formatDateTime(selectedAnnouncement.eventAt || selectedAnnouncement.createdAt)}
           actions={(
             <button onClick={() => navigate('/announcements')} className="btn btn-outline">
-              ← Powrót do listy
+              Powrót do listy
             </button>
           )}
         />
@@ -252,10 +248,10 @@ export default function Announcements() {
         <SectionCard>
           <div>{selectedAnnouncement.content}</div>
           <div style={{ marginTop: '1.5rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-            {user && (
+            {user ? (
               <button
                 className="btn btn-outline"
-                onClick={async (e) => {
+                onClick={async e => {
                   e.stopPropagation()
                   setActionError(null)
                   setActionMessage(null)
@@ -269,11 +265,11 @@ export default function Announcements() {
               >
                 Potwierdź
               </button>
-            )}
-            {canManage && (
+            ) : null}
+            {canManage ? (
               <button
                 className="btn btn-primary"
-                onClick={async (e) => {
+                onClick={async e => {
                   e.stopPropagation()
                   setActionError(null)
                   setActionMessage(null)
@@ -287,14 +283,14 @@ export default function Announcements() {
               >
                 Przywróć
               </button>
-            )}
+            ) : null}
           </div>
         </SectionCard>
       </div>
     )
   }
 
-  const renderList = (items, emptyLabel, showEventTime) => {
+  function renderList(items, emptyLabel) {
     if (items.length === 0) {
       return (
         <div className="empty-state">
@@ -328,11 +324,7 @@ export default function Announcements() {
                 <strong>Dodano:</strong> {new Date(item.createdAt).toLocaleDateString('pl-PL')}
               </p>
             )}
-            {item.content && (
-              <p style={{ marginTop: '1rem' }}>
-                {getExcerpt(item.content)}
-              </p>
-            )}
+            {item.content ? <p style={{ marginTop: '1rem' }}>{getExcerpt(item.content)}</p> : null}
           </SectionCard>
         ))}
       </div>
@@ -351,7 +343,7 @@ export default function Announcements() {
         ) : null}
       />
 
-      {canManage && showForm && (
+      {canManage && showForm ? (
         <SectionCard title="Dodaj ogłoszenie lub wydarzenie" subtitle="Wydarzenia wymagają przyszłej daty i godziny.">
           <form id="announcement-form" onSubmit={handleCreate} className="form-grid">
             <div className="form-field">
@@ -372,17 +364,12 @@ export default function Announcements() {
                 name="location"
                 value={form.location}
                 onChange={handleFormChange}
-                placeholder="np. Sala spotkan, pietro 1"
+                placeholder="np. Sala spotkań, piętro 1"
               />
             </div>
             <div className="form-field">
               <label htmlFor="announcement-kind">Typ</label>
-              <select
-                id="announcement-kind"
-                name="kind"
-                value={form.kind}
-                onChange={handleFormChange}
-              >
+              <select id="announcement-kind" name="kind" value={form.kind} onChange={handleFormChange}>
                 <option value="announcement">Ogłoszenie</option>
                 <option value="event">Wydarzenie</option>
               </select>
@@ -430,14 +417,14 @@ export default function Announcements() {
           {formError && <FeedbackCard variant="error">{formError}</FeedbackCard>}
           {formSuccess && <FeedbackCard variant="success">{formSuccess}</FeedbackCard>}
         </SectionCard>
-      )}
+      ) : null}
 
       <SectionCard title={`Wydarzenia (${events.length})`}>
-        {renderList(events, 'Brak wydarzeń', true)}
+        {renderList(events, 'Brak wydarzeń')}
       </SectionCard>
 
       <SectionCard title={`Ogłoszenia (${notices.length})`}>
-        {renderList(notices, 'Brak ogłoszeń', false)}
+        {renderList(notices, 'Brak ogłoszeń')}
       </SectionCard>
     </div>
   )

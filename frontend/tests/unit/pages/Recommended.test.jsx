@@ -18,6 +18,10 @@ vi.mock('../../../src/components/BookItem', () => ({
   default: ({ book }) => <div data-testid="book-item">{book.title}</div>
 }))
 
+vi.mock('../../../src/components/books/SemanticSearch', () => ({
+  default: () => <div>Semantic Search Widget</div>
+}))
+
 const renderPage = () => {
   return render(
     <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
@@ -43,9 +47,10 @@ describe('Recommended page', () => {
 
     renderPage()
 
+    expect(await screen.findByText(/Wyszukiwanie semantyczne/i)).toBeInTheDocument()
+    expect(screen.getByText('Semantic Search Widget')).toBeInTheDocument()
     expect(await screen.findByText('Group A')).toBeInTheDocument()
     expect(screen.getByText('Alpha')).toBeInTheDocument()
   })
 })
-
 

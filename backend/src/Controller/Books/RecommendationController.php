@@ -6,6 +6,8 @@ use App\Application\Query\Recommendation\FindSimilarBooksQuery;
 use App\Application\Query\User\GetUserByIdQuery;
 use App\Controller\Traits\ExceptionHandlingTrait;
 use App\Dto\ApiError;
+use App\Exception\ExternalServiceException;
+use App\Repository\BookRepository;
 use App\Service\Book\RecommendationService;
 use App\Service\Auth\SecurityService;
 use App\Service\Book\OpenAIEmbeddingService;
@@ -25,7 +27,8 @@ class RecommendationController extends AbstractController
         private readonly OpenAIEmbeddingService $embeddingService,
         private readonly MessageBusInterface $queryBus,
         private readonly RecommendationService $recommendationService,
-        private readonly SecurityService $security
+        private readonly SecurityService $security,
+        private readonly BookRepository $bookRepository
     ) {}
 
     #[OA\Post(
@@ -56,10 +59,13 @@ class RecommendationController extends AbstractController
             return $this->jsonErrorMessage(400, 'Query is required.');
         }
 
-        $vector = $this->embeddingService->getVector($query);
-        
-        $envelope = $this->queryBus->dispatch(new FindSimilarBooksQuery($vector, 5));
-        $books = $envelope->last(HandledStamp::class)?->getResult();
+        try {
+            $vector = $this->embeddingService->getVector($query);
+            $envelope = $this->queryBus->dispatch(new FindSimilarBooksQuery($vector, 5));
+            $books = $envelope->last(HandledStamp::class)?->getResult();
+        } catch (ExternalServiceException) {
+            $books = $this->bookRepository->searchHybrid($query, [], 5);
+        }
 
         return $this->json(['data' => $books], 200, [], ['groups' => ['book:read']]);
     }
@@ -101,4 +107,3 @@ class RecommendationController extends AbstractController
         );
     }
 }
-

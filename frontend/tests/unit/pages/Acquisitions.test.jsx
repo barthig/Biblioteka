@@ -10,6 +10,7 @@ vi.mock('../../../src/services/acquisitionService', () => ({
     listBudgets: vi.fn(),
     listOrders: vi.fn(),
     listWeeding: vi.fn(),
+    getBudgetSummary: vi.fn(),
     createSupplier: vi.fn(),
     createBudget: vi.fn(),
     createOrder: vi.fn(),
@@ -33,14 +34,14 @@ describe('Acquisitions page', () => {
     acquisitionService.listWeeding.mockResolvedValue({ data: [] })
   })
 
-  it('denies access for non-admin', () => {
+  it('denies access for non-staff user', () => {
     mockUser = { roles: ['ROLE_USER'] }
     render(<Acquisitions />)
     expect(screen.getByText(/Brak upraw/i)).toBeInTheDocument()
   })
 
-  it('loads suppliers and allows create supplier', async () => {
-    mockUser = { roles: ['ROLE_ADMIN'] }
+  it('loads suppliers and allows librarian to create supplier', async () => {
+    mockUser = { roles: ['ROLE_LIBRARIAN'] }
     acquisitionService.createSupplier.mockResolvedValue({})
     render(<Acquisitions />)
 
@@ -56,5 +57,18 @@ describe('Acquisitions page', () => {
     await userEvent.click(suppliersScope.getByRole('button', { name: /^Dodaj$/i }))
     expect(acquisitionService.createSupplier).toHaveBeenCalledWith({ name: 'Supplier B', contact: 'contact' })
   })
-})
 
+  it('allows admin to open budget summary', async () => {
+    mockUser = { roles: ['ROLE_ADMIN'] }
+    acquisitionService.listBudgets.mockResolvedValue({ data: [{ id: 5, name: 'Nowości', amount: 1000 }] })
+    acquisitionService.getBudgetSummary.mockResolvedValue({ remaining: 700 })
+
+    render(<Acquisitions />)
+
+    expect(await screen.findByText('Nowości')).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: /Podsumowanie/i }))
+
+    expect(acquisitionService.getBudgetSummary).toHaveBeenCalledWith(5)
+    expect(await screen.findAllByText(/Podsumowanie budżetu/i)).toHaveLength(2)
+  })
+})

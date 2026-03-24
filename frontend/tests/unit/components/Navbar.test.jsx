@@ -52,7 +52,7 @@ describe('Navbar', () => {
     expect(screen.getByRole('link', { name: /Panel personelu/i })).toHaveAttribute('href', '/staff?section=admin')
   })
 
-  it('shows staff and reports links for librarian', () => {
+  it('shows staff links and personal loans for librarian', () => {
     mockAuth = { token: 'token', user: { name: 'Librarian', roles: ['ROLE_LIBRARIAN'] }, logout: vi.fn() }
     render(
       <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
@@ -63,6 +63,8 @@ describe('Navbar', () => {
     expect(screen.getByRole('link', { name: /Panel personelu/i })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /Panel personelu/i })).toHaveAttribute('href', '/staff?section=operations')
     expect(screen.getByRole('link', { name: /Raporty/i })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Moje wypożyczenia/i })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Profil/i })).toBeInTheDocument()
     expect(screen.queryByRole('link', { name: /Panel administratora/i })).not.toBeInTheDocument()
   })
 

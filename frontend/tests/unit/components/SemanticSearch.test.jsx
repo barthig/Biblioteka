@@ -10,8 +10,8 @@ vi.mock('../../../src/api', () => ({
 describe('SemanticSearch', () => {
   it('shows validation error on empty query', () => {
     render(<SemanticSearch />)
-    fireEvent.click(screen.getByRole('button', { name: /Search/i }))
-    expect(screen.getByText(/Please enter a search query/i)).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /Szukaj z AI/i }))
+    expect(screen.getByText(/Wpisz opis lub temat/i)).toBeInTheDocument()
   })
 
   it('renders results after search', async () => {
@@ -19,8 +19,8 @@ describe('SemanticSearch', () => {
       data: [{ id: 1, title: 'Alpha', author: { name: 'Author A' }, description: 'Desc' }]
     })
     render(<SemanticSearch />)
-    fireEvent.change(screen.getByLabelText(/Search prompt/i), { target: { value: 'space' } })
-    fireEvent.click(screen.getByRole('button', { name: /Search/i }))
+    fireEvent.change(screen.getByLabelText(/Zapytanie AI/i), { target: { value: 'space' } })
+    fireEvent.click(screen.getByRole('button', { name: /Szukaj z AI/i }))
     expect(await screen.findByText('Alpha')).toBeInTheDocument()
     expect(screen.getByText('Desc')).toBeInTheDocument()
   })
@@ -28,9 +28,8 @@ describe('SemanticSearch', () => {
   it('renders error on failure', async () => {
     apiFetch.mockRejectedValue(new Error('Search failed.'))
     render(<SemanticSearch />)
-    fireEvent.change(screen.getByLabelText(/Search prompt/i), { target: { value: 'space' } })
-    fireEvent.click(screen.getByRole('button', { name: /Search/i }))
+    fireEvent.change(screen.getByLabelText(/Zapytanie AI/i), { target: { value: 'space' } })
+    fireEvent.click(screen.getByRole('button', { name: /Szukaj z AI/i }))
     expect(await screen.findByText(/Search failed/i)).toBeInTheDocument()
   })
 })
-

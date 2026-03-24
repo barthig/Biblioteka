@@ -37,7 +37,7 @@ export default function StaffPanel() {
       sections.push({
         key: 'operations',
         label: 'Obsługa biblioteki',
-        description: 'Wypożyczenia, zwroty, rezerwacje, opłaty i egzemplarze.',
+        description: 'Wypożyczenia, zwroty, rezerwacje, opłaty i egzemplarze.'
       })
     }
 
@@ -45,7 +45,7 @@ export default function StaffPanel() {
       sections.push({
         key: 'admin',
         label: 'Administracja',
-        description: 'Użytkownicy, role, audyt, integracje i konfiguracja systemu.',
+        description: 'Użytkownicy, role, audyt, integracje i konfiguracja systemu.'
       })
     }
 

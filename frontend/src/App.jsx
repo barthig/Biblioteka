@@ -13,6 +13,7 @@ const Register = React.lazy(() => import('./pages/auth/Register'))
 const Books = React.lazy(() => import('./pages/books/Books'))
 const BookDetails = React.lazy(() => import('./pages/books/BookDetails'))
 const Announcements = React.lazy(() => import('./pages/books/Announcements'))
+const Acquisitions = React.lazy(() => import('./pages/books/Acquisitions'))
 const Dashboard = React.lazy(() => import('./pages/dashboard/Dashboard'))
 const Recommended = React.lazy(() => import('./pages/dashboard/Recommended'))
 const MyLoans = React.lazy(() => import('./pages/loans/MyLoans'))
@@ -58,7 +59,7 @@ export default function App() {
           <Navbar />
           <main className="main flex-1 px-4 sm:px-5 lg:px-10">
             <div className="content-shell mx-auto w-full max-w-screen-2xl">
-              <Suspense fallback={<div className="page page--centered px-4 py-8 sm:px-6"><p>Ladowanie...</p></div>}>
+              <Suspense fallback={<div className="page page--centered px-4 py-8 sm:px-6"><p>Ładowanie...</p></div>}>
               <Routes>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/books" element={<Books />} />
@@ -66,6 +67,14 @@ export default function App() {
                 <Route path="/recommended" element={<AuthGuard><Recommended /></AuthGuard>} />
                 <Route path="/announcements" element={<Announcements />} />
                 <Route path="/announcements/:id" element={<Announcements />} />
+                <Route
+                  path="/acquisitions"
+                  element={(
+                    <RequireRole allowed={['ROLE_LIBRARIAN', 'ROLE_ADMIN']}>
+                      <Acquisitions />
+                    </RequireRole>
+                  )}
+                />
                 <Route path="/my-loans" element={<AuthGuard><MyLoans /></AuthGuard>} />
                 <Route path="/reservations" element={<AuthGuard><Reservations /></AuthGuard>} />
                 <Route path="/favorites" element={<AuthGuard><Favorites /></AuthGuard>} />
@@ -117,10 +126,10 @@ export default function App() {
               </Routes>
               </Suspense>
               <footer className="footer px-2 py-6 sm:px-4">
-                <p>(c) 2025 Biblioteka. System zarzadzania biblioteka i wypozyczeniami.</p>
+                <p>(c) 2025 Biblioteka. System zarządzania biblioteką i wypożyczeniami.</p>
                 <div className="footer__links flex-wrap gap-3 sm:gap-6">
                   <a href="#regulamin">Regulamin</a>
-                  <a href="#prywatnosc">Polityka prywatnosci</a>
+                  <a href="#prywatnosc">Polityka prywatności</a>
                   <a href="#kontakt">Kontakt</a>
                 </div>
               </footer>

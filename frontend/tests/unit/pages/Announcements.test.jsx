@@ -32,9 +32,9 @@ describe('Announcements page', () => {
       </MemoryRouter>
     )
 
+    expect(await screen.findByRole('heading', { level: 1, name: /Ogłoszenia/i })).toBeInTheDocument()
     expect(await screen.findByText('Alpha')).toBeInTheDocument()
     expect(screen.getByText('Beta')).toBeInTheDocument()
+    expect(screen.getByText(/Aktualne informacje, komunikaty i wydarzenia/i)).toBeInTheDocument()
   })
 })
-
-

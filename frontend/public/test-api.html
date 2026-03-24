@@ -55,7 +55,7 @@
 </head>
 <body>
     <h1>Diagnostyka API - System Biblioteczny</h1>
-    
+
     <div class="test-box">
         <h2>Test 1: Prosty endpoint (/health)</h2>
         <button onclick="testHealth()">Testuj /health</button>
@@ -63,7 +63,7 @@
     </div>
 
     <div class="test-box">
-        <h2>Test 2: Lista ksiÄ…ĹĽek (/api/books)</h2>
+        <h2>Test 2: Lista książek (/api/books)</h2>
         <button onclick="testBooks()">Testuj /api/books</button>
         <button onclick="testBooksLimit()">Testuj /api/books?limit=3</button>
         <div id="booksResult"></div>
@@ -86,8 +86,8 @@
         <p><strong>API URL:</strong> same-origin (/api via current host)</p>
         <p><strong>Frontend URL:</strong> http://localhost:5173</p>
         <p><strong>Problem:</strong> Backend odpowiada bardzo wolno (~5-6 sekund) przez Docker volumes na Windows</p>
-        <p><strong>RozwiÄ…zanie tymczasowe:</strong> CierpliwoĹ›Ä‡ - dane siÄ™ Ĺ‚adujÄ…, tylko wolno</p>
-        <p><strong>RozwiÄ…zanie staĹ‚e:</strong> UĹĽyÄ‡ WSL2 lub przenieĹ›Ä‡ vendor poza volume</p>
+        <p><strong>Rozwiązanie tymczasowe:</strong> Cierpliwość - dane się ładują, tylko wolno</p>
+        <p><strong>Rozwiązanie stałe:</strong> Użyć WSL2 lub przenieść vendor poza volume</p>
     </div>
 
     <script>
@@ -96,17 +96,17 @@
 
         async function testEndpoint(url, options = {}, resultId) {
             const resultDiv = document.getElementById(resultId);
-            resultDiv.innerHTML = '<p class="loading">Ĺadowanie... (moĹĽe zajÄ…Ä‡ 5-10 sekund)</p>';
-            
+            resultDiv.innerHTML = '<p class="loading">Ładowanie... (może zająć 5-10 sekund)</p>';
+
             const startTime = performance.now();
-            
+
             try {
                 const response = await fetch(url, options);
                 const endTime = performance.now();
                 const duration = ((endTime - startTime) / 1000).toFixed(2);
-                
+
                 const data = await response.json();
-                
+
                 resultDiv.innerHTML = `
                     <p class="success">Sukces!</p>
                     <p class="timing">Czas odpowiedzi: ${duration}s</p>
@@ -116,11 +116,11 @@
             } catch (error) {
                 const endTime = performance.now();
                 const duration = ((endTime - startTime) / 1000).toFixed(2);
-                
+
                 resultDiv.innerHTML = `
-                    <p class="error">BĹ‚Ä…d!</p>
+                    <p class="error">Błąd!</p>
                     <p class="timing">Czas: ${duration}s</p>
-                    <p><strong>BĹ‚Ä…d:</strong> ${error.message}</p>
+                    <p><strong>Błąd:</strong> ${error.message}</p>
                 `;
             }
         }
@@ -140,9 +140,9 @@
         async function testLogin() {
             const resultDiv = document.getElementById('loginResult');
             resultDiv.innerHTML = '<p class="loading">Logowanie...</p>';
-            
+
             const startTime = performance.now();
-            
+
             try {
                 const response = await fetch(`${API_URL}/api/auth/login`, {
                     method: 'POST',
@@ -154,11 +154,11 @@
                         password: 'Admin1234'
                     })
                 });
-                
+
                 const endTime = performance.now();
                 const duration = ((endTime - startTime) / 1000).toFixed(2);
                 const data = await response.json();
-                
+
                 if (data.token) {
                     token = data.token;
                     localStorage.setItem('token', token);
@@ -170,7 +170,7 @@
                     `;
                 } else {
                     resultDiv.innerHTML = `
-                        <p class="error">BĹ‚Ä…d logowania</p>
+                        <p class="error">Błąd logowania</p>
                         <p class="timing">Czas: ${duration}s</p>
                         <pre>${JSON.stringify(data, null, 2)}</pre>
                     `;
@@ -179,7 +179,7 @@
                 const endTime = performance.now();
                 const duration = ((endTime - startTime) / 1000).toFixed(2);
                 resultDiv.innerHTML = `
-                    <p class="error">BĹ‚Ä…d: ${error.message}</p>
+                    <p class="error">Błąd: ${error.message}</p>
                     <p class="timing">Czas: ${duration}s</p>
                 `;
             }
@@ -187,11 +187,11 @@
 
         function testDashboard() {
             if (!token) {
-                document.getElementById('dashboardResult').innerHTML = 
-                    '<p class="error">Najpierw zaloguj siÄ™!</p>';
+                document.getElementById('dashboardResult').innerHTML =
+                    '<p class="error">Najpierw zaloguj się!</p>';
                 return;
             }
-            
+
             testEndpoint(`${API_URL}/api/dashboard`, {
                 headers: {
                     'Authorization': `Bearer ${token}`

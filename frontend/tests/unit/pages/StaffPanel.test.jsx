@@ -32,7 +32,7 @@ describe('StaffPanel', () => {
     mockUser = null
   })
 
-  it('shows only operations section for librarian', async () => {
+  it('shows only operations section for librarian', () => {
     mockUser = { id: 1, roles: ['ROLE_LIBRARIAN'] }
 
     renderStaffPanel('/staff?section=admin')

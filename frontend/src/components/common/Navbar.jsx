@@ -71,8 +71,14 @@ export default function Navbar() {
                   <NavLink to="/staff?section=admin" className={navLinkClass} onClick={closeMenu}>
                     Panel personelu
                   </NavLink>
+                  <NavLink to="/acquisitions" className={navLinkClass} onClick={closeMenu}>
+                    Akcesje
+                  </NavLink>
+                  <NavLink to="/reports" className={navLinkClass} onClick={closeMenu}>
+                    Raporty
+                  </NavLink>
                   <NavLink to="/my-loans" className={navLinkClass} onClick={closeMenu}>
-                    Wypożyczenia
+                    Moje wypożyczenia
                   </NavLink>
                   <NavLink to="/reservations" className={navLinkClass} onClick={closeMenu}>
                     Rezerwacje
@@ -92,14 +98,32 @@ export default function Navbar() {
                   <NavLink to="/staff?section=operations" className={navLinkClass} onClick={closeMenu}>
                     Panel personelu
                   </NavLink>
+                  <NavLink to="/acquisitions" className={navLinkClass} onClick={closeMenu}>
+                    Akcesje
+                  </NavLink>
                   <NavLink to="/reports" className={navLinkClass} onClick={closeMenu}>
                     Raporty
+                  </NavLink>
+                  <NavLink to="/my-loans" className={navLinkClass} onClick={closeMenu}>
+                    Moje wypożyczenia
+                  </NavLink>
+                  <NavLink to="/reservations" className={navLinkClass} onClick={closeMenu}>
+                    Rezerwacje
+                  </NavLink>
+                  <NavLink to="/favorites" className={navLinkClass} onClick={closeMenu}>
+                    Ulubione
+                  </NavLink>
+                  <NavLink to="/notifications" className={navLinkClass} onClick={closeMenu}>
+                    Powiadomienia
+                  </NavLink>
+                  <NavLink to="/profile" className={navLinkClass} onClick={closeMenu}>
+                    Profil
                   </NavLink>
                 </>
               ) : (
                 <>
                   <NavLink to="/my-loans" className={navLinkClass} onClick={closeMenu}>
-                    Wypożyczenia
+                    Moje wypożyczenia
                   </NavLink>
                   <NavLink to="/reservations" className={navLinkClass} onClick={closeMenu}>
                     Rezerwacje

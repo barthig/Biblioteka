@@ -41,8 +41,9 @@ describe('MyLoans page', () => {
     mockAuth = { token: 'token', user: { id: 1 } }
     apiFetch.mockResolvedValue({
       data: [
-        { id: 1, book: { title: 'Active Book' }, dueAt: '2025-02-01', returnedAt: null },
-        { id: 2, book: { title: 'Returned Book' }, borrowedAt: '2025-01-01', returnedAt: '2025-01-10' }
+        { id: 1, userId: 1, book: { title: 'Active Book' }, dueAt: '2025-02-01', returnedAt: null },
+        { id: 2, userId: 1, book: { title: 'Returned Book' }, borrowedAt: '2025-01-01', returnedAt: '2025-01-10' },
+        { id: 3, userId: 99, book: { title: 'Other User Book' }, dueAt: '2025-02-05', returnedAt: null }
       ]
     })
 
@@ -50,6 +51,7 @@ describe('MyLoans page', () => {
 
     expect(await screen.findByText('Active Book')).toBeInTheDocument()
     expect(screen.getByText('Returned Book')).toBeInTheDocument()
+    expect(screen.queryByText('Other User Book')).not.toBeInTheDocument()
     expect(apiFetch).toHaveBeenCalledWith('/api/me/loans')
   })
 
@@ -80,5 +82,4 @@ describe('MyLoans page', () => {
     expect(apiFetch).toHaveBeenCalledWith('/api/loans/1/extend', expect.objectContaining({ method: 'PUT' }))
   })
 })
-
 

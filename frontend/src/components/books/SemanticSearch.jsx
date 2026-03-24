@@ -10,23 +10,26 @@ export default function SemanticSearch() {
   async function handleSearch(event) {
     event.preventDefault()
     const trimmed = query.trim()
+
     if (!trimmed) {
-      setError('Please enter a search query.')
+      setError('Wpisz opis lub temat, którego szukasz.')
       setResults([])
       return
     }
 
     setLoading(true)
     setError('')
+
     try {
       const response = await apiFetch('/api/recommend', {
         method: 'POST',
+        noRetry: true,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query: trimmed })
       })
       setResults(Array.isArray(response?.data) ? response.data : [])
     } catch (err) {
-      setError(err?.message || 'Search failed.')
+      setError(err?.message || 'Wyszukiwanie semantyczne nie powiodło się.')
       setResults([])
     } finally {
       setLoading(false)
@@ -36,31 +39,31 @@ export default function SemanticSearch() {
   return (
     <section className="semantic-search">
       <form onSubmit={handleSearch}>
-        <label htmlFor="semantic-query">Search prompt</label>
+        <label htmlFor="semantic-query">Zapytanie AI</label>
         <input
           id="semantic-query"
           type="text"
           value={query}
-          placeholder="books about space travel"
-          onChange={(event) => setQuery(event.target.value)}
+          placeholder="np. książki o podróżach kosmicznych i samotności"
+          onChange={event => setQuery(event.target.value)}
         />
         <button type="submit" disabled={loading}>
-          {loading ? 'Searching...' : 'Search'}
+          {loading ? 'Szukam...' : 'Szukaj z AI'}
         </button>
       </form>
 
       {error ? <p className="semantic-search__error">{error}</p> : null}
 
       <div className="semantic-search__results">
-        {loading ? <p>Loading results...</p> : null}
+        {loading ? <p>Ładowanie wyników...</p> : null}
         {!loading && results.length === 0 && !error ? (
-          <p>No results yet. Try a search.</p>
+          <p>Brak wyników. Spróbuj bardziej opisowego zapytania.</p>
         ) : null}
-        {results.map((book) => (
+        {results.map(book => (
           <article key={book.id} className="semantic-search__card">
             <h3>{book.title}</h3>
-            <p>{book.author?.name || 'Unknown author'}</p>
-            <p>{book.description || 'No description available.'}</p>
+            <p>{book.author?.name || 'Nieznany autor'}</p>
+            <p>{book.description || 'Brak opisu.'}</p>
           </article>
         ))}
       </div>

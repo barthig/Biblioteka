@@ -1,14 +1,11 @@
 import React, { useEffect, useState } from 'react'
 import { acquisitionService } from '../../services/acquisitionService'
 import { useAuth } from '../../context/AuthContext'
-import PageHeader from '../../components/ui/PageHeader'
-import StatGrid from '../../components/ui/StatGrid'
-import StatCard from '../../components/ui/StatCard'
-import FeedbackCard from '../../components/ui/FeedbackCard'
 
 export default function Acquisitions() {
   const { user } = useAuth()
-  const isAdmin = user?.roles?.includes('ROLE_ADMIN')
+  const roles = user?.roles || []
+  const canManageAcquisitions = roles.includes('ROLE_LIBRARIAN') || roles.includes('ROLE_ADMIN')
   const [suppliers, setSuppliers] = useState([])
   const [budgets, setBudgets] = useState([])
   const [orders, setOrders] = useState([])
@@ -24,10 +21,10 @@ export default function Acquisitions() {
   const [weedingForm, setWeedingForm] = useState({ bookId: '', reason: '' })
 
   useEffect(() => {
-    if (isAdmin) {
+    if (canManageAcquisitions) {
       loadAll()
     }
-  }, [isAdmin])
+  }, [canManageAcquisitions])
 
   async function loadAll() {
     setLoading(true)
@@ -44,7 +41,7 @@ export default function Acquisitions() {
       setOrders(Array.isArray(ordersData?.data) ? ordersData.data : ordersData || [])
       setWeeding(Array.isArray(weedingData?.data) ? weedingData.data : weedingData || [])
     } catch (err) {
-      setError(err.message || 'Nie udało się pobrać danych akcesji')
+      setError(err.message || 'Nie udało się pobrać danych akcesji.')
     } finally {
       setLoading(false)
     }
@@ -60,52 +57,52 @@ export default function Acquisitions() {
     try {
       const data = await acquisitionService.getBudgetSummary(id)
       setBudgetSummary(data)
-      setMessage('Pobrano podsumowanie budzetu')
+      setMessage('Pobrano podsumowanie budżetu.')
     } catch (err) {
-      setError(err.message || 'Nie udalo sie pobrac podsumowania budzetu')
+      setError(err.message || 'Nie udało się pobrać podsumowania budżetu.')
     }
   }
 
-  async function handleCreateSupplier(e) {
-    e.preventDefault()
+  async function handleCreateSupplier(event) {
+    event.preventDefault()
     clearMessages()
     try {
       await acquisitionService.createSupplier(supplierForm)
-      setMessage('Dodano dostawcę')
+      setMessage('Dodano dostawcę.')
       setSupplierForm({ name: '', contact: '' })
       await loadAll()
     } catch (err) {
-      setError(err.message || 'Nie udało się dodać dostawcy')
+      setError(err.message || 'Nie udało się dodać dostawcy.')
     }
   }
 
-  async function handleCreateBudget(e) {
-    e.preventDefault()
+  async function handleCreateBudget(event) {
+    event.preventDefault()
     clearMessages()
     try {
       await acquisitionService.createBudget({ ...budgetForm, amount: Number(budgetForm.amount) })
-      setMessage('Dodano budżet')
+      setMessage('Dodano budżet.')
       setBudgetForm({ name: '', amount: '' })
       await loadAll()
     } catch (err) {
-      setError(err.message || 'Nie udało się dodać budżetu')
+      setError(err.message || 'Nie udało się dodać budżetu.')
     }
   }
 
-  async function handleCreateOrder(e) {
-    e.preventDefault()
+  async function handleCreateOrder(event) {
+    event.preventDefault()
     clearMessages()
     try {
       await acquisitionService.createOrder({
-        supplierId: supplierForm.id || Number(orderForm.supplierId),
+        supplierId: Number(orderForm.supplierId),
         title: orderForm.title,
         amount: Number(orderForm.amount)
       })
-      setMessage('Dodano zamówienie')
+      setMessage('Dodano zamówienie.')
       setOrderForm({ supplierId: '', title: '', amount: '' })
       await loadAll()
     } catch (err) {
-      setError(err.message || 'Nie udało się dodać zamówienia')
+      setError(err.message || 'Nie udało się dodać zamówienia.')
     }
   }
 
@@ -113,10 +110,10 @@ export default function Acquisitions() {
     clearMessages()
     try {
       await acquisitionService.receiveOrder(id)
-      setMessage('Przyjęto zamówienie')
+      setMessage('Przyjęto zamówienie.')
       await loadAll()
     } catch (err) {
-      setError(err.message || 'Nie udało się przyjąć zamówienia')
+      setError(err.message || 'Nie udało się przyjąć zamówienia.')
     }
   }
 
@@ -124,27 +121,27 @@ export default function Acquisitions() {
     clearMessages()
     try {
       await acquisitionService.cancelOrder(id)
-      setMessage('Anulowano zamówienie')
+      setMessage('Anulowano zamówienie.')
       await loadAll()
     } catch (err) {
-      setError(err.message || 'Nie udało się anulować zamówienia')
+      setError(err.message || 'Nie udało się anulować zamówienia.')
     }
   }
 
-  async function handleCreateWeeding(e) {
-    e.preventDefault()
+  async function handleCreateWeeding(event) {
+    event.preventDefault()
     clearMessages()
     try {
       await acquisitionService.createWeeding({ bookId: Number(weedingForm.bookId), reason: weedingForm.reason })
-      setMessage('Dodano protokół ubytków')
+      setMessage('Dodano protokół ubytków.')
       setWeedingForm({ bookId: '', reason: '' })
       await loadAll()
     } catch (err) {
-      setError(err.message || 'Nie udało się dodać ubytku')
+      setError(err.message || 'Nie udało się dodać ubytku.')
     }
   }
 
-  if (!isAdmin) {
+  if (!canManageAcquisitions) {
     return (
       <div className="page">
         <div className="surface-card">Brak uprawnień do akcesji.</div>
@@ -157,7 +154,7 @@ export default function Acquisitions() {
       <header className="page-header">
         <div>
           <h1>Akcesje</h1>
-          <p className="support-copy">Dostawcy, budżety, zamówienia, ubytki</p>
+          <p className="support-copy">Dostawcy, budżety, zamówienia i ubytki.</p>
         </div>
       </header>
 
@@ -175,7 +172,7 @@ export default function Acquisitions() {
         <div className="surface-card stat-card">
           <h3>Zamówienia</h3>
           <strong>{orders.length}</strong>
-          <span>Rejestr</span>
+          <span>Rejestr zamówień</span>
         </div>
       </div>
 
@@ -200,10 +197,10 @@ export default function Acquisitions() {
             <button className="btn btn-primary" type="submit">Dodaj</button>
           </form>
           <ul className="list list--bordered">
-            {suppliers.map(s => (
-              <li key={s.id || s.name}>
-                <div className="list__title">{s.name}</div>
-                <div className="list__meta">{s.contact || s.email || ''}</div>
+            {suppliers.map(supplier => (
+              <li key={supplier.id || supplier.name}>
+                <div className="list__title">{supplier.name}</div>
+                <div className="list__meta">{supplier.contact || supplier.email || ''}</div>
               </li>
             ))}
           </ul>
@@ -217,22 +214,24 @@ export default function Acquisitions() {
             <button className="btn btn-primary" type="submit">Dodaj</button>
           </form>
           <ul className="list list--bordered">
-            {budgets.map(b => (
-              <li key={b.id || b.name}>
-                <div className="list__title">{b.name}</div>
+            {budgets.map(budget => (
+              <li key={budget.id || budget.name}>
+                <div className="list__title">{budget.name}</div>
                 <div className="list__meta">
-                  <span>Kwota: {b.amount ?? b.total ?? '-'}</span>
-                  {b.spent && <span>Wydano: {b.spent}</span>}
+                  <span>Kwota: {budget.amount ?? budget.total ?? '-'}</span>
+                  {budget.spent ? <span>Wydano: {budget.spent}</span> : null}
                 </div>
                 <div className="list__actions">
-                  <button className="btn btn-outline btn-sm" type="button" onClick={() => handleBudgetSummary(b.id)}>Podsumowanie</button>
+                  <button className="btn btn-outline btn-sm" type="button" onClick={() => handleBudgetSummary(budget.id)}>
+                    Podsumowanie
+                  </button>
                 </div>
               </li>
             ))}
           </ul>
           {budgetSummary && (
             <div className="surface-card" style={{ marginTop: '1rem' }}>
-              <strong>Podsumowanie budzetu</strong>
+              <strong>Podsumowanie budżetu</strong>
               <pre style={{ whiteSpace: 'pre-wrap' }}>{JSON.stringify(budgetSummary, null, 2)}</pre>
             </div>
           )}
@@ -247,16 +246,16 @@ export default function Acquisitions() {
             <button className="btn btn-primary" type="submit">Dodaj</button>
           </form>
           <ul className="list list--bordered">
-            {orders.map(o => (
-              <li key={o.id}>
-                <div className="list__title">{o.title || o.name || `Zamówienie ${o.id}`}</div>
+            {orders.map(order => (
+              <li key={order.id}>
+                <div className="list__title">{order.title || order.name || `Zamówienie ${order.id}`}</div>
                 <div className="list__meta">
-                  <span>Status: {o.status || '-'}</span>
-                  {o.amount && <span>Kwota: {o.amount}</span>}
+                  <span>Status: {order.status || '-'}</span>
+                  {order.amount ? <span>Kwota: {order.amount}</span> : null}
                 </div>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <button className="btn btn-outline btn-sm" type="button" onClick={() => handleReceiveOrder(o.id)}>Przyjmij</button>
-                  <button className="btn btn-outline btn-sm" type="button" onClick={() => handleCancelOrder(o.id)}>Anuluj</button>
+                  <button className="btn btn-outline btn-sm" type="button" onClick={() => handleReceiveOrder(order.id)}>Przyjmij</button>
+                  <button className="btn btn-outline btn-sm" type="button" onClick={() => handleCancelOrder(order.id)}>Anuluj</button>
                 </div>
               </li>
             ))}
@@ -271,10 +270,10 @@ export default function Acquisitions() {
             <button className="btn btn-primary" type="submit">Dodaj</button>
           </form>
           <ul className="list list--bordered">
-            {weeding.map(w => (
-              <li key={w.id || `${w.bookId}-${w.reason}`}>
-                <div className="list__title">Książka: {w.bookId || w.book?.id}</div>
-                <div className="list__meta">{w.reason || 'Brak powodu'}</div>
+            {weeding.map(entry => (
+              <li key={entry.id || `${entry.bookId}-${entry.reason}`}>
+                <div className="list__title">Książka: {entry.bookId || entry.book?.id}</div>
+                <div className="list__meta">{entry.reason || 'Brak powodu'}</div>
               </li>
             ))}
           </ul>

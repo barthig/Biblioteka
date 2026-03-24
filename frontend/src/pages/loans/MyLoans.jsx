@@ -13,6 +13,17 @@ function formatDate(value) {
   return value ? new Date(value).toLocaleDateString('pl-PL') : '-'
 }
 
+function filterLoansForCurrentUser(loans, currentUserId) {
+  return loans.filter(loan => {
+    const ownerId = loan.user?.id ?? loan.userId ?? loan.readerId ?? null
+    if (ownerId === null || typeof ownerId === 'undefined') {
+      return true
+    }
+
+    return Number(ownerId) === Number(currentUserId)
+  })
+}
+
 export default function MyLoans() {
   const { token, user } = useAuth()
   const [loans, setLoans] = useState([])
@@ -23,11 +34,11 @@ export default function MyLoans() {
   const [extendDays, setExtendDays] = useState({})
   const [extendLoading, setExtendLoading] = useState({})
   const { getCachedResource, setCachedResource, invalidateResource } = useResourceCache()
-  const CACHE_KEY = 'loans:/api/me/loans'
-  const CACHE_TTL = 60000
+  const cacheKey = `loans:${user?.id ?? 'anon'}:/api/me/loans`
+  const cacheTtl = 60000
 
   useEffect(() => {
-    if (!token) {
+    if (!token || !user?.id) {
       setLoans([])
       setLoading(false)
       invalidateResource('loans:*')
@@ -37,10 +48,10 @@ export default function MyLoans() {
     let cancelled = false
 
     async function load() {
-      const cached = getCachedResource(CACHE_KEY, CACHE_TTL)
+      const cached = getCachedResource(cacheKey, cacheTtl)
       if (typeof cached !== 'undefined') {
         const loansList = Array.isArray(cached) ? cached : (Array.isArray(cached?.data) ? cached.data : [])
-        setLoans(loansList)
+        setLoans(filterLoansForCurrentUser(loansList, user.id))
         setLoading(false)
         setError(null)
       } else {
@@ -50,16 +61,18 @@ export default function MyLoans() {
       setError(null)
       setActionError(null)
       setActionSuccess(null)
+
       try {
         const data = await apiFetch('/api/me/loans')
         if (!cancelled) {
           const list = Array.isArray(data?.data) ? data.data : []
-          setLoans(list)
-          setCachedResource(CACHE_KEY, list)
+          const ownLoans = filterLoansForCurrentUser(list, user.id)
+          setLoans(ownLoans)
+          setCachedResource(cacheKey, ownLoans)
         }
       } catch (err) {
         if (!cancelled) {
-          setError(err.message || 'Nie udało się pobrać wypożyczeń')
+          setError(err.message || 'Nie udało się pobrać wypożyczeń.')
         }
       } finally {
         if (!cancelled) {
@@ -73,16 +86,18 @@ export default function MyLoans() {
     return () => {
       cancelled = true
     }
-  }, [CACHE_KEY, CACHE_TTL, getCachedResource, invalidateResource, setCachedResource, token])
+  }, [cacheKey, cacheTtl, getCachedResource, invalidateResource, setCachedResource, token, user?.id])
 
   const activeLoans = useMemo(() => {
     const loansArray = Array.isArray(loans) ? loans : []
     return loansArray.filter(loan => !loan.returnedAt)
   }, [loans])
-  
+
   const historyLoans = useMemo(() => {
     const loansArray = Array.isArray(loans) ? loans : []
-    return loansArray.filter(loan => loan.returnedAt).sort((a, b) => new Date(b.returnedAt).getTime() - new Date(a.returnedAt).getTime())
+    return loansArray
+      .filter(loan => loan.returnedAt)
+      .sort((a, b) => new Date(b.returnedAt).getTime() - new Date(a.returnedAt).getTime())
   }, [loans])
 
   const nextDue = useMemo(() => {
@@ -91,6 +106,7 @@ export default function MyLoans() {
       .filter(Boolean)
       .map(value => new Date(value))
       .sort((a, b) => a.getTime() - b.getTime())
+
     return dates.length > 0 ? dates[0] : null
   }, [activeLoans])
 
@@ -98,24 +114,24 @@ export default function MyLoans() {
     setActionError(null)
     setActionSuccess(null)
     setExtendLoading(prev => ({ ...prev, [id]: true }))
+
     try {
       const response = await apiFetch(`/api/loans/${id}/extend`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ days }),
+        body: JSON.stringify({ days })
       })
       const updatedLoan = response?.data || response
       setLoans(prev => {
         const next = prev.map(loan => (loan.id === id ? updatedLoan : loan))
-        setCachedResource(CACHE_KEY, next)
+        setCachedResource(cacheKey, next)
         return next
       })
-      // Invalidate reservations cache as book availability may have changed
       invalidateResource('reservations:*')
       setActionSuccess(`Termin wypożyczenia został przedłużony do ${formatDate(updatedLoan.dueAt)}.`)
       setExtendDays(prev => ({ ...prev, [id]: 14 }))
     } catch (err) {
-      setActionError(err.message || 'Nie udało się przedłużyć wypożyczenia')
+      setActionError(err.message || 'Nie udało się przedłużyć wypożyczenia.')
     } finally {
       setExtendLoading(prev => ({ ...prev, [id]: false }))
     }
@@ -168,18 +184,18 @@ export default function MyLoans() {
                     <strong>{loan.book?.title ?? 'Nieznana książka'}</strong>
                     <div className="resource-item__meta">
                       <span>Termin zwrotu: {formatDate(loan.dueAt)}</span>
-                      {loan.bookCopy?.inventoryCode && <span>Kod egz.: {loan.bookCopy.inventoryCode}</span>}
-                      {typeof loan.extensionsCount === 'number' && <span>Przedłużenia: {loan.extensionsCount}</span>}
+                      {loan.bookCopy?.inventoryCode ? <span>Kod egz.: {loan.bookCopy.inventoryCode}</span> : null}
+                      {typeof loan.extensionsCount === 'number' ? <span>Przedłużenia: {loan.extensionsCount}</span> : null}
                     </div>
-                    {loan.lastExtendedAt && (
+                    {loan.lastExtendedAt ? (
                       <div className="resource-item__meta">
                         <span>Ostatnio przedłużono: {formatDate(loan.lastExtendedAt)}</span>
                       </div>
-                    )}
+                    ) : null}
                   </div>
                   <div className="resource-item__actions loan-actions">
                     <span className="status-pill">Wypożyczono</span>
-                    {(loan.extensionsCount ?? 0) < 1 && (
+                    {(loan.extensionsCount ?? 0) < 1 ? (
                       <div className="loan-extend">
                         <label htmlFor={`loan-extend-${loan.id}`} className="sr-only">Liczba dni przedłużenia</label>
                         <select
@@ -200,7 +216,7 @@ export default function MyLoans() {
                           {extendLoading[loan.id] ? 'Przetwarzanie...' : 'Przedłuż'}
                         </button>
                       </div>
-                    )}
+                    ) : null}
                   </div>
                 </li>
               ))}

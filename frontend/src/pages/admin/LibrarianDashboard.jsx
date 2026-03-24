@@ -35,8 +35,8 @@ export default function LibrarianDashboard() {
       const data = await prefetchResource(cacheKey, () => apiFetch('/api/statistics/dashboard'), 120000)
       setStats(data)
     } catch (err) {
-      setError(err.message || 'Nie udało się załadować statystyk')
-      toast.error('Błąd podczas ładowania statystyk')
+      setError(err.message || 'Nie udało się załadować statystyk.')
+      toast.error('Błąd podczas ładowania statystyk.')
     } finally {
       setLoading(false)
     }
@@ -74,49 +74,20 @@ export default function LibrarianDashboard() {
       <PageHeader
         title="Dashboard"
         subtitle="Statystyki biblioteki"
-        actions={
-          <button 
-            className="btn btn-outline" 
-            onClick={loadStats}
-            aria-label="Odśwież statystyki biblioteki"
-          >
+        actions={(
+          <button className="btn btn-outline" onClick={loadStats} aria-label="Odśwież statystyki biblioteki">
             Odśwież
           </button>
-        }
+        )}
       />
 
       <StatGrid>
-        <StatCard
-          title="Aktywne wypożyczenia"
-          value={stats.activeLoans}
-          subtitle="Obecnie wypożyczone"
-        />
-        <StatCard
-          title="Zaległe zwroty"
-          value={stats.overdueLoans}
-          subtitle="Po terminie"
-          alert={stats.overdueLoans > 0}
-        />
-        <StatCard
-          title="Rezerwacje"
-          value={stats.pendingReservations}
-          subtitle="Oczekujące"
-        />
-        <StatCard
-          title="Użytkownicy"
-          value={stats.totalUsers}
-          subtitle="Zarejestrowani"
-        />
-        <StatCard
-          title="Książki"
-          value={stats.totalBooks}
-          subtitle="W katalogu"
-        />
-        <StatCard
-          title="Dostępne egzemplarze"
-          value={stats.availableCopies}
-          subtitle="Wolne do wypożyczenia"
-        />
+        <StatCard title="Aktywne wypożyczenia" value={stats.activeLoans} subtitle="Obecnie wypożyczone" />
+        <StatCard title="Zaległe zwroty" value={stats.overdueLoans} subtitle="Po terminie" alert={stats.overdueLoans > 0} />
+        <StatCard title="Rezerwacje" value={stats.pendingReservations} subtitle="Oczekujące" />
+        <StatCard title="Użytkownicy" value={stats.totalUsers} subtitle="Zarejestrowani" />
+        <StatCard title="Książki" value={stats.totalBooks} subtitle="W katalogu" />
+        <StatCard title="Dostępne egzemplarze" value={stats.availableCopies} subtitle="Wolne do wypożyczenia" />
       </StatGrid>
 
       <div className="grid grid-2" style={{ marginTop: '24px' }}>
@@ -145,22 +116,16 @@ export default function LibrarianDashboard() {
               </table>
             </div>
           ) : (
-            <p>Brak danych</p>
+            <p>Brak danych.</p>
           )}
         </SectionCard>
 
         <SectionCard title="Ostatnia aktywność">
           {stats.recentActivity && stats.recentActivity.length > 0 ? (
             <div className="activity-log">
-              {stats.recentActivity.map((log) => (
+              {stats.recentActivity.map(log => (
                 <div key={log.id} className="activity-item">
-                  <div className="activity-icon">
-                    {log.action === 'create' && '➕'}
-                    {log.action === 'update' && '✏️'}
-                    {log.action === 'delete' && '🗑️'}
-                    {log.action === 'borrow' && '📖'}
-                    {log.action === 'return' && '✅'}
-                  </div>
+                  <div className="activity-icon">{activityIcon(log.action)}</div>
                   <div className="activity-content">
                     <div className="activity-text">
                       <strong>{log.user}</strong> - {log.action} ({log.entity} #{log.entityId})
@@ -171,12 +136,29 @@ export default function LibrarianDashboard() {
               ))}
             </div>
           ) : (
-            <p>Brak aktywności</p>
+            <p>Brak aktywności.</p>
           )}
         </SectionCard>
       </div>
     </div>
   )
+}
+
+function activityIcon(action) {
+  switch (action) {
+    case 'create':
+      return '+'
+    case 'update':
+      return 'ed'
+    case 'delete':
+      return 'x'
+    case 'borrow':
+      return 'B'
+    case 'return':
+      return 'R'
+    default:
+      return 'i'
+  }
 }
 
 function formatTimestamp(timestamp) {
@@ -189,8 +171,8 @@ function formatTimestamp(timestamp) {
 
   if (diffMins < 1) return 'przed chwilą'
   if (diffMins < 60) return `${diffMins} min temu`
-  if (diffHours < 24) return `${diffHours}h temu`
+  if (diffHours < 24) return `${diffHours} h temu`
   if (diffDays < 7) return `${diffDays} dni temu`
-  
+
   return date.toLocaleDateString('pl-PL')
 }

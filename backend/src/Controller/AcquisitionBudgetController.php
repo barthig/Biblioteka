@@ -33,7 +33,7 @@ class AcquisitionBudgetController extends AbstractController
     }
 
     #[OA\Get(
-        path: '/api/budgets',
+        path: '/api/admin/acquisitions/budgets',
         summary: 'Lista budżetów',
         description: 'Zwraca listę budżetów akwizycyjnych z opcjonalnym filtrowaniem po roku. Wymaga roli LIBRARIAN.',
         tags: ['AcquisitionBudget'],
@@ -59,7 +59,7 @@ class AcquisitionBudgetController extends AbstractController
     }
 
     #[OA\Post(
-        path: '/api/budgets',
+        path: '/api/admin/acquisitions/budgets',
         summary: 'Utwórz budżet',
         description: 'Tworzy nowy budżet akwizycyjny. Wymaga roli LIBRARIAN.',
         tags: ['AcquisitionBudget'],
@@ -129,7 +129,7 @@ class AcquisitionBudgetController extends AbstractController
     }
 
     #[OA\Put(
-        path: '/api/budgets/{id}',
+        path: '/api/admin/acquisitions/budgets/{id}',
         summary: 'Aktualizuj budżet',
         description: 'Aktualizuje dane budżetu. Wymaga roli LIBRARIAN.',
         tags: ['AcquisitionBudget'],
@@ -188,7 +188,7 @@ class AcquisitionBudgetController extends AbstractController
     }
 
     #[OA\Post(
-        path: '/api/budgets/{id}/expense',
+        path: '/api/admin/acquisitions/budgets/{id}/expenses',
         summary: 'Dodaj wydatek do budżetu',
         description: 'Dodaje nowy wydatek do budżetu. Wymaga roli LIBRARIAN.',
         tags: ['AcquisitionBudget'],
@@ -255,7 +255,7 @@ class AcquisitionBudgetController extends AbstractController
     }
 
     #[OA\Get(
-        path: '/api/budgets/{id}/summary',
+        path: '/api/admin/acquisitions/budgets/{id}/summary',
         summary: 'Podsumowanie budżetu',
         description: 'Zwraca szczegółowe podsumowanie budżetu wraz z wydatkami. Wymaga roli LIBRARIAN.',
         tags: ['AcquisitionBudget'],

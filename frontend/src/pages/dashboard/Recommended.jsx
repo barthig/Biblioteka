@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import BookItem from '../../components/books/BookItem'
+import SemanticSearch from '../../components/books/SemanticSearch'
 import { apiFetch } from '../../api'
 import { useResourceCache } from '../../context/ResourceCacheContext'
 import { useAuth } from '../../context/AuthContext'
@@ -11,7 +12,6 @@ import FeedbackCard from '../../components/ui/FeedbackCard'
 import { logger } from '../../utils/logger'
 
 const CACHE_TTL = 60000
-const CACHE_KEY = 'recommended:/api/books/recommended'
 
 export default function Recommended() {
   const [groups, setGroups] = useState([])
@@ -42,13 +42,14 @@ export default function Recommended() {
       setLastDismissedId(bookId)
       invalidateResource(cacheKey)
     } catch (err) {
-      setActionError(err.message || 'Nie udało się ukryć rekomendacji')
+      setActionError(err.message || 'Nie udało się ukryć rekomendacji.')
       logger.error('Failed to dismiss book:', err)
     }
   }
 
   async function undoDismiss(bookId) {
     if (!token) return
+
     try {
       setActionError(null)
       await apiFetch(`/api/recommendations/feedback/${bookId}`, { method: 'DELETE' })
@@ -60,7 +61,7 @@ export default function Recommended() {
       setLastDismissedId(null)
       invalidateResource(cacheKey)
     } catch (err) {
-      setActionError(err.message || 'Nie udało się cofnąć ukrycia')
+      setActionError(err.message || 'Nie udało się cofnąć ukrycia.')
       logger.error('Failed to undo dismiss:', err)
     }
   }
@@ -69,6 +70,7 @@ export default function Recommended() {
     const handleResize = () => {
       setIsMobile(window.innerWidth <= 768)
     }
+
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
   }, [])
@@ -77,36 +79,12 @@ export default function Recommended() {
     let active = true
 
     async function load() {
-      if (!token) {
-        setLoading(true)
-        setError(null)
-        try {
-          const response = await apiFetch('/api/books/recommended')
-          const normalized = Array.isArray(response?.groups)
-            ? response.groups.filter(g => Array.isArray(g.books))
-            : (Array.isArray(response)
-              ? [{ key: 'public', label: 'Popularne książki', books: response }]
-              : [])
-          if (active) {
-            setGroups(normalized)
-          }
-        } catch (err) {
-          if (active) {
-            setError(err.message || 'Nie udało się pobrać polecanych książek.')
-          }
-        } finally {
-          if (active) {
-            setLoading(false)
-          }
-        }
-        return
-      }
-
       const cached = getCachedResource(cacheKey, CACHE_TTL)
       if (cached) {
         if (active) {
           setGroups(cached)
           setLoading(false)
+          setError(null)
         }
         return
       }
@@ -118,7 +96,9 @@ export default function Recommended() {
         const response = await apiFetch('/api/books/recommended')
         const normalized = Array.isArray(response?.groups)
           ? response.groups.filter(group => Array.isArray(group.books))
-          : []
+          : (Array.isArray(response)
+            ? [{ key: 'public', label: 'Popularne książki', books: response }]
+            : [])
 
         if (active) {
           setGroups(normalized)
@@ -126,7 +106,7 @@ export default function Recommended() {
         }
       } catch (err) {
         if (active) {
-          setError(err.message || 'Nie udało się pobrać propozycji książek.')
+          setError(err.message || 'Nie udało się pobrać polecanych książek.')
         }
       } finally {
         if (active) {
@@ -140,13 +120,13 @@ export default function Recommended() {
     return () => {
       active = false
     }
-  }, [getCachedResource, setCachedResource, cacheKey, token])
+  }, [cacheKey, getCachedResource, setCachedResource])
 
   return (
     <div className="page">
       <PageHeader
         title="Polecane"
-        subtitle="Poznaj wybrane książki dobrane do Twoich preferencji."
+        subtitle="Poznaj książki dobrane do Twoich preferencji i wyszukuj je semantycznie."
         actions={token && lastDismissedId ? (
           <button className="btn btn-secondary" type="button" onClick={() => undoDismiss(lastDismissedId)}>
             Cofnij ukrycie
@@ -158,7 +138,12 @@ export default function Recommended() {
         <StatCard title="Liczba grup" value={groups.length} subtitle="Kategorie rekomendacji" />
         <StatCard title="Propozycje" value={totalBooks} subtitle="Łącznie tytułów" />
         <StatCard title="Ukryte" value={dismissedBooks.size} subtitle="Odrzucone tytuły" />
+        <StatCard title="Tryb" value="AI" subtitle="Semantyczne wyszukiwanie" />
       </StatGrid>
+
+      <SectionCard title="Wyszukiwanie semantyczne" subtitle="Opisz temat, klimat lub motyw, a system znajdzie podobne książki.">
+        <SemanticSearch />
+      </SectionCard>
 
       {loading && (
         <SectionCard className="empty-state">Ładuję polecane książki...</SectionCard>
@@ -169,7 +154,7 @@ export default function Recommended() {
 
       {!loading && !error && (!Array.isArray(groups) || groups.length === 0) && (
         <SectionCard className="empty-state">
-          Brak polecanych książek w tym momencie. Wróć do nas wkrótce!
+          Brak polecanych książek w tym momencie. Wróć do nas wkrótce.
         </SectionCard>
       )}
 
@@ -204,15 +189,14 @@ export default function Recommended() {
                             &times;
                           </button>
                         )}
-                        <BookItem 
+                        <BookItem
                           book={book}
                           compact={isMobile}
                           expanded={expandedBookId === book.id}
                           onToggleExpand={() => setExpandedBookId(expandedBookId === book.id ? null : book.id)}
                         />
                       </div>
-                    ))
-                  }
+                    ))}
                 </div>
               )}
             </SectionCard>
