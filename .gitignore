@@ -1,4 +1,4 @@
-node_modules
+﻿node_modules
 .DS_Store
 backend/var/
 backend/tmp/
@@ -22,3 +22,8 @@ frontend/.env.local
 .env
 .env.local
 .env.test
+
+test-*.txt
+tree_structure.txt
+vendor/
+

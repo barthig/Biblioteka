@@ -63,7 +63,7 @@ Projekt realizowany na potrzeby przedmiotu **ZTPAI** (Zaawansowane Technologie P
 
 ### Diagram ERD
 
-![ERD Diagram](docs/erd-diagram.png)
+![ERD Diagram](docs/erd.png)
 
 Schemat bazy danych zawiera **35 tabel** pogrupowanych w moduły:
 
@@ -409,37 +409,28 @@ biblioteka/
 │   └── playwright.config.js    # Konfiguracja Playwright
 │
 ├── docs/                        # Dokumentacja
-│   ├── SCHEMA_GUIDE.md          # Quick reference
-│   ├── database-diagram.puml    # PlantUML diagram
-│   └── INDEX.md                 # Indeks dokumentacji
+│   ├── CONTRIBUTING.md          # Wytyczne dla kontrybutorów
+│   ├── DISTRIBUTED_ROUTING.md   # Ownerstwo endpointów przez gateway
+│   ├── TESTING.md               # Lokalizacja i uruchamianie testów
+│   ├── database-diagram.puml    # Diagram PlantUML bazy danych
+│   ├── erd.png                  # Aktualny diagram ERD
+│   ├── full_erd.png             # Pełny diagram ERD
+│   └── migration-info.php       # Informacje o migracjach
 │
 ├── docker/                      # Konfiguracje Docker
-│   ├── backend/                # PHP-FPM, Nginx
+│   ├── backend/                 # PHP-FPM, Nginx
 │   │   ├── Dockerfile
 │   │   └── nginx.conf
-│   ├── frontend/               # Node, Nginx
+│   ├── frontend/                # Node, Nginx
 │   │   ├── Dockerfile
 │   │   └── nginx.conf
-│   ├── db/                     # PostgreSQL + pgvector
-│   │   └── Dockerfile
-│   └── php-worker/             # Symfony Messenger worker
+│   └── php-worker/              # Symfony Messenger worker
 │       └── Dockerfile
 │
 ├── config/                      # Konfiguracja projektu
-│   ├── docker-compose.yml       # Orkiestracja kontenerów (5 serwisów)
-│   ├── docker-compose.windows.yml # Konfiguracja dla Windows
-│   ├── .env.example             # Przykładowe zmienne środowiskowe
-│   └── .dockerignore            # Ignorowane pliki Docker
-│
-├── docs/                        # Dokumentacja
-│   ├── SCHEMA_GUIDE.md          # Quick reference
-│   ├── database-diagram.puml    # PlantUML diagram
-│   ├── INDEX.md                 # Indeks dokumentacji
-│   ├── CHANGELOG.md             # Historia zmian projektu
-│   ├── CONTRIBUTING.md          # Wytyczne dla kontrybutorów
-│   ├── SECURITY.md              # Polityka bezpieczeństwa
-│   ├── AUDYT_SENIOR_DEV.md      # Audyt dla senior dewelopera
-│   └── migration-info.php       # Informacje o migracjach
+│   ├── docker-compose.yml       # Tryb lokalny / standalone
+│   ├── docker-compose.windows.yml # Override dla Windows
+│   └── traefik/                 # Routing dla trybu distributed
 │
 ├── README.md                    # Ten plik
 ├── LICENSE                      # Licencja MIT
@@ -1989,6 +1980,7 @@ docker compose restart rabbitmq
 MIT License — projekt open-source dostępny dla społeczności.
 
 ---
+
 
 
 
