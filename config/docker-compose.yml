@@ -74,7 +74,7 @@ services:
       MESSENGER_TRANSPORT_DSN: "amqp://app:app@rabbitmq:5672/%2f"
       REDIS_URL: redis://redis:6379
       API_SECRET: dev_api_secret
-      JWT_SECRET: dev_jwt_secret
+      JWT_SECRET: dev_jwt_secret_for_local_docker_123456
       OPENAI_API_KEY: ${OPENAI_API_KEY:-change_me_openai_key}
       CORS_ALLOW_ORIGIN: http://localhost:5173
     volumes:
@@ -137,7 +137,7 @@ services:
       REDIS_URL: redis://redis:6379
       MAILER_DSN: smtp://mailpit:1025
       API_SECRET: dev_api_secret
-      JWT_SECRET: dev_jwt_secret
+      JWT_SECRET: dev_jwt_secret_for_local_docker_123456
     volumes:
       - backend_vendor:/app/vendor
       - backend_var:/app/var

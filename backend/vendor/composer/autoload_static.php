@@ -177,7 +177,6 @@ class ComposerStaticInit65ce50d89d4e417b146049a1d141d5ee
         ),
         'D' =>
         array (
-            'Doctrine\\\\Bundle\\\\MigrationsBundle\\\\DependencyInjection\\\\CompilerPass\\\\' => 71,
             'Doctrine\\SqlFormatter\\' => 22,
             'Doctrine\\Persistence\\' => 21,
             'Doctrine\\ORM\\' => 13,
@@ -621,10 +620,6 @@ class ComposerStaticInit65ce50d89d4e417b146049a1d141d5ee
         'Egulias\\EmailValidator\\' =>
         array (
             0 => __DIR__ . '/..' . '/egulias/email-validator/src',
-        ),
-        'Doctrine\\\\Bundle\\\\MigrationsBundle\\\\DependencyInjection\\\\CompilerPass\\\\' =>
-        array (
-            0 => __DIR__ . '/../..' . '/compat/DoctrineMigrationsShim',
         ),
         'Doctrine\\SqlFormatter\\' =>
         array (

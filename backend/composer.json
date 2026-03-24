@@ -33,8 +33,7 @@
                 },
     "autoload":  {
                      "psr-4":  {
-                                   "App\\":  "src/",
-                                   "Doctrine\\\\Bundle\\\\MigrationsBundle\\\\DependencyInjection\\\\CompilerPass\\\\":  "compat/DoctrineMigrationsShim/"
+                                   "App\\":  "src/"
                                }
                  },
     "autoload-dev":  {

@@ -110,7 +110,6 @@ return array(
     'Elastic\\Transport\\' => array($vendorDir . '/elastic/transport/src'),
     'Elastic\\Elasticsearch\\' => array($vendorDir . '/elasticsearch/elasticsearch/src'),
     'Egulias\\EmailValidator\\' => array($vendorDir . '/egulias/email-validator/src'),
-    'Doctrine\\\\Bundle\\\\MigrationsBundle\\\\DependencyInjection\\\\CompilerPass\\\\' => array($baseDir . '/compat/DoctrineMigrationsShim'),
     'Doctrine\\SqlFormatter\\' => array($vendorDir . '/doctrine/sql-formatter/src'),
     'Doctrine\\Persistence\\' => array($vendorDir . '/doctrine/persistence/src/Persistence'),
     'Doctrine\\ORM\\' => array($vendorDir . '/doctrine/orm/src'),
