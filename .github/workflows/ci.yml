@@ -86,11 +86,14 @@ jobs:
         run: vendor/bin/phpunit --coverage-clover coverage.xml
 
       - name: Upload coverage to Codecov
+        if: ${{ secrets.CODECOV_TOKEN != '' }}
         uses: codecov/codecov-action@v4
         with:
+          token: ${{ secrets.CODECOV_TOKEN }}
           file: backend/coverage.xml
           flags: backend
           name: backend-coverage
+          fail_ci_if_error: false
 
   # ============================================
   # BACKEND LINTING
@@ -166,11 +169,14 @@ jobs:
         run: npm run test:coverage
 
       - name: Upload coverage to Codecov
+        if: ${{ secrets.CODECOV_TOKEN != '' }}
         uses: codecov/codecov-action@v4
         with:
+          token: ${{ secrets.CODECOV_TOKEN }}
           file: frontend/coverage/coverage-final.json
           flags: frontend
           name: frontend-coverage
+          fail_ci_if_error: false
 
   # ============================================
   # FRONTEND E2E TESTS
