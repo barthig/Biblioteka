@@ -18,7 +18,7 @@ import './Modal.css'
  *     { label: 'Usuń', variant: 'danger', onClick: handleDelete }
  *   ]}
  * >
- *   <p>Czy na pewno chcesz usunąć tę książkę?</p>
+ *   <p>Czy na pewno chcesz usun t ksi|k?</p>
  * </Modal>
  * 
  * // Form modal

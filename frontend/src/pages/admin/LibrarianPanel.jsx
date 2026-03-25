@@ -89,7 +89,13 @@ export default function LibrarianPanel() {
     location: '',
     condition: ''
   })
-  const [addCopyErrors, setAddCopyErrors] = useState({})
+  const [addCopyErrors, setAddCopyErrors] = useState({
+    inventoryCode: '',
+    status: '',
+    accessType: '',
+    location: '',
+    condition: ''
+  })
   const [editingCopy, setEditingCopy] = useState(null)
   const [editCopyForm, setEditCopyForm] = useState({
     inventoryCode: '',
@@ -98,7 +104,13 @@ export default function LibrarianPanel() {
     location: '',
     condition: ''
   })
-  const [editErrors, setEditErrors] = useState({})
+  const [editErrors, setEditErrors] = useState({
+    inventoryCode: '',
+    status: '',
+    accessType: '',
+    location: '',
+    condition: ''
+  })
 
   const [returnModal, setReturnModal] = useState({ show: false, loan: null, fine: null })
   const CACHE_TTL = 120000
@@ -145,7 +157,7 @@ export default function LibrarianPanel() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab])
 
-  // PrzeĹ‚aduj rezerwacje gdy zmienia siÄ™ filtr statusu
+  // Przeładuj rezerwacje gdy zmienia się filtr statusu
   useEffect(() => {
     if (activeTab === 'reservations') {
       loadReservations()
@@ -280,7 +292,7 @@ export default function LibrarianPanel() {
       const nextLoans = Array.isArray(data) ? data : data.data || []
       setLoans(nextLoans)
     } catch (err) {
-      setError(err.message || 'Nie udaĹ‚o siÄ™ pobraÄ‡ wypoĹĽyczeĹ„')
+      setError(err.message || 'Nie udało się pobrać wypożyczeń')
     } finally {
       setLoading(false)
     }
@@ -295,7 +307,7 @@ export default function LibrarianPanel() {
       const data = await apiFetch(`/api/users/search?q=${encodeURIComponent(query)}`)
       setLoanUserResults(Array.isArray(data) ? data : data?.data || [])
     } catch (err) {
-      setError(err.message || 'Nie udaĹ‚o siÄ™ wyszukaÄ‡ uĹĽytkownika')
+      setError(err.message || 'Nie udało się wyszukać użytkownika')
     }
   }
 
@@ -308,7 +320,7 @@ export default function LibrarianPanel() {
       const data = await apiFetch(`/api/books?q=${encodeURIComponent(query)}&limit=10`)
       setLoanBookResults(Array.isArray(data?.data) ? data.data : [])
     } catch (err) {
-      setError(err.message || 'Nie udaĹ‚o siÄ™ wyszukaÄ‡ ksiÄ…ĹĽki')
+      setError(err.message || 'Nie udało się wyszukać książki')
     }
   }
 
@@ -331,7 +343,7 @@ export default function LibrarianPanel() {
       }
       setStats(nextStats)
     } catch (err) {
-      setError(err.message || 'Nie udaĹ‚o siÄ™ pobraÄ‡ statystyk')
+      setError(err.message || 'Nie udało się pobrać statystyk')
     } finally {
       setLoading(false)
     }
@@ -355,7 +367,7 @@ export default function LibrarianPanel() {
       }
       setLibrarySettings(nextSettings)
     } catch (err) {
-      setError(err.message || 'Nie udaĹ‚o siÄ™ pobraÄ‡ ustawieĹ„')
+      setError(err.message || 'Nie udało się pobrać ustawień')
     } finally {
       setLibrarySettingsLoading(false)
     }
@@ -384,7 +396,7 @@ export default function LibrarianPanel() {
       invalidateResource('librarian:/api/settings')
       setSuccess('Zapisano ustawienia')
     } catch (err) {
-      setError(err.message || 'Nie udaĹ‚o siÄ™ zapisaÄ‡ ustawieĹ„')
+      setError(err.message || 'Nie udało się zapisać ustawień')
     }
   }
 
@@ -392,7 +404,7 @@ export default function LibrarianPanel() {
     setLoading(true)
     setError(null)
     try {
-      // Pobierz rezerwacje zgodnie z wybranym filtrem lub wszystkie jeĹ›li ALL
+      // Pobierz rezerwacje zgodnie z wybranym filtrem lub wszystkie jeśli ALL
       const statusParam = reservationStatusFilter === 'ALL' ? '' : `&status=${reservationStatusFilter}`
       const cacheKey = `librarian:/api/reservations?history=true&limit=100${statusParam}`
       const cached = getCachedResource(cacheKey, CACHE_TTL)
@@ -408,31 +420,31 @@ export default function LibrarianPanel() {
       const nextReservations = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : []
       setReservations(nextReservations)
     } catch (err) {
-      setError(err.message || 'Nie udaĹ‚o siÄ™ pobraÄ‡ rezerwacji')
+      setError(err.message || 'Nie udało się pobrać rezerwacji')
     } finally {
       setLoading(false)
     }
   }
 
   async function cancelReservation(reservationId) {
-    if (!confirm('AnulowaÄ‡ tÄ™ rezerwacjÄ™?')) return
+    if (!confirm('Anulowa t rezerwacj?')) return
     setLoading(true)
     setError(null)
     setSuccess(null)
     try {
       await apiFetch(`/api/reservations/${reservationId}`, { method: 'DELETE' })
       invalidateResource('librarian:/api/reservations*')
-      setSuccess('Rezerwacja zostaĹ‚a anulowana')
+      setSuccess('Rezerwacja została anulowana')
       loadReservations()
     } catch (err) {
-      setError(err.message || 'Nie udaĹ‚o siÄ™ anulowaÄ‡ rezerwacji')
+      setError(err.message || 'Nie udało się anulować rezerwacji')
     } finally {
       setLoading(false)
     }
   }
 
   async function fulfillReservation(reservationId) {
-    if (!confirm('ZrealizowaÄ‡ tÄ™ rezerwacjÄ™? UĹĽytkownik otrzyma wypoĹĽyczenie.')) return
+    if (!confirm('Zrealizowa t rezerwacj? U|ytkownik otrzyma wypo|yczenie.')) return
     setLoading(true)
     setError(null)
     setSuccess(null)
@@ -441,27 +453,27 @@ export default function LibrarianPanel() {
       invalidateResource('librarian:/api/reservations*')
       invalidateResource('librarian:/api/loans')
       invalidateResource('librarian:/api/statistics/dashboard')
-      setSuccess('Rezerwacja zostaĹ‚a zrealizowana')
+      setSuccess('Rezerwacja została zrealizowana')
       loadReservations()
     } catch (err) {
-      setError(err.message || 'Nie udaĹ‚o siÄ™ zrealizowaÄ‡ rezerwacji')
+      setError(err.message || 'Nie udało się zrealizować rezerwacji')
     } finally {
       setLoading(false)
     }
   }
 
   async function prepareReservation(reservationId) {
-    if (!confirm('OznaczyÄ‡ rezerwacjÄ™ jako przygotowanÄ…? UĹĽytkownik otrzyma powiadomienie.')) return
+    if (!confirm('Oznaczy rezerwacj jako przygotowan? U|ytkownik otrzyma powiadomienie.')) return
     setLoading(true)
     setError(null)
     setSuccess(null)
     try {
       await apiFetch(`/api/reservations/${reservationId}/prepare`, { method: 'POST' })
       invalidateResource('librarian:/api/reservations*')
-      setSuccess('Rezerwacja zostaĹ‚a oznaczona jako przygotowana. Powiadomienie wysĹ‚ane.')
+      setSuccess('Rezerwacja została oznaczona jako przygotowana. Powiadomienie wysłane.')
       loadReservations()
     } catch (err) {
-      setError(err.message || 'Nie udaĹ‚o siÄ™ oznaczyÄ‡ rezerwacji jako przygotowanej')
+      setError(err.message || 'Nie udało się oznaczyć rezerwacji jako przygotowanej')
     } finally {
       setLoading(false)
     }
@@ -476,7 +488,7 @@ export default function LibrarianPanel() {
       const data = await apiFetch(`/api/books?q=${encodeURIComponent(query)}&limit=10`)
       setAvailableBooks(Array.isArray(data?.data) ? data.data : [])
     } catch (err) {
-      logger.error('BĹ‚Ä…d wyszukiwania ksiÄ…ĹĽek:', err)
+      logger.error('Błąd wyszukiwania książek:', err)
     }
   }
 
@@ -489,7 +501,7 @@ export default function LibrarianPanel() {
       const data = await apiFetch(`/api/users/search?q=${encodeURIComponent(query)}`)
       setFineUserResults(Array.isArray(data) ? data : data?.data || [])
     } catch (err) {
-      setError(err.message || 'Nie udaĹ‚o siÄ™ wyszukaÄ‡ uĹĽytkownika')
+      setError(err.message || 'Nie udało się wyszukać użytkownika')
     }
   }
 
@@ -503,7 +515,7 @@ export default function LibrarianPanel() {
       const list = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : []
       setFineUserLoans(list)
     } catch (err) {
-      setError(err.message || 'Nie udaĹ‚o siÄ™ pobraÄ‡ wypoĹĽyczeĹ„ uĹĽytkownika')
+      setError(err.message || 'Nie udało się pobrać wypożyczeń użytkownika')
     }
   }
 
@@ -521,7 +533,7 @@ export default function LibrarianPanel() {
       const nextFines = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : []
       setFines(nextFines)
     } catch (err) {
-      setError(err.message || 'Nie udaĹ‚o siÄ™ pobraÄ‡ opĹ‚at')
+      setError(err.message || 'Nie udało się pobrać opłat')
     } finally {
       setLoading(false)
     }
@@ -530,7 +542,7 @@ export default function LibrarianPanel() {
   async function createFine(e) {
     e.preventDefault()
     if (!fineForm.loanId || !fineForm.amount || !fineForm.reason.trim()) {
-      setError('Wybierz wypoĹĽyczenie oraz podaj kwotÄ™ i powĂłd')
+      setError('Wybierz wypożyczenie oraz podaj kwotę i powód')
       return
     }
     setLoading(true)
@@ -548,14 +560,14 @@ export default function LibrarianPanel() {
         })
       })
       invalidateResource('librarian:/api/fines?limit=50')
-      setSuccess('OpĹ‚ata zostaĹ‚a utworzona')
+      setSuccess('Opłata została utworzona')
       setFineForm({ userId: '', loanId: '', amount: '', currency: 'PLN', reason: '' })
       setFineUserQuery('')
       setFineUserResults([])
       setFineUserLoans([])
       loadFines()
     } catch (err) {
-      setError(err.message || 'Nie udaĹ‚o siÄ™ utworzyÄ‡ opĹ‚aty')
+      setError(err.message || 'Nie udało się utworzyć opłaty')
     } finally {
       setLoading(false)
     }
@@ -567,24 +579,24 @@ export default function LibrarianPanel() {
     try {
       await apiFetch(`/api/fines/${fineId}/pay`, { method: 'POST' })
       invalidateResource('librarian:/api/fines?limit=50')
-      setSuccess('OpĹ‚ata zostaĹ‚a oznaczona jako opĹ‚acona')
+      setSuccess('Opłata została oznaczona jako opłacona')
       loadFines()
     } catch (err) {
-      setError(err.message || 'Nie udaĹ‚o siÄ™ opĹ‚aciÄ‡ naleĹĽnoĹ›ci')
+      setError(err.message || 'Nie udało się opłacić należności')
     }
   }
 
   async function cancelFine(fineId) {
-    if (!confirm('AnulowaÄ‡ naleĹĽnoĹ›Ä‡?')) return
+    if (!confirm('Anulowa nale|no[?')) return
     setError(null)
     setSuccess(null)
     try {
       await apiFetch(`/api/fines/${fineId}`, { method: 'DELETE' })
       invalidateResource('librarian:/api/fines?limit=50')
-      setSuccess('OpĹ‚ata zostaĹ‚a anulowana')
+      setSuccess('Opłata została anulowana')
       loadFines()
     } catch (err) {
-      setError(err.message || 'Nie udaĹ‚o siÄ™ anulowaÄ‡ opĹ‚aty')
+      setError(err.message || 'Nie udało się anulować opłaty')
     }
   }
 
@@ -604,7 +616,7 @@ export default function LibrarianPanel() {
             : []
       setCopies(items)
     } catch (err) {
-      setError(err.message || 'Nie udaĹ‚o siÄ™ pobraÄ‡ egzemplarzy')
+      setError(err.message || 'Nie udało się pobrać egzemplarzy')
     } finally {
       setLoading(false)
     }
@@ -612,7 +624,7 @@ export default function LibrarianPanel() {
 
   function startEditCopy(copy) {
     setEditingCopy(copy)
-    setEditErrors({})
+    setEditErrors({ inventoryCode: '', status: '', accessType: '', location: '', condition: '' })
     setEditCopyForm({
       inventoryCode: copy.inventoryCode || '',
       status: (copy.status || copy.state || 'AVAILABLE').toUpperCase(),
@@ -624,7 +636,7 @@ export default function LibrarianPanel() {
 
   function cancelEditCopy() {
     setEditingCopy(null)
-    setEditErrors({})
+    setEditErrors({ inventoryCode: '', status: '', accessType: '', location: '', condition: '' })
     setEditCopyForm({
       inventoryCode: '',
       status: 'AVAILABLE',
@@ -712,13 +724,13 @@ export default function LibrarianPanel() {
       })
       setSuccess('Egzemplarz zostal dodany')
       setCopyForm({ inventoryCode: '', status: 'AVAILABLE', accessType: 'STORAGE', location: '', condition: '' })
-      setAddCopyErrors({})
+      setAddCopyErrors({ inventoryCode: '', status: '', accessType: '', location: '', condition: '' })
       loadCopies(inventoryBookId)
     } catch (err) {
       if (err.details && typeof err.details === 'object') {
         setAddCopyErrors(err.details)
       }
-      setError(err.message || 'Nie udaĹ‚o siÄ™ dodaÄ‡ egzemplarza')
+      setError(err.message || 'Nie udało się dodać egzemplarza')
     } finally {
       setLoading(false)
     }
@@ -756,28 +768,28 @@ export default function LibrarianPanel() {
       if (err.details && typeof err.details === 'object') {
         setEditErrors(err.details)
       }
-      setError(err.message || 'Nie udaĹ‚o siÄ™ zaktualizowaÄ‡ egzemplarza')
+      setError(err.message || 'Nie udało się zaktualizować egzemplarza')
     } finally {
       setLoading(false)
     }
   }
 
   async function deleteCopy(copy) {
-    if (!confirm('UsunÄ…Ä‡ egzemplarz?')) return
+    if (!confirm('Usun egzemplarz?')) return
     try {
       const bookId = inventoryBookId || copy.bookId || copy.book?.id
       await apiFetch(`/api/admin/books/${bookId}/copies/${copy.id}`, { method: 'DELETE' })
-      setSuccess('UsuniÄ™to egzemplarz')
+      setSuccess('Usunięto egzemplarz')
       loadCopies(bookId)
     } catch (err) {
-      setError(err.message || 'Nie udaĹ‚o siÄ™ usunÄ…Ä‡ egzemplarza')
+      setError(err.message || 'Nie udało się usunąć egzemplarza')
     }
   }
 
   async function handleCreateLoan(e) {
     e.preventDefault()
     if (!loanForm.userId || !loanForm.bookId || !loanForm.copyId) {
-      setError('Wybierz uĹĽytkownika, ksiÄ…ĹĽkÄ™ i egzemplarz')
+      setError('Wybierz użytkownika, książkę i egzemplarz')
       return
     }
     setLoading(true)
@@ -798,7 +810,7 @@ export default function LibrarianPanel() {
       invalidateResource('librarian:/api/loans')
       invalidateResource('librarian:/api/statistics/dashboard')
 
-      setSuccess('WypoĹĽyczenie zostaĹ‚o utworzone')
+      setSuccess('Wypożyczenie zostało utworzone')
       setLoanForm({ userId: '', bookId: '', copyId: '', dueDate: '' })
       setLoanUserQuery('')
       setLoanUserResults([])
@@ -806,7 +818,7 @@ export default function LibrarianPanel() {
       setLoanBookResults([])
       loadLoans()
     } catch (err) {
-      setError(err.message || 'Nie udaĹ‚o siÄ™ utworzyÄ‡ wypoĹĽyczenia')
+      setError(err.message || 'Nie udało się utworzyć wypożyczenia')
     } finally {
       setLoading(false)
     }
@@ -821,7 +833,7 @@ export default function LibrarianPanel() {
     let daysOverdue = 0
 
     if (isOverdue) {
-      daysOverdue = Math.floor((now - dueDate) / (1000 * 60 * 60 * 24))
+      daysOverdue = Math.floor((now.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24))
       fineAmount = daysOverdue * 0.50
     }
 
@@ -848,11 +860,11 @@ export default function LibrarianPanel() {
       if (fine) {
         setSuccess(`Zwrot po terminie. Kara: ${fine.amount.toFixed(2)} PLN za ${fine.days} dni.`)
       } else {
-        setSuccess('KsiÄ…ĹĽka zostaĹ‚a zwrĂłcona')
+        setSuccess('Książka została zwrócona')
       }
       loadLoans()
     } catch (err) {
-      setError(err.message || 'Nie udaĹ‚o siÄ™ zwrĂłciÄ‡ ksiÄ…ĹĽki')
+      setError(err.message || 'Nie udało się zwrócić książki')
     } finally {
       setLoading(false)
     }
@@ -945,10 +957,11 @@ export default function LibrarianPanel() {
     <div className="page librarian-panel">
       <PageHeader
         title="Panel bibliotekarza"
-        subtitle="ObsĹ‚uga wypoĹĽyczeĹ„ i zarzÄ…dzanie bibliotekÄ…"
+        subtitle="Obsługa wypożyczeń i zarządzanie biblioteką"
+        actions={null}
       />
 
-      {loading && <FeedbackCard variant="info">Trwa Ĺ‚adowanie danych...</FeedbackCard>}
+      {loading && <FeedbackCard variant="info">Trwa ładowanie danych...</FeedbackCard>}
       {error && <FeedbackCard variant="error">{error}</FeedbackCard>}
       {success && <FeedbackCard variant="success">{success}</FeedbackCard>}
 
@@ -960,16 +973,16 @@ export default function LibrarianPanel() {
           Ustawienia
         </button>
         <button className={`tab ${activeTab === 'loans' ? 'tab--active' : ''}`} onClick={() => setActiveTab('loans')}>
-          WypoĹĽyczenia
+          Wypożyczenia
         </button>
         <button className={`tab ${activeTab === 'create' ? 'tab--active' : ''}`} onClick={() => setActiveTab('create')}>
-          Nowe wypoĹĽyczenie
+          Nowe wypożyczenie
         </button>
         <button className={`tab ${activeTab === 'reservations' ? 'tab--active' : ''}`} onClick={() => setActiveTab('reservations')}>
           Rezerwacje
         </button>
         <button className={`tab ${activeTab === 'fines' ? 'tab--active' : ''}`} onClick={() => setActiveTab('fines')}>
-          OpĹ‚aty
+          Opłaty
         </button>
         <button className={`tab ${activeTab === 'inventory' ? 'tab--active' : ''}`} onClick={() => setActiveTab('inventory')}>
           Egzemplarze
@@ -986,16 +999,16 @@ export default function LibrarianPanel() {
           <div className="modal-content" onClick={e => e.stopPropagation()}>
             <h3>Potwierdzenie zwrotu</h3>
             <div className="modal-body">
-              <p><strong>KsiÄ…ĹĽka:</strong> {returnModal.loan?.book?.title || 'N/A'}</p>
-              <p><strong>UĹĽytkownik:</strong> {returnModal.loan?.user?.name || returnModal.loan?.user?.email || 'N/A'}</p>
-              <p><strong>Data wypoĹĽyczenia:</strong> {new Date(returnModal.loan?.borrowedAt).toLocaleDateString()}</p>
+              <p><strong>Ksi|ka:</strong> {returnModal.loan?.book?.title || 'N/A'}</p>
+              <p><strong>U|ytkownik:</strong> {returnModal.loan?.user?.name || returnModal.loan?.user?.email || 'N/A'}</p>
+              <p><strong>Data wypo|yczenia:</strong> {new Date(returnModal.loan?.borrowedAt).toLocaleDateString()}</p>
               <p><strong>Termin zwrotu:</strong> {new Date(returnModal.loan?.dueAt).toLocaleDateString()}</p>
               {returnModal.fine ? (
                 <div className="fine-warning">
                   <h4 style={{ color: '#d32f2f', marginTop: '1rem' }}>Zwrot po terminie</h4>
-                  <p><strong>Dni opĂłĹşnienia:</strong> {returnModal.fine.days}</p>
-                  <p><strong>Kara do zapĹ‚aty:</strong> {returnModal.fine.amount.toFixed(2)} PLN</p>
-                  <p style={{ fontSize: '0.9rem', color: '#666' }}>(0.50 PLN za kaĹĽdy dzieĹ„ opĂłĹşnienia)</p>
+                  <p><strong>Dni opóźnienia:</strong> {returnModal.fine.days}</p>
+                  <p><strong>Kara do zapłaty:</strong> {returnModal.fine.amount.toFixed(2)} PLN</p>
+                  <p style={{ fontSize: '0.9rem', color: '#666' }}>(0.50 PLN za każdy dzień opóźnienia)</p>
                 </div>
               ) : (
                 <p style={{ color: '#2e7d32', marginTop: '1rem' }}>Zwrot w terminie - brak kary</p>
@@ -1036,10 +1049,10 @@ export default function LibrarianPanel() {
             </div>
           </div>
 
-          <h2>Aktywne wypoĹĽyczenia</h2>
-          {loading && <p>Ĺadowanie...</p>}
+          <h2>Aktywne wypożyczenia</h2>
+          {loading && <p>Ładowanie...</p>}
           {!loading && filteredLoans.length === 0 && (
-            <p>{hasLoanFilters ? 'Brak wynikĂłw wyszukiwania.' : 'Brak aktywnych wypoĹĽyczeĹ„.'}</p>
+            <p>{hasLoanFilters ? 'Brak wynik�w wyszukiwania.' : 'Brak aktywnych wypo|yczeD.'}</p>
           )}
           {!loading && filteredLoans.length > 0 && (
             <div className="compact-list">
@@ -1065,7 +1078,7 @@ export default function LibrarianPanel() {
                       onClick={() => setExpandedLoanId(isExpanded ? null : loan.id)}
                       aria-expanded={isExpanded}
                       aria-controls={detailsId}
-                      aria-label={`${isExpanded ? 'ZwiĹ„' : 'RozwiĹ„'} wypoĹĽyczenie ${bookLabel}`}
+                      aria-label={`${isExpanded ? 'ZwiD' : 'RozwiD'} wypo|yczenie ${bookLabel}`}
                     >
                       <div>
                         <div className="compact-card__title">{bookLabel}</div>
@@ -1088,7 +1101,7 @@ export default function LibrarianPanel() {
                           <span className="value">{statusLabel}</span>
                         </div>
                         <div className="compact-card__row">
-                          <span className="label">Data wypoĹĽyczenia</span>
+                          <span className="label">Data wypożyczenia</span>
                           <span className="value">{borrowedLabel}</span>
                         </div>
                         <div className="compact-card__row">
@@ -1098,7 +1111,7 @@ export default function LibrarianPanel() {
                         {!loan.returnedAt && (
                           <div className="compact-card__actions">
                             <button className="btn btn-sm btn-primary" onClick={() => handleReturnLoan(loan)} disabled={loading}>
-                              ZwrĂłÄ‡
+                              Zwróć
                             </button>
                           </div>
                         )}
@@ -1157,8 +1170,6 @@ export default function LibrarianPanel() {
                         cursor: 'pointer',
                         borderBottom: '1px solid #eee'
                       }}
-                      onMouseEnter={e => e.target.style.backgroundColor = '#f5f5f5'}
-                      onMouseLeave={e => e.target.style.backgroundColor = 'white'}
                     >
                       <strong>{u.name || u.email || `Uzytkownik #${u.id}`}</strong>
                       {u.email && u.name && <div style={{ fontSize: '0.875rem', color: '#666' }}>{u.email}</div>}
@@ -1210,8 +1221,6 @@ export default function LibrarianPanel() {
                         cursor: 'pointer',
                         borderBottom: '1px solid #eee'
                       }}
-                      onMouseEnter={e => e.target.style.backgroundColor = '#f5f5f5'}
-                      onMouseLeave={e => e.target.style.backgroundColor = 'white'}
                     >
                       <strong>{book.title || `Ksiazka #${book.id}`}</strong>
                       {book.author?.name && <div style={{ fontSize: '0.875rem', color: '#666' }}>{book.author.name}</div>}
@@ -1258,12 +1267,12 @@ export default function LibrarianPanel() {
       {activeTab === 'stats' && (
         <div className="surface-card">
             <h2>Ustawienia biblioteki</h2>
-            {librarySettingsLoading && <p>Ĺadowanie...</p>}
+            {librarySettingsLoading && <p>Ładowanie...</p>}
             {!librarySettingsLoading && (
               <form className="form" onSubmit={updateLibrarySettings}>
                 <div className="form-row form-row--two">
                   <div className="form-field">
-                    <label>Limit wypoĹĽyczeĹ„ na uĹĽytkownika</label>
+                    <label>Limit wypożyczeń na użytkownika</label>
                     <input
                       type="number"
                       min="1"
@@ -1274,7 +1283,7 @@ export default function LibrarianPanel() {
                     />
                   </div>
                   <div className="form-field">
-                    <label>DĹ‚ugoĹ›Ä‡ wypoĹĽyczenia (dni)</label>
+                    <label>Długość wypożyczenia (dni)</label>
                     <input
                       type="number"
                       min="7"
@@ -1330,10 +1339,10 @@ export default function LibrarianPanel() {
                 <option value="FULFILLED">Zrealizowane</option>
                 <option value="CANCELLED">Anulowane</option>
               </select>
-              <button className="btn btn-secondary" onClick={loadReservations}>OdĹ›wieĹĽ</button>
+              <button className="btn btn-secondary" onClick={loadReservations}>Odśwież</button>
             </div>
           </div>
-          {loading && <p>Ĺadowanie...</p>}
+          {loading && <p>Ładowanie...</p>}
           {!loading && filteredReservations.length === 0 && <p>Brak rezerwacji dla wybranego filtra.</p>}
           {!loading && filteredReservations.length > 0 && (
             <div className="compact-list">
@@ -1382,7 +1391,7 @@ export default function LibrarianPanel() {
                           {reservation.status === 'ACTIVE' && (
                             <>
                               <button className="btn btn-sm btn-primary" onClick={() => prepareReservation(reservation.id)} disabled={loading}>
-                                Oznacz jako przygotowanÄ…
+                                Oznacz jako przygotowaną
                               </button>
                               <button className="btn btn-sm" onClick={() => cancelReservation(reservation.id)} disabled={loading}>
                                 Anuluj
@@ -1392,7 +1401,7 @@ export default function LibrarianPanel() {
                           {reservation.status === 'PREPARED' && (
                             <>
                               <button className="btn btn-sm btn-primary" onClick={() => fulfillReservation(reservation.id)} disabled={loading}>
-                                Wydaj (utwĂłrz wypoĹĽyczenie)
+                                Wydaj (utwórz wypożyczenie)
                               </button>
                               <button className="btn btn-sm" onClick={() => cancelReservation(reservation.id)} disabled={loading}>
                                 Anuluj
@@ -1401,7 +1410,7 @@ export default function LibrarianPanel() {
                           )}
                           {reservation.status === 'CANCELLED' && <span className="support-copy">Anulowana</span>}
                           {reservation.status === 'FULFILLED' && <span className="support-copy">Zrealizowana</span>}
-                          {reservation.status === 'EXPIRED' && <span className="support-copy">WygasĹ‚a</span>}
+                          {reservation.status === 'EXPIRED' && <span className="support-copy">Wygasła</span>}
                         </div>
                       </div>
                     )}
@@ -1416,7 +1425,7 @@ export default function LibrarianPanel() {
       {activeTab === 'fines' && (
         <div className="surface-card">
           <div className="section-header">
-            <h2>OpĹ‚aty i kary</h2>
+            <h2>Opłaty i kary</h2>
             <div className="fines-toolbar">
               <label className="sr-only" htmlFor="fine-search">Filtruj po imieniu i nazwisku</label>
               <input
@@ -1426,7 +1435,7 @@ export default function LibrarianPanel() {
                 onChange={event => setFineSearch(event.target.value)}
                 placeholder="Filtruj po imieniu i nazwisku"
               />
-              <button className="btn btn-secondary" onClick={loadFines}>OdĹ›wieĹĽ</button>
+              <button className="btn btn-secondary" onClick={loadFines}>Odśwież</button>
             </div>
           </div>
           <div className="surface-card" style={{ marginBottom: 'var(--space-3)' }}>
@@ -1527,7 +1536,7 @@ export default function LibrarianPanel() {
               </div>
             </form>
           </div>
-          {loading && <p>Ĺadowanie...</p>}
+          {loading && <p>Ładowanie...</p>}
           {!loading && filteredFines.length === 0 && <p>Brak aktywnych oplat.</p>}
           {!loading && filteredFines.length > 0 && (
             <div className="compact-list">
@@ -1666,8 +1675,6 @@ export default function LibrarianPanel() {
                         cursor: 'pointer',
                         borderBottom: '1px solid #eee'
                       }}
-                      onMouseEnter={e => e.target.style.backgroundColor = '#f5f5f5'}
-                      onMouseLeave={e => e.target.style.backgroundColor = 'white'}
                     >
                       <strong>{book.title}</strong>
                       {book.author?.name && <div style={{ fontSize: '0.875rem', color: '#666' }}>{book.author.name}</div>}
@@ -1699,7 +1706,7 @@ export default function LibrarianPanel() {
                 </div>
               </div>
             )}
-            {loading && <p>Ĺadowanie...</p>}
+            {loading && <p>Ładowanie...</p>}
             {!loading && sortedInventoryRows.length > 0 && (
               <div className="table-container">
                 <table className="data-table inventory-table">
@@ -1936,7 +1943,7 @@ export default function LibrarianPanel() {
                 value={collectionForm.description}
                 onChange={e => setCollectionForm({ ...collectionForm, description: e.target.value })}
                 placeholder="Krotki opis kolekcji..."
-                rows="3"
+                rows={3}
               />
             </div>
 

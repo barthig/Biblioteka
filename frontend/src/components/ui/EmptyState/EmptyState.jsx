@@ -130,8 +130,8 @@ export function NoSearchResultsEmptyState({ query, onClear, ...props }) {
     <EmptyState
       icon="🔍"
       title="Brak wyników"
-      description={query ? `Nie znaleziono wyników dla "${query}"` : 'Nie znaleziono wyników dla podanych kryteriów.'}
-      action={onClear ? { label: 'Wyczyść filtry', onClick: onClear, variant: 'secondary' } : undefined}
+      description={query ? `Nie znaleziono wynik�w dla "${query}"` : 'Nie znaleziono wynik�w dla podanych kryteri�w.'}
+      action={onClear ? { label: 'Wyczy[ filtry', onClick: onClear, variant: 'secondary' } : undefined}
       {...props}
     />
   )
@@ -144,7 +144,7 @@ export function ErrorEmptyState({ message, onRetry, ...props }) {
       title="Wystąpił błąd"
       description={message || 'Nie udało się załadować danych. Spróbuj ponownie.'}
       variant="card"
-      action={onRetry ? { label: 'Spróbuj ponownie', onClick: onRetry } : undefined}
+      action={onRetry ? { label: 'Spr�buj ponownie', onClick: onRetry } : undefined}
       {...props}
     />
   )

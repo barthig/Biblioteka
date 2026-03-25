@@ -1,4 +1,6 @@
 \set ON_ERROR_STOP on
+\encoding UTF8
+SET client_encoding = 'UTF8';
 CREATE EXTENSION IF NOT EXISTS vector;
 \echo 'Creating schema and demo data for Biblioteka...'
 -- ============================================

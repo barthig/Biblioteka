@@ -129,7 +129,7 @@ export default function BookItem({ book, onBorrowed, compact = false, expanded =
         <p className="book-item-compact__author">{book.author?.name ?? 'Autor nieznany'}</p>
         <div className="book-item-compact__actions">
           <button className="btn-expand" onClick={(e) => { e.stopPropagation(); onToggleExpand(); }}>
-            ▼ Rozwiń
+            ▾ Rozwiń
           </button>
           <span className={`status-pill status-pill--compact ${availabilityStatus.className}`}>
             {available > 0 ? `${available}/${total}` : '0'}
@@ -189,7 +189,7 @@ export default function BookItem({ book, onBorrowed, compact = false, expanded =
               disabled={!isAvailable || loading}
               onClick={borrow}
             >
-              {loading ? 'Wysyłanie...' : 'Wypożycz egzemplarz'}
+              {loading ? 'WysyBanie...' : 'Wypo|ycz egzemplarz'}
             </button>
             <button
               className="btn btn-outline"
@@ -197,14 +197,14 @@ export default function BookItem({ book, onBorrowed, compact = false, expanded =
               onClick={reserve}
               style={{ visibility: !isAvailable ? 'visible' : 'hidden' }}
             >
-              {reserveLoading ? 'Przetwarzanie...' : reserved ? 'Zarezerwowano' : 'Dołącz do kolejki'}
+              {reserveLoading ? 'Przetwarzanie...' : reserved ? 'Zarezerwowano' : 'DoBcz do kolejki'}
             </button>
             <button
               className="btn btn-ghost"
               disabled={favoriteLoading}
               onClick={toggleFavorite}
             >
-              {favoriteLoading ? 'Aktualizuję...' : favorite ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'}
+              {favoriteLoading ? 'Aktualizuj...' : favorite ? 'UsuD z ulubionych' : 'Dodaj do ulubionych'}
             </button>
             <Link to={`/books/${book.id}`} className="btn btn-outline">Szczegóły</Link>
           </>
@@ -221,7 +221,7 @@ export default function BookItem({ book, onBorrowed, compact = false, expanded =
       
       {compact && (
         <button className="btn-collapse" onClick={onToggleExpand}>
-          ▲ Zwiń
+          ▴ Zwiń
         </button>
       )}
     </article>

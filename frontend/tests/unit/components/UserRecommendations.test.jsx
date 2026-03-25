@@ -34,7 +34,7 @@ describe('UserRecommendations', () => {
         <UserRecommendations />
       </MemoryRouter>
     )
-    expect(await screen.findByText(/Rate a few books/i)).toBeInTheDocument()
+    expect(await screen.findByText(/Oceń kilka książek/i)).toBeInTheDocument()
   })
 
   it('renders error state', async () => {
@@ -47,5 +47,4 @@ describe('UserRecommendations', () => {
     expect(await screen.findByText(/Nope/)).toBeInTheDocument()
   })
 })
-
 

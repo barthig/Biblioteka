@@ -358,14 +358,14 @@ export default function Books() {
               </button>
             )}
             <button className="btn btn-outline" onClick={() => load(undefined, undefined, { force: true, page: 1 })} disabled={loading}>
-              {loading ? 'Odświeżanie...' : 'Odśwież listę'}
+              {loading ? 'Od[wie|anie...' : 'Od[wie| list'}
             </button>
           </div>
         )}
       />
 
       <StatGrid>
-        <StatCard title="Wyniki" value={loading ? '-' : resultCount} subtitle="Łącznie pozycji" />
+        <StatCard title="Wyniki" value={loading ? '-' : resultCount} subtitle="Acznie pozycji" />
         <StatCard title="Filtry" value={activeFilterCount} subtitle="Aktywne kryteria" />
         <StatCard title="Strona" value={`${page} / ${totalPages}`} subtitle={`Limit ${limit}`} />
         <StatCard title="Fraza" value={lastQuery ? `"${lastQuery}"` : '-'} subtitle="Ostatnie wyszukiwanie" />
@@ -398,9 +398,9 @@ export default function Books() {
               onClick={() => setShowAdvanced(prev => !prev)}
               aria-expanded={showAdvanced}
               aria-controls="advanced-filters"
-              aria-label={showAdvanced ? 'Ukryj zaawansowane filtry' : 'Pokaż zaawansowane filtry'}
+              aria-label={showAdvanced ? 'Ukryj zaawansowane filtry' : 'Poka| zaawansowane filtry'}
             >
-              {showAdvanced ? 'Ukryj zaawansowane' : 'Pokaż zaawansowane filtry'}
+              {showAdvanced ? 'Ukryj zaawansowane' : 'Poka| zaawansowane filtry'}
             </button>
           </div>
         </div>
@@ -546,9 +546,9 @@ export default function Books() {
       {!loading && !error && books.length === 0 && (
         <SectionCard className="empty-state">
           {lastQuery
-            ? `Brak wyników dla frazy „${lastQuery}”.`
+            ? `Brak wynik�w dla frazy ${lastQuery}.`
             : hadNonQueryFilters
-              ? 'Brak książek spełniających wybrane filtry.'
+              ? 'Brak ksi|ek speBniajcych wybrane filtry.'
               : 'Brak książek w katalogu.'}
         </SectionCard>
       )}

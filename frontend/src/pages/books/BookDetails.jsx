@@ -465,9 +465,9 @@ export default function BookDetails() {
       </SectionCard>
 
       <StatGrid>
-        <StatCard valueClassName="stat-card__value--sm" title="Dostępność" value={anyAvailable ? 'Dostępne' : 'Brak'} subtitle={`${book.copies ?? 0} z ${book.totalCopies ?? book.copies ?? 0}`} />
+        <StatCard valueClassName="stat-card__value--sm" title="Dostpno[" value={anyAvailable ? 'Dostpne' : 'Brak'} subtitle={`${book.copies ?? 0} z ${book.totalCopies ?? book.copies ?? 0}`} />
         <StatCard valueClassName="stat-card__value--sm" title="Oceny" value={ratingSummaryAverage ? ratingSummaryAverage.toFixed(1) : 'Brak'} />
-        <StatCard valueClassName="stat-card__value--sm" title="Rezerwacje" value={activeReservation ? 'Aktywna' : (anyAvailable ? 'Niepotrzebna' : 'Dostępna')} />
+        <StatCard valueClassName="stat-card__value--sm" title="Rezerwacje" value={activeReservation ? 'Aktywna' : (anyAvailable ? 'Niepotrzebna' : 'Dostpna')} />
       </StatGrid>
 
       <SectionCard>
@@ -488,23 +488,23 @@ export default function BookDetails() {
           )}
           <div className="resource-item__meta">
             <dt>ISBN</dt>
-            <dd>{book.isbn ?? '—'}</dd>
+            <dd>{book.isbn ?? ''}</dd>
           </div>
           <div className="resource-item__meta">
             <dt>Wydawca</dt>
-            <dd>{book.publisher ?? '—'}</dd>
+            <dd>{book.publisher ?? ''}</dd>
           </div>
           <div className="resource-item__meta">
             <dt>Rok wydania</dt>
-            <dd>{book.publicationYear ?? '—'}</dd>
+            <dd>{book.publicationYear ?? ''}</dd>
           </div>
           <div className="resource-item__meta">
             <dt>Typ zasobu</dt>
-            <dd>{book.resourceType ?? '—'}</dd>
+            <dd>{book.resourceType ?? ''}</dd>
           </div>
           <div className="resource-item__meta">
             <dt>Sygnatura</dt>
-            <dd>{book.signature ?? '—'}</dd>
+            <dd>{book.signature ?? ''}</dd>
           </div>
           <div className="resource-item__meta">
             <dt>Opis</dt>
@@ -540,7 +540,7 @@ export default function BookDetails() {
               onClick={handleBorrow}
               disabled={!canBorrow || borrowing}
             >
-              {borrowing ? 'Przetwarzanie...' : 'Wypożycz'}
+              {borrowing ? 'Przetwarzanie...' : 'Wypo|ycz'}
             </button>
           ) : (
 
@@ -550,7 +550,7 @@ export default function BookDetails() {
             onClick={handleReservation}
             disabled={!canReserve || reserving}
           >
-            {reserving ? 'Przetwarzanie...' : 'Dołącz do kolejki rezerwacji'}
+            {reserving ? 'Przetwarzanie...' : 'DoBcz do kolejki rezerwacji'}
           </button>
           )}
           <button
@@ -559,7 +559,7 @@ export default function BookDetails() {
             onClick={toggleFavorite}
             disabled={favoriteLoading}
           >
-            {favorite ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'}
+            {favorite ? 'UsuD z ulubionych' : 'Dodaj do ulubionych'}
           </button>
         </div>
         <p className="support-copy">
@@ -587,7 +587,7 @@ export default function BookDetails() {
         {reviewsError && <p className="error">{reviewsError}</p>}
         <div className="review-summary">
           <div>
-            <strong>Średnia ocena:</strong> {ratingSummaryAverage ? ratingSummaryAverage.toFixed(1) : 'Brak ocen'}
+            <strong>Aarednia ocena:</strong> {ratingSummaryAverage ? ratingSummaryAverage.toFixed(1) : 'Brak ocen'}
           </div>
           <div>
             <strong>Liczba ocen:</strong> {ratingSummaryCount ?? 0}
@@ -598,7 +598,7 @@ export default function BookDetails() {
         {isAuthenticated && (
           <div className="quick-rating" style={{ margin: '1rem 0', padding: '1rem', background: 'var(--surface-secondary)', borderRadius: '8px' }}>
             <p style={{ marginBottom: '0.5rem' }}>
-              <strong>Szybka ocena:</strong> {ratingData.userRating ? `Twoja ocena: ${ratingData.userRating}/5` : 'Oceń tę książkę'}
+              <strong>Szybka ocena:</strong> {ratingData.userRating ? `Twoja ocena: ${ratingData.userRating}/5` : 'OceD t ksi|k'}
             </p>
             <StarRating
               rating={ratingData.userRating || 0}
@@ -634,7 +634,7 @@ export default function BookDetails() {
             {reviewActionSuccess && <p className="success">{reviewActionSuccess}</p>}
             <div className="form-actions">
               <button type="submit" className="btn btn-primary" disabled={reviewPending}>
-                {reviewsState.userReview ? 'Aktualizuj opinię' : 'Dodaj opinię'}
+                {reviewsState.userReview ? 'Aktualizuj opini' : 'Dodaj opini'}
               </button>
               {reviewsState.userReview && (
                 <button type="button" className="btn btn-outline" onClick={deleteReview} disabled={reviewPending}>

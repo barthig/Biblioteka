@@ -25,7 +25,7 @@ framework:
       
       # Failed messages transport (Dead Letter Queue)
       failed:
-        dsn: 'doctrine://default?queue_name=failed_messages'
+        dsn: '%env(MESSENGER_FAILURE_TRANSPORT_DSN)%'
       
       sync: 'sync://'
     

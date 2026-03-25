@@ -19,7 +19,7 @@ const initialForm = {
   tastePrompt: ''
 }
 
-const PASSWORD_RULE = /^(?=.*[a-ząćęłńóśźż])(?=.*[A-ZĄĆĘŁŃÓŚŹŻ])(?=.*\d).{10,}$/
+const PASSWORD_RULE = /^(?=.*[a-zBD�[z|])(?=.*[A-ZAC�Zy{])(?=.*\d).{10,}$/
 const POSTAL_CODE_RULE = /^\d{2}-\d{3}$/
 const EMAIL_RULE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -195,7 +195,7 @@ export default function Register() {
               value={form.password}
               onChange={handleChange}
               minLength={10}
-              pattern="(?=.*[a-ząćęłńóśźż])(?=.*[A-ZĄĆĘŁŃÓŚŹŻ])(?=.*\d).{10,}"
+              pattern="(?=.*[a-zBD�[z|])(?=.*[A-ZAC�Zy{])(?=.*\d).{10,}"
               title="Minimum 10 znaków, mała i duża litera (także z polskimi znakami) oraz cyfra"
               required
             />
@@ -212,7 +212,7 @@ export default function Register() {
               value={form.confirmPassword}
               onChange={handleChange}
               minLength={10}
-              pattern="(?=.*[a-ząćęłńóśźż])(?=.*[A-ZĄĆĘŁŃÓŚŹŻ])(?=.*\d).{10,}"
+              pattern="(?=.*[a-zBD�[z|])(?=.*[A-ZAC�Zy{])(?=.*\d).{10,}"
               title="Minimum 10 znaków, mała i duża litera (także z polskimi znakami) oraz cyfra"
               required
             />
@@ -268,7 +268,7 @@ export default function Register() {
             />
           </div>
           <div className="form-field form-field--full">
-            <label htmlFor="register-taste">Co lubisz czytać?</label>
+            <label htmlFor="register-taste">Co lubisz czyta?</label>
             <textarea
               id="register-taste"
               name="tastePrompt"
@@ -293,7 +293,7 @@ export default function Register() {
 
           <div className="form-actions form-field--full">
             <button type="submit" className="btn btn-primary" disabled={loading}>
-              {loading ? 'Rejestrowanie...' : 'Utwórz konto'}
+              {loading ? 'Rejestrowanie...' : 'Utw�rz konto'}
             </button>
             <Link to="/login" className="btn btn-outline">
               Mam konto

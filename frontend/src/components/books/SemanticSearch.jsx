@@ -29,7 +29,7 @@ export default function SemanticSearch() {
       })
       setResults(Array.isArray(response?.data) ? response.data : [])
     } catch (err) {
-      setError(err?.message || 'Wyszukiwanie semantyczne nie powiodło się.')
+      setError(err?.message || 'Wyszukiwanie semantyczne nie powiodBo si.')
       setResults([])
     } finally {
       setLoading(false)
@@ -55,7 +55,7 @@ export default function SemanticSearch() {
       {error ? <p className="semantic-search__error">{error}</p> : null}
 
       <div className="semantic-search__results">
-        {loading ? <p>Ładowanie wyników...</p> : null}
+        {loading ? <p>Aadowanie wynik�w...</p> : null}
         {!loading && results.length === 0 && !error ? (
           <p>Brak wyników. Spróbuj bardziej opisowego zapytania.</p>
         ) : null}

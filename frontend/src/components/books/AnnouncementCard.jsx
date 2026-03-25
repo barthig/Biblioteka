@@ -1,5 +1,5 @@
 import React from 'react'
-import { FaClock, FaCalendar, FaUser } from 'react-icons/fa'
+import { FaCalendar, FaUser } from 'react-icons/fa'
 
 export default function AnnouncementCard({ announcement, onClick }) {
   const typeLabels = {

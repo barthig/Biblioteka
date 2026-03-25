@@ -8,6 +8,7 @@ import PageHeader from '../../components/ui/PageHeader'
 import SectionCard from '../../components/ui/SectionCard'
 import FeedbackCard from '../../components/ui/FeedbackCard'
 import { logger } from '../../utils/logger'
+import { normalizeDisplayText } from '../../utils/textNormalization'
 
 const EVENT_KEYWORDS = [
   'spotkanie',
@@ -233,7 +234,7 @@ export default function Announcements() {
     return (
       <div className="page">
         <PageHeader
-          title={selectedAnnouncement.title}
+          title={normalizeDisplayText(selectedAnnouncement.title)}
           subtitle={formatDateTime(selectedAnnouncement.eventAt || selectedAnnouncement.createdAt)}
           actions={(
             <button onClick={() => navigate('/announcements')} className="btn btn-outline">
@@ -246,7 +247,7 @@ export default function Announcements() {
         {actionError && <FeedbackCard variant="error">{actionError}</FeedbackCard>}
 
         <SectionCard>
-          <div>{selectedAnnouncement.content}</div>
+          <div>{normalizeDisplayText(selectedAnnouncement.content)}</div>
           <div style={{ marginTop: '1.5rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
             {user ? (
               <button
@@ -304,27 +305,36 @@ export default function Announcements() {
     return (
       <div style={{ display: 'grid', gap: '1rem' }}>
         {items.map(item => (
-          <SectionCard
-            key={item.id}
-            onClick={() => navigate(`/announcements/${item.id}`)}
-            style={{ cursor: 'pointer', transition: 'all 0.2s' }}
-          >
-            <h3>{item.title}</h3>
-            {item.eventAt ? (
-              <div style={{ marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
-                <span style={{ color: 'var(--color-muted)', fontSize: '0.9rem' }}>
-                  <strong>Termin:</strong> {formatDateTime(item.eventAt)}
-                </span>
-                <span style={{ color: 'var(--color-muted)', fontSize: '0.9rem' }}>
-                  <strong>Lokalizacja:</strong> {item.location || 'Brak danych'}
-                </span>
-              </div>
-            ) : (
-              <p style={{ color: 'var(--color-muted)', fontSize: '0.9rem', marginTop: '0.5rem' }}>
-                <strong>Dodano:</strong> {new Date(item.createdAt).toLocaleDateString('pl-PL')}
-              </p>
-            )}
-            {item.content ? <p style={{ marginTop: '1rem' }}>{getExcerpt(item.content)}</p> : null}
+          <SectionCard key={item.id}>
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => navigate(`/announcements/${item.id}`)}
+              onKeyDown={event => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault()
+                  navigate(`/announcements/${item.id}`)
+                }
+              }}
+              style={{ cursor: 'pointer', transition: 'all 0.2s' }}
+            >
+              <h3>{normalizeDisplayText(item.title)}</h3>
+              {item.eventAt ? (
+                <div style={{ marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+                  <span style={{ color: 'var(--color-muted)', fontSize: '0.9rem' }}>
+                    <strong>Termin:</strong> {formatDateTime(item.eventAt)}
+                  </span>
+                  <span style={{ color: 'var(--color-muted)', fontSize: '0.9rem' }}>
+                    <strong>Lokalizacja:</strong> {normalizeDisplayText(item.location || 'Brak danych')}
+                  </span>
+                </div>
+              ) : (
+                <p style={{ color: 'var(--color-muted)', fontSize: '0.9rem', marginTop: '0.5rem' }}>
+                  <strong>Dodano:</strong> {new Date(item.createdAt).toLocaleDateString('pl-PL')}
+                </p>
+              )}
+              {item.content ? <p style={{ marginTop: '1rem' }}>{getExcerpt(normalizeDisplayText(item.content))}</p> : null}
+            </div>
           </SectionCard>
         ))}
       </div>
@@ -338,7 +348,7 @@ export default function Announcements() {
         subtitle="Aktualne informacje, komunikaty i wydarzenia."
         actions={canManage ? (
           <button className="btn btn-primary" onClick={() => setShowForm(!showForm)}>
-            <FaPlus /> {showForm ? 'Ukryj formularz' : 'Nowe ogłoszenie'}
+            <FaPlus /> {showForm ? 'Ukryj formularz' : 'Nowe ogBoszenie'}
           </button>
         ) : null}
       />

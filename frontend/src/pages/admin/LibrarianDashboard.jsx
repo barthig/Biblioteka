@@ -45,7 +45,7 @@ export default function LibrarianDashboard() {
   if (loading) {
     return (
       <div className="page">
-        <PageHeader title="Dashboard" subtitle="Statystyki biblioteki" />
+        <PageHeader title="Panel bibliotekarza" subtitle="Statystyki biblioteki" />
         <div aria-live="polite" aria-busy="true" role="status">
           <StatGrid>
             <StatCardSkeleton />
@@ -61,7 +61,7 @@ export default function LibrarianDashboard() {
   if (error) {
     return (
       <div className="page">
-        <PageHeader title="Dashboard" subtitle="Statystyki biblioteki" />
+        <PageHeader title="Panel bibliotekarza" subtitle="Statystyki biblioteki" />
         <FeedbackCard variant="error">{error}</FeedbackCard>
       </div>
     )
@@ -72,7 +72,7 @@ export default function LibrarianDashboard() {
   return (
     <div className="page">
       <PageHeader
-        title="Dashboard"
+        title="Panel bibliotekarza"
         subtitle="Statystyki biblioteki"
         actions={(
           <button className="btn btn-outline" onClick={loadStats} aria-label="Odśwież statystyki biblioteki">
@@ -171,7 +171,7 @@ function formatTimestamp(timestamp) {
 
   if (diffMins < 1) return 'przed chwilą'
   if (diffMins < 60) return `${diffMins} min temu`
-  if (diffHours < 24) return `${diffHours} h temu`
+  if (diffHours < 24) return `${diffHours} godz. temu`
   if (diffDays < 7) return `${diffDays} dni temu`
 
   return date.toLocaleDateString('pl-PL')

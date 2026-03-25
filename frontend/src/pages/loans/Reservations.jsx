@@ -217,7 +217,7 @@ export default function Reservations() {
         <StatCard title="Aktywne rezerwacje" value={activeOnlyReservations.length} subtitle="W trakcie realizacji" />
         <StatCard title="Przygotowane" value={preparedReservations.length} subtitle="Do odbioru" />
         <StatCard title="Zrealizowane" value={historicalReservations.length} subtitle="Historia" />
-        <StatCard title="Najblizszy termin" value={nextExpiry ? formatDate(nextExpiry) : '-'} valueClassName="stat-card__value--sm" />
+        <StatCard title="Najbliższy termin" value={nextExpiry ? formatDate(nextExpiry) : '-'} valueClassName="stat-card__value--sm" />
       </StatGrid>
 
       {error && <FeedbackCard variant="error">{error}</FeedbackCard>}
@@ -305,7 +305,6 @@ export default function Reservations() {
     </div>
   )
 }
-
 
 
 

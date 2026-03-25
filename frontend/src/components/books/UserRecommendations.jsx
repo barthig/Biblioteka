@@ -23,7 +23,7 @@ export default function UserRecommendations() {
         setBooks(Array.isArray(response?.data) ? response.data : [])
       } catch (err) {
         if (active) {
-          setError(err?.message || 'Nie udalo sie pobrac rekomendacji.')
+          setError(err?.message || 'Nie udało się pobrać rekomendacji.')
         }
       } finally {
         if (active) {
@@ -41,7 +41,7 @@ export default function UserRecommendations() {
 
   return (
     <section className="user-recommendations">
-      {loading && <div className="surface-card empty-state">Laduje rekomendacje...</div>}
+      {loading && <div className="surface-card empty-state">Ładowanie rekomendacji...</div>}
 
       {!loading && error && (
         <div className="surface-card">
@@ -51,7 +51,7 @@ export default function UserRecommendations() {
 
       {!loading && !error && status === 'not_enough_data' && (
         <div className="surface-card recommendations-note">
-          Rate a few books to get AI recommendations!
+          Oceń kilka książek, aby otrzymać rekomendacje AI.
         </div>
       )}
 

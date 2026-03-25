@@ -408,7 +408,7 @@ abstract class ApiTestCase extends WebTestCase
         $schemaManager = $this->entityManager->getConnection()->createSchemaManager();
         $tableNames = array_map(
             static fn ($table): string => strtolower($table->getName()),
-            $schemaManager->listTables()
+            $schemaManager->introspectSchema()->getTables()
         );
 
         foreach (['app_user', 'book', 'book_copy', 'loan', 'reservation'] as $requiredTable) {

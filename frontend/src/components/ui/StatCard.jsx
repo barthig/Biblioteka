@@ -1,18 +1,18 @@
 import React from 'react'
 
 export default function StatCard({
-  icon: Icon,
-  value,
-  label,
-  title,
-  subtitle,
-  trend,
+  icon: Icon = null,
+  value = null,
+  label = null,
+  title = null,
+  subtitle = null,
+  trend = null,
   color = 'primary',
   valueClassName = '',
-  children,
+  children = undefined,
 }) {
   const heading = title || label
-  const content = typeof children !== 'undefined' ? children : value
+  const content = children ?? value
 
   return (
     <div className={`stat-card stat-card-${color}`}>
@@ -22,7 +22,7 @@ export default function StatCard({
           {content}
           {trend && (
             <span className={`stat-trend ${trend > 0 ? 'trend-up' : 'trend-down'}`}>
-              {trend > 0 ? '↑' : '↓'} {Math.abs(trend)}%
+              {trend > 0 ? '�' : '�'} {Math.abs(trend)}%
             </span>
           )}
         </div>

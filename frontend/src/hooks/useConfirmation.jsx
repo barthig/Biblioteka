@@ -10,7 +10,7 @@ import { ConfirmModal } from '../components/ui/Modal'
  * const handleDelete = async () => {
  *   const confirmed = await confirm({
  *     title: 'Usuń książkę',
- *     message: 'Czy na pewno chcesz usunąć tę książkę?',
+ *     message: 'Czy na pewno chcesz usun t ksi|k?',
  *     confirmText: 'Usuń',
  *     variant: 'danger'
  *   });
@@ -36,7 +36,7 @@ export function useConfirmation() {
       setState({
         isOpen: true,
         title: options.title || 'Potwierdź',
-        message: options.message || 'Czy na pewno chcesz kontynuować?',
+        message: options.message || 'Czy na pewno chcesz kontynuowa?',
         confirmText: options.confirmText || 'Potwierdź',
         cancelText: options.cancelText || 'Anuluj',
         variant: options.variant || 'primary',
@@ -61,7 +61,7 @@ export function useConfirmation() {
   const confirmDelete = useCallback((itemName = 'ten element') => {
     return confirm({
       title: 'Potwierdź usunięcie',
-      message: `Czy na pewno chcesz usunąć ${itemName}? Ta operacja jest nieodwracalna.`,
+      message: `Czy na pewno chcesz usun ${itemName}? Ta operacja jest nieodwracalna.`,
       confirmText: 'Usuń',
       variant: 'danger'
     })

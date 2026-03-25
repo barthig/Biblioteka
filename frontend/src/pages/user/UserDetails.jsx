@@ -109,7 +109,7 @@ const UserDetails = () => {
       <div className="user-details-error">
         <h2>Błąd</h2>
         <p>{error}</p>
-        <button onClick={() => navigate('/staff?section=admin')}>Powrót do listy użytkowników</button>
+        <button onClick={() => navigate('/staff?section=admin')}>Powr�t do listy u|ytkownik�w</button>
       </div>
     );
   }
@@ -125,7 +125,7 @@ const UserDetails = () => {
       <div className="user-details-header">
         <h1>Szczegóły użytkownika</h1>
         <button className="btn-back" onClick={() => navigate('/staff?section=admin')}>
-          ← Powrót do listy
+          ← Powrót do listy
         </button>
       </div>
 
@@ -358,7 +358,7 @@ const UserDetails = () => {
             <tbody>
               {activeLoans.map(loan => (
                 <tr key={loan.id} className={new Date(loan.dueAt) < new Date() ? 'overdue' : ''}>
-                  <td>{loan.bookCopy?.book?.title || 'Brak tytułu'}</td>
+                  <td>{loan.bookCopy?.book?.title || 'Brak tytuBu'}</td>
                   <td>{formatDate(loan.borrowedAt)}</td>
                   <td>{formatDate(loan.dueAt)}</td>
                   <td>
@@ -419,7 +419,7 @@ const UserDetails = () => {
             <tbody>
               {loanHistory.map(loan => (
                 <tr key={loan.id}>
-                  <td>{loan.bookCopy?.book?.title || 'Brak tytułu'}</td>
+                  <td>{loan.bookCopy?.book?.title || 'Brak tytuBu'}</td>
                   <td>{formatDate(loan.borrowedAt)}</td>
                   <td>{formatDate(loan.dueAt)}</td>
                   <td>{formatDate(loan.returnedAt)}</td>

@@ -141,7 +141,7 @@ export default function DataTable({
 
   const getSortIcon = (key) => {
     if (sortConfig.key !== key) return '↕'
-    return sortConfig.direction === 'asc' ? '↑' : '↓'
+    return sortConfig.direction === 'asc' ? '�' : '�'
   }
 
   const tableClasses = [
@@ -257,7 +257,7 @@ export default function DataTable({
                       >
                         {column.render 
                           ? column.render(row, index) 
-                          : getNestedValue(row, column.key) ?? '—'}
+                          : getNestedValue(row, column.key) ?? ''}
                       </td>
                     ))}
                     {actions.length > 0 && (

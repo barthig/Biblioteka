@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process'
+import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 
 const suppressed = "CJS build of Vite's Node API is deprecated"

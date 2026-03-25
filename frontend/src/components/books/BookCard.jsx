@@ -2,7 +2,7 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import { Link } from 'react-router-dom'
 import { StatusBadge } from '../ui/StatusBadge'
-import StarRating from './StarRating'
+import { StarRating } from './StarRating'
 import BookCover from './BookCover'
 import './BookCard.css'
 
@@ -27,10 +27,10 @@ export default function BookCard({
   showCategories = false,
   linkable = true,
   actions = [],
-  onBorrow,
-  onReserve,
-  onFavorite,
-  onRemoveFavorite,
+  onBorrow = null,
+  onReserve = null,
+  onFavorite = null,
+  onRemoveFavorite = null,
   isFavorite = false,
   className = '',
   ...props
@@ -95,7 +95,7 @@ export default function BookCard({
       <div className="book-card__cover">
         <BookCover 
           src={coverUrl} 
-          alt={title}
+          title={title}
           size={variant === 'compact' ? 'sm' : 'md'}
         />
         {showAvailability && availableCopies !== undefined && (
@@ -178,9 +178,9 @@ export default function BookCard({
               <button 
                 className={`book-card__action book-card__action--icon ${isFavorite ? 'book-card__action--active' : ''}`}
                 onClick={(e) => handleAction('favorite', e)}
-                aria-label={isFavorite ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'}
+                aria-label={isFavorite ? 'UsuD z ulubionych' : 'Dodaj do ulubionych'}
               >
-                {isFavorite ? '❤️' : '🤍'}
+                {isFavorite ? 'd' : 'a'}
               </button>
             )}
           </div>
@@ -240,11 +240,11 @@ BookCard.propTypes = {
  * BookCardGrid - Grid layout for book cards
  */
 export function BookCardGrid({ books, columns = { sm: 2, md: 3, lg: 4 }, ...cardProps }) {
-  const style = {
+  const style = /** @type {any} */ ({
     '--grid-cols-sm': columns.sm || 2,
     '--grid-cols-md': columns.md || 3,
     '--grid-cols-lg': columns.lg || 4
-  }
+  })
 
   return (
     <div className="book-card-grid" style={style}>

@@ -1,10 +1,10 @@
 import React, { createContext, useContext, useMemo, useRef } from 'react'
 
 const ResourceCacheContext = createContext({
-  getCachedResource: () => undefined,
-  setCachedResource: () => undefined,
-  invalidateResource: () => undefined,
-  prefetchResource: () => Promise.resolve(undefined),
+  getCachedResource: (_key, _ttlMs) => undefined,
+  setCachedResource: (_key, _value) => undefined,
+  invalidateResource: (_matchKey) => undefined,
+  prefetchResource: (_key, _loader, _ttlMs) => Promise.resolve(undefined),
 })
 
 export function ResourceCacheProvider({ children }) {

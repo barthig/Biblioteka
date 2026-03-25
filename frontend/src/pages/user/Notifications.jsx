@@ -133,7 +133,7 @@ export default function Notifications() {
             )}
             {isAdmin && (
               <button className="btn btn-primary" onClick={() => setShowTestForm(!showTestForm)}>
-                {showTestForm ? 'Anuluj' : 'Wyślij test'}
+                {showTestForm ? 'Anuluj' : 'Wy[lij test'}
               </button>
             )}
           </div>

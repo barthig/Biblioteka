@@ -1,28 +1,28 @@
 import React, { useState } from 'react'
 
-export default function UserManagement({ 
-  users, 
-  loading, 
-  userSearchQuery, 
-  setUserSearchQuery, 
-  searchUsers, 
+export default function UserManagement({
+  users,
+  loading,
+  userSearchQuery,
+  setUserSearchQuery,
+  searchUsers,
   loadUsers,
-  setEditingUser, 
-  updateUserPermissions, 
-  toggleUserBlock, 
+  setEditingUser,
+  updateUserPermissions,
+  toggleUserBlock,
   deleteUser,
   editingUser,
   updateUserData
 }) {
   const [expandedUserId, setExpandedUserId] = useState(null)
-  
+
   return (
     <div className="surface-card" role="region" aria-labelledby="users-title">
       <div className="section-header">
         <h2 id="users-title">Użytkownicy</h2>
         {!loading && (
-          <button 
-            className="btn btn-secondary" 
+          <button
+            className="btn btn-secondary"
             onClick={loadUsers}
             aria-label="Odśwież listę użytkowników"
           >
@@ -30,7 +30,7 @@ export default function UserManagement({
           </button>
         )}
       </div>
-      
+
       <div className="form-field">
         <label htmlFor="user-search">Wyszukaj</label>
         <input
@@ -41,11 +41,11 @@ export default function UserManagement({
             setUserSearchQuery(value)
             searchUsers(value)
           }}
-          placeholder="Szukaj po imieniu, emailu lub karcie"
+          placeholder="Szukaj po imieniu, adresie e-mail lub numerze karty"
           aria-describedby="user-search-help"
         />
         <small id="user-search-help" className="support-copy">
-          Wpisz minimum 2 znaki aby wyszukać
+          Wpisz minimum 2 znaki, aby wyszukać.
         </small>
       </div>
 
@@ -56,24 +56,27 @@ export default function UserManagement({
         <div className="users-list-compact">
           {users.map(user => {
             const isExpanded = expandedUserId === user.id
+
             return (
               <div key={user.id} className="user-card-compact">
-                <div 
+                <div
                   className="user-card-header"
                   onClick={() => setExpandedUserId(isExpanded ? null : user.id)}
                   style={{ cursor: 'pointer' }}
                 >
                   <h3>{user.name || 'Brak nazwy'}</h3>
-                  <span className="expand-icon">{isExpanded ? '▼' : '▶'}</span>
+                  <span className="expand-icon" aria-hidden="true">
+                    {isExpanded ? '▾' : '▸'}
+                  </span>
                 </div>
-                
+
                 {isExpanded && (
                   <div className="user-card-details">
                     <div className="user-info-field">
-                      <span className="label">Email</span>
+                      <span className="label">E-mail</span>
                       <span className="value">{user.email}</span>
                     </div>
-                    
+
                     <div className="user-info-row">
                       <div className="user-info-field">
                         <span className="label">Role</span>
@@ -81,7 +84,7 @@ export default function UserManagement({
                       </div>
                       <div className="user-info-field">
                         <span className="label">Status</span>
-                        <span 
+                        <span
                           className={user.blocked ? 'badge badge-danger' : 'badge badge-success'}
                           aria-label={user.blocked ? 'Użytkownik zablokowany' : 'Użytkownik aktywny'}
                         >
@@ -89,17 +92,17 @@ export default function UserManagement({
                         </span>
                       </div>
                     </div>
-                    
+
                     <div className="user-card-actions">
-                      <button 
-                        className="btn btn-sm" 
+                      <button
+                        className="btn btn-sm"
                         onClick={() => setEditingUser(user)}
                         aria-label={`Edytuj użytkownika ${user.name}`}
                       >
                         Edytuj
                       </button>
-                      <button 
-                        className="btn btn-sm btn-secondary" 
+                      <button
+                        className="btn btn-sm btn-secondary"
                         onClick={() => updateUserPermissions(user.id, user.roles)}
                         aria-label={`Zmień uprawnienia użytkownika ${user.name}`}
                       >
@@ -112,8 +115,8 @@ export default function UserManagement({
                       >
                         {user.blocked ? 'Odblokuj' : 'Zablokuj'}
                       </button>
-                      <button 
-                        className="btn btn-sm btn-danger" 
+                      <button
+                        className="btn btn-sm btn-danger"
                         onClick={() => deleteUser(user.id)}
                         aria-label={`Usuń użytkownika ${user.name}`}
                       >
@@ -129,7 +132,7 @@ export default function UserManagement({
       )}
 
       {editingUser && (
-        <UserEditModal 
+        <UserEditModal
           user={editingUser}
           onClose={() => setEditingUser(null)}
           onSave={(updates) => updateUserData(editingUser.id, updates)}
@@ -155,9 +158,9 @@ function UserEditModal({ user, onClose, onSave }) {
 
   return (
     <div className="modal-overlay" onClick={onClose} role="presentation">
-      <div 
-        className="modal-content" 
-        onClick={e => e.stopPropagation()} 
+      <div
+        className="modal-content"
+        onClick={e => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
         aria-labelledby="edit-user-title"
@@ -167,43 +170,43 @@ function UserEditModal({ user, onClose, onSave }) {
           <div className="user-info-compact">
             <div className="user-info-row">
               <div className="form-field">
-                <label htmlFor="edit-name">Użytkownik</label>
-                <input 
-                  id="edit-name" 
-                  type="text" 
-                  name="name" 
-                  defaultValue={user.name} 
-                  required 
+                <label htmlFor="edit-name">Imię i nazwisko</label>
+                <input
+                  id="edit-name"
+                  type="text"
+                  name="name"
+                  defaultValue={user.name}
+                  required
                   aria-required="true"
                 />
               </div>
               <div className="form-field">
-                <label htmlFor="edit-card">Karta</label>
-                <input 
-                  id="edit-card" 
-                  type="text" 
-                  name="cardNumber" 
-                  defaultValue={user.cardNumber || ''} 
+                <label htmlFor="edit-card">Numer karty</label>
+                <input
+                  id="edit-card"
+                  type="text"
+                  name="cardNumber"
+                  defaultValue={user.cardNumber || ''}
                 />
               </div>
             </div>
             <div className="form-field">
-              <label htmlFor="edit-email">Email</label>
-              <input 
-                id="edit-email" 
-                type="email" 
-                name="email" 
-                defaultValue={user.email} 
-                required 
+              <label htmlFor="edit-email">E-mail</label>
+              <input
+                id="edit-email"
+                type="email"
+                name="email"
+                defaultValue={user.email}
+                required
                 aria-required="true"
               />
             </div>
             <div className="user-info-row">
               <div className="form-field">
-                <label htmlFor="edit-status">Status</label>
-                <select 
-                  id="edit-status" 
-                  name="accountStatus" 
+                <label htmlFor="edit-status">Status konta</label>
+                <select
+                  id="edit-status"
+                  name="accountStatus"
                   defaultValue={user.accountStatus || 'Aktywne'}
                 >
                   <option value="Aktywne">Aktywne</option>
@@ -222,7 +225,7 @@ function UserEditModal({ user, onClose, onSave }) {
                       value="ROLE_USER"
                       defaultChecked={user.roles?.includes('ROLE_USER')}
                     />
-                    <label htmlFor="role_user">User</label>
+                    <label htmlFor="role_user">Czytelnik</label>
                   </div>
                   <div className="checkbox-field">
                     <input
@@ -232,7 +235,7 @@ function UserEditModal({ user, onClose, onSave }) {
                       value="ROLE_LIBRARIAN"
                       defaultChecked={user.roles?.includes('ROLE_LIBRARIAN')}
                     />
-                    <label htmlFor="role_librarian">Librarian</label>
+                    <label htmlFor="role_librarian">Bibliotekarz</label>
                   </div>
                   <div className="checkbox-field">
                     <input
@@ -242,7 +245,7 @@ function UserEditModal({ user, onClose, onSave }) {
                       value="ROLE_ADMIN"
                       defaultChecked={user.roles?.includes('ROLE_ADMIN')}
                     />
-                    <label htmlFor="role_admin">Admin</label>
+                    <label htmlFor="role_admin">Administrator</label>
                   </div>
                 </div>
               </fieldset>

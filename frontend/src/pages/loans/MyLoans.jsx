@@ -165,7 +165,7 @@ export default function MyLoans() {
       <StatGrid>
         <StatCard title="Aktywne wypożyczenia" value={activeLoans.length} subtitle="Do zwrotu" />
         <StatCard title="Zwrócone książki" value={historyLoans.length} subtitle="Historia" />
-        <StatCard title="Najbliższy termin" value={nextDue ? formatDate(nextDue) : '-'} valueClassName="stat-card__value--sm" />
+        <StatCard title="Najbli|szy termin" value={nextDue ? formatDate(nextDue) : '-'} valueClassName="stat-card__value--sm" />
       </StatGrid>
 
       {error && <FeedbackCard variant="error">{error}</FeedbackCard>}
@@ -181,11 +181,11 @@ export default function MyLoans() {
               {activeLoans.map(loan => (
                 <li key={loan.id} className="resource-item">
                   <div>
-                    <strong>{loan.book?.title ?? 'Nieznana książka'}</strong>
+                    <strong>{loan.book?.title ?? 'Nieznana ksi|ka'}</strong>
                     <div className="resource-item__meta">
                       <span>Termin zwrotu: {formatDate(loan.dueAt)}</span>
                       {loan.bookCopy?.inventoryCode ? <span>Kod egz.: {loan.bookCopy.inventoryCode}</span> : null}
-                      {typeof loan.extensionsCount === 'number' ? <span>Przedłużenia: {loan.extensionsCount}</span> : null}
+                      {typeof loan.extensionsCount === 'number' ? <span>PrzedBu|enia: {loan.extensionsCount}</span> : null}
                     </div>
                     {loan.lastExtendedAt ? (
                       <div className="resource-item__meta">
@@ -213,7 +213,7 @@ export default function MyLoans() {
                           disabled={extendLoading[loan.id]}
                           onClick={() => extendLoan(loan.id, extendDays[loan.id] ?? 14)}
                         >
-                          {extendLoading[loan.id] ? 'Przetwarzanie...' : 'Przedłuż'}
+                          {extendLoading[loan.id] ? 'Przetwarzanie...' : 'PrzedBu|'}
                         </button>
                       </div>
                     ) : null}
@@ -232,7 +232,7 @@ export default function MyLoans() {
               {historyLoans.map(loan => (
                 <li key={loan.id} className="resource-item">
                   <div>
-                    <strong>{loan.book?.title ?? 'Nieznana książka'}</strong>
+                    <strong>{loan.book?.title ?? 'Nieznana ksi|ka'}</strong>
                     <div className="resource-item__meta">
                       <span>Wypożyczono: {formatDate(loan.borrowedAt)}</span>
                       <span>Zwrócono: {formatDate(loan.returnedAt)}</span>

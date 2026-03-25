@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 
-export function StarRating({ rating, onRate, readonly = false, size = 'medium' }) {
+export function StarRating({ rating, onRate = null, readonly = false, size = 'medium' }) {
   const [hoverRating, setHoverRating] = useState(0)
   
   const sizeClass = size === 'large' ? 'star-rating--large' : size === 'small' ? 'star-rating--small' : ''

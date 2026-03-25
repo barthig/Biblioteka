@@ -150,7 +150,7 @@ export default function Navbar() {
                 <div className="avatar avatar--sm">
                   {user?.name?.charAt(0).toUpperCase() || 'U'}
                 </div>
-                <span>{user?.name || 'Użytkownik'}</span>
+                <span>{user?.name || 'U|ytkownik'}</span>
               </div>
               <button className="btn btn-ghost" onClick={() => { logout(); closeMenu() }}>
                 Wyloguj

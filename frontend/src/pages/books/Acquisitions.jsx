@@ -272,7 +272,7 @@ export default function Acquisitions() {
           <ul className="list list--bordered">
             {weeding.map(entry => (
               <li key={entry.id || `${entry.bookId}-${entry.reason}`}>
-                <div className="list__title">Książka: {entry.bookId || entry.book?.id}</div>
+                <div className="list__title">Ksi|ka: {entry.bookId || entry.book?.id}</div>
                 <div className="list__meta">{entry.reason || 'Brak powodu'}</div>
               </li>
             ))}

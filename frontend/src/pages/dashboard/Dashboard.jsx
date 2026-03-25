@@ -8,6 +8,7 @@ import UserRecommendations from '../../components/books/UserRecommendations'
 import SectionCard from '../../components/ui/SectionCard'
 import BookCover from '../../components/books/BookCover'
 import { bookService } from '../../services/bookService'
+import { normalizeDisplayText } from '../../utils/textNormalization'
 
 export default function Dashboard() {
   const [stats, setStats] = useState(null)
@@ -64,7 +65,7 @@ export default function Dashboard() {
   const publicLatestAnnouncements = useMemo(() => {
     return publicAnnouncements
       .filter(item => !item?.eventAt)
-      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
       .slice(0, 3)
   }, [publicAnnouncements])
 
@@ -72,7 +73,7 @@ export default function Dashboard() {
     const now = Date.now()
     return dashboardAnnouncements
       .filter(item => item?.eventAt && new Date(item.eventAt).getTime() > now)
-      .sort((a, b) => new Date(a.eventAt) - new Date(b.eventAt))
+      .sort((a, b) => new Date(a.eventAt).getTime() - new Date(b.eventAt).getTime())
       .slice(0, 3)
   }, [dashboardAnnouncements])
 
@@ -80,14 +81,14 @@ export default function Dashboard() {
     const now = Date.now()
     return publicAnnouncements
       .filter(item => item?.eventAt && new Date(item.eventAt).getTime() > now)
-      .sort((a, b) => new Date(a.eventAt) - new Date(b.eventAt))
+      .sort((a, b) => new Date(a.eventAt).getTime() - new Date(b.eventAt).getTime())
       .slice(0, 2)
   }, [publicAnnouncements])
 
   const latestAnnouncements = useMemo(() => {
     return dashboardAnnouncements
       .filter(item => !item?.eventAt)
-      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
       .slice(0, 3)
   }, [dashboardAnnouncements])
 
@@ -109,7 +110,7 @@ export default function Dashboard() {
     })
   }
 
-  const getAnnouncementText = (item) => item?.content || item?.description || ''
+  const getAnnouncementText = (item) => normalizeDisplayText(item?.content || item?.description || '')
   const truncateText = (text) => {
     if (!text || text.length <= CONTENT_LIMIT) return text
     return `${text.slice(0, CONTENT_LIMIT).trimEnd()}...`
@@ -131,10 +132,10 @@ export default function Dashboard() {
 
           return (
             <li key={itemKey}>
-              <div className="list__title">{item.title}</div>
+              <div className="list__title">{normalizeDisplayText(item.title)}</div>
               <div className="list__meta">{dateFormatter(dateValue(item))}</div>
               {item.location && (
-                <div className="list__meta">Lokalizacja: {item.location}</div>
+                <div className="list__meta">Lokalizacja: {normalizeDisplayText(item.location)}</div>
               )}
               {content && (
                 <div className="list__content">
@@ -229,7 +230,7 @@ export default function Dashboard() {
     setPublicNewArrivalsError(null)
     bookService.getNewest(4)
       .then(items => { if (active) setPublicNewArrivals(items) })
-      .catch(err => { if (active) setPublicNewArrivalsError(err.message || 'Nie udaĹ‚o siÄ™ pobraÄ‡ nowoĹ›ci') })
+      .catch(err => { if (active) setPublicNewArrivalsError(err.message || 'Nie udało się pobrać nowości') })
       .finally(() => { if (active) setPublicNewArrivalsLoading(false) })
     return () => { active = false }
   }, [authLoading, getCachedResource, isAuthenticated, setCachedResource])
@@ -314,9 +315,9 @@ export default function Dashboard() {
           <section className="hero-guest" aria-labelledby="hero-title">
             <div className="hero-guest__content">
               <p className="hero-guest__eyebrow">Biblioteka miejska online</p>
-          <h1 id="hero-title">ZnajdĹş ksiÄ…ĹĽkÄ™, ktĂłrej szukasz w kilka sekund</h1>
+          <h1 id="hero-title">Znajdź książkę, której szukasz w kilka sekund</h1>
               <p className="hero-guest__lead">
-                Wyszukuj po tytule, autorze lub temacie i sprawdzaj dostÄ™pnoĹ›Ä‡ bez wychodzenia z domu.
+                Wyszukuj po tytule, autorze lub temacie i sprawdzaj dostępność bez wychodzenia z domu.
               </p>
               <form className="hero-guest__search" role="search" onSubmit={handlePublicSearch}>
                 <label className="sr-only" htmlFor="public-search">Szukaj w katalogu</label>
@@ -324,14 +325,14 @@ export default function Dashboard() {
                   id="public-search"
                   type="search"
                   name="q"
-                  placeholder="Szukaj tytuĹ‚u, autora lub tematu..."
+                  placeholder="Szukaj tytułu, autora lub tematu..."
                   value={searchQuery}
                   onChange={event => setSearchQuery(event.target.value)}
                 />
                 <button type="submit" className="btn btn-primary">Szukaj</button>
               </form>
               <div className="hero-guest__filters" role="group" aria-label="Szybkie filtry">
-                <button type="button" className="filter-pill">KsiÄ…ĹĽki</button>
+                <button type="button" className="filter-pill">Książki</button>
                 <button type="button" className="filter-pill">Audiobooki</button>
                 <button type="button" className="filter-pill">Filmy</button>
               </div>
@@ -362,15 +363,15 @@ export default function Dashboard() {
               </span>
               <div>
                 <p>Adres biblioteki</p>
-                <strong>ul. Wiosenna 12, 60-101 PoznaĹ„</strong>
+                <strong>ul. Wiosenna 12, 60-101 Poznań</strong>
               </div>
             </div>
           </section>
 
           <section id="catalog" className="section-block" aria-labelledby="new-title">
             <div className="section-heading">
-              <h2 id="new-title">NowoĹ›ci w ksiÄ™gozbiorze</h2>
-              <Link to="/books" className="section-link">Zobacz caĹ‚y katalog</Link>
+              <h2 id="new-title">Nowości w księgozbiorze</h2>
+              <Link to="/books" className="section-link">Zobacz cały katalog</Link>
             </div>
             <div className="books-grid">
               {publicNewArrivalsLoading && (
@@ -393,10 +394,10 @@ export default function Dashboard() {
                     <button
                       type="button"
                       className="btn btn-ghost"
-                      aria-label={`SprawdĹş dostÄ™pnoĹ›Ä‡: ${item.title}`}
+                      aria-label={`Sprawdź dostępność: ${item.title}`}
                       onClick={() => handleCheckAvailabilityPublic(item)}
                     >
-                      SprawdĹş dostÄ™pnoĹ›Ä‡
+                      Sprawdź dostępność
                     </button>
                   </div>
                 </article>
@@ -406,12 +407,12 @@ export default function Dashboard() {
 
           <section id="events" className="section-block" aria-labelledby="events-title">
             <div className="section-heading">
-              <h2 id="events-title">NadchodzÄ…ce wydarzenia</h2>
-              <Link to="/announcements" className="section-link">PeĹ‚ny kalendarz</Link>
+              <h2 id="events-title">Nadchodzące wydarzenia</h2>
+              <Link to="/announcements" className="section-link">Pełny kalendarz</Link>
             </div>
             <div className="events-list">
               {publicUpcomingEvents.length === 0 ? (
-                <div className="empty-state">Brak nadchodzÄ…cych wydarzeĹ„.</div>
+                <div className="empty-state">Brak nadchodzących wydarzeń.</div>
               ) : (
                 publicUpcomingEvents.map(event => (
                   <article key={event.id || event.title} className="event-card">
@@ -431,13 +432,13 @@ export default function Dashboard() {
 
           <section id="public-announcements" className="section-block" aria-labelledby="public-announcements-title">
             <div className="section-heading">
-              <h2 id="public-announcements-title">OgĹ‚oszenia</h2>
+              <h2 id="public-announcements-title">Ogłoszenia</h2>
               <Link to="/announcements" className="section-link">Zobacz wszystkie</Link>
             </div>
             <div className="surface-card" style={{ padding: 'var(--space-3)' }}>
               {renderAnnouncementsList(
                 publicLatestAnnouncements,
-                'Brak nowych ogĹ‚oszeĹ„.',
+                'Brak nowych ogłoszeń.',
                 formatDate,
                 (item) => item.createdAt
               )}
@@ -448,8 +449,8 @@ export default function Dashboard() {
         <footer id="contact" className="public-footer">
           <div className="public-footer__links" aria-label="Linki pomocnicze">
             <a href="/terms">Regulamin</a>
-            <a href="/privacy">Polityka prywatnoĹ›ci</a>
-            <a href="/accessibility">Deklaracja DostÄ™pnoĹ›ci</a>
+            <a href="/privacy">Polityka prywatności</a>
+            <a href="/accessibility">Deklaracja Dostępności</a>
           </div>
           <div className="public-footer__contact">
             <div>
@@ -463,14 +464,14 @@ export default function Dashboard() {
               <p>Sob: 9:00-14:00</p>
               <p>Nd: nieczynne</p>
             </div>
-            <div className="public-footer__social" aria-label="Media spoĹ‚ecznoĹ›ciowe">
+            <div className="public-footer__social" aria-label="Media społecznościowe">
               <a href="https://facebook.com" aria-label="Facebook">Fb</a>
               <a href="https://instagram.com" aria-label="Instagram">Ig</a>
               <a href="https://youtube.com" aria-label="YouTube">Yt</a>
             </div>
           </div>
           <p className="public-footer__copyright">
-            (c) 2025 Biblioteka Publiczna. Wszelkie prawa zastrzeĹĽone.
+            (c) 2025 Biblioteka Publiczna. Wszelkie prawa zastrzeżone.
           </p>
         </footer>
       </div>
@@ -480,7 +481,7 @@ export default function Dashboard() {
   if (loading) {
     return (
       <div className="page">
-        <div className="surface-card empty-state">ĹadujÄ™ dane panelu...</div>
+        <div className="surface-card empty-state">Ładuję dane panelu...</div>
       </div>
     )
   }
@@ -490,16 +491,16 @@ export default function Dashboard() {
       <div className="page">
         <div className="surface-card">
           <h2>Panel biblioteki</h2>
-          <p className="error">Nie udaĹ‚o siÄ™ pobraÄ‡ statystyk (kod: {error}). SprĂłbuj ponownie pĂłĹşniej.</p>
+          <p className="error">Nie udało się pobrać statystyk (kod: {error}). Spróbuj ponownie później.</p>
         </div>
       </div>
     )
   }
 
-  const books = stats?.booksCount ?? 'â€”'
-  const users = stats?.usersCount ?? 'â€”'
-  const loans = stats?.loansCount ?? 'â€”'
-  const reservations = stats?.reservationsQueue ?? 'â€”'
+  const books = stats?.booksCount ?? ''
+  const users = stats?.usersCount ?? ''
+  const loans = stats?.loansCount ?? ''
+  const reservations = stats?.reservationsQueue ?? ''
 
   const getAlertIcon = (type) => {
     switch (type) {
@@ -527,13 +528,13 @@ export default function Dashboard() {
         <header className="page-header">
           <div>
             <h1>Witaj, {user?.name || 'Czytelniku'}!</h1>
-            <p className="support-copy">Twoje centrum dowodzenia - szybki podglÄ…d wypoĹĽyczeĹ„, rezerwacji i nowoĹ›ci.</p>
+            <p className="support-copy">Twoje centrum dowodzenia - szybki podgląd wypożyczeń, rezerwacji i nowości.</p>
           </div>
         </header>
 
         {alerts.length > 0 && (
           <div className="surface-card" style={{ marginBottom: 'var(--space-4)' }}>
-            <h2 style={{ marginBottom: 'var(--space-3)' }}>WaĹĽne powiadomienia</h2>
+            <h2 style={{ marginBottom: 'var(--space-3)' }}>Ważne powiadomienia</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
               {alerts.map((alert, index) => (
                 <div key={index} className={`alert ${getAlertClass(alert.type)}`}>
@@ -557,14 +558,14 @@ export default function Dashboard() {
 
         <div className="card-grid card-grid--columns-3" style={{ marginBottom: 'var(--space-4)' }}>
           <Link to="/my-loans" className="surface-card stat-card" style={{ textDecoration: 'none' }}>
-            <h3>WypoĹĽyczone ksiÄ…ĹĽki</h3>
+            <h3>Wypożyczone książki</h3>
             <strong style={{ color: '#5ce1e6' }}>{stats?.activeLoans ?? 0}</strong>
-            <span>Aktualne wypoĹĽyczenia</span>
+            <span>Aktualne wypożyczenia</span>
           </Link>
           <Link to="/reservations" className="surface-card stat-card" style={{ textDecoration: 'none' }}>
             <h3>Rezerwacje</h3>
             <strong style={{ color: '#667eea' }}>{stats?.activeReservations ?? 0}</strong>
-            <span>OczekujÄ…ce</span>
+            <span>Oczekujące</span>
           </Link>
           <Link to="/favorites" className="surface-card stat-card" style={{ textDecoration: 'none' }}>
             <h3>Ulubione</h3>
@@ -582,15 +583,15 @@ export default function Dashboard() {
           <SectionCard title="Wydarzenia">
             {renderAnnouncementsList(
               upcomingEvents,
-              'Brak nadchodzÄ…cych wydarzeĹ„.',
+              'Brak nadchodzących wydarzeń.',
               formatDateTime,
               (item) => item.eventAt
             )}
           </SectionCard>
-          <SectionCard title="OgĹ‚oszenia">
+          <SectionCard title="Ogłoszenia">
             {renderAnnouncementsList(
               latestAnnouncements,
-              'Brak nowych ogĹ‚oszeĹ„.',
+              'Brak nowych ogłoszeń.',
               formatDate,
               (item) => item.createdAt
             )}
@@ -606,12 +607,12 @@ export default function Dashboard() {
         <header className="page-header">
           <div>
             <h1>Panel Bibliotekarza</h1>
-            <p className="support-copy">Zadania na dziĹ› i szybki dostÄ™p do kluczowych funkcji.</p>
+            <p className="support-copy">Zadania na dziś i szybki dostęp do kluczowych funkcji.</p>
           </div>
         </header>
 
         <div className="surface-card" style={{ marginBottom: 'var(--space-4)' }}>
-          <h2 style={{ marginBottom: 'var(--space-3)' }}>Zadania na dziĹ›</h2>
+          <h2 style={{ marginBottom: 'var(--space-3)' }}>Zadania na dziś</h2>
           <div className="card-grid card-grid--columns-3">
             <div className="stat-card">
               <h3>Rezerwacje do przygotowania</h3>
@@ -621,12 +622,12 @@ export default function Dashboard() {
             <div className="stat-card">
               <h3>Przetrzymane zwroty</h3>
               <strong style={{ color: '#ff6838' }}>{stats?.overdueLoans ?? 0}</strong>
-              <Link to="/staff?section=operations&tab=loans&loan=overdue" className="btn btn-ghost">WyĹ›wietl</Link>
+              <Link to="/staff?section=operations&tab=loans&loan=overdue" className="btn btn-ghost">Wy[wietl</Link>
             </div>
             <div className="stat-card">
               <h3>Niewydane rezerwacje</h3>
               <strong style={{ color: '#f59e0b' }}>{stats?.preparedReservations ?? 0}</strong>
-              <Link to="/staff?section=operations&tab=reservations&status=prepared" className="btn btn-ghost">SprawdĹş</Link>
+              <Link to="/staff?section=operations&tab=reservations&status=prepared" className="btn btn-ghost">Sprawdz</Link>
             </div>
           </div>
         </div>
@@ -634,11 +635,11 @@ export default function Dashboard() {
         <div className="surface-card">
           <h2 style={{ marginBottom: 'var(--space-3)' }}>Szybkie akcje</h2>
           <div className="form-actions">
-            <Link to="/staff?section=operations&tab=dashboard" className="btn btn-primary">Panel obsĹ‚ugi</Link>
-            <Link to="/books" className="btn btn-ghost">Katalog ksiÄ…ĹĽek</Link>
-            <Link to="/announcements" className="btn btn-ghost">OgĹ‚oszenia</Link>
-            <Link to="/staff?section=operations&tab=create" className="btn btn-secondary">Nowe wypoĹĽyczenie</Link>
-            <Link to="/staff?section=operations&tab=loans" className="btn btn-secondary">Zobacz wypoĹĽyczenia</Link>
+            <Link to="/staff?section=operations&tab=dashboard" className="btn btn-primary">Panel obsBugi</Link>
+            <Link to="/books" className="btn btn-ghost">Katalog książek</Link>
+            <Link to="/announcements" className="btn btn-ghost">Ogłoszenia</Link>
+            <Link to="/staff?section=operations&tab=create" className="btn btn-secondary">Nowe wypo|yczenie</Link>
+            <Link to="/staff?section=operations&tab=loans" className="btn btn-secondary">Zobacz wypo|yczenia</Link>
           </div>
         </div>
 
@@ -646,15 +647,15 @@ export default function Dashboard() {
           <SectionCard title="Wydarzenia">
             {renderAnnouncementsList(
               upcomingEvents,
-              'Brak nadchodzÄ…cych wydarzeĹ„.',
+              'Brak nadchodzących wydarzeń.',
               formatDateTime,
               (item) => item.eventAt
             )}
           </SectionCard>
-          <SectionCard title="OgĹ‚oszenia">
+          <SectionCard title="Ogłoszenia">
             {renderAnnouncementsList(
               latestAnnouncements,
-              'Brak nowych ogĹ‚oszeĹ„.',
+              'Brak nowych ogłoszeń.',
               formatDate,
               (item) => item.createdAt
             )}
@@ -670,25 +671,25 @@ export default function Dashboard() {
         <header className="page-header">
           <div>
             <h1>Panel Administratora</h1>
-            <p className="support-copy">Statystyki ogĂłlne i zarzÄ…dzanie systemem.</p>
+            <p className="support-copy">Statystyki ogólne i zarządzanie systemem.</p>
           </div>
         </header>
 
         <div className="card-grid card-grid--columns-3" style={{ marginBottom: 'var(--space-4)' }}>
           <div className="surface-card stat-card">
-            <h3>Aktywni uĹĽytkownicy</h3>
+            <h3>Aktywni użytkownicy</h3>
             <strong style={{ color: '#5ce1e6' }}>{stats?.activeUsers ?? 0}</strong>
             <span>Obecnie online</span>
           </div>
           <div className="surface-card stat-card">
-            <h3>ObciÄ…ĹĽenie serwera</h3>
-            <strong style={{ color: '#667eea' }}>{stats?.serverLoad ?? 'â€”'}%</strong>
+            <h3>Obciążenie serwera</h3>
+            <strong style={{ color: '#667eea' }}>{stats?.serverLoad ?? ''}%</strong>
             <span>Wykorzystanie CPU</span>
           </div>
           <div className="surface-card stat-card">
             <h3>Transakcje dzisiaj</h3>
             <strong style={{ color: '#ff6838' }}>{stats?.transactionsToday ?? 0}</strong>
-            <span>WypoĹĽyczenia + zwroty</span>
+            <span>Wypożyczenia + zwroty</span>
           </div>
         </div>
 
@@ -696,7 +697,7 @@ export default function Dashboard() {
           <h2 style={{ marginBottom: 'var(--space-3)' }}>Statystyki bazy danych</h2>
           <div className="card-grid card-grid--columns-3">
             <div className="stat-card">
-              <h3>KsiÄ…ĹĽki w katalogu</h3>
+              <h3>Książki w katalogu</h3>
               <strong>{books}</strong>
             </div>
             <div className="stat-card">
@@ -704,16 +705,16 @@ export default function Dashboard() {
               <strong>{users}</strong>
             </div>
             <div className="stat-card">
-              <h3>Aktywne wypoĹĽyczenia</h3>
+              <h3>Aktywne wypożyczenia</h3>
               <strong>{loans}</strong>
             </div>
           </div>
         </div>
 
         <div className="surface-card">
-          <h2 style={{ marginBottom: 'var(--space-3)' }}>NarzÄ™dzia administracyjne</h2>
+          <h2 style={{ marginBottom: 'var(--space-3)' }}>Narzędzia administracyjne</h2>
           <div className="form-actions">
-            <Link to="/staff?section=admin" className="btn btn-primary">ZarzÄ…dzanie uĹĽytkownikami</Link>
+            <Link to="/staff?section=admin" className="btn btn-primary">Zarzdzanie u|ytkownikami</Link>
             <Link to="/staff?section=admin" className="btn btn-ghost">Konfiguracja systemu</Link>
             <Link to="/reports" className="btn btn-ghost">Raporty</Link>
           </div>
@@ -723,15 +724,15 @@ export default function Dashboard() {
           <SectionCard title="Wydarzenia">
             {renderAnnouncementsList(
               upcomingEvents,
-              'Brak nadchodzÄ…cych wydarzeĹ„.',
+              'Brak nadchodzących wydarzeń.',
               formatDateTime,
               (item) => item.eventAt
             )}
           </SectionCard>
-          <SectionCard title="OgĹ‚oszenia">
+          <SectionCard title="Ogłoszenia">
             {renderAnnouncementsList(
               latestAnnouncements,
-              'Brak nowych ogĹ‚oszeĹ„.',
+              'Brak nowych ogłoszeń.',
               formatDate,
               (item) => item.createdAt
             )}
@@ -746,13 +747,13 @@ export default function Dashboard() {
       <header className="page-header">
         <div>
           <h1>Panel biblioteki</h1>
-          <p className="support-copy">Szybki podglÄ…d bieĹĽÄ…cej kondycji kolekcji, aktywnych uĹĽytkownikĂłw oraz rotacji zasobĂłw.</p>
+          <p className="support-copy">Szybki podgląd bieżącej kondycji kolekcji, aktywnych użytkowników oraz rotacji zasobów.</p>
         </div>
       </header>
 
       <section className="card-grid card-grid--columns-3">
         <article className="surface-card stat-card">
-          <h3>KsiÄ…ĹĽki w katalogu</h3>
+          <h3>Książki w katalogu</h3>
           <strong>{books}</strong>
           <span>Widocznych w aktualnej ofercie biblioteki</span>
         </article>
@@ -762,31 +763,31 @@ export default function Dashboard() {
           <span>Z rolami czytelnika lub bibliotekarza</span>
         </article>
         <article className="surface-card stat-card">
-          <h3>WypoĹĽyczenia</h3>
+          <h3>Wypożyczenia</h3>
           <strong>{loans}</strong>
-          <span>Aktywnych transakcji wypoĹĽyczeĹ„</span>
+          <span>Aktywnych transakcji wypożyczeń</span>
         </article>
       </section>
 
       <section className="surface-card stat-card">
         <h3>Kolejka rezerwacji</h3>
         <strong>{reservations}</strong>
-        <span>Liczba oczekujÄ…cych na zwrot egzemplarza</span>
+        <span>Liczba oczekujących na zwrot egzemplarza</span>
       </section>
 
       <div className="grid grid-2" style={{ marginTop: 'var(--space-4)' }}>
           <SectionCard title="Wydarzenia">
             {renderAnnouncementsList(
               upcomingEvents,
-              'Brak nadchodzÄ…cych wydarzeĹ„.',
+              'Brak nadchodzących wydarzeń.',
               formatDateTime,
               (item) => item.eventAt
             )}
           </SectionCard>
-          <SectionCard title="OgĹ‚oszenia">
+          <SectionCard title="Ogłoszenia">
             {renderAnnouncementsList(
               latestAnnouncements,
-              'Brak nowych ogĹ‚oszeĹ„.',
+              'Brak nowych ogłoszeń.',
               formatDate,
               (item) => item.createdAt
             )}

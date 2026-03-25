@@ -35,7 +35,7 @@ describe('LibrarianDashboard page', () => {
       </ResourceCacheProvider>
     )
 
-    expect(await screen.findByText('Dashboard')).toBeInTheDocument()
+    expect(await screen.findByText('Panel bibliotekarza')).toBeInTheDocument()
     expect(await screen.findByText('3')).toBeInTheDocument()
   })
 })

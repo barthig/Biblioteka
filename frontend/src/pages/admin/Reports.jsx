@@ -94,8 +94,8 @@ export default function Reports() {
       <PageHeader title="Raporty" subtitle="Przegląd metryk biblioteki" />
 
       <StatGrid>
-        <StatCard title="Aktywne wypożyczenia" value={usageLoans ?? '-'} subtitle="Według raportu" />
-        <StatCard title="Użytkownicy" value={usageUsers ?? '-'} subtitle="Z segmentów" />
+        <StatCard title="Aktywne wypo|yczenia" value={usageLoans ?? '-'} subtitle="WedBug raportu" />
+        <StatCard title="U|ytkownicy" value={usageUsers ?? '-'} subtitle="Z segment�w" />
         <StatCard title="Raporty" value={[usage, financial, inventory, popular.length, segments.length].filter(Boolean).length} subtitle="Załadowane sekcje" />
       </StatGrid>
 
@@ -107,10 +107,10 @@ export default function Reports() {
           <SectionCard>
             <h3>Użycie systemu</h3>
             <ul className="list">
-              <li>Aktywne wypożyczenia: {usageLoans ?? '-'}</li>
-              <li>Wszystkie wypożyczenia: {usageTotalLoans ?? '-'}</li>
-              <li>Użytkownicy: {usageUsers ?? '-'}</li>
-              <li>Dostępne egzemplarze: {inventoryAvailableCopies ?? '-'}</li>
+              <li>Aktywne wypo|yczenia: {usageLoans ?? '-'}</li>
+              <li>Wszystkie wypo|yczenia: {usageTotalLoans ?? '-'}</li>
+              <li>U|ytkownicy: {usageUsers ?? '-'}</li>
+              <li>Dostpne egzemplarze: {inventoryAvailableCopies ?? '-'}</li>
             </ul>
           </SectionCard>
 
@@ -153,7 +153,7 @@ export default function Reports() {
                   <li key={item.id || item.bookId || item.title}>
                     <div className="list__title">{item.title || item.book?.title}</div>
                     <div className="list__meta">
-                      <span>Wypożyczeń: {item.loanCount ?? item.borrowCount ?? item.count ?? '-'}</span>
+                      <span>Wypo|yczeD: {item.loanCount ?? item.borrowCount ?? item.count ?? '-'}</span>
                     </div>
                   </li>
                 ))}
@@ -171,7 +171,7 @@ export default function Reports() {
                   <li key={segment.membershipGroup || segment.segment || segment.name}>
                     <div className="list__title">{segment.membershipGroup || segment.segment || segment.name}</div>
                     <div className="list__meta">
-                      <span>Użytkowników: {segment.totalUsers ?? segment.count ?? segment.total ?? '-'}</span>
+                      <span>U|ytkownik�w: {segment.totalUsers ?? segment.count ?? segment.total ?? '-'}</span>
                       {segment.blockedUsers != null && (
                         <span> • Zablokowani: {segment.blockedUsers}</span>
                       )}
@@ -190,9 +190,9 @@ export default function Reports() {
             {inventory ? (
               <>
                 <ul className="list">
-                  <li>Łącznie egzemplarzy: {inventoryTotalCopies ?? '-'}</li>
-                  <li>Wypożyczone (%): {inventory?.borrowedPercentage ?? '-'}</li>
-                  <li>Dostępne: {inventoryAvailableCopies ?? '-'}</li>
+                  <li>Acznie egzemplarzy: {inventoryTotalCopies ?? '-'}</li>
+                  <li>Wypo|yczone (%): {inventory?.borrowedPercentage ?? '-'}</li>
+                  <li>Dostpne: {inventoryAvailableCopies ?? '-'}</li>
                 </ul>
                 {inventoryBreakdown && inventoryBreakdown.length > 0 && (
                   <ul className="list list--bordered">

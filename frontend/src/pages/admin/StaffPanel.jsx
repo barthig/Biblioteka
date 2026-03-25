@@ -72,9 +72,6 @@ export default function StaffPanel() {
         <div className="section-header" style={{ alignItems: 'flex-start' }}>
           <div>
             <h2>Panel personelu</h2>
-            <p className="support-copy">
-              Jeden panel dla bibliotekarza i administratora. Zakres widocznych sekcji zależy od roli.
-            </p>
           </div>
           <div className="tabs" role="tablist" aria-label="Sekcje panelu personelu">
             {availableSections.map(item => (

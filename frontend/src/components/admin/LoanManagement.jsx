@@ -27,7 +27,7 @@ export default function LoanManagement({
   }
 
   const getStatusLabel = (loan) => {
-    if (loan?.returnedAt) return 'Zwrócone'
+    if (loan?.returnedAt) return 'Zwr�cone'
     const due = loan?.dueAt ? new Date(loan.dueAt) : null
     if (due && due < today) return 'Przeterminowane'
     return 'Aktywne'

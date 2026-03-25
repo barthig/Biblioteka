@@ -1,6 +1,6 @@
 import React from 'react'
 
-export default function PageHeader({ title, subtitle, actions }) {
+export default function PageHeader({ title = '', subtitle = null, actions = null }) {
   return (
     <header className="page-header">
       <div>

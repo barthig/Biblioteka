@@ -28,7 +28,7 @@ export default function Breadcrumbs({
 
   // Add home if needed
   const allItems = showHome && items[0]?.href !== '/'
-    ? [{ label: 'Strona główna', href: '/', icon: homeIcon }, ...items]
+    ? [{ label: 'Strona gB�wna', href: '/', icon: homeIcon }, ...items]
     : items
 
   // Truncate middle items if maxItems is set

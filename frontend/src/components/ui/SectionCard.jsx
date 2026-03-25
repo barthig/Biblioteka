@@ -1,6 +1,6 @@
 import React from 'react'
 
-export default function SectionCard({ title, subtitle, actions, header, children, className = '' }) {
+export default function SectionCard({ title = null, subtitle = null, actions = null, header = null, children = null, className = '' }) {
   return (
     <section className={`surface-card ${className}`.trim()}>
       {header ? (

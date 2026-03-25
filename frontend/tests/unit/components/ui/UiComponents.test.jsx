@@ -38,7 +38,7 @@ describe('ui components', () => {
 
   it('renders Skeleton with aria label', () => {
     render(<Skeleton />)
-    expect(screen.getByLabelText('Loading...')).toBeInTheDocument()
+    expect(screen.getByLabelText('Ładowanie...')).toBeInTheDocument()
   })
 
   it('renders TableRowSkeleton columns', () => {
@@ -49,7 +49,6 @@ describe('ui components', () => {
         </tbody>
       </table>
     )
-    expect(screen.getAllByLabelText('Loading...')).toHaveLength(2)
+    expect(screen.getAllByLabelText('Ładowanie...')).toHaveLength(2)
   })
 })
-

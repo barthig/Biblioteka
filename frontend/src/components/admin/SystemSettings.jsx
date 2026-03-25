@@ -44,13 +44,13 @@ export default function SystemSettings({
                         {item.description}
                       </div>
                     )}
-                    <div className="support-copy" aria-label={`Aktualna wartość: ${item.value ?? ''}`}>
+                    <div className="support-copy" aria-label={`Aktualna warto[: ${item.value ?? ''}`}>
                       {String(item.value ?? '')}
                     </div>
                   </div>
                   <button
                     className="btn btn-sm"
-                    onClick={() => updateSetting(item.key, prompt('Nowa wartość', item.value ?? '') || item.value)}
+                    onClick={() => updateSetting(item.key, prompt('Nowa warto[', item.value ?? '') || item.value)}
                     aria-label={`Edytuj ustawienie ${item.key}`}
                     aria-describedby={item.description ? `desc-${item.key}` : undefined}
                   >
@@ -110,7 +110,7 @@ export default function SystemSettings({
                         type="checkbox"
                         checked={!!item.enabled}
                         onChange={e => toggleIntegration(item.id, e.target.checked)}
-                        aria-label={item.enabled ? 'Wyłącz integrację' : 'Włącz integrację'}
+                        aria-label={item.enabled ? 'WyBcz integracj' : 'WBcz integracj'}
                       />
                       <span className="switch-slider" />
                     </label>
