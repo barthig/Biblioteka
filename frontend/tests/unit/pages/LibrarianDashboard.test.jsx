@@ -1,3 +1,4 @@
+import React from 'react'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import LibrarianDashboard from '../../../src/pages/admin/LibrarianDashboard'
@@ -17,7 +18,7 @@ describe('LibrarianDashboard page', () => {
     vi.clearAllMocks()
   })
 
-  it('renders stats after load', async () => {
+  it('renders statistic cards after load', async () => {
     apiFetch.mockResolvedValue({
       activeLoans: 3,
       overdueLoans: 1,
@@ -37,5 +38,12 @@ describe('LibrarianDashboard page', () => {
 
     expect(await screen.findByText('Panel bibliotekarza')).toBeInTheDocument()
     expect(await screen.findByText('3')).toBeInTheDocument()
+    expect(screen.getByText(/^Aktywne wypożyczenia$/i)).toBeInTheDocument()
+    expect(screen.getByText(/^Zaległe zwroty$/i)).toBeInTheDocument()
+    expect(screen.getByText(/^Rezerwacje$/i)).toBeInTheDocument()
+    expect(screen.getByText(/^Użytkownicy$/i)).toBeInTheDocument()
+    expect(screen.getAllByText(/Książki/i).length).toBeGreaterThan(0)
+    expect(screen.getByText(/^Dostępne egzemplarze$/i)).toBeInTheDocument()
+    expect(screen.getByText('15')).toBeInTheDocument()
   })
 })

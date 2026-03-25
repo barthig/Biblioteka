@@ -300,6 +300,182 @@ class BookRepository extends ServiceEntityRepository
     }
 
     /**
+     * Local semantic-hybrid fallback used when external embeddings are unavailable.
+     *
+     * @return Book[]
+     */
+    public function searchSemanticHybridFallback(string $query, int $limit = 10): array
+    {
+        $query = trim($query);
+        if ($query === '') {
+            return [];
+        }
+
+        $limit = max(1, $limit);
+        $normalizedQuery = $this->normalizeSearchText($query);
+        $tokens = $this->tokenizeSearchText($normalizedQuery);
+
+        if ($tokens === []) {
+            return $this->searchHybrid($query, [], $limit);
+        }
+
+        $qb = $this->createQueryBuilder('b')
+            ->leftJoin('b.author', 'a')->addSelect('a')
+            ->leftJoin('b.categories', 'c')->addSelect('c')
+            ->groupBy('b.id, a.id, c.id');
+
+        $orX = $qb->expr()->orX();
+        $parameters = [
+            'phrase' => '%' . $normalizedQuery . '%',
+        ];
+
+        $orX->add('LOWER(b.title) LIKE :phrase');
+        $orX->add('LOWER(COALESCE(b.description, \'\')) LIKE :phrase');
+        $orX->add('LOWER(a.name) LIKE :phrase');
+        $orX->add('LOWER(COALESCE(c.name, \'\')) LIKE :phrase');
+        $orX->add('LOWER(COALESCE(b.publisher, \'\')) LIKE :phrase');
+
+        foreach ($tokens as $index => $token) {
+            $parameterName = 'token' . $index;
+            $parameters[$parameterName] = '%' . $token . '%';
+            $orX->add('LOWER(b.title) LIKE :' . $parameterName);
+            $orX->add('LOWER(COALESCE(b.description, \'\')) LIKE :' . $parameterName);
+            $orX->add('LOWER(a.name) LIKE :' . $parameterName);
+            $orX->add('LOWER(COALESCE(c.name, \'\')) LIKE :' . $parameterName);
+            $orX->add('LOWER(COALESCE(b.publisher, \'\')) LIKE :' . $parameterName);
+        }
+
+        $qb->andWhere($orX)
+            ->orderBy('b.createdAt', 'DESC')
+            ->setMaxResults(max($limit * 4, 20));
+
+        foreach ($parameters as $name => $value) {
+            $qb->setParameter($name, $value);
+        }
+
+        $candidates = $qb->getQuery()->getResult();
+        if ($candidates === []) {
+            return $this->searchHybrid($query, [], $limit);
+        }
+
+        $scored = [];
+        foreach ($candidates as $book) {
+            if (!$book instanceof Book) {
+                continue;
+            }
+
+            $title = $this->normalizeSearchText($book->getTitle());
+            $description = $this->normalizeSearchText((string) ($book->getDescription() ?? ''));
+            $author = $this->normalizeSearchText($book->getAuthor()->getName());
+            $publisher = $this->normalizeSearchText((string) ($book->getPublisher() ?? ''));
+            $categories = [];
+            foreach ($book->getCategories() as $category) {
+                $categories[] = $this->normalizeSearchText($category->getName());
+            }
+            $categoryText = implode(' ', $categories);
+
+            $score = 0.0;
+
+            if (str_contains($title, $normalizedQuery)) {
+                $score += 10;
+            }
+            if (str_contains($author, $normalizedQuery) || str_contains($categoryText, $normalizedQuery)) {
+                $score += 7;
+            }
+            if (str_contains($description, $normalizedQuery) || str_contains($publisher, $normalizedQuery)) {
+                $score += 5;
+            }
+
+            foreach ($tokens as $token) {
+                if (str_contains($title, $token)) {
+                    $score += 3.5;
+                }
+                if (str_contains($author, $token)) {
+                    $score += 2.5;
+                }
+                if (str_contains($categoryText, $token)) {
+                    $score += 2.5;
+                }
+                if (str_contains($description, $token)) {
+                    $score += 1.5;
+                }
+                if (str_contains($publisher, $token)) {
+                    $score += 1.0;
+                }
+            }
+
+            if ($book->getCopies() > 0) {
+                $score += 0.5;
+            }
+
+            if ($score <= 0) {
+                continue;
+            }
+
+            $scored[] = [
+                'book' => $book,
+                'score' => $score,
+                'copies' => $book->getCopies(),
+                'createdAt' => $book->getCreatedAt()->getTimestamp(),
+            ];
+        }
+
+        if ($scored === []) {
+            return $this->searchHybrid($query, [], $limit);
+        }
+
+        usort($scored, static function (array $left, array $right): int {
+            $scoreComparison = $right['score'] <=> $left['score'];
+            if ($scoreComparison !== 0) {
+                return $scoreComparison;
+            }
+
+            $copiesComparison = $right['copies'] <=> $left['copies'];
+            if ($copiesComparison !== 0) {
+                return $copiesComparison;
+            }
+
+            return $right['createdAt'] <=> $left['createdAt'];
+        });
+
+        return array_map(
+            static fn (array $entry): Book => $entry['book'],
+            array_slice($scored, 0, $limit)
+        );
+    }
+
+    private function normalizeSearchText(string $value): string
+    {
+        $value = function_exists('mb_strtolower') ? mb_strtolower($value) : strtolower($value);
+
+        return preg_replace('/\s+/u', ' ', trim($value)) ?? trim($value);
+    }
+
+    /**
+     * @return string[]
+     */
+    private function tokenizeSearchText(string $value): array
+    {
+        $tokens = preg_split('/[^\p{L}\p{N}]+/u', $value) ?: [];
+        $stopWords = [
+            'a', 'aby', 'albo', 'ale', 'bo', 'czy', 'dla', 'do', 'i', 'jak', 'jest', 'lub',
+            'na', 'nie', 'o', 'od', 'oraz', 'po', 'się', 'the', 'to', 'w', 'we', 'z',
+            'za', 'ze',
+        ];
+
+        $filtered = [];
+        foreach ($tokens as $token) {
+            $token = trim($token);
+            if ($token === '' || mb_strlen($token) < 2 || in_array($token, $stopWords, true)) {
+                continue;
+            }
+            $filtered[] = $token;
+        }
+
+        return array_values(array_unique($filtered));
+    }
+
+    /**
      * Fetch books for public listings with optional advanced filters.
      * @param array{
      *     q?: string,

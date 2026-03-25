@@ -32,22 +32,22 @@ class RecommendationController extends AbstractController
     ) {}
 
     #[OA\Post(
-        path: '/api/recommendations',
+        path: '/api/recommend',
         summary: 'Rekomendacje na podstawie zapytania',
-        description: 'Zwraca rekomendacje książek na podstawie zapytania tekstowego (wyszukiwanie semantyczne)',
+        description: 'Zwraca rekomendacje książek na podstawie zapytania tekstowego w trybie semantyczno-hybrydowym.',
         tags: ['Recommendations'],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
                 required: ['query'],
                 properties: [
-                    new OA\Property(property: 'query', type: 'string')
+                    new OA\Property(property: 'query', type: 'string'),
                 ]
             )
         ),
         responses: [
             new OA\Response(response: 200, description: 'Lista rekomendowanych książek', content: new OA\JsonContent(type: 'object')),
-            new OA\Response(response: 400, description: 'Brak zapytania', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
+            new OA\Response(response: 400, description: 'Brak zapytania', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
         ]
     )]
     public function recommend(Request $request): JsonResponse
@@ -67,7 +67,7 @@ class RecommendationController extends AbstractController
             $books = $envelope->last(HandledStamp::class)?->getResult();
         } catch (ExternalServiceException) {
             $fallback = true;
-            $books = $this->bookRepository->searchHybrid($query, [], 5);
+            $books = $this->bookRepository->searchSemanticHybridFallback($query, 5);
         }
 
         return $this->json(
@@ -75,7 +75,7 @@ class RecommendationController extends AbstractController
                 'data' => $books,
                 'meta' => [
                     'aiAvailable' => !$fallback,
-                    'mode' => $fallback ? 'fallback' : 'semantic',
+                    'mode' => $fallback ? 'semantic-hybrid-local' : 'semantic-ai',
                 ],
             ],
             200,
@@ -87,12 +87,23 @@ class RecommendationController extends AbstractController
     #[OA\Get(
         path: '/api/recommendations/personal',
         summary: 'Spersonalizowane rekomendacje',
-        description: 'Zwraca spersonalizowane rekomendacje dla zalogowanego użytkownika na podstawie historii wypożyczeń i preferencji',
+        description: 'Zwraca spersonalizowane rekomendacje dla zalogowanego użytkownika na podstawie historii wypożyczeń i preferencji.',
         tags: ['Recommendations'],
         responses: [
             new OA\Response(response: 200, description: 'Spersonalizowane rekomendacje', content: new OA\JsonContent(type: 'object')),
             new OA\Response(response: 401, description: 'Nieautoryzowany', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
-            new OA\Response(response: 404, description: 'Użytkownik nie znaleziony', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
+            new OA\Response(response: 404, description: 'Użytkownik nie znaleziony', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
+    #[OA\Post(
+        path: '/api/recommendations/personal',
+        summary: 'Spersonalizowane rekomendacje (POST)',
+        description: 'Alternatywny endpoint POST zwracający spersonalizowane rekomendacje dla zalogowanego użytkownika.',
+        tags: ['Recommendations'],
+        responses: [
+            new OA\Response(response: 200, description: 'Spersonalizowane rekomendacje', content: new OA\JsonContent(type: 'object')),
+            new OA\Response(response: 401, description: 'Nieautoryzowany', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'Użytkownik nie znaleziony', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
         ]
     )]
     public function personal(Request $request): JsonResponse

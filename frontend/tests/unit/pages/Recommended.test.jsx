@@ -1,3 +1,4 @@
+import React from 'react'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
@@ -47,10 +48,10 @@ describe('Recommended page', () => {
 
     renderPage()
 
-    expect(await screen.findByText(/Wyszukiwanie semantyczne/i)).toBeInTheDocument()
+    expect(await screen.findByText(/Wyszukiwanie semantyczno-hybrydowe/i)).toBeInTheDocument()
     expect(screen.getByText('Semantic Search Widget')).toBeInTheDocument()
     expect(await screen.findByText('Group A')).toBeInTheDocument()
     expect(screen.getByText('Alpha')).toBeInTheDocument()
+    expect(screen.getByText(/Semantyczno-hybrydowe rekomendacje/i)).toBeInTheDocument()
   })
 })
-

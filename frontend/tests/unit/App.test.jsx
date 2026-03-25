@@ -35,6 +35,7 @@ vi.mock('../../src/pages/admin/StaffPanel', () => ({ default: () => <div>Staff P
 vi.mock('../../src/pages/user/UserDetails', () => ({ default: () => <div>User Details</div> }))
 vi.mock('../../src/pages/admin/Reports', () => ({ default: () => <div>Reports</div> }))
 vi.mock('../../src/pages/books/Acquisitions', () => ({ default: () => <div>Acquisitions</div> }))
+vi.mock('../../src/pages/NotFound', () => ({ default: () => <div>Not Found Page</div> }))
 
 import App from '../../src/App'
 
@@ -56,5 +57,14 @@ describe('App routing', () => {
       </MemoryRouter>
     )
     expect(await screen.findByText('Books Page')).toBeInTheDocument()
+  })
+
+  it('renders not found route for unknown path', async () => {
+    render(
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/missing-route']}>
+        <App />
+      </MemoryRouter>
+    )
+    expect(await screen.findByText('Not Found Page')).toBeInTheDocument()
   })
 })

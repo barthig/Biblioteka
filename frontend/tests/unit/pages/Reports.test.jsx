@@ -1,3 +1,4 @@
+import React from 'react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import Reports from '../../../src/pages/admin/Reports'
@@ -30,11 +31,13 @@ describe('Reports page', () => {
     reportService.getPatronSegments.mockResolvedValue({ data: [] })
     reportService.getFinancialSummary.mockResolvedValue({})
     reportService.getInventoryOverview.mockResolvedValue({})
+
     render(<Reports />)
-    expect(await screen.findByText(/Brak upraw/i)).toBeInTheDocument()
+
+    expect(await screen.findByText(/Brak uprawnień do raportów/i)).toBeInTheDocument()
   })
 
-  it('renders reports data', async () => {
+  it('renders statistics and report data', async () => {
     mockUser = { roles: ['ROLE_LIBRARIAN'] }
     reportService.getUsage.mockResolvedValue({ totalLoans: 5, activeLoans: 2 })
     reportService.getPopularTitles.mockResolvedValue({ items: [{ bookId: 1, title: 'Alpha', loanCount: 3 }] })
@@ -50,15 +53,22 @@ describe('Reports page', () => {
     })
 
     render(<Reports />)
+
     expect(await screen.findByRole('heading', { level: 1, name: /Raporty/i })).toBeInTheDocument()
-    
-    // Wait for loading to complete before checking for data
+
     await waitFor(() => {
-      expect(screen.queryByText(/Ładowanie/)).not.toBeInTheDocument()
+      expect(screen.queryByText(/Ładowanie/i)).not.toBeInTheDocument()
     })
-    
+
+    expect(screen.getAllByText(/Aktywne wypożyczenia/i).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/Użytkownicy/i).length).toBeGreaterThan(0)
+    expect(screen.getByRole('heading', { level: 1, name: /Raporty/i })).toBeInTheDocument()
+    expect(screen.getAllByText('2').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('5').length).toBeGreaterThan(0)
     expect(screen.getByText(/Alpha/)).toBeInTheDocument()
     expect(screen.getByText(/Student/)).toBeInTheDocument()
+    expect(screen.getByText(/Budżet przydzielony: 1000 PLN/i)).toBeInTheDocument()
+    expect(screen.getByText(/Łącznie egzemplarzy: 20/i)).toBeInTheDocument()
   })
 
   it('shows error when reports fail to load', async () => {
@@ -70,7 +80,7 @@ describe('Reports page', () => {
     reportService.getInventoryOverview.mockResolvedValue({})
 
     render(<Reports />)
+
     expect(await screen.findByText(/Load failed/i)).toBeInTheDocument()
   })
 })
-

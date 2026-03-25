@@ -3,6 +3,7 @@ namespace App\Tests\Functional;
 
 use App\Entity\Author;
 use App\Entity\Book;
+use App\Exception\ExternalServiceException;
 use App\Repository\BookRepository;
 use App\Service\Book\OpenAIEmbeddingService;
 use App\Service\Book\RecommendationService;
@@ -37,7 +38,10 @@ class RecommendationControllerTest extends ApiTestCase
         $this->assertResponseStatusCodeSame(200);
         $payload = $this->getJsonResponse($client);
         $this->assertArrayHasKey('data', $payload);
+        $this->assertTrue($payload['meta']['aiAvailable'] ?? false);
+        $this->assertSame('semantic-ai', $payload['meta']['mode'] ?? null);
         $this->assertCount(1, $payload['data']);
+
         if (!isset($payload['data'][0]['title'], $payload['data'][0]['author']['name'])) {
             $this->assertSame('Dune', $book->getTitle());
             $this->assertSame('Frank Herbert', $book->getAuthor()->getName());
@@ -47,19 +51,48 @@ class RecommendationControllerTest extends ApiTestCase
         }
     }
 
+    public function testRecommendFallsBackToLocalSemanticHybridMode(): void
+    {
+        static::ensureKernelShutdown();
+        $client = $this->createApiClient();
+        $container = static::getContainer();
+
+        $mockEmbedding = $this->createMock(OpenAIEmbeddingService::class);
+        $mockEmbedding->expects($this->once())
+            ->method('getVector')
+            ->with('space travel')
+            ->willThrowException(new ExternalServiceException('Embedding service unavailable'));
+
+        $book = $this->createBookStub(1, 'Dune', 'Frank Herbert', 'Sci-fi classic.');
+
+        $mockRepository = $this->createMock(BookRepository::class);
+        $mockRepository->expects($this->once())
+            ->method('searchSemanticHybridFallback')
+            ->with('space travel', 5)
+            ->willReturn([$book]);
+
+        $container->set(OpenAIEmbeddingService::class, $mockEmbedding);
+        $container->set(BookRepository::class, $mockRepository);
+
+        $this->jsonRequest($client, 'POST', '/api/recommend', ['query' => 'space travel']);
+
+        $this->assertResponseStatusCodeSame(200);
+        $payload = $this->getJsonResponse($client);
+        $this->assertFalse($payload['meta']['aiAvailable'] ?? true);
+        $this->assertSame('semantic-hybrid-local', $payload['meta']['mode'] ?? null);
+        $this->assertCount(1, $payload['data'] ?? []);
+    }
+
     public function testRecommendRejectsEmptyQuery(): void
     {
         $client = $this->createApiClient();
-        putenv('OPENAI_API_KEY=test-key');
-        $_ENV['OPENAI_API_KEY'] = 'test-key';
-        $_SERVER['OPENAI_API_KEY'] = 'test-key';
 
         $this->jsonRequest($client, 'POST', '/api/recommend', ['query' => '']);
 
         $this->assertResponseStatusCodeSame(400);
         $payload = $this->getJsonResponse($client);
         $message = $payload['error']['message'] ?? $payload['message'] ?? null;
-        $this->assertSame('Query is required.', $message);
+        $this->assertSame('Zapytanie jest wymagane.', $message);
     }
 
     public function testPersonalRecommendationsReturnsPayload(): void

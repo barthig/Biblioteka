@@ -19,10 +19,7 @@ class AmqpConnectionFactory
             $port = $parts['port'] ?? 5672;
             $user = $parts['user'] ?? 'app';
             $pass = $parts['pass'] ?? 'app';
-            $vhost = isset($parts['path']) ? urldecode(ltrim($parts['path'], '/')) : '/';
-            if ($vhost === '') {
-                $vhost = '/';
-            }
+            $vhost = self::extractVhost($parts['path'] ?? null);
 
             return new \PhpAmqpLib\Connection\AMQPStreamConnection(
                 $host,
@@ -44,5 +41,18 @@ class AmqpConnectionFactory
             // Integration events are non-critical — return null and log
             return null;
         }
+    }
+
+    private static function extractVhost(?string $path): string
+    {
+        if ($path === null || $path === '' || $path === '/') {
+            return '/';
+        }
+
+        $segments = explode('/', ltrim($path, '/'));
+        $encodedVhost = $segments[0] ?? '';
+        $vhost = urldecode($encodedVhost);
+
+        return $vhost === '' ? '/' : $vhost;
     }
 }

@@ -79,6 +79,9 @@ describe('Dashboard page', () => {
     expect(await screen.findByText(/Witaj/i)).toBeInTheDocument()
     expect(screen.getByText('Alert title')).toBeInTheDocument()
     expect(screen.getByTestId('user-recommendations')).toBeInTheDocument()
+    expect(screen.getByText('2')).toBeInTheDocument()
+    expect(screen.getByText('1')).toBeInTheDocument()
+    expect(screen.getByText('3')).toBeInTheDocument()
   })
 
   it('renders admin dashboard', async () => {
@@ -103,7 +106,8 @@ describe('Dashboard page', () => {
     )
 
     expect(await screen.findByText(/Panel Administratora/i)).toBeInTheDocument()
+    expect(screen.getByText('1')).toBeInTheDocument()
+    expect(screen.getByText('10%')).toBeInTheDocument()
+    expect(screen.getByText('2')).toBeInTheDocument()
   })
 })
-
-

@@ -13,7 +13,7 @@ export default function SemanticSearch() {
     const trimmed = query.trim()
 
     if (!trimmed) {
-      setError('Wpisz opis lub temat, którego szukasz.')
+      setError('Wpisz opis, klimat albo temat, którego szukasz.')
       setResults([])
       return
     }
@@ -31,12 +31,12 @@ export default function SemanticSearch() {
       })
 
       if (response?.meta?.aiAvailable === false) {
-        setNotice('Moduł AI jest chwilowo niedostępny. Pokazano wyniki zastępcze.')
+        setNotice('Tryb AI jest chwilowo niedostępny. Pokazano lokalne wyniki semantyczno-hybrydowe.')
       }
 
       setResults(Array.isArray(response?.data) ? response.data : [])
     } catch (err) {
-      setError(err?.message || 'Wyszukiwanie semantyczne nie powiodło się.')
+      setError(err?.message || 'Wyszukiwanie semantyczno-hybrydowe nie powiodło się.')
       setResults([])
     } finally {
       setLoading(false)
@@ -51,7 +51,7 @@ export default function SemanticSearch() {
           id="semantic-query"
           type="text"
           value={query}
-          placeholder="np. książki o podróżach kosmicznych i samotności"
+          placeholder="np. książki o podróżach kosmicznych, samotności i odkrywaniu świata"
           onChange={event => setQuery(event.target.value)}
         />
         <button type="submit" disabled={loading}>

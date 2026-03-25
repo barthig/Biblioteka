@@ -126,7 +126,7 @@ export default function Recommended() {
     <div className="page">
       <PageHeader
         title="Polecane"
-        subtitle="Poznaj książki dobrane do Twoich preferencji i wyszukuj je semantycznie."
+        subtitle="Poznaj książki dobrane do Twoich preferencji i korzystaj z lokalnego trybu semantyczno-hybrydowego."
         actions={token && lastDismissedId ? (
           <button className="btn btn-secondary" type="button" onClick={() => undoDismiss(lastDismissedId)}>
             Cofnij ukrycie
@@ -138,10 +138,13 @@ export default function Recommended() {
         <StatCard title="Liczba grup" value={groups.length} subtitle="Kategorie rekomendacji" />
         <StatCard title="Propozycje" value={totalBooks} subtitle="Łącznie tytułów" />
         <StatCard title="Ukryte" value={dismissedBooks.size} subtitle="Odrzucone tytuły" />
-        <StatCard title="Tryb" value="AI" subtitle="Semantyczne wyszukiwanie" />
+        <StatCard title="Tryb" value="Lokalny" subtitle="Semantyczno-hybrydowe rekomendacje" />
       </StatGrid>
 
-      <SectionCard title="Wyszukiwanie semantyczne" subtitle="Opisz temat, klimat lub motyw, a system znajdzie podobne książki.">
+      <SectionCard
+        title="Wyszukiwanie semantyczno-hybrydowe"
+        subtitle="Opisz temat, klimat lub motyw, a system znajdzie podobne książki bez zewnętrznego AI."
+      >
         <SemanticSearch />
       </SectionCard>
 

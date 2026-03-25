@@ -2,7 +2,6 @@
 declare(strict_types=1);
 namespace App\ApiDoc;
 
-use Nelmio\ApiDocBundle\Describer\DescriberInterface;
 use Nelmio\ApiDocBundle\OpenApiPhp\Util;
 use OpenApi\Annotations\JsonContent;
 use OpenApi\Annotations\MediaType;
@@ -10,9 +9,12 @@ use OpenApi\Annotations\OpenApi;
 use OpenApi\Annotations\Operation;
 use OpenApi\Generator;
 
-class DefaultOperationDescriber implements DescriberInterface
+class DefaultOperationDescriber
 {
-    public function describe(OpenApi $api)
+    /**
+     * @param OpenApi $api
+     */
+    public function describe($api)
     {
         if (Generator::isDefault($api->paths)) {
             return;
@@ -65,7 +67,7 @@ class DefaultOperationDescriber implements DescriberInterface
                 continue;
             }
 
-            if ($this->hasJsonContent($response)) {
+            if ($this->hasResponseContent($response)) {
                 continue;
             }
 
@@ -81,21 +83,15 @@ class DefaultOperationDescriber implements DescriberInterface
         }
     }
 
-    private function hasJsonContent(object $response): bool
+    private function hasResponseContent(object $response): bool
     {
         if (!Generator::isDefault($response->content)) {
-            if ($response->content instanceof JsonContent) {
-                return true;
-            }
-            if ($response->content instanceof MediaType && $response->content->mediaType === 'application/json') {
+            if ($response->content instanceof JsonContent || $response->content instanceof MediaType) {
                 return true;
             }
             if (is_array($response->content)) {
                 foreach ($response->content as $content) {
-                    if ($content instanceof JsonContent) {
-                        return true;
-                    }
-                    if ($content instanceof MediaType && $content->mediaType === 'application/json') {
+                    if ($content instanceof JsonContent || $content instanceof MediaType) {
                         return true;
                     }
                 }
@@ -104,10 +100,7 @@ class DefaultOperationDescriber implements DescriberInterface
 
         if (!Generator::isDefault($response->_unmerged)) {
             foreach ($response->_unmerged as $content) {
-                if ($content instanceof JsonContent) {
-                    return true;
-                }
-                if ($content instanceof MediaType && $content->mediaType === 'application/json') {
+                if ($content instanceof JsonContent || $content instanceof MediaType) {
                     return true;
                 }
             }

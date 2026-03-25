@@ -2,20 +2,23 @@
 declare(strict_types=1);
 namespace App\ApiDoc;
 
-use Nelmio\ApiDocBundle\Describer\DescriberInterface;
 use Nelmio\ApiDocBundle\OpenApiPhp\Util;
 use OpenApi\Annotations as OA;
+use OpenApi\Annotations\OpenApi;
 use OpenApi\Generator;
 use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouterInterface;
 
-class RouteOperationDescriber implements DescriberInterface
+class RouteOperationDescriber
 {
     public function __construct(private RouterInterface $router)
     {
     }
 
-    public function describe(OA\OpenApi $api)
+    /**
+     * @param OpenApi $api
+     */
+    public function describe($api)
     {
         foreach ($this->router->getRouteCollection() as $name => $route) {
             if (!$route instanceof Route) {
@@ -40,13 +43,13 @@ class RouteOperationDescriber implements DescriberInterface
                     continue;
                 }
 
-                if (!Generator::isDefault($pathItem->{$methodLower})) {
-                    continue;
+                $operation = Util::getOperation($pathItem, $methodLower);
+
+                if (Generator::isDefault($pathItem->{$methodLower})) {
+                    $this->applyOperationId($operation, (string) $name, $methodLower);
+                    $this->ensureResponse($operation, $this->defaultResponseCode($method));
                 }
 
-                $operation = Util::getOperation($pathItem, $methodLower);
-                $this->applyOperationId($operation, (string) $name, $methodLower);
-                $this->ensureResponse($operation, $this->defaultResponseCode($method));
                 $this->attachPathParameters($operation, $route);
                 $this->applySecurityOverrides($operation, $route, $path, $method);
             }
@@ -105,13 +108,19 @@ class RouteOperationDescriber implements DescriberInterface
         }
 
         $method = strtoupper($method);
+        $normalizedPath = preg_replace('#\{[^/]+\}#', '1', $path) ?? $path;
         $publicRoutes = [
             '/api/auth/login' => ['POST'],
             '/api/auth/register' => ['POST'],
             '/api/auth/refresh' => ['POST'],
+            '/api/auth/verify' => ['GET'],
         ];
 
         if (isset($publicRoutes[$path]) && in_array($method, $publicRoutes[$path], true)) {
+            return true;
+        }
+
+        if (isset($publicRoutes[$normalizedPath]) && in_array($method, $publicRoutes[$normalizedPath], true)) {
             return true;
         }
 
@@ -126,6 +135,7 @@ class RouteOperationDescriber implements DescriberInterface
             ['pattern' => '#^/api/books/popular$#', 'methods' => ['GET']],
             ['pattern' => '#^/api/books/new$#', 'methods' => ['GET']],
             ['pattern' => '#^/api/books/\\d+$#', 'methods' => ['GET']],
+            ['pattern' => '#^/api/books/\\d+/cover$#', 'methods' => ['GET']],
             ['pattern' => '#^/api/books/\\d+/availability$#', 'methods' => ['GET']],
             ['pattern' => '#^/api/books/\\d+/ratings$#', 'methods' => ['GET']],
             ['pattern' => '#^/api/collections$#', 'methods' => ['GET']],
@@ -137,7 +147,8 @@ class RouteOperationDescriber implements DescriberInterface
         ];
 
         foreach ($publicPatterns as $entry) {
-            if (preg_match($entry['pattern'], $path) && in_array($method, $entry['methods'], true)) {
+            if ((preg_match($entry['pattern'], $path) || preg_match($entry['pattern'], $normalizedPath))
+                && in_array($method, $entry['methods'], true)) {
                 return true;
             }
         }

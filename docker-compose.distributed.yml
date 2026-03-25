@@ -144,6 +144,7 @@ services:
       DATABASE_URL: postgresql://biblioteka:biblioteka_secure@db:5432/biblioteka?serverVersion=16&charset=utf8
       REDIS_URL: redis://redis:6379
       MESSENGER_TRANSPORT_DSN: amqp://guest:guest@rabbitmq:5672/%2f/messages
+      MESSENGER_FAILURE_TRANSPORT_DSN: amqp://guest:guest@rabbitmq:5672/%2f/messages_failed
       API_SECRET: distributed_api_secret
       JWT_SECRET: distributed_jwt_secret_for_gateway_123456
       APP_ENV: distributed
@@ -168,6 +169,7 @@ services:
       DATABASE_URL: postgresql://biblioteka:biblioteka_secure@db:5432/biblioteka?serverVersion=16&charset=utf8
       REDIS_URL: redis://redis:6379
       MESSENGER_TRANSPORT_DSN: amqp://guest:guest@rabbitmq:5672/%2f/messages
+      MESSENGER_FAILURE_TRANSPORT_DSN: amqp://guest:guest@rabbitmq:5672/%2f/messages_failed
       API_SECRET: distributed_api_secret
       JWT_SECRET: distributed_jwt_secret_for_gateway_123456
       APP_ENV: distributed
@@ -215,8 +217,12 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     environment:
-      DATABASE_URL: postgresql://notifications:notifications_secure@notification-db:5432/notifications
-      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+      NOTIFICATION_DATABASE_URL: postgresql://notifications:notifications_secure@notification-db:5432/notifications
+      NOTIFICATION_RABBITMQ_HOST: rabbitmq
+      NOTIFICATION_RABBITMQ_PORT: 5672
+      NOTIFICATION_RABBITMQ_USER: guest
+      NOTIFICATION_RABBITMQ_PASSWORD: guest
+      NOTIFICATION_RABBITMQ_VHOST: /
       LOG_LEVEL: INFO
     depends_on:
       notification-db:
@@ -233,9 +239,14 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     environment:
-      DATABASE_URL: postgresql://recommendations:recommendations_secure@recommendation-db:5432/recommendations
-      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
-      EMBEDDING_MODEL: sentence-transformers/all-MiniLM-L6-v2
+      RECOMMENDATION_DATABASE_URL: postgresql://recommendations:recommendations_secure@recommendation-db:5432/recommendations
+      RECOMMENDATION_RABBITMQ_HOST: rabbitmq
+      RECOMMENDATION_RABBITMQ_PORT: 5672
+      RECOMMENDATION_RABBITMQ_USER: guest
+      RECOMMENDATION_RABBITMQ_PASSWORD: guest
+      RECOMMENDATION_RABBITMQ_VHOST: /
+      RECOMMENDATION_OPENAI_API_KEY: ${OPENAI_API_KEY:-change_me_openai_key}
+      RECOMMENDATION_OPENAI_MODEL: text-embedding-3-small
       LOG_LEVEL: INFO
     depends_on:
       recommendation-db:
