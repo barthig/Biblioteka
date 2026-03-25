@@ -36,11 +36,5 @@ export {
 // SearchInput component
 export { SearchInput, useSearch } from './SearchInput'
 
-// FormField components
-export { FormField, TextField, TextArea, SelectField, CheckboxField } from './FormField'
-
-// Avatar components
-export { Avatar, AvatarGroup } from './Avatar'
-
 // Toast notifications
 export { useToast, ToastProvider } from './Toast'

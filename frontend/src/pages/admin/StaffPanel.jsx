@@ -1,9 +1,10 @@
-import React, { useMemo } from 'react'
+import React, { Suspense, lazy, useMemo } from 'react'
 import { useLocation, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import FeedbackCard from '../../components/ui/FeedbackCard'
-import AdminPanel from './AdminPanel'
-import LibrarianPanel from './LibrarianPanel'
+
+const AdminPanel = lazy(() => import('./AdminPanel'))
+const LibrarianPanel = lazy(() => import('./LibrarianPanel'))
 
 function resolveSection(pathname, requestedSection, isAdmin) {
   const routeDefault = pathname.startsWith('/admin') ? 'admin' : 'operations'
@@ -37,7 +38,7 @@ export default function StaffPanel() {
       sections.push({
         key: 'operations',
         label: 'Obsługa biblioteki',
-        description: 'Wypożyczenia, zwroty, rezerwacje, opłaty i egzemplarze.'
+        description: 'Wypożyczenia, zwroty, rezerwacje, opłaty i egzemplarze.',
       })
     }
 
@@ -45,7 +46,7 @@ export default function StaffPanel() {
       sections.push({
         key: 'admin',
         label: 'Administracja',
-        description: 'Użytkownicy, role, audyt, integracje i konfiguracja systemu.'
+        description: 'Użytkownicy, role, audyt, integracje i konfiguracja systemu.',
       })
     }
 
@@ -91,7 +92,9 @@ export default function StaffPanel() {
         </div>
       </div>
 
-      {section === 'admin' ? <AdminPanel /> : <LibrarianPanel />}
+      <Suspense fallback={<div className="surface-card">Ładowanie panelu...</div>}>
+        {section === 'admin' ? <AdminPanel /> : <LibrarianPanel />}
+      </Suspense>
     </div>
   )
 }

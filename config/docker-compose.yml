@@ -70,13 +70,14 @@
     environment:
       APP_ENV: dev
       APP_DEBUG: 0
+      APP_DISTRIBUTED_MODE: 0
       DATABASE_URL: postgresql://biblioteka:biblioteka@db:5432/biblioteka_dev?serverVersion=16&charset=utf8
       MESSENGER_TRANSPORT_DSN: "amqp://app:app@rabbitmq:5672/%2f"
       MESSENGER_FAILURE_TRANSPORT_DSN: "amqp://app:app@rabbitmq:5672/%2f/messages_failed"
       INTEGRATION_AMQP_DSN: "amqp://app:app@rabbitmq:5672/%2f"
       REDIS_URL: redis://redis:6379
-      API_SECRET: dev_api_secret
-      JWT_SECRET: dev_jwt_secret_for_local_docker_123456
+      API_SECRET: ${API_SECRET:-change_me_api}
+      JWT_SECRET: ${JWT_SECRET:-change_me_jwt_dev_local_1234567890}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-change_me_openai_key}
       CORS_ALLOW_ORIGIN: http://localhost:5173
     volumes:
@@ -91,8 +92,8 @@
         mkdir -p /app/var/cache/dev/doctrine/orm/Proxies &&
         mkdir -p /app/var/cache/prod/doctrine/orm/Proxies &&
         chown -R www-data:www-data /app/var &&
-        chmod -R 777 /app/var &&
-        composer install --no-interaction &&
+        chmod -R 775 /app/var &&
+        if [ ! -f /app/vendor/autoload.php ]; then composer install --no-interaction; fi &&
         if php bin/console doctrine:query:sql 'SELECT 1 FROM app_user LIMIT 1' 2>/dev/null; then
           echo 'Database schema already exists, skipping migrations';
         else
@@ -103,7 +104,7 @@
         php bin/console doctrine:query:sql \"SELECT setval('loan_id_seq', COALESCE((SELECT MAX(id) FROM loan), 1), true);\" &&
         php bin/console cache:warmup --env=dev &&
         chown -R www-data:www-data /app/var &&
-        chmod -R 777 /app/var &&
+        chmod -R 775 /app/var &&
         php-fpm -F
       "
 
@@ -136,14 +137,15 @@
     environment:
       APP_ENV: dev
       APP_DEBUG: 0
+      APP_DISTRIBUTED_MODE: 0
       DATABASE_URL: postgresql://biblioteka:biblioteka@db:5432/biblioteka_dev?serverVersion=16&charset=utf8
       MESSENGER_TRANSPORT_DSN: "amqp://app:app@rabbitmq:5672/%2f"
       MESSENGER_FAILURE_TRANSPORT_DSN: "amqp://app:app@rabbitmq:5672/%2f/messages_failed"
       INTEGRATION_AMQP_DSN: "amqp://app:app@rabbitmq:5672/%2f"
       REDIS_URL: redis://redis:6379
       MAILER_DSN: smtp://mailpit:1025
-      API_SECRET: dev_api_secret
-      JWT_SECRET: dev_jwt_secret_for_local_docker_123456
+      API_SECRET: ${API_SECRET:-change_me_api}
+      JWT_SECRET: ${JWT_SECRET:-change_me_jwt_dev_local_1234567890}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-change_me_openai_key}
     volumes:
       - backend_vendor:/app/vendor
@@ -156,8 +158,8 @@
         mkdir -p /app/var/cache/dev/doctrine/orm/Proxies &&
         mkdir -p /app/var/cache/prod/doctrine/orm/Proxies &&
         chown -R www-data:www-data /app/var &&
-        chmod -R 777 /app/var &&
-        composer install --no-interaction &&
+        chmod -R 775 /app/var &&
+        if [ ! -f /app/vendor/autoload.php ]; then composer install --no-interaction; fi &&
         until php -r \"exit(@fsockopen('rabbitmq', 5672) ? 0 : 1);\"; do
           echo 'Waiting for RabbitMQ...' &&
           sleep 2;
@@ -175,7 +177,7 @@
     working_dir: /app
     environment:
       VITE_API_URL: ""
-      VITE_API_SECRET: dev_api_secret
+      VITE_API_SECRET: ${API_SECRET:-change_me_api}
       VITE_PROXY_TARGET: http://nginx
     volumes:
       - ./frontend:/app:cached

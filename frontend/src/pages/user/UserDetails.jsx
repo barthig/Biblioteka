@@ -1,16 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { apiFetch } from '../../api';
-import '../UserDetails.css';
-import { logger } from '../../utils/logger';
+import React, { useEffect, useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
+import { apiFetch } from '../../api'
+import { logger } from '../../utils/logger'
+import '../UserDetails.css'
 
-const UserDetails = () => {
-  const { id } = useParams();
-  const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [userDetails, setUserDetails] = useState(null);
-  const [editMode, setEditMode] = useState(false);
+const DEFAULT_ROLES = ['ROLE_USER']
+
+export default function UserDetails() {
+  const { id } = useParams()
+  const navigate = useNavigate()
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [userDetails, setUserDetails] = useState(null)
+  const [editMode, setEditMode] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -20,18 +22,18 @@ const UserDetails = () => {
     postalCode: '',
     pesel: '',
     cardNumber: '',
-    roles: []
-  });
+    roles: DEFAULT_ROLES,
+  })
 
   useEffect(() => {
-    fetchUserDetails();
-  }, [id]);
+    fetchUserDetails()
+  }, [id])
 
-  const fetchUserDetails = async () => {
+  async function fetchUserDetails() {
     try {
-      setLoading(true);
-      const response = await apiFetch(`/api/users/${id}/details`);
-      setUserDetails(response);
+      setLoading(true)
+      const response = await apiFetch(`/api/users/${id}/details`)
+      setUserDetails(response)
       setFormData({
         name: response.user.name || '',
         email: response.user.email || '',
@@ -41,67 +43,76 @@ const UserDetails = () => {
         postalCode: response.user.postalCode || '',
         pesel: response.user.pesel || '',
         cardNumber: response.user.cardNumber || '',
-        roles: response.user.roles || ['ROLE_USER']
-      });
-      setError('');
+        roles: response.user.roles || DEFAULT_ROLES,
+      })
+      setError('')
     } catch (err) {
-      setError(err.message || 'Błąd podczas ładowania danych użytkownika');
-      logger.error('Error fetching user details:', err);
+      setError(err.message || 'Błąd podczas ładowania danych użytkownika.')
+      logger.error('Error fetching user details:', err)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
+  function handleInputChange(event) {
+    const { name, value } = event.target
+    setFormData(prev => ({ ...prev, [name]: value }))
+  }
 
-  const handleRoleChange = (role) => {
+  function handleRoleChange(role) {
     setFormData(prev => {
-      const currentRoles = prev.roles || [];
-      const hasRole = currentRoles.includes(role);
-      
-      if (hasRole) {
-        // Usuń rolę
-        return { ...prev, roles: currentRoles.filter(r => r !== role) };
-      } else {
-        // Dodaj rolę
-        return { ...prev, roles: [...currentRoles, role] };
+      const currentRoles = prev.roles || []
+      const hasRole = currentRoles.includes(role)
+      return {
+        ...prev,
+        roles: hasRole ? currentRoles.filter(item => item !== role) : [...currentRoles, role],
       }
-    });
-  };
+    })
+  }
 
-  const handleSaveUser = async () => {
+  async function handleSaveUser() {
     try {
       await apiFetch(`/api/users/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      });
-      setEditMode(false);
-      fetchUserDetails();
-      alert('Dane użytkownika zostały zaktualizowane');
+        body: JSON.stringify(formData),
+      })
+      setEditMode(false)
+      fetchUserDetails()
+      alert('Dane użytkownika zostały zaktualizowane.')
     } catch (err) {
-      alert(err.message || 'Błąd podczas zapisywania danych');
-      logger.error('Error updating user:', err);
+      alert(err.message || 'Błąd podczas zapisywania danych.')
+      logger.error('Error updating user:', err)
     }
-  };
+  }
 
-  const formatDate = (dateString) => {
-    if (!dateString) return '-';
-    return new Date(dateString).toLocaleDateString('pl-PL');
-  };
+  function formatDate(dateString) {
+    if (!dateString) return '-'
+    return new Date(dateString).toLocaleDateString('pl-PL')
+  }
 
-  const formatCurrency = (amount) => {
-    return `${parseFloat(amount).toFixed(2)} PLN`;
-  };
+  function formatCurrency(amount) {
+    return `${parseFloat(amount || 0).toFixed(2)} PLN`
+  }
+
+  function resetEditForm() {
+    if (!userDetails?.user) return
+    const user = userDetails.user
+    setFormData({
+      name: user.name || '',
+      email: user.email || '',
+      phoneNumber: user.phoneNumber || '',
+      addressLine: user.addressLine || '',
+      city: user.city || '',
+      postalCode: user.postalCode || '',
+      pesel: user.pesel || '',
+      cardNumber: user.cardNumber || '',
+      roles: user.roles || DEFAULT_ROLES,
+    })
+  }
 
   if (loading) {
-    return <div className="user-details-loading">Ładowanie...</div>;
+    return <div className="user-details-loading">Ładowanie...</div>
   }
 
   if (error) {
@@ -109,27 +120,26 @@ const UserDetails = () => {
       <div className="user-details-error">
         <h2>Błąd</h2>
         <p>{error}</p>
-        <button onClick={() => navigate('/staff?section=admin')}>Powr�t do listy u|ytkownik�w</button>
+        <button onClick={() => navigate('/staff?section=admin')}>Powrót do listy użytkowników</button>
       </div>
-    );
+    )
   }
 
   if (!userDetails) {
-    return <div>Nie znaleziono użytkownika</div>;
+    return <div>Nie znaleziono użytkownika.</div>
   }
 
-  const { user, activeLoans, loanHistory, activeFines, paidFines, statistics } = userDetails;
+  const { user, activeLoans, loanHistory, activeFines, paidFines, statistics } = userDetails
 
   return (
     <div className="user-details-container">
       <div className="user-details-header">
         <h1>Szczegóły użytkownika</h1>
         <button className="btn-back" onClick={() => navigate('/staff?section=admin')}>
-          ← Powrót do listy
+          ← Powrót do listy
         </button>
       </div>
 
-      {/* Podstawowe informacje */}
       <div className="user-info-card">
         <div className="card-header">
           <h2>Dane osobowe</h2>
@@ -138,20 +148,15 @@ const UserDetails = () => {
           ) : (
             <div className="edit-actions">
               <button className="btn-save" onClick={handleSaveUser}>Zapisz</button>
-              <button className="btn-cancel" onClick={() => {
-                setEditMode(false);
-                setFormData({
-                  name: user.name || '',
-                  email: user.email || '',
-                  phoneNumber: user.phoneNumber || '',
-                  addressLine: user.addressLine || '',
-                  city: user.city || '',
-                  postalCode: user.postalCode || '',
-                  pesel: user.pesel || '',
-                  cardNumber: user.cardNumber || '',
-                  roles: user.roles || ['ROLE_USER']
-                });
-              }}>Anuluj</button>
+              <button
+                className="btn-cancel"
+                onClick={() => {
+                  setEditMode(false)
+                  resetEditForm()
+                }}
+              >
+                Anuluj
+              </button>
             </div>
           )}
         </div>
@@ -159,42 +164,18 @@ const UserDetails = () => {
         <div className="user-info-grid">
           <div className="info-item">
             <label>Imię i nazwisko:</label>
-            {editMode ? (
-              <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleInputChange}
-              />
-            ) : (
-              <span>{user.name}</span>
-            )}
+            {editMode ? <input type="text" name="name" value={formData.name} onChange={handleInputChange} /> : <span>{user.name}</span>}
           </div>
 
           <div className="info-item">
-            <label>Email:</label>
-            {editMode ? (
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleInputChange}
-              />
-            ) : (
-              <span>{user.email}</span>
-            )}
+            <label>E-mail:</label>
+            {editMode ? <input type="email" name="email" value={formData.email} onChange={handleInputChange} /> : <span>{user.email}</span>}
           </div>
 
           <div className="info-item">
             <label>Telefon:</label>
             {editMode ? (
-              <input
-                type="text"
-                name="phoneNumber"
-                value={formData.phoneNumber}
-                onChange={handleInputChange}
-                maxLength={30}
-              />
+              <input type="text" name="phoneNumber" value={formData.phoneNumber} onChange={handleInputChange} maxLength={30} />
             ) : (
               <span>{user.phoneNumber || '-'}</span>
             )}
@@ -203,14 +184,7 @@ const UserDetails = () => {
           <div className="info-item">
             <label>PESEL:</label>
             {editMode ? (
-              <input
-                type="text"
-                name="pesel"
-                value={formData.pesel}
-                onChange={handleInputChange}
-                maxLength={11}
-                pattern="[0-9]{11}"
-              />
+              <input type="text" name="pesel" value={formData.pesel} onChange={handleInputChange} maxLength={11} pattern="[0-9]{11}" />
             ) : (
               <span>{user.pesel || '-'}</span>
             )}
@@ -219,13 +193,7 @@ const UserDetails = () => {
           <div className="info-item">
             <label>Numer karty:</label>
             {editMode ? (
-              <input
-                type="text"
-                name="cardNumber"
-                value={formData.cardNumber}
-                onChange={handleInputChange}
-                maxLength={20}
-              />
+              <input type="text" name="cardNumber" value={formData.cardNumber} onChange={handleInputChange} maxLength={20} />
             ) : (
               <span>{user.cardNumber || '-'}</span>
             )}
@@ -234,13 +202,7 @@ const UserDetails = () => {
           <div className="info-item">
             <label>Adres:</label>
             {editMode ? (
-              <input
-                type="text"
-                name="addressLine"
-                value={formData.addressLine}
-                onChange={handleInputChange}
-                maxLength={255}
-              />
+              <input type="text" name="addressLine" value={formData.addressLine} onChange={handleInputChange} maxLength={255} />
             ) : (
               <span>{user.addressLine || '-'}</span>
             )}
@@ -249,13 +211,7 @@ const UserDetails = () => {
           <div className="info-item">
             <label>Miasto:</label>
             {editMode ? (
-              <input
-                type="text"
-                name="city"
-                value={formData.city}
-                onChange={handleInputChange}
-                maxLength={120}
-              />
+              <input type="text" name="city" value={formData.city} onChange={handleInputChange} maxLength={120} />
             ) : (
               <span>{user.city || '-'}</span>
             )}
@@ -264,14 +220,7 @@ const UserDetails = () => {
           <div className="info-item">
             <label>Kod pocztowy:</label>
             {editMode ? (
-              <input
-                type="text"
-                name="postalCode"
-                value={formData.postalCode}
-                onChange={handleInputChange}
-                maxLength={12}
-                pattern="[0-9]{2}-[0-9]{3}"
-              />
+              <input type="text" name="postalCode" value={formData.postalCode} onChange={handleInputChange} maxLength={12} pattern="[0-9]{2}-[0-9]{3}" />
             ) : (
               <span>{user.postalCode || '-'}</span>
             )}
@@ -282,27 +231,15 @@ const UserDetails = () => {
             {editMode ? (
               <div className="roles-checkboxes">
                 <label className="role-checkbox">
-                  <input
-                    type="checkbox"
-                    checked={formData.roles?.includes('ROLE_USER')}
-                    onChange={() => handleRoleChange('ROLE_USER')}
-                  />
+                  <input type="checkbox" checked={formData.roles?.includes('ROLE_USER')} onChange={() => handleRoleChange('ROLE_USER')} />
                   <span>Użytkownik</span>
                 </label>
                 <label className="role-checkbox">
-                  <input
-                    type="checkbox"
-                    checked={formData.roles?.includes('ROLE_LIBRARIAN')}
-                    onChange={() => handleRoleChange('ROLE_LIBRARIAN')}
-                  />
+                  <input type="checkbox" checked={formData.roles?.includes('ROLE_LIBRARIAN')} onChange={() => handleRoleChange('ROLE_LIBRARIAN')} />
                   <span>Bibliotekarz</span>
                 </label>
                 <label className="role-checkbox">
-                  <input
-                    type="checkbox"
-                    checked={formData.roles?.includes('ROLE_ADMIN')}
-                    onChange={() => handleRoleChange('ROLE_ADMIN')}
-                  />
+                  <input type="checkbox" checked={formData.roles?.includes('ROLE_ADMIN')} onChange={() => handleRoleChange('ROLE_ADMIN')} />
                   <span>Administrator</span>
                 </label>
               </div>
@@ -320,7 +257,6 @@ const UserDetails = () => {
         </div>
       </div>
 
-      {/* Statystyki */}
       <div className="statistics-grid">
         <div className="stat-card">
           <h3>Łącznie wypożyczeń</h3>
@@ -340,7 +276,6 @@ const UserDetails = () => {
         </div>
       </div>
 
-      {/* Aktywne wypożyczenia */}
       <div className="loans-card">
         <h2>Aktywne wypożyczenia ({activeLoans.length})</h2>
         {activeLoans.length === 0 ? (
@@ -358,7 +293,7 @@ const UserDetails = () => {
             <tbody>
               {activeLoans.map(loan => (
                 <tr key={loan.id} className={new Date(loan.dueAt) < new Date() ? 'overdue' : ''}>
-                  <td>{loan.bookCopy?.book?.title || 'Brak tytuBu'}</td>
+                  <td>{loan.bookCopy?.book?.title || 'Brak tytułu'}</td>
                   <td>{formatDate(loan.borrowedAt)}</td>
                   <td>{formatDate(loan.dueAt)}</td>
                   <td>
@@ -375,7 +310,6 @@ const UserDetails = () => {
         )}
       </div>
 
-      {/* Aktywne kary */}
       {activeFines.length > 0 && (
         <div className="fines-card">
           <h2>Aktywne kary ({activeFines.length})</h2>
@@ -400,7 +334,6 @@ const UserDetails = () => {
         </div>
       )}
 
-      {/* Historia wypożyczeń */}
       <div className="history-card">
         <h2>Historia wypożyczeń (ostatnie {loanHistory.length})</h2>
         {loanHistory.length === 0 ? (
@@ -419,7 +352,7 @@ const UserDetails = () => {
             <tbody>
               {loanHistory.map(loan => (
                 <tr key={loan.id}>
-                  <td>{loan.bookCopy?.book?.title || 'Brak tytuBu'}</td>
+                  <td>{loan.bookCopy?.book?.title || 'Brak tytułu'}</td>
                   <td>{formatDate(loan.borrowedAt)}</td>
                   <td>{formatDate(loan.dueAt)}</td>
                   <td>{formatDate(loan.returnedAt)}</td>
@@ -441,7 +374,6 @@ const UserDetails = () => {
         )}
       </div>
 
-      {/* Opłacone kary */}
       {paidFines.length > 0 && (
         <div className="paid-fines-card">
           <h2>Opłacone kary ({paidFines.length})</h2>
@@ -468,7 +400,5 @@ const UserDetails = () => {
         </div>
       )}
     </div>
-  );
-};
-
-export default UserDetails;
+  )
+}

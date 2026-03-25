@@ -3,17 +3,6 @@ import PropTypes from 'prop-types'
 import { Link } from 'react-router-dom'
 import './EmptyState.css'
 
-/**
- * EmptyState component for displaying when no data is available
- * 
- * @example
- * <EmptyState
- *   icon={<BookOpenIcon />}
- *   title="Brak wypożyczeń"
- *   description="Nie masz żadnych aktywnych wypożyczeń."
- *   action={{ label: 'Przeglądaj katalog', href: '/books' }}
- * />
- */
 export default function EmptyState({
   icon,
   title,
@@ -27,12 +16,11 @@ export default function EmptyState({
   ...props
 }) {
   const allActions = action ? [action, ...actions] : actions
-
   const classes = [
     'empty-state',
     `empty-state--${variant}`,
     `empty-state--${size}`,
-    className
+    className,
   ].filter(Boolean).join(' ')
 
   return (
@@ -42,22 +30,16 @@ export default function EmptyState({
           {typeof icon === 'string' ? <span>{icon}</span> : icon}
         </div>
       )}
-      
-      {title && <h3 className="empty-state__title">{title}</h3>}
-      
-      {description && (
-        <p className="empty-state__description">{description}</p>
-      )}
 
-      {children && (
-        <div className="empty-state__content">{children}</div>
-      )}
+      {title && <h3 className="empty-state__title">{title}</h3>}
+      {description && <p className="empty-state__description">{description}</p>}
+      {children && <div className="empty-state__content">{children}</div>}
 
       {allActions.length > 0 && (
         <div className="empty-state__actions">
           {allActions.map((act, index) => {
             const buttonClass = `empty-state__action-btn empty-state__action-btn--${act.variant || (index === 0 ? 'primary' : 'secondary')}`
-            
+
             if (act.href) {
               return (
                 <Link key={index} to={act.href} className={buttonClass}>
@@ -66,10 +48,10 @@ export default function EmptyState({
                 </Link>
               )
             }
-            
+
             return (
-              <button 
-                key={index} 
+              <button
+                key={index}
                 className={buttonClass}
                 onClick={act.onClick}
                 disabled={act.disabled}
@@ -95,7 +77,7 @@ EmptyState.propTypes = {
     onClick: PropTypes.func,
     variant: PropTypes.oneOf(['primary', 'secondary', 'ghost']),
     icon: PropTypes.node,
-    disabled: PropTypes.bool
+    disabled: PropTypes.bool,
   }),
   actions: PropTypes.arrayOf(PropTypes.shape({
     label: PropTypes.string.isRequired,
@@ -103,17 +85,14 @@ EmptyState.propTypes = {
     onClick: PropTypes.func,
     variant: PropTypes.oneOf(['primary', 'secondary', 'ghost']),
     icon: PropTypes.node,
-    disabled: PropTypes.bool
+    disabled: PropTypes.bool,
   })),
   variant: PropTypes.oneOf(['default', 'card', 'inline']),
   size: PropTypes.oneOf(['sm', 'md', 'lg']),
   className: PropTypes.string,
-  children: PropTypes.node
+  children: PropTypes.node,
 }
 
-/**
- * Preset empty states for common scenarios
- */
 export function NoDataEmptyState(props) {
   return (
     <EmptyState
@@ -130,8 +109,8 @@ export function NoSearchResultsEmptyState({ query, onClear, ...props }) {
     <EmptyState
       icon="🔍"
       title="Brak wyników"
-      description={query ? `Nie znaleziono wynik�w dla "${query}"` : 'Nie znaleziono wynik�w dla podanych kryteri�w.'}
-      action={onClear ? { label: 'Wyczy[ filtry', onClick: onClear, variant: 'secondary' } : undefined}
+      description={query ? `Nie znaleziono wyników dla "${query}".` : 'Nie znaleziono wyników dla podanych kryteriów.'}
+      action={onClear ? { label: 'Wyczyść filtry', onClick: onClear, variant: 'secondary' } : undefined}
       {...props}
     />
   )
@@ -144,7 +123,7 @@ export function ErrorEmptyState({ message, onRetry, ...props }) {
       title="Wystąpił błąd"
       description={message || 'Nie udało się załadować danych. Spróbuj ponownie.'}
       variant="card"
-      action={onRetry ? { label: 'Spr�buj ponownie', onClick: onRetry } : undefined}
+      action={onRetry ? { label: 'Spróbuj ponownie', onClick: onRetry } : undefined}
       {...props}
     />
   )

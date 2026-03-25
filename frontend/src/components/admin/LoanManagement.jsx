@@ -15,7 +15,7 @@ export default function LoanManagement({
   editForm,
   setEditForm,
   onSaveEdit,
-  onCloseEdit
+  onCloseEdit,
 }) {
   const today = useMemo(() => new Date(), [])
 
@@ -27,7 +27,7 @@ export default function LoanManagement({
   }
 
   const getStatusLabel = (loan) => {
-    if (loan?.returnedAt) return 'Zwr�cone'
+    if (loan?.returnedAt) return 'Zwrócone'
     const due = loan?.dueAt ? new Date(loan.dueAt) : null
     if (due && due < today) return 'Przeterminowane'
     return 'Aktywne'

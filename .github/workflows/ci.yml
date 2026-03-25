@@ -287,6 +287,35 @@ jobs:
         run: docker compose --project-directory . -f config/docker-compose.yml down -v
 
   # ============================================
+  # DOCKER DISTRIBUTED SMOKE
+  # ============================================
+  docker-distributed-smoke:
+    name: Docker Distributed Smoke
+    runs-on: ubuntu-latest
+    needs: [backend-tests, frontend-tests]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build and start distributed stack
+        run: docker compose --project-directory . -f docker-compose.distributed.yml up -d --build
+
+      - name: Run gateway routing smoke test
+        run: bash tests/integration/test_gateway_routing.sh
+
+      - name: Run cross-service smoke test
+        run: bash tests/integration/test_cross_service.sh
+
+      - name: Print distributed container logs
+        if: failure()
+        run: docker compose --project-directory . -f docker-compose.distributed.yml logs --no-color
+
+      - name: Stop distributed stack
+        if: always()
+        run: docker compose --project-directory . -f docker-compose.distributed.yml down -v
+
+  # ============================================
   # DOCKER BUILD
   # ============================================
   docker-build:

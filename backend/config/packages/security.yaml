@@ -48,6 +48,7 @@ security:
     - { path: ^/api/announcements, roles: PUBLIC_ACCESS, methods: [GET] }
     - { path: ^/api/announcements/\d+, roles: PUBLIC_ACCESS, methods: [GET] }
     - { path: ^/api/library/hours, roles: PUBLIC_ACCESS, methods: [GET] }
+    - { path: ^/api/library-hours, roles: PUBLIC_ACCESS, methods: [GET] }
 
     # Admin / restricted
     - { path: ^/api/admin/books/\d+/copies, roles: ROLE_LIBRARIAN }

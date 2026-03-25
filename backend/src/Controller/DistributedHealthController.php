@@ -23,6 +23,7 @@ class DistributedHealthController extends AbstractController
         private readonly LoggerInterface $logger,
         private readonly string $messengerTransportDsn = '',
         private readonly ?string $rabbitMqManagementUrl = null,
+        private readonly bool $distributedMode = false,
     ) {
     }
 
@@ -63,18 +64,24 @@ class DistributedHealthController extends AbstractController
             $allOk = false;
         }
 
-        $checks['notification_service'] = $this->checkHttpHealth('http://notification-service:8001/health');
-        if ($checks['notification_service'] !== 'ok') {
-            $allOk = false;
-        }
+        if ($this->distributedMode) {
+            $checks['notification_service'] = $this->checkHttpHealth('http://notification-service:8001/health');
+            if ($checks['notification_service'] !== 'ok') {
+                $allOk = false;
+            }
 
-        $checks['recommendation_service'] = $this->checkHttpHealth('http://recommendation-service:8002/health');
-        if ($checks['recommendation_service'] !== 'ok') {
-            $allOk = false;
+            $checks['recommendation_service'] = $this->checkHttpHealth('http://recommendation-service:8002/health');
+            if ($checks['recommendation_service'] !== 'ok') {
+                $allOk = false;
+            }
+        } else {
+            $checks['notification_service'] = 'skipped';
+            $checks['recommendation_service'] = 'skipped';
         }
 
         return $this->json([
             'status' => $allOk ? 'ok' : 'degraded',
+            'mode' => $this->distributedMode ? 'distributed' : 'standalone',
             'timestamp' => (new \DateTimeImmutable())->format(\DateTimeInterface::ATOM),
             'checks' => $checks,
         ], $allOk ? 200 : 503);

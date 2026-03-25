@@ -13,9 +13,21 @@ class AlertControllerTest extends ApiTestCase
 
     public function testLibraryHoursReturnsData(): void
     {
-        $client = $this->createApiClient();
+        $client = $this->createClientWithoutSecret();
         $this->sendRequest($client, 'GET', '/api/library-hours');
 
         $this->assertResponseStatusCodeSame(200);
+        $payload = $this->getJsonResponse($client);
+        $this->assertArrayHasKey('Poniedziałek', $payload);
+    }
+
+    public function testCanonicalLibraryHoursReturnsData(): void
+    {
+        $client = $this->createClientWithoutSecret();
+        $this->sendRequest($client, 'GET', '/api/library/hours');
+
+        $this->assertResponseStatusCodeSame(200);
+        $payload = $this->getJsonResponse($client);
+        $this->assertArrayHasKey('Poniedziałek', $payload);
     }
 }

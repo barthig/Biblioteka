@@ -1,10 +1,8 @@
 // Services - barrel exports
 export { acquisitionService } from './acquisitionService'
-export { aiService } from './aiService'
 export { announcementService } from './announcementService'
 export { authService } from './authService'
 export { bookService } from './bookService'
-export { catalogService } from './catalogService'
 export { loanService } from './loanService'
 export { notificationService } from './notificationService'
 export { ratingService } from './ratingService'

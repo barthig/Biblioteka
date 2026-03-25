@@ -39,8 +39,9 @@
         <env name="REDIS_URL" value="redis://localhost"/>
         <env name="JWT_SECRET" value="test_jwt_secret"/>
         <env name="API_SECRET" value="test-secret"/>
-        <env name="LEGACY_AUTH_SUBSCRIBER" value="1"/>
+        <env name="LEGACY_AUTH_SUBSCRIBER" value="0"/>
         <env name="MESSENGER_TRANSPORT_DSN" value="sync://"/>
+        <env name="APP_DISTRIBUTED_MODE" value="0"/>
         <env name="SYMFONY_DEPRECATIONS_HELPER" value="disabled"/>
     </php>
 </phpunit>

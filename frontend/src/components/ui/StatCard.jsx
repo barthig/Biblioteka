@@ -22,7 +22,7 @@ export default function StatCard({
           {content}
           {trend && (
             <span className={`stat-trend ${trend > 0 ? 'trend-up' : 'trend-down'}`}>
-              {trend > 0 ? '�' : '�'} {Math.abs(trend)}%
+              {trend > 0 ? '↑' : '↓'} {Math.abs(trend)}%
             </span>
           )}
         </div>

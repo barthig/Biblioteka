@@ -6,15 +6,15 @@ import { MemoryRouter } from 'react-router-dom'
 let mockUser = null
 
 vi.mock('../../../src/context/AuthContext', () => ({
-  useAuth: () => ({ user: mockUser })
+  useAuth: () => ({ user: mockUser }),
 }))
 
 vi.mock('../../../src/pages/admin/AdminPanel', () => ({
-  default: () => <div>Admin Section</div>
+  default: () => <div>Admin Section</div>,
 }))
 
 vi.mock('../../../src/pages/admin/LibrarianPanel', () => ({
-  default: () => <div>Operations Section</div>
+  default: () => <div>Operations Section</div>,
 }))
 
 import StaffPanel from '../../../src/pages/admin/StaffPanel'
@@ -32,7 +32,7 @@ describe('StaffPanel', () => {
     mockUser = null
   })
 
-  it('shows only operations section for librarian', () => {
+  it('shows only operations section for librarian', async () => {
     mockUser = { id: 1, roles: ['ROLE_LIBRARIAN'] }
 
     renderStaffPanel('/staff?section=admin')
@@ -40,16 +40,16 @@ describe('StaffPanel', () => {
     expect(screen.getByRole('heading', { name: /Panel personelu/i })).toBeInTheDocument()
     expect(screen.getByRole('tab', { name: /Obsługa biblioteki/i })).toBeInTheDocument()
     expect(screen.queryByRole('tab', { name: /Administracja/i })).not.toBeInTheDocument()
-    expect(screen.getByText('Operations Section')).toBeInTheDocument()
+    expect(await screen.findByText('Operations Section')).toBeInTheDocument()
     expect(screen.queryByText('Admin Section')).not.toBeInTheDocument()
   })
 
-  it('defaults to admin section on admin route for administrator', () => {
+  it('defaults to admin section on admin route for administrator', async () => {
     mockUser = { id: 2, roles: ['ROLE_ADMIN'] }
 
     renderStaffPanel('/admin')
 
-    expect(screen.getByText('Admin Section')).toBeInTheDocument()
+    expect(await screen.findByText('Admin Section')).toBeInTheDocument()
     expect(screen.queryByText('Operations Section')).not.toBeInTheDocument()
   })
 
@@ -58,9 +58,9 @@ describe('StaffPanel', () => {
 
     renderStaffPanel('/staff?section=operations')
 
-    expect(screen.getByText('Operations Section')).toBeInTheDocument()
+    expect(await screen.findByText('Operations Section')).toBeInTheDocument()
     await userEvent.click(screen.getByRole('tab', { name: /Administracja/i }))
-    expect(screen.getByText('Admin Section')).toBeInTheDocument()
+    expect(await screen.findByText('Admin Section')).toBeInTheDocument()
   })
 
   it('shows forbidden feedback for non-staff user', () => {

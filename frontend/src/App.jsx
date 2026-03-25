@@ -59,7 +59,13 @@ export default function App() {
             <Navbar />
             <main className="main flex-1 px-4 sm:px-5 lg:px-10">
               <div className="content-shell mx-auto w-full max-w-screen-2xl">
-                <Suspense fallback={<div className="page page--centered px-4 py-8 sm:px-6"><p>Ładowanie...</p></div>}>
+                <Suspense
+                  fallback={(
+                    <div className="page page--centered px-4 py-8 sm:px-6">
+                      <p>Ładowanie...</p>
+                    </div>
+                  )}
+                >
                   <Routes>
                     <Route path="/" element={<Dashboard />} />
                     <Route path="/books" element={<Books />} />

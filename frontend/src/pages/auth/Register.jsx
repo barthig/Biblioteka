@@ -1,10 +1,9 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useAuth } from '../../context/AuthContext'
 import { apiFetch } from '../../api'
+import FeedbackCard from '../../components/ui/FeedbackCard'
 import PageHeader from '../../components/ui/PageHeader'
 import SectionCard from '../../components/ui/SectionCard'
-import FeedbackCard from '../../components/ui/FeedbackCard'
 
 const initialForm = {
   name: '',
@@ -16,15 +15,14 @@ const initialForm = {
   city: '',
   postalCode: '',
   privacyConsent: true,
-  tastePrompt: ''
+  tastePrompt: '',
 }
 
-const PASSWORD_RULE = /^(?=.*[a-zBD�[z|])(?=.*[A-ZAC�Zy{])(?=.*\d).{10,}$/
+const PASSWORD_RULE = /^(?=.*[a-ząćęłńóśźż])(?=.*[A-ZĄĆĘŁŃÓŚŹŻ])(?=.*\d).{10,}$/u
 const POSTAL_CODE_RULE = /^\d{2}-\d{3}$/
 const EMAIL_RULE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export default function Register() {
-  const auth = useAuth()
   const navigate = useNavigate()
   const [form, setForm] = useState(initialForm)
   const [loading, setLoading] = useState(false)
@@ -53,52 +51,52 @@ export default function Register() {
     const tastePrompt = form.tastePrompt.trim()
 
     if (name.length < 2) {
-      setError('Imię i nazwisko musi mieć co najmniej 2 znaki')
+      setError('Imię i nazwisko musi mieć co najmniej 2 znaki.')
       return
     }
 
     if (!EMAIL_RULE.test(email)) {
-      setError('Podaj poprawny adres e-mail')
+      setError('Podaj poprawny adres e-mail.')
       return
     }
 
-    if (form.password !== form.confirmPassword) {
-      setError('Hasła muszą być identyczne')
+    if (password !== confirmPassword) {
+      setError('Hasła muszą być identyczne.')
       return
     }
 
     if (!PASSWORD_RULE.test(password)) {
-      setError('Hasło musi mieć min. 10 znaków, małą i dużą literę (także polską) oraz cyfrę')
+      setError('Hasło musi mieć co najmniej 10 znaków, małą i dużą literę oraz cyfrę.')
       return
     }
 
     if (postalCode && !POSTAL_CODE_RULE.test(postalCode)) {
-      setError('Kod pocztowy musi być w formacie 00-000')
+      setError('Kod pocztowy musi być w formacie 00-000.')
       return
     }
 
     if (phoneNumber.length > 30) {
-      setError('Numer telefonu nie może przekraczać 30 znaków')
+      setError('Numer telefonu nie może przekraczać 30 znaków.')
       return
     }
 
     if (addressLine.length > 255) {
-      setError('Adres nie może przekraczać 255 znaków')
+      setError('Adres nie może przekraczać 255 znaków.')
       return
     }
 
     if (city.length > 100) {
-      setError('Miasto nie może przekraczać 100 znaków')
+      setError('Miasto nie może przekraczać 100 znaków.')
       return
     }
 
     if (tastePrompt.length > 500) {
-      setError('Opis preferencji nie może przekraczać 500 znaków')
+      setError('Opis preferencji nie może przekraczać 500 znaków.')
       return
     }
 
     if (!form.privacyConsent) {
-      setError('Musisz wyrazić zgodę na przetwarzanie danych osobowych')
+      setError('Musisz wyrazić zgodę na przetwarzanie danych osobowych.')
       return
     }
 
@@ -112,7 +110,7 @@ export default function Register() {
         addressLine: addressLine || undefined,
         city: city || undefined,
         postalCode: postalCode || undefined,
-        privacyConsent: form.privacyConsent
+        privacyConsent: form.privacyConsent,
       }
 
       if (tastePrompt) {
@@ -122,12 +120,12 @@ export default function Register() {
       const response = await apiFetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       })
 
       const verificationToken = response?.verificationToken
       if (!verificationToken) {
-        throw new Error('Brak tokenu weryfikacyjnego w odpowiedzi serwera')
+        throw new Error('Brak tokenu weryfikacyjnego w odpowiedzi serwera.')
       }
 
       const verifyResult = await apiFetch(`/api/auth/verify/${verificationToken}`)
@@ -137,12 +135,11 @@ export default function Register() {
         setSuccess('Konto zostało utworzone i zweryfikowane. Możesz się teraz zalogować.')
       }
 
-      // Przekieruj po 2 sekundach na stronę logowania
       setTimeout(() => {
         navigate('/login')
       }, 2000)
     } catch (err) {
-      setError(err.message || 'Rejestracja nie powiodła się')
+      setError(err.message || 'Rejestracja nie powiodła się.')
     } finally {
       setLoading(false)
     }
@@ -195,11 +192,9 @@ export default function Register() {
               value={form.password}
               onChange={handleChange}
               minLength={10}
-              pattern="(?=.*[a-zBD�[z|])(?=.*[A-ZAC�Zy{])(?=.*\d).{10,}"
-              title="Minimum 10 znaków, mała i duża litera (także z polskimi znakami) oraz cyfra"
               required
             />
-            <p className="field-hint">Minimum 10 znaków, mała i duża litera (także z polskimi znakami) oraz cyfra</p>
+            <p className="field-hint">Minimum 10 znaków, mała i duża litera oraz cyfra.</p>
           </div>
           <div className="form-field">
             <label htmlFor="register-confirm">Powtórz hasło</label>
@@ -212,8 +207,6 @@ export default function Register() {
               value={form.confirmPassword}
               onChange={handleChange}
               minLength={10}
-              pattern="(?=.*[a-zBD�[z|])(?=.*[A-ZAC�Zy{])(?=.*\d).{10,}"
-              title="Minimum 10 znaków, mała i duża litera (także z polskimi znakami) oraz cyfra"
               required
             />
           </div>
@@ -258,17 +251,16 @@ export default function Register() {
               placeholder="00-000"
               value={form.postalCode}
               onChange={e => {
-                // automatycznie formatuje: dwie cyfry, myślnik, trzy cyfry
-                let v = e.target.value.replace(/[^\d]/g, '')
-                if (v.length > 2) v = v.slice(0,2) + '-' + v.slice(2,5)
-                if (v.length > 6) v = v.slice(0,6)
-                setForm(prev => ({ ...prev, postalCode: v }))
+                let value = e.target.value.replace(/[^\d]/g, '')
+                if (value.length > 2) value = `${value.slice(0, 2)}-${value.slice(2, 5)}`
+                if (value.length > 6) value = value.slice(0, 6)
+                setForm(prev => ({ ...prev, postalCode: value }))
               }}
               required
             />
           </div>
           <div className="form-field form-field--full">
-            <label htmlFor="register-taste">Co lubisz czyta?</label>
+            <label htmlFor="register-taste">Co lubisz czytać?</label>
             <textarea
               id="register-taste"
               name="tastePrompt"
@@ -277,7 +269,7 @@ export default function Register() {
               onChange={handleChange}
               rows={3}
             />
-            <p className="field-hint">To pomoże uruchomić rekomendacje AI od pierwszego dnia.</p>
+            <p className="field-hint">To pomoże uruchomić rekomendacje od pierwszego dnia.</p>
           </div>
 
           <label className="checkbox-field form-field--full">
@@ -288,12 +280,12 @@ export default function Register() {
               onChange={handleChange}
               required
             />
-            <span>Wyrażam zgodę na przetwarzanie danych osobowych</span>
+            <span>Wyrażam zgodę na przetwarzanie danych osobowych.</span>
           </label>
 
           <div className="form-actions form-field--full">
             <button type="submit" className="btn btn-primary" disabled={loading}>
-              {loading ? 'Rejestrowanie...' : 'Utw�rz konto'}
+              {loading ? 'Rejestrowanie...' : 'Utwórz konto'}
             </button>
             <Link to="/login" className="btn btn-outline">
               Mam konto

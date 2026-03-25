@@ -38,6 +38,7 @@ final class PublicRouteMatcher
         ['pattern' => '#^/api/announcements$#', 'methods' => ['GET']],
         ['pattern' => '#^/api/announcements/\d+$#', 'methods' => ['GET']],
         ['pattern' => '#^/api/library/hours$#', 'methods' => ['GET']],
+        ['pattern' => '#^/api/library-hours$#', 'methods' => ['GET']],
     ];
 
     public function isPublicPath(string $path, string $method): bool

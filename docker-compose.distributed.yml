@@ -39,8 +39,8 @@ services:
       - "5672:5672"    # AMQP
       - "15672:15672"  # Management UI
     environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     networks:
@@ -83,8 +83,8 @@ services:
       - "5432:5432"
     environment:
       POSTGRES_DB: biblioteka
-      POSTGRES_USER: biblioteka
-      POSTGRES_PASSWORD: biblioteka_secure
+      POSTGRES_USER: ${MAIN_DB_USER:-biblioteka}
+      POSTGRES_PASSWORD: ${MAIN_DB_PASSWORD:-change_me_main_db}
       POSTGRES_INITDB_ARGS: "-c shared_preload_libraries=vector"
     volumes:
       - ./backend/init-db-expanded-v2.sql:/docker-entrypoint-initdb.d/01-init.sql
@@ -103,8 +103,8 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_DB: notifications
-      POSTGRES_USER: notifications
-      POSTGRES_PASSWORD: notifications_secure
+      POSTGRES_USER: ${NOTIFICATION_DB_USER:-notifications}
+      POSTGRES_PASSWORD: ${NOTIFICATION_DB_PASSWORD:-change_me_notification_db}
     volumes:
       - notification_db_data:/var/lib/postgresql/data
     networks:
@@ -121,8 +121,8 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_DB: recommendations
-      POSTGRES_USER: recommendations
-      POSTGRES_PASSWORD: recommendations_secure
+      POSTGRES_USER: ${RECOMMENDATION_DB_USER:-recommendations}
+      POSTGRES_PASSWORD: ${RECOMMENDATION_DB_PASSWORD:-change_me_recommendation_db}
       POSTGRES_INITDB_ARGS: "-c shared_preload_libraries=vector"
     volumes:
       - recommendation_db_data:/var/lib/postgresql/data
@@ -141,14 +141,15 @@ services:
       dockerfile: ../docker/backend/Dockerfile
     restart: unless-stopped
     environment:
-      DATABASE_URL: postgresql://biblioteka:biblioteka_secure@db:5432/biblioteka?serverVersion=16&charset=utf8
+      DATABASE_URL: postgresql://${MAIN_DB_USER:-biblioteka}:${MAIN_DB_PASSWORD:-change_me_main_db}@db:5432/biblioteka?serverVersion=16&charset=utf8
       REDIS_URL: redis://redis:6379
-      MESSENGER_TRANSPORT_DSN: amqp://guest:guest@rabbitmq:5672/%2f/messages
-      MESSENGER_FAILURE_TRANSPORT_DSN: amqp://guest:guest@rabbitmq:5672/%2f/messages_failed
-      INTEGRATION_AMQP_DSN: amqp://guest:guest@rabbitmq:5672/%2f/messages
-      API_SECRET: distributed_api_secret
-      JWT_SECRET: distributed_jwt_secret_for_gateway_123456
+      MESSENGER_TRANSPORT_DSN: amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD:-guest}@rabbitmq:5672/%2f/messages
+      MESSENGER_FAILURE_TRANSPORT_DSN: amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD:-guest}@rabbitmq:5672/%2f/messages_failed
+      INTEGRATION_AMQP_DSN: amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD:-guest}@rabbitmq:5672/%2f/messages
+      API_SECRET: ${API_SECRET:-change_me_api}
+      JWT_SECRET: ${JWT_SECRET:-change_me_jwt_distributed_1234567890}
       APP_ENV: distributed
+      APP_DISTRIBUTED_MODE: 1
       APP_DEBUG: "false"
     depends_on:
       db:
@@ -167,14 +168,15 @@ services:
       dockerfile: ../docker/php-worker/Dockerfile
     restart: unless-stopped
     environment:
-      DATABASE_URL: postgresql://biblioteka:biblioteka_secure@db:5432/biblioteka?serverVersion=16&charset=utf8
+      DATABASE_URL: postgresql://${MAIN_DB_USER:-biblioteka}:${MAIN_DB_PASSWORD:-change_me_main_db}@db:5432/biblioteka?serverVersion=16&charset=utf8
       REDIS_URL: redis://redis:6379
-      MESSENGER_TRANSPORT_DSN: amqp://guest:guest@rabbitmq:5672/%2f/messages
-      MESSENGER_FAILURE_TRANSPORT_DSN: amqp://guest:guest@rabbitmq:5672/%2f/messages_failed
-      INTEGRATION_AMQP_DSN: amqp://guest:guest@rabbitmq:5672/%2f/messages
-      API_SECRET: distributed_api_secret
-      JWT_SECRET: distributed_jwt_secret_for_gateway_123456
+      MESSENGER_TRANSPORT_DSN: amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD:-guest}@rabbitmq:5672/%2f/messages
+      MESSENGER_FAILURE_TRANSPORT_DSN: amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD:-guest}@rabbitmq:5672/%2f/messages_failed
+      INTEGRATION_AMQP_DSN: amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD:-guest}@rabbitmq:5672/%2f/messages
+      API_SECRET: ${API_SECRET:-change_me_api}
+      JWT_SECRET: ${JWT_SECRET:-change_me_jwt_distributed_1234567890}
       APP_ENV: distributed
+      APP_DISTRIBUTED_MODE: 1
       CONTAINER_ROLE: worker
     depends_on:
       - backend
@@ -219,11 +221,11 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     environment:
-      NOTIFICATION_DATABASE_URL: postgresql://notifications:notifications_secure@notification-db:5432/notifications
+      NOTIFICATION_DATABASE_URL: postgresql://${NOTIFICATION_DB_USER:-notifications}:${NOTIFICATION_DB_PASSWORD:-change_me_notification_db}@notification-db:5432/notifications
       NOTIFICATION_RABBITMQ_HOST: rabbitmq
       NOTIFICATION_RABBITMQ_PORT: 5672
-      NOTIFICATION_RABBITMQ_USER: guest
-      NOTIFICATION_RABBITMQ_PASSWORD: guest
+      NOTIFICATION_RABBITMQ_USER: ${RABBITMQ_USER:-guest}
+      NOTIFICATION_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
       NOTIFICATION_RABBITMQ_VHOST: /
       LOG_LEVEL: INFO
     depends_on:
@@ -241,11 +243,11 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     environment:
-      RECOMMENDATION_DATABASE_URL: postgresql://recommendations:recommendations_secure@recommendation-db:5432/recommendations
+      RECOMMENDATION_DATABASE_URL: postgresql://${RECOMMENDATION_DB_USER:-recommendations}:${RECOMMENDATION_DB_PASSWORD:-change_me_recommendation_db}@recommendation-db:5432/recommendations
       RECOMMENDATION_RABBITMQ_HOST: rabbitmq
       RECOMMENDATION_RABBITMQ_PORT: 5672
-      RECOMMENDATION_RABBITMQ_USER: guest
-      RECOMMENDATION_RABBITMQ_PASSWORD: guest
+      RECOMMENDATION_RABBITMQ_USER: ${RABBITMQ_USER:-guest}
+      RECOMMENDATION_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
       RECOMMENDATION_RABBITMQ_VHOST: /
       RECOMMENDATION_OPENAI_API_KEY: ${OPENAI_API_KEY:-change_me_openai_key}
       RECOMMENDATION_OPENAI_MODEL: text-embedding-3-small
@@ -280,7 +282,7 @@ services:
     ports:
       - "3001:3000"
     environment:
-      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-change_me_grafana_admin}
       GF_USERS_ALLOW_SIGN_UP: "false"
     volumes:
       - grafana_data:/var/lib/grafana

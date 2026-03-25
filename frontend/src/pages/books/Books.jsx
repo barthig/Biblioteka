@@ -1,18 +1,18 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { apiFetch } from '../../api'
 import BookItem from '../../components/books/BookItem'
-import { BookSkeleton } from '../../components/ui/Skeleton'
-import { useResourceCache } from '../../context/ResourceCacheContext'
-import { useAuth } from '../../context/AuthContext'
-import PageHeader from '../../components/ui/PageHeader'
-import StatGrid from '../../components/ui/StatGrid'
-import StatCard from '../../components/ui/StatCard'
-import { logger } from '../../utils/logger'
-import SectionCard from '../../components/ui/SectionCard'
-import FeedbackCard from '../../components/ui/FeedbackCard'
 import Pagination from '../../components/common/Pagination'
+import FeedbackCard from '../../components/ui/FeedbackCard'
+import PageHeader from '../../components/ui/PageHeader'
+import SectionCard from '../../components/ui/SectionCard'
+import StatCard from '../../components/ui/StatCard'
+import StatGrid from '../../components/ui/StatGrid'
+import { BookSkeleton } from '../../components/ui/Skeleton'
+import { useAuth } from '../../context/AuthContext'
+import { useResourceCache } from '../../context/ResourceCacheContext'
+import { logger } from '../../utils/logger'
 
 const initialFilters = {
   authorId: '',
@@ -58,7 +58,6 @@ export default function Books() {
   const lastCacheKeyRef = useRef(null)
   const { getCachedResource, setCachedResource, invalidateResource } = useResourceCache()
   const location = useLocation()
-  const navigate = useNavigate()
   const LIST_CACHE_TTL = 60000
   const FACETS_CACHE_TTL = 300000
 
@@ -67,23 +66,18 @@ export default function Books() {
   }, [filters])
 
   useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768)
-    }
+    const handleResize = () => setIsMobile(window.innerWidth <= 768)
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
-  // Run search automatically when arriving with ?search= in URL
   useEffect(() => {
     const params = new URLSearchParams(location.search)
     const initial = params.get('search') || params.get('q') || ''
     if (initial && initial !== query) {
       setQuery(initial)
-      // ensure page resets and force new load
       load(initial, undefined, { page: 1, force: true })
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.search])
 
   async function load(searchTerm, providedFilters = filtersRef.current, options = {}) {
@@ -96,71 +90,36 @@ export default function Books() {
 
     params.set('page', String(targetPage))
     params.set('limit', String(targetLimit))
-
-    if (finalTerm) {
-      params.set('q', finalTerm)
-    }
-
-    if (activeFilters.authorId) {
-      params.set('authorId', activeFilters.authorId)
-    }
-
-    if (activeFilters.categoryId) {
-      params.set('categoryId', activeFilters.categoryId)
-    }
-
-    if (activeFilters.publisher && activeFilters.publisher.trim() !== '') {
-      params.set('publisher', activeFilters.publisher.trim())
-    }
-
-    if (activeFilters.resourceType) {
-      params.set('resourceType', activeFilters.resourceType)
-    }
-
-    if (activeFilters.signature && activeFilters.signature.trim() !== '') {
-      params.set('signature', activeFilters.signature.trim())
-    }
-
-    if (activeFilters.ageGroup) {
-      params.set('ageGroup', activeFilters.ageGroup)
-    }
-
-    if (activeFilters.yearFrom && `${activeFilters.yearFrom}`.trim() !== '') {
-      params.set('yearFrom', `${activeFilters.yearFrom}`.trim())
-    }
-
-    if (activeFilters.yearTo && `${activeFilters.yearTo}`.trim() !== '') {
-      params.set('yearTo', `${activeFilters.yearTo}`.trim())
-    }
-
-    if (activeFilters.availableOnly) {
-      params.set('available', 'true')
-    }
+    if (finalTerm) params.set('q', finalTerm)
+    if (activeFilters.authorId) params.set('authorId', activeFilters.authorId)
+    if (activeFilters.categoryId) params.set('categoryId', activeFilters.categoryId)
+    if (activeFilters.publisher?.trim()) params.set('publisher', activeFilters.publisher.trim())
+    if (activeFilters.resourceType) params.set('resourceType', activeFilters.resourceType)
+    if (activeFilters.signature?.trim()) params.set('signature', activeFilters.signature.trim())
+    if (activeFilters.ageGroup) params.set('ageGroup', activeFilters.ageGroup)
+    if (`${activeFilters.yearFrom}`.trim()) params.set('yearFrom', `${activeFilters.yearFrom}`.trim())
+    if (`${activeFilters.yearTo}`.trim()) params.set('yearTo', `${activeFilters.yearTo}`.trim())
+    if (activeFilters.availableOnly) params.set('available', 'true')
 
     const endpoint = `/api/books?${params.toString()}`
     const cacheKey = `books:${endpoint}`
     lastCacheKeyRef.current = cacheKey
     const hasNonQueryFilters = Boolean(
-      (activeFilters.authorId && activeFilters.authorId !== '') ||
-      (activeFilters.categoryId && activeFilters.categoryId !== '') ||
-      (activeFilters.publisher && activeFilters.publisher.trim() !== '') ||
-      (activeFilters.resourceType && activeFilters.resourceType !== '') ||
-      (activeFilters.signature && activeFilters.signature.trim() !== '') ||
-      (activeFilters.ageGroup && activeFilters.ageGroup !== '') ||
-      (activeFilters.yearFrom && activeFilters.yearFrom !== '') ||
-      (activeFilters.yearTo && activeFilters.yearTo !== '') ||
+      activeFilters.authorId ||
+      activeFilters.categoryId ||
+      activeFilters.publisher?.trim() ||
+      activeFilters.resourceType ||
+      activeFilters.signature?.trim() ||
+      activeFilters.ageGroup ||
+      activeFilters.yearFrom ||
+      activeFilters.yearTo ||
       activeFilters.availableOnly
     )
-    const forceReload = Boolean(options.force)
 
-    if (!forceReload) {
+    if (!options.force) {
       const cached = getCachedResource(cacheKey, LIST_CACHE_TTL)
       if (cached) {
-        const cachedItems = Array.isArray(cached)
-          ? cached
-          : Array.isArray(cached.items)
-            ? cached.items
-            : []
+        const cachedItems = Array.isArray(cached) ? cached : Array.isArray(cached.items) ? cached.items : []
         const cachedMeta = Array.isArray(cached) ? null : cached.meta
         setBooks(cachedItems)
         setLoading(false)
@@ -187,11 +146,7 @@ export default function Books() {
     setLastQuery(finalTerm)
     try {
       const data = await apiFetch(endpoint)
-      const list = Array.isArray(data?.data)
-        ? data.data
-        : Array.isArray(data)
-          ? data
-          : []
+      const list = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : []
       const meta = data?.meta || {}
       setBooks(list)
       setPage(meta.page ?? targetPage)
@@ -234,23 +189,23 @@ export default function Books() {
   useEffect(() => {
     load('', { ...initialFilters }, { page: 1 })
     loadFacets()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   function onBorrowed(borrowedBook) {
     setBooks(prev => {
-      const next = prev.map(b => {
-        if (b.id === borrowedBook.id) {
-          return {
-            ...b,
-            copies: Math.max(0, (b.copies ?? 0) - 1)
-          }
-        }
-        return b
-      })
+      const next = prev.map(book => (
+        book.id === borrowedBook.id
+          ? { ...book, copies: Math.max(0, (book.copies ?? 0) - 1) }
+          : book
+      ))
+
       if (lastCacheKeyRef.current) {
-        setCachedResource(lastCacheKeyRef.current, { items: next, meta: { page, totalPages, total: totalItems, limit } })
+        setCachedResource(lastCacheKeyRef.current, {
+          items: next,
+          meta: { page, totalPages, total: totalItems, limit },
+        })
       }
+
       return next
     })
   }
@@ -288,17 +243,16 @@ export default function Books() {
   }
 
   const filtersDirty = Boolean(
-    (filters.authorId && filters.authorId !== '') ||
-    (filters.categoryId && filters.categoryId !== '') ||
-    (filters.publisher && filters.publisher.trim() !== '') ||
-    (filters.resourceType && filters.resourceType !== '') ||
-    (filters.signature && filters.signature.trim() !== '') ||
-    (filters.ageGroup && filters.ageGroup !== '') ||
-    (filters.yearFrom && filters.yearFrom !== '') ||
-    (filters.yearTo && filters.yearTo !== '') ||
+    filters.authorId ||
+    filters.categoryId ||
+    filters.publisher?.trim() ||
+    filters.resourceType ||
+    filters.signature?.trim() ||
+    filters.ageGroup ||
+    filters.yearFrom ||
+    filters.yearTo ||
     filters.availableOnly
   )
-
   const canClear = query.trim() !== '' || filtersDirty
   const activeFilterCount = [
     filters.authorId,
@@ -309,10 +263,9 @@ export default function Books() {
     filters.ageGroup,
     filters.yearFrom,
     filters.yearTo,
-    filters.availableOnly ? 'available' : ''
+    filters.availableOnly ? 'available' : '',
   ].filter(Boolean).length
   const resultCount = totalItems || books.length
-
   const isLibrarianOrAdmin = user && (user.roles?.includes('ROLE_LIBRARIAN') || user.roles?.includes('ROLE_ADMIN'))
 
   async function handleExportCSV() {
@@ -320,9 +273,7 @@ export default function Books() {
       const token = localStorage.getItem('token')
       const exportUrl = API_BASE ? `${API_BASE}/api/books/export` : '/api/books/export'
       const response = await fetch(exportUrl, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: { Authorization: `Bearer ${token}` },
       })
 
       if (!response.ok) {
@@ -331,16 +282,16 @@ export default function Books() {
 
       const blob = await response.blob()
       const url = window.URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `books_export_${new Date().toISOString().split('T')[0]}.csv`
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
+      const anchor = document.createElement('a')
+      anchor.href = url
+      anchor.download = `books_export_${new Date().toISOString().split('T')[0]}.csv`
+      document.body.appendChild(anchor)
+      anchor.click()
+      document.body.removeChild(anchor)
       window.URL.revokeObjectURL(url)
-      
+
       toast.success('Eksport zakończony pomyślnie!')
-    } catch (err) {
+    } catch {
       toast.error('Nie udało się wyeksportować książek')
     }
   }
@@ -358,14 +309,14 @@ export default function Books() {
               </button>
             )}
             <button className="btn btn-outline" onClick={() => load(undefined, undefined, { force: true, page: 1 })} disabled={loading}>
-              {loading ? 'Od[wie|anie...' : 'Od[wie| list'}
+              {loading ? 'Odświeżanie...' : 'Odśwież listę'}
             </button>
           </div>
         )}
       />
 
       <StatGrid>
-        <StatCard title="Wyniki" value={loading ? '-' : resultCount} subtitle="Acznie pozycji" />
+        <StatCard title="Wyniki" value={loading ? '-' : resultCount} subtitle="Łącznie pozycji" />
         <StatCard title="Filtry" value={activeFilterCount} subtitle="Aktywne kryteria" />
         <StatCard title="Strona" value={`${page} / ${totalPages}`} subtitle={`Limit ${limit}`} />
         <StatCard title="Fraza" value={lastQuery ? `"${lastQuery}"` : '-'} subtitle="Ostatnie wyszukiwanie" />
@@ -398,9 +349,9 @@ export default function Books() {
               onClick={() => setShowAdvanced(prev => !prev)}
               aria-expanded={showAdvanced}
               aria-controls="advanced-filters"
-              aria-label={showAdvanced ? 'Ukryj zaawansowane filtry' : 'Poka| zaawansowane filtry'}
+              aria-label={showAdvanced ? 'Ukryj zaawansowane filtry' : 'Pokaż zaawansowane filtry'}
             >
-              {showAdvanced ? 'Ukryj zaawansowane' : 'Poka| zaawansowane filtry'}
+              {showAdvanced ? 'Ukryj zaawansowane' : 'Pokaż zaawansowane filtry'}
             </button>
           </div>
         </div>
@@ -409,12 +360,7 @@ export default function Books() {
           <div id="advanced-filters" className="book-search__advanced" role="group" aria-label="Filtry zaawansowane">
             <div className="book-search__group">
               <label htmlFor="filter-author">Autor</label>
-              <select
-                id="filter-author"
-                name="authorId"
-                value={filters.authorId}
-                onChange={handleFilterChange}
-              >
+              <select id="filter-author" name="authorId" value={filters.authorId} onChange={handleFilterChange}>
                 <option value="">Dowolny</option>
                 {facets.authors.map(author => (
                   <option key={author.id} value={author.id}>{author.name}</option>
@@ -424,12 +370,7 @@ export default function Books() {
 
             <div className="book-search__group">
               <label htmlFor="filter-category">Kategoria</label>
-              <select
-                id="filter-category"
-                name="categoryId"
-                value={filters.categoryId}
-                onChange={handleFilterChange}
-              >
+              <select id="filter-category" name="categoryId" value={filters.categoryId} onChange={handleFilterChange}>
                 <option value="">Dowolna</option>
                 {facets.categories.map(category => (
                   <option key={category.id} value={category.id}>{category.name}</option>
@@ -451,12 +392,7 @@ export default function Books() {
 
             <div className="book-search__group">
               <label htmlFor="filter-resourceType">Typ zasobu</label>
-              <select
-                id="filter-resourceType"
-                name="resourceType"
-                value={filters.resourceType}
-                onChange={handleFilterChange}
-              >
+              <select id="filter-resourceType" name="resourceType" value={filters.resourceType} onChange={handleFilterChange}>
                 <option value="">Dowolny</option>
                 {facets.resourceTypes.map(type => (
                   <option key={type} value={type}>{type}</option>
@@ -466,12 +402,7 @@ export default function Books() {
 
             <div className="book-search__group">
               <label htmlFor="filter-ageGroup">Przedział wiekowy</label>
-              <select
-                id="filter-ageGroup"
-                name="ageGroup"
-                value={filters.ageGroup}
-                onChange={handleFilterChange}
-              >
+              <select id="filter-ageGroup" name="ageGroup" value={filters.ageGroup} onChange={handleFilterChange}>
                 <option value="">Dowolny</option>
                 {facets.ageGroups.map(group => (
                   <option key={group.value} value={group.value}>{group.label}</option>
@@ -518,12 +449,7 @@ export default function Books() {
 
             <div className="book-search__group book-search__group--checkbox">
               <label className="checkbox">
-                <input
-                  type="checkbox"
-                  name="availableOnly"
-                  checked={filters.availableOnly}
-                  onChange={handleFilterChange}
-                />
+                <input type="checkbox" name="availableOnly" checked={filters.availableOnly} onChange={handleFilterChange} />
                 <span>Tylko dostępne egzemplarze</span>
               </label>
             </div>
@@ -546,9 +472,9 @@ export default function Books() {
       {!loading && !error && books.length === 0 && (
         <SectionCard className="empty-state">
           {lastQuery
-            ? `Brak wynik�w dla frazy ${lastQuery}.`
+            ? `Brak wyników dla frazy "${lastQuery}".`
             : hadNonQueryFilters
-              ? 'Brak ksi|ek speBniajcych wybrane filtry.'
+              ? 'Brak książek spełniających wybrane filtry.'
               : 'Brak książek w katalogu.'}
         </SectionCard>
       )}
@@ -557,9 +483,9 @@ export default function Books() {
         <>
           <div className="books-grid">
             {books.map(book => (
-              <BookItem 
-                key={book.id} 
-                book={book} 
+              <BookItem
+                key={book.id}
+                book={book}
                 onBorrowed={onBorrowed}
                 compact={isMobile}
                 expanded={expandedBookId === book.id}

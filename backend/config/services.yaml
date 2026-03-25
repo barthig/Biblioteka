@@ -283,6 +283,7 @@ services:
     arguments:
       $redis: '@app.redis_client'
       $messengerTransportDsn: '%env(MESSENGER_TRANSPORT_DSN)%'
+      $distributedMode: '%env(bool:APP_DISTRIBUTED_MODE)%'
 
   App\MessageHandler\TestNotificationDispatchHandler:
     arguments:

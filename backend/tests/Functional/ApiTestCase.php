@@ -34,8 +34,8 @@ abstract class ApiTestCase extends WebTestCase
         $_ENV['API_SECRET'] = self::API_SECRET;
         putenv('JWT_SECRET=' . self::JWT_SECRET);
         $_ENV['JWT_SECRET'] = self::JWT_SECRET;
-        putenv('LEGACY_AUTH_SUBSCRIBER=1');
-        $_ENV['LEGACY_AUTH_SUBSCRIBER'] = '1';
+        putenv('LEGACY_AUTH_SUBSCRIBER=0');
+        $_ENV['LEGACY_AUTH_SUBSCRIBER'] = '0';
         putenv('MESSENGER_TRANSPORT_DSN=sync://');
         $_ENV['MESSENGER_TRANSPORT_DSN'] = 'sync://';
 

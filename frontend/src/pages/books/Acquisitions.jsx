@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import { acquisitionService } from '../../services/acquisitionService'
 import { useAuth } from '../../context/AuthContext'
+import { acquisitionService } from '../../services/acquisitionService'
 
 export default function Acquisitions() {
   const { user } = useAuth()
@@ -34,7 +34,7 @@ export default function Acquisitions() {
         acquisitionService.listSuppliers(),
         acquisitionService.listBudgets(),
         acquisitionService.listOrders(),
-        acquisitionService.listWeeding()
+        acquisitionService.listWeeding(),
       ])
       setSuppliers(Array.isArray(suppliersData?.data) ? suppliersData.data : suppliersData || [])
       setBudgets(Array.isArray(budgetsData?.data) ? budgetsData.data : budgetsData || [])
@@ -96,7 +96,7 @@ export default function Acquisitions() {
       await acquisitionService.createOrder({
         supplierId: Number(orderForm.supplierId),
         title: orderForm.title,
-        amount: Number(orderForm.amount)
+        amount: Number(orderForm.amount),
       })
       setMessage('Dodano zamówienie.')
       setOrderForm({ supplierId: '', title: '', amount: '' })
@@ -132,7 +132,10 @@ export default function Acquisitions() {
     event.preventDefault()
     clearMessages()
     try {
-      await acquisitionService.createWeeding({ bookId: Number(weedingForm.bookId), reason: weedingForm.reason })
+      await acquisitionService.createWeeding({
+        bookId: Number(weedingForm.bookId),
+        reason: weedingForm.reason,
+      })
       setMessage('Dodano protokół ubytków.')
       setWeedingForm({ bookId: '', reason: '' })
       await loadAll()
@@ -192,8 +195,16 @@ export default function Acquisitions() {
         <div className="surface-card">
           <h3>Dostawcy</h3>
           <form className="form-row" onSubmit={handleCreateSupplier}>
-            <input placeholder="Nazwa" value={supplierForm.name} onChange={e => setSupplierForm(prev => ({ ...prev, name: e.target.value }))} />
-            <input placeholder="Kontakt" value={supplierForm.contact} onChange={e => setSupplierForm(prev => ({ ...prev, contact: e.target.value }))} />
+            <input
+              placeholder="Nazwa"
+              value={supplierForm.name}
+              onChange={e => setSupplierForm(prev => ({ ...prev, name: e.target.value }))}
+            />
+            <input
+              placeholder="Kontakt"
+              value={supplierForm.contact}
+              onChange={e => setSupplierForm(prev => ({ ...prev, contact: e.target.value }))}
+            />
             <button className="btn btn-primary" type="submit">Dodaj</button>
           </form>
           <ul className="list list--bordered">
@@ -209,8 +220,17 @@ export default function Acquisitions() {
         <div className="surface-card">
           <h3>Budżety</h3>
           <form className="form-row" onSubmit={handleCreateBudget}>
-            <input placeholder="Nazwa" value={budgetForm.name} onChange={e => setBudgetForm(prev => ({ ...prev, name: e.target.value }))} />
-            <input placeholder="Kwota" type="number" value={budgetForm.amount} onChange={e => setBudgetForm(prev => ({ ...prev, amount: e.target.value }))} />
+            <input
+              placeholder="Nazwa"
+              value={budgetForm.name}
+              onChange={e => setBudgetForm(prev => ({ ...prev, name: e.target.value }))}
+            />
+            <input
+              placeholder="Kwota"
+              type="number"
+              value={budgetForm.amount}
+              onChange={e => setBudgetForm(prev => ({ ...prev, amount: e.target.value }))}
+            />
             <button className="btn btn-primary" type="submit">Dodaj</button>
           </form>
           <ul className="list list--bordered">
@@ -240,9 +260,22 @@ export default function Acquisitions() {
         <div className="surface-card surface-card--wide">
           <h3>Zamówienia</h3>
           <form className="form-row" onSubmit={handleCreateOrder}>
-            <input placeholder="ID dostawcy" value={orderForm.supplierId} onChange={e => setOrderForm(prev => ({ ...prev, supplierId: e.target.value }))} />
-            <input placeholder="Tytuł" value={orderForm.title} onChange={e => setOrderForm(prev => ({ ...prev, title: e.target.value }))} />
-            <input placeholder="Kwota" type="number" value={orderForm.amount} onChange={e => setOrderForm(prev => ({ ...prev, amount: e.target.value }))} />
+            <input
+              placeholder="ID dostawcy"
+              value={orderForm.supplierId}
+              onChange={e => setOrderForm(prev => ({ ...prev, supplierId: e.target.value }))}
+            />
+            <input
+              placeholder="Tytuł"
+              value={orderForm.title}
+              onChange={e => setOrderForm(prev => ({ ...prev, title: e.target.value }))}
+            />
+            <input
+              placeholder="Kwota"
+              type="number"
+              value={orderForm.amount}
+              onChange={e => setOrderForm(prev => ({ ...prev, amount: e.target.value }))}
+            />
             <button className="btn btn-primary" type="submit">Dodaj</button>
           </form>
           <ul className="list list--bordered">
@@ -265,14 +298,22 @@ export default function Acquisitions() {
         <div className="surface-card">
           <h3>Ubytki</h3>
           <form className="form-row" onSubmit={handleCreateWeeding}>
-            <input placeholder="ID książki" value={weedingForm.bookId} onChange={e => setWeedingForm(prev => ({ ...prev, bookId: e.target.value }))} />
-            <input placeholder="Powód" value={weedingForm.reason} onChange={e => setWeedingForm(prev => ({ ...prev, reason: e.target.value }))} />
+            <input
+              placeholder="ID książki"
+              value={weedingForm.bookId}
+              onChange={e => setWeedingForm(prev => ({ ...prev, bookId: e.target.value }))}
+            />
+            <input
+              placeholder="Powód"
+              value={weedingForm.reason}
+              onChange={e => setWeedingForm(prev => ({ ...prev, reason: e.target.value }))}
+            />
             <button className="btn btn-primary" type="submit">Dodaj</button>
           </form>
           <ul className="list list--bordered">
             {weeding.map(entry => (
               <li key={entry.id || `${entry.bookId}-${entry.reason}`}>
-                <div className="list__title">Ksi|ka: {entry.bookId || entry.book?.id}</div>
+                <div className="list__title">Książka: {entry.bookId || entry.book?.id}</div>
                 <div className="list__meta">{entry.reason || 'Brak powodu'}</div>
               </li>
             ))}
