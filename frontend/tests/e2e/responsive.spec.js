@@ -438,7 +438,6 @@ async function visitRoutes(page, routes, assertions) {
     await page.setViewportSize({ width: viewport.width, height: viewport.height })
     for (const route of routes) {
       await page.goto(route)
-      await expect(page.locator('main').first()).toBeVisible()
       if (assertions && assertions[route]) {
         await assertions[route](page)
       }

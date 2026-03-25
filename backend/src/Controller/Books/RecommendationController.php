@@ -1,28 +1,28 @@
 <?php
 declare(strict_types=1);
+
 namespace App\Controller\Books;
 
 use App\Application\Query\Recommendation\FindSimilarBooksQuery;
 use App\Application\Query\User\GetUserByIdQuery;
 use App\Controller\Traits\ExceptionHandlingTrait;
-use App\Dto\ApiError;
 use App\Exception\ExternalServiceException;
 use App\Repository\BookRepository;
-use App\Service\Book\RecommendationService;
 use App\Service\Auth\SecurityService;
 use App\Service\Book\OpenAIEmbeddingService;
+use App\Service\Book\RecommendationService;
+use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
-use OpenApi\Attributes as OA;
 
 #[OA\Tag(name: 'Recommendation')]
 class RecommendationController extends AbstractController
 {
     use ExceptionHandlingTrait;
-    
+
     public function __construct(
         private readonly OpenAIEmbeddingService $embeddingService,
         private readonly MessageBusInterface $queryBus,
@@ -56,18 +56,32 @@ class RecommendationController extends AbstractController
         $query = is_array($payload) ? trim((string) ($payload['query'] ?? '')) : '';
 
         if ($query === '') {
-            return $this->jsonErrorMessage(400, 'Query is required.');
+            return $this->jsonErrorMessage(400, 'Zapytanie jest wymagane.');
         }
+
+        $fallback = false;
 
         try {
             $vector = $this->embeddingService->getVector($query);
             $envelope = $this->queryBus->dispatch(new FindSimilarBooksQuery($vector, 5));
             $books = $envelope->last(HandledStamp::class)?->getResult();
         } catch (ExternalServiceException) {
+            $fallback = true;
             $books = $this->bookRepository->searchHybrid($query, [], 5);
         }
 
-        return $this->json(['data' => $books], 200, [], ['groups' => ['book:read']]);
+        return $this->json(
+            [
+                'data' => $books,
+                'meta' => [
+                    'aiAvailable' => !$fallback,
+                    'mode' => $fallback ? 'fallback' : 'semantic',
+                ],
+            ],
+            200,
+            [],
+            ['groups' => ['book:read']]
+        );
     }
 
     #[OA\Get(

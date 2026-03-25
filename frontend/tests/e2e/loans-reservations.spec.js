@@ -29,14 +29,14 @@ test('loans and reservations pages', async ({ page }) => {
       body: JSON.stringify({ id: 1, book: { title: 'Loaned Book' }, dueAt: '2025-02-15', returnedAt: null, extensionsCount: 1 })
     })
   })
-  await page.route('**/api/reservations?history=true', async (route) => {
+  await page.route('**/api/reservations**', async (route) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({
         data: [
-          { id: 1, status: 'ACTIVE', reservedAt: '2025-01-01T10:00:00Z', expiresAt: '2025-02-01T10:00:00Z', book: { title: 'Reserved Book' } },
-          { id: 2, status: 'FULFILLED', reservedAt: '2025-01-01T10:00:00Z', fulfilledAt: '2025-01-05T10:00:00Z', book: { title: 'Fulfilled Book' } }
+          { id: 1, userId: 1, status: 'ACTIVE', reservedAt: '2025-01-01T10:00:00Z', expiresAt: '2025-02-01T10:00:00Z', book: { title: 'Reserved Book' } },
+          { id: 2, userId: 1, status: 'FULFILLED', reservedAt: '2025-01-01T10:00:00Z', fulfilledAt: '2025-01-05T10:00:00Z', book: { title: 'Fulfilled Book' } }
         ]
       })
     })
@@ -51,5 +51,5 @@ test('loans and reservations pages', async ({ page }) => {
 
   await page.goto('/reservations')
   await expect(page.getByText('Reserved Book')).toBeVisible()
-  await page.click('button:has-text("Anul")')
+  await page.getByRole('button', { name: /Anuluj|Anul/i }).first().click()
 })

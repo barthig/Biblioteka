@@ -97,7 +97,7 @@ export default function Recommended() {
         const normalized = Array.isArray(response?.groups)
           ? response.groups.filter(group => Array.isArray(group.books))
           : (Array.isArray(response)
-            ? [{ key: 'public', label: 'Popularne ksi|ki', books: response }]
+            ? [{ key: 'public', label: 'Popularne książki', books: response }]
             : [])
 
         if (active) {
@@ -136,7 +136,7 @@ export default function Recommended() {
 
       <StatGrid>
         <StatCard title="Liczba grup" value={groups.length} subtitle="Kategorie rekomendacji" />
-        <StatCard title="Propozycje" value={totalBooks} subtitle="Źcznie tytułów" />
+        <StatCard title="Propozycje" value={totalBooks} subtitle="Łącznie tytułów" />
         <StatCard title="Ukryte" value={dismissedBooks.size} subtitle="Odrzucone tytuły" />
         <StatCard title="Tryb" value="AI" subtitle="Semantyczne wyszukiwanie" />
       </StatGrid>

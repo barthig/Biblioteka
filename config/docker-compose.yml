@@ -156,6 +156,10 @@
         chown -R www-data:www-data /app/var &&
         chmod -R 777 /app/var &&
         composer install --no-interaction &&
+        until php -r \"exit(@fsockopen('rabbitmq', 5672) ? 0 : 1);\"; do
+          echo 'Waiting for RabbitMQ...' &&
+          sleep 2;
+        done &&
         php bin/console messenger:consume async --time-limit=3600 --memory-limit=256M
       "
 

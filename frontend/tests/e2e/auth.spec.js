@@ -22,13 +22,13 @@ test('register flow stores token', async ({ page }) => {
   await page.goto('/register')
   await page.fill('#register-name', 'Test User')
   await page.fill('#register-email', 'user@example.com')
-  await page.fill('#register-password', 'password123')
-  await page.fill('#register-confirm', 'password123')
+  await page.fill('#register-password', 'Password123A')
+  await page.fill('#register-confirm', 'Password123A')
+  await page.fill('#register-postal', '00-001')
   await page.click('button[type="submit"]')
 
-  await page.waitForFunction(() => localStorage.getItem('token'))
-  const stored = await page.evaluate(() => localStorage.getItem('token'))
-  expect(stored).toBeTruthy()
+  await expect(page.getByText('Konto zostało utworzone i zweryfikowane. Możesz się teraz zalogować.')).toBeVisible()
+  await expect(page).toHaveURL(/\/login$/, { timeout: 5000 })
 })
 
 test('login navigates to home', async ({ page }) => {

@@ -6,6 +6,7 @@ export default function SemanticSearch() {
   const [loading, setLoading] = useState(false)
   const [results, setResults] = useState([])
   const [error, setError] = useState('')
+  const [notice, setNotice] = useState('')
 
   async function handleSearch(event) {
     event.preventDefault()
@@ -19,6 +20,7 @@ export default function SemanticSearch() {
 
     setLoading(true)
     setError('')
+    setNotice('')
 
     try {
       const response = await apiFetch('/api/recommend', {
@@ -27,9 +29,14 @@ export default function SemanticSearch() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query: trimmed })
       })
+
+      if (response?.meta?.aiAvailable === false) {
+        setNotice('Moduł AI jest chwilowo niedostępny. Pokazano wyniki zastępcze.')
+      }
+
       setResults(Array.isArray(response?.data) ? response.data : [])
     } catch (err) {
-      setError(err?.message || 'Wyszukiwanie semantyczne nie powiodBo si.')
+      setError(err?.message || 'Wyszukiwanie semantyczne nie powiodło się.')
       setResults([])
     } finally {
       setLoading(false)
@@ -53,9 +60,10 @@ export default function SemanticSearch() {
       </form>
 
       {error ? <p className="semantic-search__error">{error}</p> : null}
+      {notice ? <p className="semantic-search__notice">{notice}</p> : null}
 
       <div className="semantic-search__results">
-        {loading ? <p>Aadowanie wynik�w...</p> : null}
+        {loading ? <p>Ładowanie wyników...</p> : null}
         {!loading && results.length === 0 && !error ? (
           <p>Brak wyników. Spróbuj bardziej opisowego zapytania.</p>
         ) : null}

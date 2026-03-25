@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+﻿import React, { useEffect, useMemo, useState } from 'react'
 import { apiFetch } from '../../api'
 import { useResourceCache } from '../../context/ResourceCacheContext'
 import PageHeader from '../../components/ui/PageHeader'
@@ -203,7 +203,7 @@ export default function AdminPanel() {
   }
 
   async function toggleUserBlock(userId, currentBlocked) {
-    if (!confirm(currentBlocked ? 'Odblokowa tego u|ytkownika?' : 'Zablokowa tego u|ytkownika?')) return
+    if (!confirm(currentBlocked ? 'Odblokować tego użytkownika?' : 'Zablokować tego użytkownika?')) return
     setError(null)
     setSuccess(null)
     try {
@@ -216,7 +216,7 @@ export default function AdminPanel() {
           body: JSON.stringify({ reason: 'manual' })
         })
       }
-      setSuccess(currentBlocked ? 'U|ytkownik zostaB odblokowany' : 'U|ytkownik zostaB zablokowany')
+      setSuccess(currentBlocked ? 'Użytkownik został odblokowany' : 'Użytkownik został zablokowany')
       loadUsers()
     } catch (err) {
       setError(err.message || 'Nie udało się zmienić statusu użytkownika')
@@ -224,7 +224,7 @@ export default function AdminPanel() {
   }
 
   async function deleteUser(userId) {
-    if (!confirm('Na pewno usun to konto? Tej operacji nie mo|na cofn.')) return
+    if (!confirm('Na pewno usunąć to konto? Tej operacji nie można cofnąć.')) return
     setError(null)
     setSuccess(null)
     try {
@@ -412,7 +412,7 @@ export default function AdminPanel() {
   }
 
   async function updateRole(role) {
-    const modulesValue = prompt('ModuBy (oddzielone przecinkami)', Array.isArray(role.modules) ? role.modules.join(', ') : '')
+    const modulesValue = prompt('Moduły (oddzielone przecinkami)', Array.isArray(role.modules) ? role.modules.join(', ') : '')
     if (modulesValue === null) return
     const descriptionValue = prompt('Opis', role.description || '')
     if (descriptionValue === null) return
@@ -542,7 +542,7 @@ export default function AdminPanel() {
   }
 
   async function returnLoan(loan) {
-    if (!confirm('Potwierdzi zwrot wypo|yczenia?')) return
+    if (!confirm('Potwierdzić zwrot wypożyczenia?')) return
     setError(null)
     setSuccess(null)
     try {
@@ -567,7 +567,7 @@ export default function AdminPanel() {
   }
 
   async function deleteLoan(loan) {
-    if (!confirm('Na pewno usun wypo|yczenie?')) return
+    if (!confirm('Na pewno usunąć wypożyczenie?')) return
     setError(null)
     setSuccess(null)
     try {
@@ -594,7 +594,7 @@ export default function AdminPanel() {
               className="btn btn-secondary" 
               onClick={() => setShowStats(!showStats)}
             >
-              {showStats ? 'Ukryj' : 'Poka|'}
+              {showStats ? 'Ukryj' : 'Pokaż'}
             </button>
             {showStats && !libraryStatsLoading && (
               <button className="btn btn-secondary" onClick={loadLibraryStats}>Odśwież</button>
@@ -607,12 +607,12 @@ export default function AdminPanel() {
             {!libraryStatsLoading && (
               <>
                 <StatGrid>
-                  <StatCard title="Ksi|ki" value={libraryStats?.booksCount ?? ''} subtitle="W katalogu" />
-                  <StatCard title="Czytelnicy" value={libraryStats?.usersCount ?? ''} subtitle="Konta aktywne" />
-                  <StatCard title="Wypo|yczenia" value={libraryStats?.loansCount ?? ''} subtitle="Aktywne" />
-                  <StatCard title="Rezerwacje" value={libraryStats?.reservationsQueue ?? ''} subtitle="W kolejce" />
-                  <StatCard title="Transakcje dzi[" value={libraryStats?.transactionsToday ?? ''} subtitle="Nowe wypo|yczenia" />
-                  <StatCard title="Aktywni dzi?" value={libraryStats?.activeUsers ?? ''} subtitle="Szacunek" />
+                  <StatCard title="Książki" value={libraryStats?.booksCount ?? '-'} subtitle="W katalogu" />
+                  <StatCard title="Czytelnicy" value={libraryStats?.usersCount ?? '-'} subtitle="Konta aktywne" />
+                  <StatCard title="Wypożyczenia" value={libraryStats?.loansCount ?? '-'} subtitle="Aktywne" />
+                  <StatCard title="Rezerwacje" value={libraryStats?.reservationsQueue ?? '-'} subtitle="W kolejce" />
+                  <StatCard title="Transakcje dziś" value={libraryStats?.transactionsToday ?? '-'} subtitle="Nowe wypożyczenia" />
+                  <StatCard title="Aktywni dziś" value={libraryStats?.activeUsers ?? '-'} subtitle="Szacunek" />
                 </StatGrid>
                 <div style={{ marginTop: '1rem' }}>
                   <StatGrid>
@@ -630,7 +630,7 @@ export default function AdminPanel() {
       {error && <FeedbackCard variant="error">{error}</FeedbackCard>}
       {success && <FeedbackCard variant="success">{success}</FeedbackCard>}
 
-      <div className="tabs" role="tablist" aria-label="Zak?adki panelu administratora">
+      <div className="tabs" role="tablist" aria-label="Zakładki panelu administratora">
         <button 
           className={`tab ${activeTab === 'users' ? 'tab--active' : ''}`} 
           onClick={() => setActiveTab('users')}
