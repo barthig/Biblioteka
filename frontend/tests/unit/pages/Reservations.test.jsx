@@ -40,14 +40,16 @@ describe('Reservations page', () => {
     mockUser = { id: 1 }
     apiFetch.mockResolvedValue({
       data: [
-        { id: 1, status: 'ACTIVE', reservedAt: '2025-01-01', expiresAt: '2025-02-01', book: { title: 'Alpha' } },
-        { id: 2, status: 'FULFILLED', reservedAt: '2025-01-01', fulfilledAt: '2025-01-05', book: { title: 'Beta' } }
+        { id: 1, status: 'ACTIVE', reservedAt: '2025-01-01', expiresAt: '2025-02-01', user: { id: 1 }, book: { title: 'Alpha' } },
+        { id: 2, status: 'FULFILLED', reservedAt: '2025-01-01', fulfilledAt: '2025-01-05', user: { id: 1 }, book: { title: 'Beta' } },
+        { id: 3, status: 'ACTIVE', reservedAt: '2025-01-01', expiresAt: '2025-02-01', user: { id: 99 }, book: { title: 'Gamma' } }
       ]
     })
 
     renderPage()
 
     expect(await screen.findByText('Alpha')).toBeInTheDocument()
+    expect(screen.queryByText('Gamma')).not.toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: /Anuluj/i }))
     expect(apiFetch).toHaveBeenCalledWith('/api/reservations/1', { method: 'DELETE' })
   })
@@ -60,6 +62,27 @@ describe('Reservations page', () => {
 
     expect(await screen.findByText(/Load failed/i)).toBeInTheDocument()
   })
+
+  it('does not render cancel action for reservation already tied to borrowed copy', async () => {
+    mockUser = { id: 1 }
+    apiFetch.mockResolvedValue({
+      data: [
+        {
+          id: 12,
+          status: 'ACTIVE',
+          reservedAt: '2025-01-01',
+          expiresAt: '2025-02-01',
+          user: { id: 1 },
+          book: { title: 'Delta' },
+          bookCopy: { id: 10, status: 'BORROWED' }
+        }
+      ]
+    })
+
+    renderPage()
+
+    expect(await screen.findByText('Delta')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Anuluj/i })).not.toBeInTheDocument()
+    expect(screen.getByText(/Egzemplarz jest już przygotowany do realizacji/i)).toBeInTheDocument()
+  })
 })
-
-

@@ -129,7 +129,7 @@ export const API_ENDPOINTS = {
   // Loans
   LOANS: '/api/loans',
   LOAN: (id) => `/api/loans/${id}`,
-  MY_LOANS: '/api/my-loans',
+  MY_LOANS: '/api/me/loans',
   
   // Reservations
   RESERVATIONS: '/api/reservations',
@@ -140,7 +140,7 @@ export const API_ENDPOINTS = {
   USER: (id) => `/api/users/${id}`,
   
   // Admin
-  ADMIN_DASHBOARD: '/api/admin/dashboard',
+  ADMIN_DASHBOARD: '/api/dashboard',
   ADMIN_USERS: '/api/admin/users',
   ADMIN_LOGS: '/api/admin/logs',
 }

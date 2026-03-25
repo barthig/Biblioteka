@@ -104,11 +104,11 @@ describe('Profile page', () => {
     )
 
     await screen.findByText(/Moje konto/i)
-    await userEvent.click(screen.getByRole('button', { name: /Oplaty i platnosci/i }))
-    await userEvent.click(screen.getByRole('button', { name: /Rozwin oplaty i platnosci/i }))
+    await userEvent.click(screen.getByRole('button', { name: /Op.*at.*i p.*atno.*ci/i }))
+    await userEvent.click(screen.getByRole('button', { name: /Rozw.*op.*at.*i p.*atno.*ci/i }))
 
     expect(apiFetch).toHaveBeenCalledWith('/api/me/fees')
-    expect(await screen.findByText(/Brak aktywnych oplat do uregulowania/i)).toBeInTheDocument()
+    expect(await screen.findByText(/Brak aktywnych op.*at do uregulowania/i)).toBeInTheDocument()
   })
 
   it('shows error when fee payment fails', async () => {
@@ -130,13 +130,12 @@ describe('Profile page', () => {
     )
 
     await screen.findByText(/Moje konto/i)
-    await userEvent.click(screen.getByRole('button', { name: /Oplaty i platnosci/i }))
-    await userEvent.click(screen.getByRole('button', { name: /Rozwin oplaty i platnosci/i }))
+    await userEvent.click(screen.getByRole('button', { name: /Op.*at.*i p.*atno.*ci/i }))
+    await userEvent.click(screen.getByRole('button', { name: /Rozw.*op.*at.*i p.*atno.*ci/i }))
     await screen.findByText(/Kara/i)
 
     await userEvent.click(screen.getByRole('button', { name: /Ureguluj online/i }))
     expect(await screen.findByText(/Pay failed/i)).toBeInTheDocument()
   })
 })
-
 

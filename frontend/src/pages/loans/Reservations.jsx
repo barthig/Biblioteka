@@ -8,10 +8,20 @@ import StatGrid from '../../components/ui/StatGrid'
 import StatCard from '../../components/ui/StatCard'
 import SectionCard from '../../components/ui/SectionCard'
 import FeedbackCard from '../../components/ui/FeedbackCard'
-import { logger } from '../../utils/logger'
+
+const ACTIVE_STATUSES = ['ACTIVE', 'PREPARED']
+const RESERVATIONS_HISTORY_ENDPOINT = '/api/reservations?history=true'
 
 function formatDate(value) {
   return value ? new Date(value).toLocaleDateString('pl-PL') : '-'
+}
+
+function canCancelReservation(reservation) {
+  if (!reservation || !ACTIVE_STATUSES.includes(reservation.status)) {
+    return false
+  }
+
+  return reservation.bookCopy?.status !== 'BORROWED'
 }
 
 export default function Reservations() {
@@ -20,18 +30,38 @@ export default function Reservations() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [actionError, setActionError] = useState(null)
+  const [cancelling, setCancelling] = useState({})
   const { getCachedResource, setCachedResource, invalidateResource } = useResourceCache()
-  const CACHE_KEY = '/api/reservations?history=true'
+  const CACHE_KEY = `reservations:${user?.id ?? 'anon'}:${RESERVATIONS_HISTORY_ENDPOINT}`
   const CACHE_TTL = 60000
-  const ACTIVE_STATUSES = ['ACTIVE', 'PREPARED']
+  const currentUserId = user?.id ? Number(user.id) : null
+
+  const filterReservationsForCurrentUser = useMemo(() => (items) => {
+    if (!currentUserId) {
+      return []
+    }
+
+    return (Array.isArray(items) ? items : []).filter((reservation) => {
+      const reservationUserId = Number(
+        reservation?.user?.id
+        ?? reservation?.userId
+        ?? reservation?.readerId
+        ?? 0
+      )
+
+      return reservationUserId === currentUserId
+    })
+  }, [currentUserId])
 
   useEffect(() => {
     let active = true
 
     async function load() {
-      const cached = getCachedResource(`reservations:${CACHE_KEY}`, CACHE_TTL)
+      const cached = getCachedResource(CACHE_KEY, CACHE_TTL)
       if (cached) {
-        const list = Array.isArray(cached) ? cached : (Array.isArray(cached?.data) ? cached.data : [])
+        const list = filterReservationsForCurrentUser(
+          Array.isArray(cached) ? cached : (Array.isArray(cached?.data) ? cached.data : [])
+        )
         setReservations(list)
         setLoading(false)
         setError(null)
@@ -41,11 +71,11 @@ export default function Reservations() {
       setLoading(true)
       setError(null)
       try {
-        const data = await apiFetch('/api/reservations?history=true')
+        const data = await apiFetch(RESERVATIONS_HISTORY_ENDPOINT)
         if (active) {
-          const list = Array.isArray(data?.data) ? data.data : []
+          const list = filterReservationsForCurrentUser(Array.isArray(data?.data) ? data.data : [])
           setReservations(list)
-          setCachedResource(`reservations:${CACHE_KEY}`, list)
+          setCachedResource(CACHE_KEY, list)
         }
       } catch (err) {
         if (active) {
@@ -63,13 +93,13 @@ export default function Reservations() {
     } else {
       setLoading(false)
       setReservations([])
-      invalidateResource('reservations:/api/reservations*')
+      invalidateResource('reservations:*')
     }
 
     return () => {
       active = false
     }
-  }, [getCachedResource, invalidateResource, setCachedResource, user?.id, CACHE_KEY, CACHE_TTL])
+  }, [CACHE_KEY, CACHE_TTL, currentUserId, filterReservationsForCurrentUser, getCachedResource, invalidateResource, setCachedResource, user?.id])
 
   const statusMeta = (status) => {
     switch (status) {
@@ -116,7 +146,12 @@ export default function Reservations() {
   }, [activeReservations])
 
   async function cancelReservation(id) {
+    if (cancelling[id]) {
+      return
+    }
+
     setActionError(null)
+    setCancelling(prev => ({ ...prev, [id]: true }))
     try {
       await apiFetch(`/api/reservations/${id}`, { method: 'DELETE' })
       setReservations(prev => {
@@ -125,14 +160,31 @@ export default function Reservations() {
             ? { ...item, status: 'CANCELLED', cancelledAt: new Date().toISOString() }
             : item
         ))
-        setCachedResource(`reservations:${CACHE_KEY}`, next)
+        setCachedResource(CACHE_KEY, next)
         return next
       })
       // Invalidate recommended cache as book availability may have changed
       invalidateResource('recommended:*')
     } catch (err) {
-      logger.error('Error cancelling reservation:', err)
-      setActionError(err.message || 'Nie udało się anulować rezerwacji')
+      if (err?.status === 422 || err?.status === 404) {
+        invalidateResource(CACHE_KEY)
+        setReservations(prev => prev.map(item => (
+          item.id === id
+            ? {
+                ...item,
+                status: item.bookCopy?.status === 'BORROWED' ? 'PREPARED' : item.status,
+              }
+            : item
+        )))
+        setActionError(
+          err?.data?.error?.message
+            || 'Ta rezerwacja nie może już zostać anulowana.'
+        )
+      } else {
+        setActionError(err.message || 'Nie udało się anulować rezerwacji')
+      }
+    } finally {
+      setCancelling(prev => ({ ...prev, [id]: false }))
     }
   }
 
@@ -200,13 +252,20 @@ export default function Reservations() {
                         </span>
                       )
                     })()}
-                    <button
-                      type="button"
-                      className="btn btn-outline"
-                      onClick={() => cancelReservation(reservation.id)}
-                    >
-                      Anuluj
-                    </button>
+                    {canCancelReservation(reservation) ? (
+                      <button
+                        type="button"
+                        className="btn btn-outline"
+                        disabled={Boolean(cancelling[reservation.id])}
+                        onClick={() => cancelReservation(reservation.id)}
+                      >
+                        {cancelling[reservation.id] ? 'Anulowanie...' : 'Anuluj'}
+                      </button>
+                    ) : (
+                      <span className="resource-item__hint">
+                        {reservation.bookCopy?.status === 'BORROWED' ? 'Egzemplarz jest już przygotowany do realizacji.' : 'Anulowanie niedostępne.'}
+                      </span>
+                    )}
                   </div>
                 </li>
               ))}

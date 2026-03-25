@@ -111,7 +111,8 @@ const responseInterceptors = [
 const errorInterceptors = [
   // Log errors
   async (error, url) => {
-    if (config.enableLogging) {
+    const isUnexpectedError = !error?.status || error.status >= 500
+    if (config.enableLogging && isUnexpectedError) {
       logger.error(`[API Error] ${url}:`, error.message)
     }
     return error
@@ -173,6 +174,7 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 const shouldRetry = (error, attempt, options) => {
   if (attempt >= config.retryAttempts) return false
   if (options.noRetry) return false
+  if (isAuthEndpoint(options.endpoint ?? '')) return false
   
   // Retry on network errors
   if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
@@ -200,7 +202,7 @@ export const apiClient = async (endpoint, options = {}) => {
   const startTime = Date.now()
   
   // Apply request interceptors
-  let requestOptions = { ...options }
+  let requestOptions = { ...options, endpoint }
   for (const interceptor of requestInterceptors) {
     requestOptions = interceptor(requestOptions)
   }

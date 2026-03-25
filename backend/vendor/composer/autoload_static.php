@@ -34,6 +34,7 @@ class ComposerStaticInit65ce50d89d4e417b146049a1d141d5ee
         'ec07570ca5a812141189b1fa81503674' => __DIR__ . '/..' . '/phpunit/phpunit/src/Framework/Assert/Functions.php',
         '6588714690f694b8fb6c15a7149e00eb' => __DIR__ . '/../..' . '/compat/symfony_app_reference.php',
         '5e34ec8a67dae2653f7bae4b70ade870' => __DIR__ . '/../..' . '/compat/symfony_idle_connection_driver.php',
+        'e2f45e1c8ec682e058b6c2e6a8585018' => __DIR__ . '/../..' . '/compat/symfony_idle_connection_listener.php',
         '6a6a51e8906db6cbd9593d7bb7fb16a4' => __DIR__ . '/../..' . '/compat/symfony_date_point_type.php',
     );
 

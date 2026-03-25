@@ -53,6 +53,7 @@
                      "files":  [
                                    "compat/symfony_app_reference.php",
                                    "compat/symfony_idle_connection_driver.php",
+                                   "compat/symfony_idle_connection_listener.php",
                                    "compat/symfony_date_point_type.php"
                                ],
                      "psr-4":  {

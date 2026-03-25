@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { apiFetch } from '../../api'
@@ -32,7 +32,7 @@ const initialPasswordForm = {
 }
 
 export default function Profile() {
-  const { user, refreshSession, logoutAll, fetchAuthProfile } = useAuth()
+  const { user } = useAuth()
   const [profile, setProfile] = useState(blankProfile)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -57,8 +57,6 @@ export default function Profile() {
   const [theme, setTheme] = useState('auto')
   const [fontSize, setFontSize] = useState('standard')
   const [language, setLanguage] = useState('pl')
-  
-  const [profileImage, setProfileImage] = useState(null)
   const [imagePreview, setImagePreview] = useState(null)
   const [ratings, setRatings] = useState([])
   const [ratingsError, setRatingsError] = useState(null)
@@ -69,10 +67,8 @@ export default function Profile() {
   const [feesPayingId, setFeesPayingId] = useState(null)
   const [feesExpanded, setFeesExpanded] = useState(false)
   const [feeSearch, setFeeSearch] = useState('')
-  const [sessionStatus, setSessionStatus] = useState(null)
-  const [sessionLoading, setSessionLoading] = useState(false)
 
-  async function refreshRatings() {
+  const refreshRatings = useCallback(async () => {
     if (!user?.id) return
     setRatingsLoading(true)
     try {
@@ -88,13 +84,13 @@ export default function Profile() {
       setRatingsError(null)
     } catch (err) {
       const statusInfo = err?.status ? ` (HTTP ${err.status})` : ''
-      setRatingsError(`${err?.message || 'Nie udalo sie pobrac ocen'}${statusInfo}`)
+      setRatingsError(`${err?.message || 'Nie udaĹ‚o siÄ™ pobraÄ‡ ocen'}${statusInfo}`)
     } finally {
       setRatingsLoading(false)
     }
-  }
+  }, [user?.id])
 
-  async function refreshFees() {
+  const refreshFees = useCallback(async () => {
     setFeesLoading(true)
     setFeesError(null)
     try {
@@ -107,11 +103,11 @@ export default function Profile() {
       setFees(list)
     } catch (err) {
       const statusInfo = err?.status ? ` (HTTP ${err.status})` : ''
-      setFeesError(`${err?.message || 'Nie udalo sie pobrac oplat'}${statusInfo}`)
+      setFeesError(`${err?.message || 'Nie udaĹ‚o siÄ™ pobraÄ‡ opĹ‚at'}${statusInfo}`)
     } finally {
       setFeesLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
     let active = true
@@ -157,7 +153,7 @@ export default function Profile() {
         }
       } catch (err) {
         if (active) {
-          setError(err.message || 'Nie udało się pobrać profilu użytkownika')
+          setError(err.message || 'Nie udaĹ‚o siÄ™ pobraÄ‡ profilu uĹĽytkownika')
         }
       } finally {
         if (active) {
@@ -174,11 +170,11 @@ export default function Profile() {
   useEffect(() => {
     if (activeTab !== 'ratings' || !user?.id) return
     refreshRatings()
-  }, [activeTab, user?.id])
+  }, [activeTab, user?.id, refreshRatings])
   useEffect(() => {
     if (activeTab !== 'fees' || !user?.id) return
     refreshFees()
-  }, [activeTab, user?.id])
+  }, [activeTab, refreshFees, user?.id])
 
   const normalizedFeeSearch = feeSearch.trim().toLowerCase()
   const filteredFees = normalizedFeeSearch
@@ -216,15 +212,15 @@ export default function Profile() {
         preferredContact: preferredContact
       }
 
-      const data = await apiFetch('/api/me/contact', {
+      await apiFetch('/api/me/contact', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       })
 
-      setSuccess('Dane kontaktowe zostały zaktualizowane')
+      setSuccess('Dane kontaktowe zostaĹ‚y zaktualizowane')
     } catch (err) {
-      setError(err.message || 'Aktualizacja nie powiodła się')
+      setError(err.message || 'Aktualizacja nie powiodĹ‚a siÄ™')
     } finally {
       setSaving(false)
     }
@@ -242,12 +238,12 @@ export default function Profile() {
     setPasswordError(null)
 
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      setPasswordError('Nowe hasło i powtórzone hasło muszą być takie same')
+      setPasswordError('Nowe hasĹ‚o i powtĂłrzone hasĹ‚o muszÄ… byÄ‡ takie same')
       return
     }
 
     if (passwordForm.newPassword.length < 6) {
-      setPasswordError('Nowe hasło musi mieć minimum 6 znaków')
+      setPasswordError('Nowe hasĹ‚o musi mieÄ‡ minimum 6 znakĂłw')
       return
     }
 
@@ -262,58 +258,15 @@ export default function Profile() {
           newPassword: passwordForm.newPassword
         })
       })
-      toast.success('Hasło zostało zmienione!')
+      toast.success('HasĹ‚o zostaĹ‚o zmienione!')
       setPasswordError(null)
       setPasswordForm(initialPasswordForm)
     } catch (err) {
-      setPasswordError(err.message || 'Nie udało się zmienić hasła')
+      setPasswordError(err.message || 'Nie udaĹ‚o siÄ™ zmieniÄ‡ hasĹ‚a')
     } finally {
       setSaving(false)
     }
   }
-
-  async function handleRefreshSession() {
-    setSessionLoading(true)
-    setSessionStatus(null)
-    setError(null)
-    try {
-      await refreshSession()
-      setSessionStatus('Sesja została odświeżona')
-    } catch (err) {
-      setError(err.message || 'Nie udało się odświeżyć sesji')
-    } finally {
-      setSessionLoading(false)
-    }
-  }
-
-  async function handleVerifySession() {
-    setSessionLoading(true)
-    setSessionStatus(null)
-    setError(null)
-    try {
-      const data = await fetchAuthProfile()
-      const label = data?.email ? `Sesja aktywna: ${data.email}` : 'Sesja aktywna'
-      setSessionStatus(label)
-    } catch (err) {
-      setError(err.message || 'Nie udało się zweryfikować sesji')
-    } finally {
-      setSessionLoading(false)
-    }
-  }
-
-  async function handleLogoutAllSessions() {
-    setSessionLoading(true)
-    setSessionStatus(null)
-    setError(null)
-    try {
-      await logoutAll()
-    } catch (err) {
-      setError(err.message || 'Nie udało się wylogować wszystkich sesji')
-    } finally {
-      setSessionLoading(false)
-    }
-  }
-
   async function handleDeleteRating(bookId, ratingId) {
     setRatingsError(null)
     try {
@@ -321,7 +274,7 @@ export default function Profile() {
       setRatings(prev => prev.filter(r => r.id !== ratingId))
       refreshRatings()
     } catch (err) {
-      setRatingsError(err.message || 'Nie udało się usunąć oceny')
+      setRatingsError(err.message || 'Nie udaĹ‚o siÄ™ usunÄ…Ä‡ oceny')
     }
   }
 
@@ -333,7 +286,7 @@ export default function Profile() {
       toast.success('Platnosc zostala zarejestrowana')
       refreshFees()
     } catch (err) {
-      setFeesError(err.message || 'Nie udalo sie oplacic oplaty')
+      setFeesError(err.message || 'Nie udaĹ‚o siÄ™ opĹ‚aciÄ‡ opĹ‚aty')
     } finally {
       setFeesPayingId(null)
     }
@@ -342,7 +295,6 @@ export default function Profile() {
   function handleImageChange(event) {
     const file = event.target.files[0]
     if (file) {
-      setProfileImage(file)
       const reader = new FileReader()
       reader.onloadend = () => {
         setImagePreview(reader.result)
@@ -370,9 +322,9 @@ export default function Profile() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       })
-      setSuccess('Preferencje zostały zapisane')
+      setSuccess('Preferencje zostaĹ‚y zapisane')
     } catch (err) {
-      setError(err.message || 'Nie udało się zapisać preferencji')
+      setError(err.message || 'Nie udaĹ‚o siÄ™ zapisaÄ‡ preferencji')
     } finally {
       setSaving(false)
     }
@@ -392,9 +344,9 @@ export default function Profile() {
       })
       applyUiPreferences({ theme, fontSize, language })
       storeUiPreferences({ theme, fontSize, language })
-      setSuccess('Ustawienia interfejsu zostały zapisane')
+      setSuccess('Ustawienia interfejsu zostaĹ‚y zapisane')
     } catch (err) {
-      setError(err.message || 'Nie udało się zapisać ustawień')
+      setError(err.message || 'Nie udaĹ‚o siÄ™ zapisaÄ‡ ustawieĹ„')
     } finally {
       setSaving(false)
     }
@@ -404,7 +356,7 @@ export default function Profile() {
     return (
       <div className="page page--centered">
         <div className="surface-card empty-state">
-          Aby zarządzać kontem, <Link to="/login">zaloguj się</Link> lub <Link to="/register">utwórz nowe konto</Link>.
+          Aby zarzÄ…dzaÄ‡ kontem, <Link to="/login">zaloguj siÄ™</Link> lub <Link to="/register">utwĂłrz nowe konto</Link>.
         </div>
       </div>
     )
@@ -413,7 +365,7 @@ export default function Profile() {
   if (loading) {
     return (
       <div className="page">
-        <div className="surface-card empty-state">Ładowanie profilu...</div>
+        <div className="surface-card empty-state">Ĺadowanie profilu...</div>
       </div>
     )
   }
@@ -422,13 +374,13 @@ export default function Profile() {
     <div className="page">
       <PageHeader
         title="Moje konto"
-        subtitle="Zarządzaj swoim profilem, bezpieczeństwem i ustawieniami."
+        subtitle="ZarzÄ…dzaj swoim profilem, bezpieczeĹ„stwem i ustawieniami."
       />
 
       <StatGrid>
         <StatCard title="Status konta" value={profile.accountStatus || 'Aktywne'} />
-        <StatCard title="Ważność karty" value={profile.cardExpiry || '-'} />
-        <StatCard title="Domyślna filia" value={profile.defaultBranch || '-'} />
+        <StatCard title="WaĹĽnoĹ›Ä‡ karty" value={profile.cardExpiry || '-'} />
+        <StatCard title="DomyĹ›lna filia" value={profile.defaultBranch || '-'} />
       </StatGrid>
 
       {error && <FeedbackCard variant="error">{error}</FeedbackCard>}
@@ -440,7 +392,7 @@ export default function Profile() {
           onClick={() => setActiveTab('security')}
           className={`tab ${activeTab === 'security' ? 'tab--active' : ''}`}
         >
-          Logowanie i bezpieczeństwo
+          Logowanie i bezpieczeĹ„stwo
         </button>
         <button
           onClick={() => setActiveTab('contact')}
@@ -458,7 +410,7 @@ export default function Profile() {
           onClick={() => setActiveTab('ui')}
           className={`tab ${activeTab === 'ui' ? 'tab--active' : ''}`}
         >
-          Dostępność i interfejs
+          DostÄ™pnoĹ›Ä‡ i interfejs
         </button>
         <button
           onClick={() => setActiveTab('account')}
@@ -476,7 +428,7 @@ export default function Profile() {
           onClick={() => setActiveTab('fees')}
           className={`tab ${activeTab === 'fees' ? 'tab--active' : ''}`}
         >
-          Oplaty i platnosci
+          OpĹ‚aty i pĹ‚atnoĹ›ci
         </button>
       </div>
 
@@ -491,17 +443,17 @@ export default function Profile() {
               </svg>
             </div>
             <div>
-              <h2 className="form-section__title">Bezpieczeństwo konta</h2>
+              <h2 className="form-section__title">BezpieczeĹ„stwo konta</h2>
               <p className="form-section__description">Zarzadzaj haslem i aktywnymi sesjami</p>
             </div>
           </div>
 
           {/* Change Password */}
           <form onSubmit={handlePasswordSubmit}>
-            <h3>Zmiana hasła</h3>
+            <h3>Zmiana hasĹ‚a</h3>
             <div className="form-row">
               <div className="form-field">
-                <label htmlFor="password-current">Obecne hasło</label>
+                <label htmlFor="password-current">Obecne hasĹ‚o</label>
                 <input
                   id="password-current"
                   name="currentPassword"
@@ -515,7 +467,7 @@ export default function Profile() {
             </div>
             <div className="form-row form-row--two">
               <div className="form-field">
-                <label htmlFor="password-new">Nowe hasło</label>
+                <label htmlFor="password-new">Nowe hasĹ‚o</label>
                 <input
                   id="password-new"
                   name="newPassword"
@@ -526,10 +478,10 @@ export default function Profile() {
                   minLength={8}
                   required
                 />
-                <small className="support-copy">Min. 8 znaków, zalecane cyfry i znaki specjalne</small>
+                <small className="support-copy">Min. 8 znakĂłw, zalecane cyfry i znaki specjalne</small>
               </div>
               <div className="form-field">
-                <label htmlFor="password-confirm">Powtórz nowe hasło</label>
+                <label htmlFor="password-confirm">PowtĂłrz nowe hasĹ‚o</label>
                 <input
                   id="password-confirm"
                   name="confirmPassword"
@@ -545,7 +497,7 @@ export default function Profile() {
             <div className="form-actions">
               {passwordError && <p className="error">{passwordError}</p>}
               <button type="submit" className="btn btn-primary" disabled={saving}>
-                {saving ? 'Zapisywanie...' : 'Zmień hasło'}
+                {saving ? 'Zapisywanie...' : 'ZmieĹ„ hasĹ‚o'}
               </button>
             </div>
           </form>
@@ -563,7 +515,7 @@ export default function Profile() {
             </div>
             <div>
               <h2 className="form-section__title">Dane kontaktowe</h2>
-              <p className="form-section__description">Utrzymuj aktualny adres i telefon dla powiadomień</p>
+              <p className="form-section__description">Utrzymuj aktualny adres i telefon dla powiadomieĹ„</p>
             </div>
           </div>
 
@@ -597,7 +549,7 @@ export default function Profile() {
 
             <h3 style={{ marginTop: '2rem' }}>Adres zamieszkania</h3>
             <p className="support-copy">
-              Zmiana adresu może wymagać ponownej weryfikacji karty przy najbliższej wizycie w bibliotece.
+              Zmiana adresu moĹĽe wymagaÄ‡ ponownej weryfikacji karty przy najbliĹĽszej wizycie w bibliotece.
             </p>
 
             <div className="form-row">
@@ -608,14 +560,14 @@ export default function Profile() {
                   name="addressLine"
                   value={profile.addressLine}
                   onChange={handleProfileChange}
-                  placeholder="ul. Przykładowa 123/45"
+                  placeholder="ul. PrzykĹ‚adowa 123/45"
                 />
               </div>
             </div>
 
             <div className="form-row form-row--two">
               <div className="form-field">
-                <label htmlFor="contact-city">Miejscowość</label>
+                <label htmlFor="contact-city">MiejscowoĹ›Ä‡</label>
                 <input
                   id="contact-city"
                   name="city"
@@ -659,27 +611,27 @@ export default function Profile() {
             </div>
             <div>
               <h2 className="form-section__title">Preferencje biblioteczne</h2>
-              <p className="form-section__description">Dostosuj sposób działania biblioteki do swoich potrzeb</p>
+              <p className="form-section__description">Dostosuj sposĂłb dziaĹ‚ania biblioteki do swoich potrzeb</p>
             </div>
           </div>
 
           <form onSubmit={handlePreferencesSubmit}>
             {/* Default Branch */}
             <div className="form-field">
-              <label htmlFor="pref-branch">Domyślna filia odbioru</label>
+              <label htmlFor="pref-branch">DomyĹ›lna filia odbioru</label>
               <select
                 id="pref-branch"
                 name="defaultBranch"
                 value={profile.defaultBranch}
                 onChange={handleProfileChange}
               >
-                <option value="">Wybierz filię</option>
-                <option value="main">Filia Główna - Centrum</option>
-                <option value="north">Filia Północna - Osiedle Słoneczne</option>
-                <option value="south">Filia Południowa - Park Miejski</option>
+                <option value="">Wybierz filiÄ™</option>
+                <option value="main">Filia GĹ‚Ăłwna - Centrum</option>
+                <option value="north">Filia PĂłĹ‚nocna - Osiedle SĹ‚oneczne</option>
+                <option value="south">Filia PoĹ‚udniowa - Park Miejski</option>
                 <option value="east">Filia Wschodnia - Galeria Handlowa</option>
               </select>
-              <small className="support-copy">Rezerwacje domyślnie trafiają do wybranej filii</small>
+              <small className="support-copy">Rezerwacje domyĹ›lnie trafiajÄ… do wybranej filii</small>
             </div>
 
             <h3 style={{ marginTop: '2rem' }}>Powiadomienia e-mail</h3>
@@ -691,7 +643,7 @@ export default function Profile() {
                 onChange={e => setNotifications(prev => ({ ...prev, emailLoans: e.target.checked }))}
               />
               <label htmlFor="notif-loans">
-                <strong>Przypomnienia o zbliżających się terminach zwrotu</strong>
+                <strong>Przypomnienia o zbliĹĽajÄ…cych siÄ™ terminach zwrotu</strong>
                 <div className="support-copy">Otrzymuj powiadomienie 3 dni przed terminem</div>
               </label>
             </div>
@@ -704,8 +656,8 @@ export default function Profile() {
                 onChange={e => setNotifications(prev => ({ ...prev, emailReservations: e.target.checked }))}
               />
               <label htmlFor="notif-reservations">
-                <strong>Informacje o dostępności zarezerwowanych książek</strong>
-                <div className="support-copy">Powiadomienie, gdy książka czeka na odbiór</div>
+                <strong>Informacje o dostÄ™pnoĹ›ci zarezerwowanych ksiÄ…ĹĽek</strong>
+                <div className="support-copy">Powiadomienie, gdy ksiÄ…ĹĽka czeka na odbiĂłr</div>
               </label>
             </div>
 
@@ -717,8 +669,8 @@ export default function Profile() {
                 onChange={e => setNotifications(prev => ({ ...prev, emailFines: e.target.checked }))}
               />
               <label htmlFor="notif-fines">
-                <strong>Informacje o nowych karach za opóźnienia</strong>
-                <div className="support-copy">Alerty o naliczonych opłatach</div>
+                <strong>Informacje o nowych karach za opĂłĹşnienia</strong>
+                <div className="support-copy">Alerty o naliczonych opĹ‚atach</div>
               </label>
             </div>
 
@@ -731,7 +683,7 @@ export default function Profile() {
               />
               <label htmlFor="notif-newsletter">
                 <strong>Newsletter biblioteki</strong>
-                <div className="support-copy">Nowości, wydarzenia i zmiany w działalności</div>
+                <div className="support-copy">NowoĹ›ci, wydarzenia i zmiany w dziaĹ‚alnoĹ›ci</div>
               </label>
             </div>
 
@@ -743,12 +695,12 @@ export default function Profile() {
                 onChange={e => setNotifications(prev => ({ ...prev, emailAnnouncements: e.target.checked }))}
               />
               <label htmlFor="notif-announcements">
-                <strong>Ogłoszenia specjalne</strong>
-                <div className="support-copy">Ważne informacje o zmianach godzin otwarcia, remontach itp.</div>
+                <strong>OgĹ‚oszenia specjalne</strong>
+                <div className="support-copy">WaĹĽne informacje o zmianach godzin otwarcia, remontach itp.</div>
               </label>
             </div>
 
-            <h3 style={{ marginTop: '2rem' }}>Historia wypożyczeń</h3>
+            <h3 style={{ marginTop: '2rem' }}>Historia wypoĹĽyczeĹ„</h3>
             <div className="checkbox-field">
               <input
                 type="checkbox"
@@ -757,9 +709,9 @@ export default function Profile() {
                 onChange={e => setKeepHistory(e.target.checked)}
               />
               <label htmlFor="pref-history">
-                <strong>Przechowuj historię zwróconych książek</strong>
+                <strong>Przechowuj historiÄ™ zwrĂłconych ksiÄ…ĹĽek</strong>
                 <div className="support-copy">
-                  Zgodnie z RODO domyślnie nie przechowujemy historii. Zaznacz, aby zobaczyć co przeczytałeś.
+                  Zgodnie z RODO domyĹ›lnie nie przechowujemy historii. Zaznacz, aby zobaczyÄ‡ co przeczytaĹ‚eĹ›.
                 </div>
               </label>
             </div>
@@ -784,8 +736,8 @@ export default function Profile() {
               </svg>
             </div>
             <div>
-              <h2 className="form-section__title">Dostępność i interfejs</h2>
-              <p className="form-section__description">Dostosuj wygląd i język systemu</p>
+              <h2 className="form-section__title">DostÄ™pnoĹ›Ä‡ i interfejs</h2>
+              <p className="form-section__description">Dostosuj wyglÄ…d i jÄ™zyk systemu</p>
             </div>
           </div>
 
@@ -801,26 +753,26 @@ export default function Profile() {
                   <option value="auto">Automatyczny (systemowy)</option>
                   <option value="light">Jasny</option>
                   <option value="dark">Ciemny</option>
-                  {/* <option value="contrast">Wysoki kontrast (dla słabowidzących)</option> */}
+                  {/* <option value="contrast">Wysoki kontrast (dla sĹ‚abowidzÄ…cych)</option> */}
                 </select>
               </div>
 
               <div className="form-field">
-                <label htmlFor="ui-font">Wielkość czcionki</label>
+                <label htmlFor="ui-font">WielkoĹ›Ä‡ czcionki</label>
                 <select
                   id="ui-font"
                   value={fontSize}
                   onChange={e => setFontSize(e.target.value)}
                 >
                   <option value="standard">Standardowa</option>
-                  <option value="large">Powiększona</option>
-                  <option value="xlarge">Bardzo duża</option>
+                  <option value="large">PowiÄ™kszona</option>
+                  <option value="xlarge">Bardzo duĹĽa</option>
                 </select>
               </div>
             </div>
 
             <div className="form-field">
-              <label htmlFor="ui-lang">Język interfejsu</label>
+              <label htmlFor="ui-lang">JÄ™zyk interfejsu</label>
               <select
                 id="ui-lang"
                 value={language}
@@ -830,7 +782,7 @@ export default function Profile() {
                 <option value="en">English</option>
               </select>
               <small className="support-copy">
-                Tłumaczenia interfejsu są w przygotowaniu — na razie zapisujemy tylko preferencję języka.
+                TĹ‚umaczenia interfejsu sÄ… w przygotowaniu â€” na razie zapisujemy tylko preferencjÄ™ jÄ™zyka.
               </small>
             </div>
 
@@ -864,7 +816,7 @@ export default function Profile() {
             {imagePreview ? (
               <img
                 src={imagePreview}
-                alt="Zdjęcie profilowe"
+                alt="ZdjÄ™cie profilowe"
                 style={{
                   width: '120px',
                   height: '120px',
@@ -892,7 +844,7 @@ export default function Profile() {
             )}
             <div style={{ marginTop: '1rem' }}>
               <label htmlFor="account-image" className="btn btn-ghost" style={{ cursor: 'pointer' }}>
-                Zmień zdjęcie profilowe
+                ZmieĹ„ zdjÄ™cie profilowe
               </label>
               <input
                 id="account-image"
@@ -907,34 +859,34 @@ export default function Profile() {
           {/* Read-only fields */}
           <div className="form-row form-row--two">
             <div className="form-field form-field--readonly">
-              <label>Imię i nazwisko</label>
-              <div className="form-field__value">{profile.name || '—'}</div>
-              <small className="support-copy">Zmiana wymaga wizyty z dowodem tożsamości</small>
+              <label>ImiÄ™ i nazwisko</label>
+              <div className="form-field__value">{profile.name || 'â€”'}</div>
+              <small className="support-copy">Zmiana wymaga wizyty z dowodem toĹĽsamoĹ›ci</small>
             </div>
 
             <div className="form-field form-field--readonly">
               <label>Adres e-mail (login)</label>
-              <div className="form-field__value">{profile.email || '—'}</div>
-              <small className="support-copy">Kontakt z biblioteką w celu zmiany</small>
+              <div className="form-field__value">{profile.email || 'â€”'}</div>
+              <small className="support-copy">Kontakt z bibliotekÄ… w celu zmiany</small>
             </div>
           </div>
 
           <div className="form-row form-row--two">
             <div className="form-field form-field--readonly">
               <label>Numer karty bibliotecznej</label>
-              <div className="form-field__value">{profile.cardNumber || '—'}</div>
+              <div className="form-field__value">{profile.cardNumber || 'â€”'}</div>
             </div>
 
             <div className="form-field form-field--readonly">
               <label>PESEL</label>
-              <div className="form-field__value">{profile.pesel ? `******${profile.pesel.slice(-5)}` : '—'}</div>
+              <div className="form-field__value">{profile.pesel ? `******${profile.pesel.slice(-5)}` : 'â€”'}</div>
             </div>
           </div>
 
           <div className="form-row form-row--two">
             <div className="form-field form-field--readonly">
-              <label>Data ważności konta</label>
-              <div className="form-field__value">{profile.cardExpiry || '—'}</div>
+              <label>Data waĹĽnoĹ›ci konta</label>
+              <div className="form-field__value">{profile.cardExpiry || 'â€”'}</div>
             </div>
 
             <div className="form-field form-field--readonly">
@@ -957,11 +909,11 @@ export default function Profile() {
                 Regulamin biblioteki
               </a>
               <button type="button" className="btn btn-ghost" style={{ color: 'var(--color-danger)' }}>
-                Usuń konto
+                UsuĹ„ konto
               </button>
             </div>
             <p className="support-copy" style={{ marginTop: '1rem' }}>
-              Usunięcie konta jest możliwe po zwróceniu wszystkich książek i uregulowaniu kar.
+              UsuniÄ™cie konta jest moĹĽliwe po zwrĂłceniu wszystkich ksiÄ…ĹĽek i uregulowaniu kar.
             </p>
           </div>
         </div>
@@ -971,7 +923,7 @@ export default function Profile() {
         <SectionCard title="Twoje oceny">
           <div className="form-actions">
             <button type="button" className="btn btn-secondary" onClick={refreshRatings} disabled={ratingsLoading}>
-              {ratingsLoading ? 'Odswiezanie...' : 'Odswiez oceny'}
+              {ratingsLoading ? 'OdĹ›wieĹĽanie...' : 'OdĹ›wieĹĽ oceny'}
             </button>
           </div>
         {ratingsError && <p className="error">{ratingsError}</p>}
@@ -981,14 +933,14 @@ export default function Profile() {
           <ul className="list list--bordered">
             {ratings.map(r => (
               <li key={r.id}>
-                <div className="list__title">{r.book?.title || 'Książka'}</div>
+                <div className="list__title">{r.book?.title || 'KsiÄ…ĹĽka'}</div>
                 <div className="list__meta">
                   <span>Ocena: {r.rating}/5</span>
                   {r.createdAt && <span>{new Date(r.createdAt).toLocaleDateString('pl-PL')}</span>}
                 </div>
                 {r.id && r.book?.id && (
                   <button className="btn btn-outline btn-sm" onClick={() => handleDeleteRating(r.book.id, r.id)}>
-                    Usuń ocenę
+                    UsuĹ„ ocenÄ™
                   </button>
                 )}
               </li>
@@ -1008,15 +960,15 @@ export default function Profile() {
               onClick={() => setFeesExpanded(prev => !prev)}
               aria-expanded={feesExpanded}
               aria-controls="fees-panel"
-              aria-label={`${feesExpanded ? 'Zwin' : 'Rozwin'} oplaty i platnosci`}
+              aria-label={`${feesExpanded ? 'ZwiĹ„' : 'RozwiĹ„'} opĹ‚aty i pĹ‚atnoĹ›ci`}
             >
               <div>
-                <h2>Oplaty i platnosci</h2>
-                <p className="support-copy">Kliknij, aby {feesExpanded ? 'zwinac' : 'rozwinac'} sekcje oplat i kar.</p>
+                <h2>OpĹ‚aty i pĹ‚atnoĹ›ci</h2>
+                <p className="support-copy">Kliknij, aby {feesExpanded ? 'zwinÄ…Ä‡' : 'rozwinÄ…Ä‡'} sekcjÄ™ opĹ‚at i kar.</p>
               </div>
               <div className="fees-accordion__meta">
                 <span className="fees-accordion__count">{fees.length} pozycji</span>
-                <span className={`fees-accordion__chevron ${feesExpanded ? 'is-open' : ''}`} aria-hidden>⌄</span>
+                <span className={`fees-accordion__chevron ${feesExpanded ? 'is-open' : ''}`} aria-hidden>âŚ„</span>
               </div>
             </button>
           )}
@@ -1028,7 +980,7 @@ export default function Profile() {
           >
             <div className="fees-toolbar">
               <button type="button" className="btn btn-secondary" onClick={refreshFees} disabled={feesLoading}>
-                {feesLoading ? 'Odswiezanie...' : 'Odswiez oplaty'}
+                {feesLoading ? 'OdĹ›wieĹĽanie...' : 'OdĹ›wieĹĽ opĹ‚aty'}
               </button>
               <div className="fees-filter">
                 <label htmlFor="fee-search" className="sr-only">Filtruj po imieniu i nazwisku</label>
@@ -1047,7 +999,7 @@ export default function Profile() {
               </p>
             </div>
             <div className="surface-card fees-payment-card">
-              <h3>Instrukcja platnosci</h3>
+              <h3>Instrukcja pĹ‚atnoĹ›ci</h3>
               <p className="support-copy">
                 W tytule przelewu podaj numer karty lub identyfikator oplaty. Platnosci online sa ksiegowane zwykle w 1-2 dni robocze.
               </p>
@@ -1073,7 +1025,7 @@ export default function Profile() {
               </div>
               <div className="form-actions">
                 <button type="button" className="btn btn-ghost">
-                  Przejdz do platnosci online
+                  PrzejdĹş do pĹ‚atnoĹ›ci online
                 </button>
               </div>
             </div>

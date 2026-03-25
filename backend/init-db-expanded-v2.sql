@@ -7,8 +7,8 @@ CREATE EXTENSION IF NOT EXISTS vector;
 -- System: Biblioteka - System Zarządzania Biblioteką
 -- Wersja: 2.1.0
 -- 
--- FUNKCJONALNO�CI:
--- - System ocen ksi��ek (rating)
+-- FUNKCJONALNOŚCI:
+-- - System ocen książek (rating)
 -- - System feedbacku rekomendacji (recommendation_feedback)
 -- - Kolekcje kuratorskie (book_collection)
 -- - Onboarding użytkownika (preferred_categories)
@@ -930,7 +930,7 @@ INSERT INTO book_copy (id, book_id, inventory_code, status, location, access_typ
 (8, 9, 'INV-009-001', 'AVAILABLE', 'Półka dystopie', 'OPEN_STACK', 'Dobry', NOW(), NOW()),
 (9, 10, 'INV-010-001', 'BORROWED', 'Wypożyczona', 'OPEN_STACK', 'Dobry', NOW(), NOW()),
 (10, 10, 'INV-010-002', 'AVAILABLE', 'Półka SF', 'OPEN_STACK', 'Bardzo dobry', NOW(), NOW()),
-(11, 6, 'INV-006-001', 'RESERVED', 'Rezerwacja', 'OPEN_STACK', '�redni', NOW(), NOW()),
+(11, 6, 'INV-006-001', 'RESERVED', 'Rezerwacja', 'OPEN_STACK', 'Średni', NOW(), NOW()),
 (12, 6, 'INV-006-002', 'AVAILABLE', 'Magazyn H1', 'STORAGE', 'Dobry', NOW(), NOW()),
 (13, 11, 'INV-011-001', 'AVAILABLE', 'Półka klasyka', 'OPEN_STACK', 'Dobry', NOW(), NOW()),
 (14, 12, 'INV-012-001', 'BORROWED', 'Wypożyczona', 'OPEN_STACK', 'Bardzo dobry', NOW(), NOW()),
@@ -943,7 +943,7 @@ INSERT INTO book_copy (id, book_id, inventory_code, status, location, access_typ
 (21, 19, 'INV-019-001', 'AVAILABLE', 'Półka kryminał', 'OPEN_STACK', 'Dobry', NOW(), NOW()),
 (22, 20, 'INV-020-001', 'BORROWED', 'Wypożyczona', 'OPEN_STACK', 'Dobry', NOW(), NOW()),
 (23, 21, 'INV-021-001', 'AVAILABLE', 'Półka klasyka', 'OPEN_STACK', 'Dobry', NOW(), NOW()),
-(24, 22, 'INV-022-001', 'AVAILABLE', 'P�ka historia', 'OPEN_STACK', '�redni', NOW(), NOW()),
+(24, 22, 'INV-022-001', 'AVAILABLE', 'Półka historia', 'OPEN_STACK', 'Średni', NOW(), NOW()),
 (25, 23, 'INV-023-001', 'RESERVED', 'Rezerwacja', 'OPEN_STACK', 'Bardzo dobry', NOW(), NOW()),
 (26, 24, 'INV-024-001', 'AVAILABLE', 'Półka SF', 'OPEN_STACK', 'Dobry', NOW(), NOW()),
 (27, 27, 'INV-027-001', 'AVAILABLE', 'Cyfrowy', 'REFERENCE', 'Nieaplikowalny', NOW(), NOW()),
@@ -1402,14 +1402,14 @@ INSERT INTO backup_record (id, file_name, file_path, file_size, status, created_
 
 -- Ustawienia systemowe (3)
 INSERT INTO system_setting (id, setting_key, setting_value, value_type, description, created_at, updated_at) VALUES
-(1, 'loanlimitperuser', '5', 'int', 'Maksymalna liczba wypozyczen na uzytkownika', NOW() - INTERVAL '30 days', NOW() - INTERVAL '1 day'),
-(2, 'loandurationdays', '14', 'int', 'Domyslny czas wypozyczenia (dni)', NOW() - INTERVAL '30 days', NOW() - INTERVAL '1 day'),
-(3, 'notificationsenabled', '1', 'bool', 'Wlaczenie powiadomien systemowych', NOW() - INTERVAL '30 days', NOW() - INTERVAL '1 day');
+(1, 'loanlimitperuser', '5', 'int', 'Maksymalna liczba wypożyczeń na użytkownika', NOW() - INTERVAL '30 days', NOW() - INTERVAL '1 day'),
+(2, 'loandurationdays', '14', 'int', 'Domyślny czas wypożyczenia (dni)', NOW() - INTERVAL '30 days', NOW() - INTERVAL '1 day'),
+(3, 'notificationsenabled', '1', 'bool', 'Włączenie powiadomień systemowych', NOW() - INTERVAL '30 days', NOW() - INTERVAL '1 day');
 
 -- Role systemowe (2)
 INSERT INTO staff_role (id, name, role_key, modules, description, created_at, updated_at) VALUES
-(1, 'Administrator', 'ROLE_ADMIN', '["system","users","audit","catalog","acquisitions","assets","logs"]', 'Pelny dostep administracyjny', NOW() - INTERVAL '90 days', NOW() - INTERVAL '1 day'),
-(2, 'Bibliotekarz', 'ROLE_LIBRARIAN', '["loans","reservations","catalog","collections","fines","reports"]', 'Obsluga wypozyczen i rezerwacji', NOW() - INTERVAL '90 days', NOW() - INTERVAL '1 day');
+(1, 'Administrator', 'ROLE_ADMIN', '["system","users","audit","catalog","acquisitions","assets","logs"]', 'Pełny dostęp administracyjny', NOW() - INTERVAL '90 days', NOW() - INTERVAL '1 day'),
+(2, 'Bibliotekarz', 'ROLE_LIBRARIAN', '["loans","reservations","catalog","collections","fines","reports"]', 'Obsługa wypożyczeń i rezerwacji', NOW() - INTERVAL '90 days', NOW() - INTERVAL '1 day');
 
 -- Konfiguracje integracji (3)
 INSERT INTO integration_config (id, name, provider, enabled, settings, last_status, last_tested_at, created_at, updated_at) VALUES

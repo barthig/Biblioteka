@@ -86,9 +86,10 @@
     command: >
       sh -c "
         mkdir -p /app/var/cache /app/var/log &&
+        mkdir -p /app/var/cache/dev/doctrine/orm/Proxies &&
         mkdir -p /app/var/cache/prod/doctrine/orm/Proxies &&
         chown -R www-data:www-data /app/var &&
-        chmod -R 775 /app/var &&
+        chmod -R 777 /app/var &&
         composer install --no-interaction &&
         if php bin/console doctrine:query:sql 'SELECT 1 FROM app_user LIMIT 1' 2>/dev/null; then
           echo 'Database schema already exists, skipping migrations';
@@ -100,7 +101,7 @@
         php bin/console doctrine:query:sql \"SELECT setval('loan_id_seq', COALESCE((SELECT MAX(id) FROM loan), 1), true);\" &&
         php bin/console cache:warmup --env=dev &&
         chown -R www-data:www-data /app/var &&
-        chmod -R 775 /app/var &&
+        chmod -R 777 /app/var &&
         php-fpm -F
       "
 
@@ -147,9 +148,10 @@
     command: >
       sh -c "
         mkdir -p /app/var/cache /app/var/log &&
+        mkdir -p /app/var/cache/dev/doctrine/orm/Proxies &&
         mkdir -p /app/var/cache/prod/doctrine/orm/Proxies &&
         chown -R www-data:www-data /app/var &&
-        chmod -R 775 /app/var &&
+        chmod -R 777 /app/var &&
         composer install --no-interaction &&
         php bin/console messenger:consume async --time-limit=3600 --memory-limit=256M
       "

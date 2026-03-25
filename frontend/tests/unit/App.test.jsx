@@ -23,7 +23,6 @@ vi.mock('../../src/pages/dashboard/Dashboard', () => ({ default: () => <div>Dash
 vi.mock('../../src/pages/books/Books', () => ({ default: () => <div>Books Page</div> }))
 vi.mock('../../src/pages/books/BookDetails', () => ({ default: () => <div>Book Details</div> }))
 vi.mock('../../src/pages/dashboard/Recommended', () => ({ default: () => <div>Recommended Page</div> }))
-vi.mock('../../src/pages/books/SemanticSearchPage', () => ({ default: () => <div>Semantic Search</div> }))
 vi.mock('../../src/pages/books/Announcements', () => ({ default: () => <div>Announcements Page</div> }))
 vi.mock('../../src/pages/loans/MyLoans', () => ({ default: () => <div>My Loans</div> }))
 vi.mock('../../src/pages/loans/Reservations', () => ({ default: () => <div>Reservations</div> }))
@@ -35,10 +34,7 @@ vi.mock('../../src/pages/user/Profile', () => ({ default: () => <div>Profile Pag
 vi.mock('../../src/pages/admin/StaffPanel', () => ({ default: () => <div>Staff Panel</div> }))
 vi.mock('../../src/pages/user/UserDetails', () => ({ default: () => <div>User Details</div> }))
 vi.mock('../../src/pages/admin/Reports', () => ({ default: () => <div>Reports</div> }))
-vi.mock('../../src/pages/books/DigitalAssets', () => ({ default: () => <div>Digital Assets</div> }))
-vi.mock('../../src/pages/admin/CatalogAdmin', () => ({ default: () => <div>Catalog Admin</div> }))
 vi.mock('../../src/pages/books/Acquisitions', () => ({ default: () => <div>Acquisitions</div> }))
-vi.mock('../../src/pages/admin/SystemLogs', () => ({ default: () => <div>System Logs</div> }))
 
 import App from '../../src/App'
 

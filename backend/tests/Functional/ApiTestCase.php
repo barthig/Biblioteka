@@ -7,7 +7,6 @@ use App\Entity\Book;
 use App\Entity\Category;
 use App\Entity\Loan;
 use App\Entity\BookCopy;
-use App\Entity\Reservation;
 use App\Entity\Fine;
 use App\Entity\User;
 use App\Entity\Supplier;
@@ -16,7 +15,6 @@ use App\Service\Auth\JwtService;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpKernel\HttpKernelBrowser;
 
 abstract class ApiTestCase extends WebTestCase
@@ -408,7 +406,10 @@ abstract class ApiTestCase extends WebTestCase
         }
 
         $schemaManager = $this->entityManager->getConnection()->createSchemaManager();
-        $tableNames = array_map('strtolower', $schemaManager->listTableNames());
+        $tableNames = array_map(
+            static fn ($table): string => strtolower($table->getName()),
+            $schemaManager->listTables()
+        );
 
         foreach (['app_user', 'book', 'book_copy', 'loan', 'reservation'] as $requiredTable) {
             if (!in_array($requiredTable, $tableNames, true)) {
