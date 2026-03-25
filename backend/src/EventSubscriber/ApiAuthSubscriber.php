@@ -4,6 +4,7 @@ namespace App\EventSubscriber;
 
 use App\Repository\UserRepository;
 use App\Security\ApiSecretUser;
+use App\Security\PublicRouteMatcher;
 use App\Service\Auth\JwtService;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -22,7 +23,8 @@ final class ApiAuthSubscriber implements EventSubscriberInterface
 {
     public function __construct(
         private UserRepository $users,
-        private TokenStorageInterface $tokenStorage
+        private TokenStorageInterface $tokenStorage,
+        private PublicRouteMatcher $publicRouteMatcher
     )
     {
     }
@@ -68,7 +70,7 @@ final class ApiAuthSubscriber implements EventSubscriberInterface
         $apiSecretStatus = $this->attachApiSecretIdentity($request);
         $jwtStatus = $this->attachJwtPayload($request);
 
-        if ($this->isPublicRoute($path, $method)) {
+        if ($this->publicRouteMatcher->isPublicPath($path, $method)) {
             return;
         }
 
@@ -121,13 +123,7 @@ final class ApiAuthSubscriber implements EventSubscriberInterface
     private function attachJwtPayload(Request $request): ?bool
     {
         $auth = $request->headers->get('authorization');
-        
-        // Temporary debug logging
-        $path = $request->getPathInfo();
-        if ($path === '/api/me' || $path === '/api/dashboard') {
-            error_log("DEBUG ApiAuthSubscriber: path=$path, auth_header=" . ($auth ?: 'NULL'));
-        }
-        
+
         if (!$auth || stripos($auth, 'bearer ') !== 0) {
             return null;
         }
@@ -149,49 +145,6 @@ final class ApiAuthSubscriber implements EventSubscriberInterface
         $request->attributes->set('jwt_user', $user);
 
         return true;
-    }
-
-    private function isPublicRoute(string $path, string $method): bool
-    {
-        $publicRoutes = [
-            '/api/auth/login' => ['POST'],
-            '/api/auth/register' => ['POST'],
-            '/api/auth/refresh' => ['POST'],
-        ];
-
-        if (isset($publicRoutes[$path]) && in_array($method, $publicRoutes[$path], true)) {
-            return true;
-        }
-
-        if ($path === '/api/test-login' && $this->isDebugEnv()) {
-            return true;
-        }
-
-        $publicPatterns = [
-            ['pattern' => '#^/api/books$#', 'methods' => ['GET']],
-            ['pattern' => '#^/api/books/filters$#', 'methods' => ['GET']],
-            ['pattern' => '#^/api/books/recommended$#', 'methods' => ['GET']],
-            ['pattern' => '#^/api/books/popular$#', 'methods' => ['GET']],
-            ['pattern' => '#^/api/books/new$#', 'methods' => ['GET']],
-            ['pattern' => '#^/api/books/\\d+$#', 'methods' => ['GET']],
-            ['pattern' => '#^/api/books/\\d+/cover$#', 'methods' => ['GET']],
-            ['pattern' => '#^/api/books/\\d+/availability$#', 'methods' => ['GET']],
-            ['pattern' => '#^/api/books/\\d+/ratings$#', 'methods' => ['GET']],
-            ['pattern' => '#^/api/collections$#', 'methods' => ['GET']],
-            ['pattern' => '#^/api/collections/\\d+$#', 'methods' => ['GET']],
-            ['pattern' => '#^/api/announcements$#', 'methods' => ['GET']],
-            ['pattern' => '#^/api/announcements/\\d+$#', 'methods' => ['GET']],
-            ['pattern' => '#^/api/auth/verify/[A-Za-z0-9]+$#', 'methods' => ['GET']],
-            ['pattern' => '#^/api/library/hours$#', 'methods' => ['GET']],
-        ];
-
-        foreach ($publicPatterns as $entry) {
-            if (preg_match($entry['pattern'], $path) && in_array($method, $entry['methods'], true)) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     private function attachApiSecretIdentity(Request $request): ?bool
@@ -236,9 +189,4 @@ final class ApiAuthSubscriber implements EventSubscriberInterface
         return false;
     }
 
-    private function isDebugEnv(): bool
-    {
-        $env = getenv('APP_ENV') ?: ($_ENV['APP_ENV'] ?? 'prod');
-        return in_array($env, ['dev', 'test'], true);
-    }
 }

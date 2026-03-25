@@ -39,4 +39,20 @@ class RoleAdminControllerTest extends ApiTestCase
         ]);
         $this->assertResponseStatusCodeSame(200);
     }
+
+    public function testSystemAliasRoutesMatchLegacyRoutes(): void
+    {
+        $admin = $this->createUser('admin-roles@example.com', ['ROLE_ADMIN']);
+        $client = $this->createAuthenticatedClient($admin);
+
+        $this->sendRequest($client, 'GET', '/api/admin/roles');
+        $this->assertResponseStatusCodeSame(200);
+        $legacy = $this->getJsonResponse($client);
+
+        $this->sendRequest($client, 'GET', '/api/admin/system/roles');
+        $this->assertResponseStatusCodeSame(200);
+        $alias = $this->getJsonResponse($client);
+
+        $this->assertSame($legacy, $alias);
+    }
 }

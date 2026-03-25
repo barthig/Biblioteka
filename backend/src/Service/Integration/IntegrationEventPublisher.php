@@ -38,6 +38,7 @@ class IntegrationEventPublisher
      */
     public function publish(string $routingKey, array $payload): void
     {
+        $lastError = null;
         $payload['_meta'] = [
             'event_type' => $routingKey,
             'timestamp' => (new \DateTimeImmutable())->format(\DateTimeInterface::ATOM),
@@ -69,6 +70,7 @@ class IntegrationEventPublisher
 
                 return;
             } catch (\Throwable $e) {
+                $lastError = $e;
                 $this->resetChannel();
 
                 $context = [
@@ -87,6 +89,15 @@ class IntegrationEventPublisher
                 $this->logger->error('Failed to publish integration event after retries', $context);
             }
         }
+
+        throw ExternalServiceException::rabbitMQError(
+            sprintf(
+                'Failed to publish integration event "%s" after %d attempts. Last error: %s',
+                $routingKey,
+                self::MAX_ATTEMPTS,
+                $lastError?->getMessage() ?? 'unknown error'
+            )
+        );
     }
 
     private function getChannel(): AMQPChannel

@@ -145,6 +145,7 @@ services:
       REDIS_URL: redis://redis:6379
       MESSENGER_TRANSPORT_DSN: amqp://guest:guest@rabbitmq:5672/%2f/messages
       MESSENGER_FAILURE_TRANSPORT_DSN: amqp://guest:guest@rabbitmq:5672/%2f/messages_failed
+      INTEGRATION_AMQP_DSN: amqp://guest:guest@rabbitmq:5672/%2f/messages
       API_SECRET: distributed_api_secret
       JWT_SECRET: distributed_jwt_secret_for_gateway_123456
       APP_ENV: distributed
@@ -170,6 +171,7 @@ services:
       REDIS_URL: redis://redis:6379
       MESSENGER_TRANSPORT_DSN: amqp://guest:guest@rabbitmq:5672/%2f/messages
       MESSENGER_FAILURE_TRANSPORT_DSN: amqp://guest:guest@rabbitmq:5672/%2f/messages_failed
+      INTEGRATION_AMQP_DSN: amqp://guest:guest@rabbitmq:5672/%2f/messages
       API_SECRET: distributed_api_secret
       JWT_SECRET: distributed_jwt_secret_for_gateway_123456
       APP_ENV: distributed

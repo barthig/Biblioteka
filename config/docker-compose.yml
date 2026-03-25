@@ -73,6 +73,7 @@
       DATABASE_URL: postgresql://biblioteka:biblioteka@db:5432/biblioteka_dev?serverVersion=16&charset=utf8
       MESSENGER_TRANSPORT_DSN: "amqp://app:app@rabbitmq:5672/%2f"
       MESSENGER_FAILURE_TRANSPORT_DSN: "amqp://app:app@rabbitmq:5672/%2f/messages_failed"
+      INTEGRATION_AMQP_DSN: "amqp://app:app@rabbitmq:5672/%2f"
       REDIS_URL: redis://redis:6379
       API_SECRET: dev_api_secret
       JWT_SECRET: dev_jwt_secret_for_local_docker_123456
@@ -138,6 +139,7 @@
       DATABASE_URL: postgresql://biblioteka:biblioteka@db:5432/biblioteka_dev?serverVersion=16&charset=utf8
       MESSENGER_TRANSPORT_DSN: "amqp://app:app@rabbitmq:5672/%2f"
       MESSENGER_FAILURE_TRANSPORT_DSN: "amqp://app:app@rabbitmq:5672/%2f/messages_failed"
+      INTEGRATION_AMQP_DSN: "amqp://app:app@rabbitmq:5672/%2f"
       REDIS_URL: redis://redis:6379
       MAILER_DSN: smtp://mailpit:1025
       API_SECRET: dev_api_secret

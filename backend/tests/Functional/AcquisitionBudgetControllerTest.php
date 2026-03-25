@@ -19,7 +19,7 @@ class AcquisitionBudgetControllerTest extends ApiTestCase
     public function testCreateBudgetRequiresNumericAmount(): void
     {
         $librarian = $this->createUser('budget-librarian@example.com', ['ROLE_LIBRARIAN']);
-        $client = $this->createAuthenticatedClient($librarian);
+        $client = $this->createAuthenticatedClientWithoutApiSecret($librarian);
 
         $this->jsonRequest($client, 'POST', '/api/admin/acquisitions/budgets', [
             'name' => 'Invalid Budget',
@@ -33,7 +33,7 @@ class AcquisitionBudgetControllerTest extends ApiTestCase
     public function testAddExpenseAndSummary(): void
     {
         $librarian = $this->createUser('budget-flow@example.com', ['ROLE_LIBRARIAN']);
-        $client = $this->createAuthenticatedClient($librarian);
+        $client = $this->createAuthenticatedClientWithoutApiSecret($librarian);
 
         $this->jsonRequest($client, 'POST', '/api/admin/acquisitions/budgets', [
             'name' => 'Collection 2025',
@@ -81,7 +81,7 @@ class AcquisitionBudgetControllerTest extends ApiTestCase
     public function testUpdateBudgetAdjustsFields(): void
     {
         $librarian = $this->createUser('budget-update@example.com', ['ROLE_LIBRARIAN']);
-        $client = $this->createAuthenticatedClient($librarian);
+        $client = $this->createAuthenticatedClientWithoutApiSecret($librarian);
 
         $this->jsonRequest($client, 'POST', '/api/admin/acquisitions/budgets', [
             'name' => 'Initial Budget',

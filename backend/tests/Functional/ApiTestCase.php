@@ -63,6 +63,13 @@ abstract class ApiTestCase extends WebTestCase
         $this->entityManager = static::getContainer()->get('doctrine')->resetManager();
     }
 
+    private function ensureEntityManagerOpen(): void
+    {
+        if (!$this->entityManager->isOpen()) {
+            $this->resetEntityManager();
+        }
+    }
+
     protected function createApiClient(?string $token = null): HttpKernelBrowser
     {
         static::ensureKernelShutdown();
@@ -169,9 +176,7 @@ abstract class ApiTestCase extends WebTestCase
 
     protected function createUser(string $email, array $roles = ['ROLE_USER'], string $password = 'StrongPass1', ?string $name = null): User
     {
-        if (!$this->entityManager->isOpen()) {
-            $this->resetEntityManager();
-        }
+        $this->ensureEntityManagerOpen();
 
         $existing = $this->entityManager
             ->getRepository(User::class)
@@ -217,6 +222,7 @@ abstract class ApiTestCase extends WebTestCase
 
     protected function createAuthor(string $name = 'Author'): Author
     {
+        $this->ensureEntityManagerOpen();
         $author = (new Author())->setName($name);
         $this->entityManager->persist($author);
         $this->entityManager->flush();
@@ -226,6 +232,7 @@ abstract class ApiTestCase extends WebTestCase
 
     protected function createCategory(string $name = 'General'): Category
     {
+        $this->ensureEntityManagerOpen();
         $repository = $this->entityManager->getRepository(Category::class);
         $existing = $repository->findOneBy(['name' => $name]);
         if ($existing instanceof Category) {
@@ -251,6 +258,7 @@ abstract class ApiTestCase extends WebTestCase
         ?string $ageGroup = null
     ): Book
     {
+        $this->ensureEntityManagerOpen();
         $author ??= $this->createAuthor('Author ' . uniqid('', true));
         $categories = $categories ?? [$this->createCategory('General')];
 
@@ -290,6 +298,7 @@ abstract class ApiTestCase extends WebTestCase
 
     protected function createLoan(User $user, Book $book, ?\DateTimeImmutable $due = null, bool $returned = false): Loan
     {
+        $this->ensureEntityManagerOpen();
         $availableCopy = null;
         foreach ($book->getInventory() as $copy) {
             if ($copy->getStatus() === BookCopy::STATUS_AVAILABLE) {
@@ -333,6 +342,7 @@ abstract class ApiTestCase extends WebTestCase
 
     protected function createSupplier(string $name = 'Biblioteka Dostawca', bool $active = true, ?string $email = null): Supplier
     {
+        $this->ensureEntityManagerOpen();
         $supplier = (new Supplier())
             ->setName($name)
             ->setActive($active);
@@ -354,6 +364,7 @@ abstract class ApiTestCase extends WebTestCase
         string $currency = 'PLN',
         string $spentAmount = '0.00'
     ): AcquisitionBudget {
+        $this->ensureEntityManagerOpen();
         $budget = (new AcquisitionBudget())
             ->setName($name)
             ->setFiscalYear($fiscalYear)
@@ -374,6 +385,7 @@ abstract class ApiTestCase extends WebTestCase
         string $reason = 'Testowa kara',
         string $currency = 'PLN'
     ): Fine {
+        $this->ensureEntityManagerOpen();
         $fine = (new Fine())
             ->setLoan($loan)
             ->setAmount($amount)

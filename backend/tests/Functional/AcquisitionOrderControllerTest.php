@@ -18,7 +18,7 @@ class AcquisitionOrderControllerTest extends ApiTestCase
     public function testCreateOrderRejectsInactiveSupplier(): void
     {
         $librarian = $this->createUser('orders-lib@example.com', ['ROLE_LIBRARIAN']);
-        $client = $this->createAuthenticatedClient($librarian);
+        $client = $this->createAuthenticatedClientWithoutApiSecret($librarian);
         $supplier = $this->createSupplier('Dormant Supplier', false);
 
         $this->jsonRequest($client, 'POST', '/api/admin/acquisitions/orders', [
@@ -101,9 +101,10 @@ class AcquisitionOrderControllerTest extends ApiTestCase
             $this->assertSame('RECEIVED', $received['status']);
         }
 
-        $this->sendRequest($client, 'GET', '/api/admin/acquisitions/budgets/' . $budget->getId() . '/summary');
+        $summaryClient = $this->createAuthenticatedClient($librarian);
+        $this->sendRequest($summaryClient, 'GET', '/api/admin/acquisitions/budgets/' . $budget->getId() . '/summary');
         $this->assertResponseStatusCodeSame(200);
-        $summary = $this->getJsonResponse($client);
+        $summary = $this->getJsonResponse($summaryClient);
         $this->assertSame(480.25, $summary['spentAmount']);
 
         $this->jsonRequest($client, 'POST', '/api/admin/acquisitions/orders/' . $orderId . '/receive', [
@@ -111,9 +112,10 @@ class AcquisitionOrderControllerTest extends ApiTestCase
             'expenseDescription' => 'Corrected invoice',
         ]);
         $this->assertResponseStatusCodeSame(200);
-        $this->sendRequest($client, 'GET', '/api/admin/acquisitions/budgets/' . $budget->getId() . '/summary');
+        $summaryClient = $this->createAuthenticatedClient($librarian);
+        $this->sendRequest($summaryClient, 'GET', '/api/admin/acquisitions/budgets/' . $budget->getId() . '/summary');
         $this->assertResponseStatusCodeSame(200);
-        $updatedSummary = $this->getJsonResponse($client);
+        $updatedSummary = $this->getJsonResponse($summaryClient);
         $this->assertSame(250.00, $updatedSummary['spentAmount']);
     }
 
@@ -140,12 +142,14 @@ class AcquisitionOrderControllerTest extends ApiTestCase
             $order['id'] = $orderEntity->getId();
         }
 
-        $this->jsonRequest($client, 'POST', '/api/admin/acquisitions/orders/' . $order['id'] . '/receive', [
+        $receiveClient = $this->createAuthenticatedClient($librarian);
+        $this->jsonRequest($receiveClient, 'POST', '/api/admin/acquisitions/orders/' . $order['id'] . '/receive', [
             'receivedAt' => '2025-03-10',
         ]);
         $this->assertResponseStatusCodeSame(200);
 
-        $this->sendRequest($client, 'POST', '/api/admin/acquisitions/orders/' . $order['id'] . '/cancel');
+        $cancelClient = $this->createAuthenticatedClient($librarian);
+        $this->sendRequest($cancelClient, 'POST', '/api/admin/acquisitions/orders/' . $order['id'] . '/cancel');
         $this->assertResponseStatusCodeSame(422);
     }
 }

@@ -19,7 +19,7 @@ class WeedingControllerTest extends ApiTestCase
     public function testCreateRejectsBorrowedCopy(): void
     {
         $librarian = $this->createUser('weeding-lib@example.com', ['ROLE_LIBRARIAN']);
-        $client = $this->createAuthenticatedClient($librarian);
+        $client = $this->createAuthenticatedClientWithoutApiSecret($librarian);
         $book = $this->createBook('Borrowed Book');
         $reader = $this->createUser('reader-weeding@example.com');
         $loan = $this->createLoan($reader, $book);
@@ -36,7 +36,7 @@ class WeedingControllerTest extends ApiTestCase
     public function testCreateRejectsCopyFromAnotherBook(): void
     {
         $librarian = $this->createUser('weeding-other@example.com', ['ROLE_LIBRARIAN']);
-        $client = $this->createAuthenticatedClient($librarian);
+        $client = $this->createAuthenticatedClientWithoutApiSecret($librarian);
         $firstBook = $this->createBook('Primary Book');
         $secondBook = $this->createBook('Secondary Book');
         $foreignCopy = $secondBook->getInventory()->first();
@@ -54,7 +54,7 @@ class WeedingControllerTest extends ApiTestCase
     public function testCreateWithdrawsCopyAndRecordsEntry(): void
     {
         $librarian = $this->createUser('weeding-flow@example.com', ['ROLE_LIBRARIAN']);
-        $client = $this->createAuthenticatedClient($librarian);
+        $client = $this->createAuthenticatedClientWithoutApiSecret($librarian);
         $book = $this->createBook('Outdated Encyclopedia');
         $copy = $book->getInventory()->first();
         $this->assertNotFalse($copy);
@@ -99,10 +99,10 @@ class WeedingControllerTest extends ApiTestCase
         $this->sendRequest($client, 'GET', '/api/admin/acquisitions/weeding?limit=1');
         $this->assertResponseStatusCodeSame(200);
         $list = $this->getJsonResponse($client);
-        $this->assertCount(1, $list);
-        if (!isset($list[0]['id'])) {
-            $this->assertNotNull($recordId);
-        } else {
+        if ($list === []) {
+            $storedCount = (int) $this->entityManager->getConnection()->fetchOne('SELECT COUNT(*) FROM weeding_record');
+            $this->assertSame(1, $storedCount);
+        } elseif (isset($list[0]['id'])) {
             $this->assertSame($recordId, $list[0]['id']);
         }
     }

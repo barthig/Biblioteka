@@ -34,7 +34,7 @@ class RecommendationFeedbackControllerTest extends ApiTestCase
         $user = $this->createUser('reader@example.com');
         $book = $this->createBook('Suggested Book');
 
-        $client = $this->createAuthenticatedClient($user);
+        $client = $this->createAuthenticatedClientWithoutApiSecret($user);
         $this->jsonRequest($client, 'POST', '/api/recommendation-feedback', [
             'bookId' => $book->getId(),
             'feedbackType' => 'dismiss'
@@ -43,6 +43,25 @@ class RecommendationFeedbackControllerTest extends ApiTestCase
         $this->assertResponseStatusCodeSame(200);
 
         $this->sendRequest($client, 'DELETE', '/api/recommendation-feedback/' . $book->getId());
+        $this->assertResponseStatusCodeSame(200);
+    }
+
+    public function testAliasRoutesBehaveLikeCanonicalRoutes(): void
+    {
+        $user = $this->createUser('reader-alias@example.com');
+        $book = $this->createBook('Suggested Alias Book');
+
+        $client = $this->createAuthenticatedClientWithoutApiSecret($user);
+        $this->jsonRequest($client, 'POST', '/api/recommendations/feedback', [
+            'bookId' => $book->getId(),
+            'feedbackType' => 'interested'
+        ]);
+
+        $this->assertResponseStatusCodeSame(200);
+        $payload = $this->getJsonResponse($client);
+        $this->assertTrue($payload['success'] ?? false);
+
+        $this->sendRequest($client, 'DELETE', '/api/recommendations/feedback/' . $book->getId());
         $this->assertResponseStatusCodeSame(200);
     }
 }

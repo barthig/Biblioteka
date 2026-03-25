@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     service_name: str = "recommendation-service"
     service_port: int = 8002
     debug: bool = False
+    log_level: str = "INFO"
 
     # Own database (pgvector)
     database_url: str = "postgresql://recommendation:recommendation@recommendation-db:5432/recommendation_db"

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Service;
 
+use App\Exception\ExternalServiceException;
 use App\Service\Integration\IntegrationEventPublisher;
 use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
@@ -63,8 +64,8 @@ final class IntegrationEventPublisherTest extends TestCase
         $logger->expects($this->once())->method('error');
 
         $publisher = new IntegrationEventPublisher($connection, $logger);
+        $this->expectException(ExternalServiceException::class);
+        $this->expectExceptionMessage('Failed to publish integration event "loan.borrowed" after 3 attempts');
         $publisher->publish('loan.borrowed', ['loanId' => 15]);
-
-        $this->addToAssertionCount(1);
     }
 }

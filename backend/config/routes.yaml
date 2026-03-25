@@ -6,6 +6,11 @@ health_check:
   controller: App\Controller\HealthController::health
   methods: [GET]
 
+metrics:
+  path: /metrics
+  controller: App\Controller\MetricsController
+  methods: [GET]
+
 # Distributed health check (aggregates all services)
 health_distributed:
   path: /health/distributed
@@ -188,7 +193,7 @@ api_recommend:
 api_recommendations_personal:
   path: /api/recommendations/personal
   controller: App\Controller\Books\RecommendationController::personal
-  methods: [GET, POST]
+  methods: [GET]
 
 # Recommendation feedback
 api_recommendations_feedback_create:

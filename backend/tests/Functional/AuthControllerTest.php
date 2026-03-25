@@ -21,4 +21,22 @@ class AuthControllerTest extends ApiTestCase
 
         $this->assertResponseStatusCodeSame(401);
     }
+
+    public function testProfileAliasAndCanonicalRouteReturnAuthenticatedUser(): void
+    {
+        $user = $this->createUser('profile@example.com', ['ROLE_USER'], 'StrongPass1', 'Jan Profile');
+        $client = $this->createAuthenticatedClientWithoutApiSecret($user);
+
+        $this->sendRequest($client, 'GET', '/api/auth/profile');
+        $this->assertResponseStatusCodeSame(200);
+        $canonical = $this->getJsonResponse($client);
+
+        $this->sendRequest($client, 'GET', '/api/profile');
+        $this->assertResponseStatusCodeSame(200);
+        $alias = $this->getJsonResponse($client);
+
+        $this->assertSame($canonical['id'] ?? null, $alias['id'] ?? null);
+        $this->assertSame('profile@example.com', $canonical['email'] ?? null);
+        $this->assertSame('profile@example.com', $alias['email'] ?? null);
+    }
 }

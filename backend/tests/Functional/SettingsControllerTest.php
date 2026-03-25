@@ -16,7 +16,7 @@ class SettingsControllerTest extends ApiTestCase
     public function testGetSettingsReturnsDefaults(): void
     {
         $librarian = $this->createUser('librarian@example.com', ['ROLE_LIBRARIAN']);
-        $client = $this->createAuthenticatedClient($librarian);
+        $client = $this->createAuthenticatedClientWithoutApiSecret($librarian);
 
         $this->sendRequest($client, 'GET', '/api/settings');
 
@@ -28,7 +28,7 @@ class SettingsControllerTest extends ApiTestCase
     public function testGetSettingsIntegrationDown(): void
     {
         $librarian = $this->createUser('librarian@example.com', ['ROLE_LIBRARIAN']);
-        $client = $this->createAuthenticatedClient($librarian);
+        $client = $this->createAuthenticatedClientWithoutApiSecret($librarian);
 
         $this->sendRequest($client, 'GET', '/api/settings?integrationsDown=1');
 
@@ -50,7 +50,7 @@ class SettingsControllerTest extends ApiTestCase
     public function testUpdateSettingsValidatesRanges(): void
     {
         $librarian = $this->createUser('librarian@example.com', ['ROLE_LIBRARIAN']);
-        $client = $this->createAuthenticatedClient($librarian);
+        $client = $this->createAuthenticatedClientWithoutApiSecret($librarian);
 
         $this->jsonRequest($client, 'PATCH', '/api/settings', [
             'loanLimitPerUser' => 100,
@@ -62,7 +62,7 @@ class SettingsControllerTest extends ApiTestCase
     public function testUpdateSettingsWithBackendDown(): void
     {
         $librarian = $this->createUser('librarian@example.com', ['ROLE_LIBRARIAN']);
-        $client = $this->createAuthenticatedClient($librarian);
+        $client = $this->createAuthenticatedClientWithoutApiSecret($librarian);
 
         $this->jsonRequest($client, 'PATCH', '/api/settings', [
             'notificationsEnabled' => false,
@@ -74,7 +74,7 @@ class SettingsControllerTest extends ApiTestCase
     public function testUpdateSettingsSuccess(): void
     {
         $librarian = $this->createUser('librarian@example.com', ['ROLE_LIBRARIAN']);
-        $client = $this->createAuthenticatedClient($librarian);
+        $client = $this->createAuthenticatedClientWithoutApiSecret($librarian);
 
         $this->jsonRequest($client, 'PATCH', '/api/settings', [
             'loanLimitPerUser' => 6,

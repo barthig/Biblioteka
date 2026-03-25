@@ -95,17 +95,6 @@ class RecommendationController extends AbstractController
             new OA\Response(response: 404, description: 'Użytkownik nie znaleziony', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
         ]
     )]
-    #[OA\Post(
-        path: '/api/recommendations/personal',
-        summary: 'Spersonalizowane rekomendacje (POST)',
-        description: 'Alternatywny endpoint POST zwracający spersonalizowane rekomendacje dla zalogowanego użytkownika.',
-        tags: ['Recommendations'],
-        responses: [
-            new OA\Response(response: 200, description: 'Spersonalizowane rekomendacje', content: new OA\JsonContent(type: 'object')),
-            new OA\Response(response: 401, description: 'Nieautoryzowany', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
-            new OA\Response(response: 404, description: 'Użytkownik nie znaleziony', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
-        ]
-    )]
     public function personal(Request $request): JsonResponse
     {
         $userId = $this->security->getCurrentUserId($request);

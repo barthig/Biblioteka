@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     service_name: str = "notification-service"
     service_port: int = 8001
     debug: bool = False
+    log_level: str = "INFO"
 
     # Database (own DB for notification logs)
     database_url: str = "postgresql://notification:notification@notification-db:5432/notification_db"

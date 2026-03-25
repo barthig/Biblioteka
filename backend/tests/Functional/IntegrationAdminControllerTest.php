@@ -16,7 +16,7 @@ class IntegrationAdminControllerTest extends ApiTestCase
     public function testCreateUpdateAndTestIntegration(): void
     {
         $admin = $this->createUser('admin@example.com', ['ROLE_ADMIN']);
-        $client = $this->createAuthenticatedClient($admin);
+        $client = $this->createAuthenticatedClientWithoutApiSecret($admin);
 
         $this->jsonRequest($client, 'POST', '/api/admin/integrations', [
             'name' => 'Test Integration',
@@ -34,5 +34,21 @@ class IntegrationAdminControllerTest extends ApiTestCase
 
         $this->sendRequest($client, 'POST', '/api/admin/integrations/' . $config->getId() . '/test');
         $this->assertResponseStatusCodeSame(422);
+    }
+
+    public function testSystemAliasRoutesMatchLegacyRoutes(): void
+    {
+        $admin = $this->createUser('admin-alias@example.com', ['ROLE_ADMIN']);
+        $client = $this->createAuthenticatedClientWithoutApiSecret($admin);
+
+        $this->sendRequest($client, 'GET', '/api/admin/integrations');
+        $this->assertResponseStatusCodeSame(200);
+        $legacy = $this->getJsonResponse($client);
+
+        $this->sendRequest($client, 'GET', '/api/admin/system/integrations');
+        $this->assertResponseStatusCodeSame(200);
+        $alias = $this->getJsonResponse($client);
+
+        $this->assertSame($legacy, $alias);
     }
 }

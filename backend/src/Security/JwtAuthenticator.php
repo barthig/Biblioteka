@@ -16,7 +16,10 @@ use Symfony\Component\Security\Http\Authenticator\Passport\SelfValidatingPasspor
 
 class JwtAuthenticator extends AbstractAuthenticator
 {
-    public function __construct(private UserRepository $users)
+    public function __construct(
+        private UserRepository $users,
+        private PublicRouteMatcher $publicRouteMatcher
+    )
     {
     }
 
@@ -32,7 +35,7 @@ class JwtAuthenticator extends AbstractAuthenticator
         if ($method === 'OPTIONS') {
             return false;
         }
-        if ($this->isPublicRoute($path, $method)) {
+        if ($this->publicRouteMatcher->isPublicPath($path, $method)) {
             return false;
         }
 
@@ -109,7 +112,7 @@ class JwtAuthenticator extends AbstractAuthenticator
 
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?JsonResponse
     {
-        return new JsonResponse(['message' => $exception->getMessage()], 401);
+        return new JsonResponse(['message' => 'Unauthorized'], 401);
     }
 
     public function start(Request $request, AuthenticationException $authException = null): JsonResponse
@@ -129,54 +132,6 @@ class JwtAuthenticator extends AbstractAuthenticator
             return null;
         }
         return substr($auth, 7);
-    }
-
-    private function isPublicRoute(string $path, string $method): bool
-    {
-        $publicRoutes = [
-            '/api/test-login' => ['POST'],
-            '/api/auth/login' => ['POST'],
-            '/api/auth/register' => ['POST'],
-            '/api/auth/refresh' => ['POST'],
-            '/api/health' => ['GET'],
-            '/health' => ['GET'],
-            '/api/docs' => ['GET'],
-            '/api/docs.json' => ['GET'],
-        ];
-
-        // Check for /api/auth/verify/{token}
-        if (preg_match('#^/api/auth/verify/.+$#', $path) && $method === 'GET') {
-            return true;
-        }
-
-        if (isset($publicRoutes[$path]) && in_array($method, $publicRoutes[$path], true)) {
-            return true;
-        }
-
-        $publicPatterns = [
-            ['pattern' => '#^/api/books$#', 'methods' => ['GET']],
-            ['pattern' => '#^/api/books/filters$#', 'methods' => ['GET']],
-            ['pattern' => '#^/api/books/recommended$#', 'methods' => ['GET']],
-            ['pattern' => '#^/api/books/popular$#', 'methods' => ['GET']],
-            ['pattern' => '#^/api/books/new$#', 'methods' => ['GET']],
-            ['pattern' => '#^/api/books/\d+$#', 'methods' => ['GET']],
-            ['pattern' => '#^/api/books/\d+/cover$#', 'methods' => ['GET']],
-            ['pattern' => '#^/api/books/\d+/availability$#', 'methods' => ['GET']],
-            ['pattern' => '#^/api/books/\d+/ratings$#', 'methods' => ['GET']],
-            ['pattern' => '#^/api/collections$#', 'methods' => ['GET']],
-            ['pattern' => '#^/api/collections/\d+$#', 'methods' => ['GET']],
-            ['pattern' => '#^/api/announcements$#', 'methods' => ['GET']],
-            ['pattern' => '#^/api/announcements/\d+$#', 'methods' => ['GET']],
-            ['pattern' => '#^/api/library/hours$#', 'methods' => ['GET']],
-        ];
-
-        foreach ($publicPatterns as $entry) {
-            if (preg_match($entry['pattern'], $path) && in_array($method, $entry['methods'], true)) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     private function tryApiSecret(Request $request): ?ApiSecretUser

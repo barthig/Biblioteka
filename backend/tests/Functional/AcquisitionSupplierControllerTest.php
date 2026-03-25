@@ -18,7 +18,7 @@ class AcquisitionSupplierControllerTest extends ApiTestCase
     public function testLibrarianCanCreateSupplier(): void
     {
         $librarian = $this->createUser('librarian@example.com', ['ROLE_LIBRARIAN']);
-        $client = $this->createAuthenticatedClient($librarian);
+        $client = $this->createAuthenticatedClientWithoutApiSecret($librarian);
 
         $payload = [
             'name' => 'Books & Co',
@@ -50,7 +50,7 @@ class AcquisitionSupplierControllerTest extends ApiTestCase
         $activeSupplier = $this->createSupplier('Gamma Stationery', true);
         $inactiveSupplier = $this->createSupplier('Delta Supplies', false);
 
-        $client = $this->createAuthenticatedClient($librarian);
+        $client = $this->createAuthenticatedClientWithoutApiSecret($librarian);
         $this->sendRequest($client, 'GET', '/api/admin/acquisitions/suppliers?active=true');
 
         $this->assertResponseStatusCodeSame(200);
@@ -102,7 +102,7 @@ class AcquisitionSupplierControllerTest extends ApiTestCase
     {
         $librarian = $this->createUser('lib-deactivate@example.com', ['ROLE_LIBRARIAN']);
         $supplier = $this->createSupplier('Beta Books');
-        $client = $this->createAuthenticatedClient($librarian);
+        $client = $this->createAuthenticatedClientWithoutApiSecret($librarian);
 
         $this->sendRequest($client, 'DELETE', '/api/admin/acquisitions/suppliers/' . $supplier->getId());
 

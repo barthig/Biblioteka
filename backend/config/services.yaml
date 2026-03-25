@@ -68,6 +68,7 @@ services:
     arguments:
       $users: '@App\Repository\UserRepository'
       $tokenStorage: '@security.token_storage'
+      $publicRouteMatcher: '@App\Security\PublicRouteMatcher'
     tags: ['kernel.event_subscriber']
   
   # Named Rate Limiters
@@ -251,6 +252,9 @@ services:
       - { name: nelmio_api_doc.describer, priority: -2000 }
 
   App\ApiDoc\RouteOperationDescriber:
+    arguments:
+      $router: '@router'
+      $publicRouteMatcher: '@App\Security\PublicRouteMatcher'
     tags:
       - { name: nelmio_api_doc.describer, priority: -1500 }
 
@@ -264,7 +268,7 @@ services:
     class: PhpAmqpLib\Connection\AMQPStreamConnection
     factory: ['App\Service\Integration\AmqpConnectionFactory', 'create']
     arguments:
-      $dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
+      $dsn: '%env(INTEGRATION_AMQP_DSN)%'
 
   App\EventSubscriber\IntegrationEventBridgeSubscriber:
     tags: ['kernel.event_subscriber']
