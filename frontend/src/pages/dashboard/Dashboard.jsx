@@ -497,10 +497,10 @@ export default function Dashboard() {
     )
   }
 
-  const books = stats?.booksCount ?? ''
-  const users = stats?.usersCount ?? ''
-  const loans = stats?.loansCount ?? ''
-  const reservations = stats?.reservationsQueue ?? ''
+  const books = stats?.booksCount ?? '?'
+  const users = stats?.usersCount ?? '?'
+  const loans = stats?.loansCount ?? '?'
+  const reservations = stats?.reservationsQueue ?? '?'
 
   const getAlertIcon = (type) => {
     switch (type) {
@@ -683,7 +683,7 @@ export default function Dashboard() {
           </div>
           <div className="surface-card stat-card">
             <h3>Obciążenie serwera</h3>
-            <strong style={{ color: '#667eea' }}>{stats?.serverLoad ?? ''}%</strong>
+            <strong style={{ color: '#667eea' }}>{stats?.serverLoad ?? '?'}%</strong>
             <span>Wykorzystanie CPU</span>
           </div>
           <div className="surface-card stat-card">
@@ -714,7 +714,7 @@ export default function Dashboard() {
         <div className="surface-card">
           <h2 style={{ marginBottom: 'var(--space-3)' }}>Narzędzia administracyjne</h2>
           <div className="form-actions">
-            <Link to="/staff?section=admin" className="btn btn-primary">Zarzdzanie u|ytkownikami</Link>
+            <Link to="/staff?section=admin" className="btn btn-primary">Zarz?dzanie u?ytkownikami</Link>
             <Link to="/staff?section=admin" className="btn btn-ghost">Konfiguracja systemu</Link>
             <Link to="/reports" className="btn btn-ghost">Raporty</Link>
           </div>

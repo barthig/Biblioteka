@@ -5,7 +5,6 @@ import { AuthProvider } from './context/AuthContext'
 import { ResourceCacheProvider } from './context/ResourceCacheContext'
 import ErrorBoundary from './components/ErrorBoundary'
 import { AuthGuard } from './guards'
-
 import { Navbar, RequireRole } from './components/common'
 
 const Login = React.lazy(() => import('./pages/auth/Login'))

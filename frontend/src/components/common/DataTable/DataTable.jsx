@@ -2,31 +2,6 @@ import React, { useState, useMemo, useCallback } from 'react'
 import PropTypes from 'prop-types'
 import './DataTable.css'
 
-/**
- * Universal DataTable component with sorting, pagination, filtering, and actions
- * 
- * @example
- * <DataTable
- *   columns={[
- *     { key: 'title', label: 'Tytuł', sortable: true },
- *     { key: 'author', label: 'Autor', render: (row) => row.author?.name },
- *     { key: 'status', label: 'Status', render: (row) => <StatusBadge status={row.status} /> }
- *   ]}
- *   data={books}
- *   sortable
- *   paginated
- *   pageSize={20}
- *   searchable
- *   searchPlaceholder="Szukaj..."
- *   onRowClick={(row) => navigate(`/books/${row.id}`)}
- *   actions={[
- *     { icon: 'edit', label: 'Edytuj', onClick: (row) => handleEdit(row) },
- *     { icon: 'delete', label: 'Usuń', onClick: (row) => handleDelete(row), variant: 'danger' }
- *   ]}
- *   emptyMessage="Brak danych do wyświetlenia"
- *   loading={isLoading}
- * />
- */
 export default function DataTable({
   columns = [],
   data = [],
@@ -58,73 +33,67 @@ export default function DataTable({
   const [currentPage, setCurrentPage] = useState(1)
   const [searchQuery, setSearchQuery] = useState('')
   const [internalSelectedRows, setInternalSelectedRows] = useState([])
-  
-  const selected = selectable ? (onSelectionChange ? selectedRows : internalSelectedRows) : []
-  const setSelected = useMemo(() => {
-    return selectable ? (onSelectionChange || setInternalSelectedRows) : () => {}
-  }, [selectable, onSelectionChange])
 
-  // Filtering
+  const selected = selectable ? (onSelectionChange ? selectedRows : internalSelectedRows) : []
+  const setSelected = useMemo(() => (
+    selectable ? (onSelectionChange || setInternalSelectedRows) : () => {}
+  ), [selectable, onSelectionChange])
+
   const filteredData = useMemo(() => {
     if (!searchQuery.trim()) return data
-    
+
     const query = searchQuery.toLowerCase()
-    const fields = searchFields.length > 0 
-      ? searchFields 
-      : columns.filter(c => !c.render).map(c => c.key)
-    
-    return data.filter(row => {
-      return fields.some(field => {
-        const value = getNestedValue(row, field)
-        return value && String(value).toLowerCase().includes(query)
-      })
-    })
+    const fields = searchFields.length > 0
+      ? searchFields
+      : columns.filter(column => !column.render).map(column => column.key)
+
+    return data.filter(row => fields.some(field => {
+      const value = getNestedValue(row, field)
+      return value && String(value).toLowerCase().includes(query)
+    }))
   }, [data, searchQuery, searchFields, columns])
 
-  // Sorting
   const sortedData = useMemo(() => {
     if (!sortConfig.key) return filteredData
-    
+
     return [...filteredData].sort((a, b) => {
       const aValue = getNestedValue(a, sortConfig.key)
       const bValue = getNestedValue(b, sortConfig.key)
-      
+
       if (aValue === bValue) return 0
       if (aValue == null) return 1
       if (bValue == null) return -1
-      
+
       const comparison = aValue < bValue ? -1 : 1
       return sortConfig.direction === 'asc' ? comparison : -comparison
     })
   }, [filteredData, sortConfig])
 
-  // Pagination
   const paginatedData = useMemo(() => {
     if (!paginated) return sortedData
-    
+
     const start = (currentPage - 1) * pageSize
     return sortedData.slice(start, start + pageSize)
   }, [sortedData, paginated, currentPage, pageSize])
 
   const totalPages = Math.ceil(sortedData.length / pageSize)
 
-  // Handlers
   const handleSort = useCallback((key) => {
     if (!sortable) return
-    
+
     setSortConfig(prev => ({
       key,
-      direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc'
+      direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc',
     }))
   }, [sortable])
 
-  const handleSearch = useCallback((e) => {
-    setSearchQuery(e.target.value)
+  const handleSearch = useCallback((event) => {
+    setSearchQuery(event.target.value)
     setCurrentPage(1)
   }, [])
 
-  const handleSelectAll = useCallback((e) => {
-    if (e.target.checked) {
+  const handleSelectAll = useCallback((event) => {
+    if (event.target.checked) {
       setSelected(paginatedData.map(row => row[rowKey]))
     } else {
       setSelected([])
@@ -132,16 +101,16 @@ export default function DataTable({
   }, [paginatedData, rowKey, setSelected])
 
   const handleSelectRow = useCallback((rowId) => {
-    setSelected(prev => 
-      prev.includes(rowId) 
+    setSelected(prev => (
+      prev.includes(rowId)
         ? prev.filter(id => id !== rowId)
         : [...prev, rowId]
-    )
+    ))
   }, [setSelected])
 
   const getSortIcon = (key) => {
     if (sortConfig.key !== key) return '↕'
-    return sortConfig.direction === 'asc' ? '�' : '�'
+    return sortConfig.direction === 'asc' ? '↑' : '↓'
   }
 
   const tableClasses = [
@@ -152,7 +121,7 @@ export default function DataTable({
     stickyHeader && 'data-table--sticky-header',
     stickyFirstColumn && 'data-table--sticky-first-col',
     mobileCards && 'data-table--mobile-cards',
-    className
+    className,
   ].filter(Boolean).join(' ')
 
   if (loading) {
@@ -176,9 +145,12 @@ export default function DataTable({
             className="data-table__search-input"
           />
           {searchQuery && (
-            <button 
+            <button
               className="data-table__search-clear"
-              onClick={() => { setSearchQuery(''); setCurrentPage(1); }}
+              onClick={() => {
+                setSearchQuery('')
+                setCurrentPage(1)
+              }}
               aria-label="Wyczyść wyszukiwanie"
             >
               ×
@@ -208,12 +180,12 @@ export default function DataTable({
                     </th>
                   )}
                   {columns.map(column => (
-                    <th 
+                    <th
                       key={column.key}
                       className={[
                         column.sortable !== false && sortable ? 'data-table__sortable' : '',
                         column.align ? `data-table__align-${column.align}` : '',
-                        column.width ? '' : ''
+                        column.width ? '' : '',
                       ].filter(Boolean).join(' ')}
                       style={column.width ? { width: column.width } : undefined}
                       onClick={() => column.sortable !== false && sortable && handleSort(column.key)}
@@ -231,16 +203,16 @@ export default function DataTable({
               </thead>
               <tbody>
                 {paginatedData.map((row, index) => (
-                  <tr 
+                  <tr
                     key={row[rowKey] ?? index}
                     onClick={() => onRowClick?.(row)}
                     className={[
                       onRowClick ? 'data-table__clickable-row' : '',
-                      selected.includes(row[rowKey]) ? 'data-table__selected-row' : ''
+                      selected.includes(row[rowKey]) ? 'data-table__selected-row' : '',
                     ].filter(Boolean).join(' ')}
                   >
                     {selectable && (
-                      <td className="data-table__checkbox-cell" onClick={e => e.stopPropagation()}>
+                      <td className="data-table__checkbox-cell" onClick={event => event.stopPropagation()}>
                         <input
                           type="checkbox"
                           checked={selected.includes(row[rowKey])}
@@ -250,18 +222,18 @@ export default function DataTable({
                       </td>
                     )}
                     {columns.map(column => (
-                      <td 
+                      <td
                         key={column.key}
                         className={column.align ? `data-table__align-${column.align}` : ''}
                         data-label={column.label}
                       >
-                        {column.render 
-                          ? column.render(row, index) 
-                          : getNestedValue(row, column.key) ?? ''}
+                        {column.render
+                          ? column.render(row, index)
+                          : getNestedValue(row, column.key) ?? '—'}
                       </td>
                     ))}
                     {actions.length > 0 && (
-                      <td className="data-table__actions-cell" onClick={e => e.stopPropagation()}>
+                      <td className="data-table__actions-cell" onClick={event => event.stopPropagation()}>
                         <div className="data-table__actions">
                           {actions.map((action, actionIndex) => (
                             <button
@@ -300,7 +272,7 @@ export default function DataTable({
                 </button>
                 <button
                   className="data-table__pagination-btn"
-                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  onClick={() => setCurrentPage(page => Math.max(1, page - 1))}
                   disabled={currentPage === 1}
                   aria-label="Poprzednia strona"
                 >
@@ -311,7 +283,7 @@ export default function DataTable({
                 </span>
                 <button
                   className="data-table__pagination-btn"
-                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  onClick={() => setCurrentPage(page => Math.min(totalPages, page + 1))}
                   disabled={currentPage === totalPages}
                   aria-label="Następna strona"
                 >
@@ -334,7 +306,6 @@ export default function DataTable({
   )
 }
 
-// Helper function to get nested object values (e.g., 'author.name')
 function getNestedValue(obj, path) {
   if (!path) return undefined
   return path.split('.').reduce((acc, part) => acc?.[part], obj)
@@ -347,7 +318,7 @@ DataTable.propTypes = {
     sortable: PropTypes.bool,
     render: PropTypes.func,
     align: PropTypes.oneOf(['left', 'center', 'right']),
-    width: PropTypes.string
+    width: PropTypes.string,
   })).isRequired,
   data: PropTypes.array.isRequired,
   sortable: PropTypes.bool,
@@ -363,7 +334,7 @@ DataTable.propTypes = {
     onClick: PropTypes.func.isRequired,
     variant: PropTypes.oneOf(['default', 'primary', 'danger', 'warning']),
     disabled: PropTypes.func,
-    iconOnly: PropTypes.bool
+    iconOnly: PropTypes.bool,
   })),
   emptyMessage: PropTypes.string,
   loading: PropTypes.bool,
@@ -378,5 +349,5 @@ DataTable.propTypes = {
   selectedRows: PropTypes.array,
   onSelectionChange: PropTypes.func,
   rowKey: PropTypes.string,
-  ariaLabel: PropTypes.string
+  ariaLabel: PropTypes.string,
 }

@@ -21,9 +21,6 @@ jobs:
     name: Backend Tests (PHP ${{ matrix.php-version }})
     runs-on: ubuntu-latest
 
-    env:
-      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-
     strategy:
       matrix:
         php-version: ['8.2', '8.3']
@@ -75,7 +72,7 @@ jobs:
 
       - name: Create .env.test.local
         run: |
-          echo "DATABASE_URL=postgresql://${{ env.POSTGRES_USER }}:${{ env.POSTGRES_PASSWORD }}@localhost:5432/${{ env.POSTGRES_DB }}?serverVersion=16&charset=utf8" > .env.test.local
+          echo "DATABASE_URL=postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@localhost:5432/$POSTGRES_DB?serverVersion=16&charset=utf8" > .env.test.local
           echo "APP_ENV=test" >> .env.test.local
           echo "APP_SECRET=test_secret_12345678901234567890" >> .env.test.local
 
@@ -89,10 +86,9 @@ jobs:
         run: vendor/bin/phpunit --coverage-clover coverage.xml
 
       - name: Upload coverage to Codecov
-        if: ${{ env.CODECOV_TOKEN != '' }}
         uses: codecov/codecov-action@v4
         with:
-          token: ${{ env.CODECOV_TOKEN }}
+          token: ${{ secrets.CODECOV_TOKEN }}
           file: backend/coverage.xml
           flags: backend
           name: backend-coverage
@@ -140,9 +136,6 @@ jobs:
     name: Frontend Tests (Node ${{ matrix.node-version }})
     runs-on: ubuntu-latest
 
-    env:
-      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-
     strategy:
       matrix:
         node-version: ['18', '20']
@@ -175,10 +168,9 @@ jobs:
         run: npm run test:coverage
 
       - name: Upload coverage to Codecov
-        if: ${{ env.CODECOV_TOKEN != '' }}
         uses: codecov/codecov-action@v4
         with:
-          token: ${{ env.CODECOV_TOKEN }}
+          token: ${{ secrets.CODECOV_TOKEN }}
           file: frontend/coverage/coverage-final.json
           flags: frontend
           name: frontend-coverage

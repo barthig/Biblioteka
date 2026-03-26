@@ -775,7 +775,7 @@ export default function LibrarianPanel() {
   }
 
   async function deleteCopy(copy) {
-    if (!confirm('Usun egzemplarz?')) return
+    if (!confirm('Usun?? egzemplarz?')) return
     try {
       const bookId = inventoryBookId || copy.bookId || copy.book?.id
       await apiFetch(`/api/admin/books/${bookId}/copies/${copy.id}`, { method: 'DELETE' })

@@ -19,7 +19,7 @@ export default function LoanCard({ loan, onReturn, onExtend }) {
       <div className="loan-book-info">
         <FaBook className="loan-icon" />
         <div>
-          <h3>{loan.book?.title || 'Nieznana ksi|ka'}</h3>
+          <h3>{loan.book?.title || 'Nieznana ksi??ka'}</h3>
           <p className="loan-author">{loan.book?.author || ''}</p>
         </div>
       </div>

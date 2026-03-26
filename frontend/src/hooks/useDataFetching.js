@@ -67,7 +67,7 @@ export function useDataFetching(
     } catch (err) {
       if (!mountedRef.current) return
 
-      const errorMessage = err.response?.data?.message || err.message || 'WystpiB bBd'
+      const errorMessage = err.response?.data?.message || err.message || 'Wystąpił błąd'
       setError(errorMessage)
       onError?.(err)
       throw err
@@ -159,7 +159,7 @@ export function useMutation(mutationFn, options = {}) {
     } catch (err) {
       if (!mountedRef.current) return
 
-      const errorMessage = err.response?.data?.message || err.message || 'WystpiB bBd'
+      const errorMessage = err.response?.data?.message || err.message || 'Wystąpił błąd'
       setError(errorMessage)
       onError?.(err, ...args)
       onSettled?.(null, err, ...args)

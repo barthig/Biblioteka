@@ -6,12 +6,13 @@ use App\Application\Handler\Command\DeleteReviewHandler;
 use App\Entity\Review;
 use App\Repository\ReviewRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 class DeleteReviewHandlerTest extends TestCase
 {
     private ReviewRepository $reviewRepository;
-    private EntityManagerInterface $entityManager;
+    private EntityManagerInterface&MockObject $entityManager;
     private DeleteReviewHandler $handler;
 
     protected function setUp(): void

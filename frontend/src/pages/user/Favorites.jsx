@@ -131,7 +131,7 @@ export default function Favorites() {
             {favorites.map(fav => (
               <li key={fav.id} className="resource-item">
                 <div>
-                  <strong>{fav.book?.title ?? 'Nieznana ksi|ka'}</strong>
+                  <strong>{fav.book?.title ?? 'Nieznana ksi??ka'}</strong>
                   <div className="resource-item__meta">
                     <span>Autor: {fav.book?.author?.name ?? '-'}</span>
                     <span>Dodano: {fav.createdAt ? new Date(fav.createdAt).toLocaleDateString('pl-PL') : '-'}</span>

@@ -181,7 +181,7 @@ export default function MyLoans() {
               {activeLoans.map(loan => (
                 <li key={loan.id} className="resource-item">
                   <div>
-                    <strong>{loan.book?.title ?? 'Nieznana ksi|ka'}</strong>
+                    <strong>{loan.book?.title ?? 'Nieznana ksi??ka'}</strong>
                     <div className="resource-item__meta">
                       <span>Termin zwrotu: {formatDate(loan.dueAt)}</span>
                       {loan.bookCopy?.inventoryCode ? <span>Kod egz.: {loan.bookCopy.inventoryCode}</span> : null}
@@ -232,7 +232,7 @@ export default function MyLoans() {
               {historyLoans.map(loan => (
                 <li key={loan.id} className="resource-item">
                   <div>
-                    <strong>{loan.book?.title ?? 'Nieznana ksi|ka'}</strong>
+                    <strong>{loan.book?.title ?? 'Nieznana ksi??ka'}</strong>
                     <div className="resource-item__meta">
                       <span>Wypożyczono: {formatDate(loan.borrowedAt)}</span>
                       <span>Zwrócono: {formatDate(loan.returnedAt)}</span>

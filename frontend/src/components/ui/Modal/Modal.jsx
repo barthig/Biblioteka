@@ -5,9 +5,8 @@ import './Modal.css'
 
 /**
  * Universal Modal component with variants for different use cases
- * 
+ *
  * @example
- * // Confirmation modal
  * <Modal
  *   isOpen={showModal}
  *   onClose={handleClose}
@@ -18,10 +17,9 @@ import './Modal.css'
  *     { label: 'Usuń', variant: 'danger', onClick: handleDelete }
  *   ]}
  * >
- *   <p>Czy na pewno chcesz usun t ksi|k?</p>
+ *   <p>Czy na pewno chcesz usunąć tę książkę?</p>
  * </Modal>
- * 
- * // Form modal
+ *
  * <Modal
  *   isOpen={showForm}
  *   onClose={handleClose}
@@ -52,21 +50,18 @@ export default function Modal({
   const modalRef = useRef(null)
   const previousActiveElement = useRef(null)
 
-  // Handle escape key
-  const handleKeyDown = useCallback((e) => {
-    if (e.key === 'Escape' && closeOnEscape && !loading) {
+  const handleKeyDown = useCallback((event) => {
+    if (event.key === 'Escape' && closeOnEscape && !loading) {
       onClose?.()
     }
   }, [closeOnEscape, onClose, loading])
 
-  // Handle overlay click
-  const handleOverlayClick = useCallback((e) => {
-    if (e.target === e.currentTarget && closeOnOverlayClick && !loading) {
+  const handleOverlayClick = useCallback((event) => {
+    if (event.target === event.currentTarget && closeOnOverlayClick && !loading) {
       onClose?.()
     }
   }, [closeOnOverlayClick, onClose, loading])
 
-  // Focus management
   useEffect(() => {
     if (isOpen) {
       previousActiveElement.current = document.activeElement
@@ -82,12 +77,12 @@ export default function Modal({
     }
   }, [isOpen])
 
-  // Keyboard event listener
   useEffect(() => {
     if (isOpen) {
       document.addEventListener('keydown', handleKeyDown)
       return () => document.removeEventListener('keydown', handleKeyDown)
     }
+    return undefined
   }, [isOpen, handleKeyDown])
 
   if (!isOpen) return null
@@ -96,25 +91,24 @@ export default function Modal({
   const variantClass = `modal--${variant}`
 
   const modalContent = (
-    <div 
+    <div
       className="modal__overlay"
       onClick={handleOverlayClick}
       aria-modal="true"
       role="dialog"
       aria-labelledby="modal-title"
     >
-      <div 
+      <div
         ref={modalRef}
         className={`modal ${sizeClass} ${variantClass} ${className}`.trim()}
         tabIndex={-1}
         {...props}
       >
-        {/* Header */}
         <div className="modal__header">
           {icon && <span className="modal__icon">{icon}</span>}
           {title && <h2 id="modal-title" className="modal__title">{title}</h2>}
           {showCloseButton && (
-            <button 
+            <button
               className="modal__close-btn"
               onClick={onClose}
               disabled={loading}
@@ -125,12 +119,10 @@ export default function Modal({
           )}
         </div>
 
-        {/* Body */}
         <div className="modal__body">
           {children}
         </div>
 
-        {/* Footer */}
         {(actions.length > 0 || footer) && (
           <div className="modal__footer">
             {footer || (
@@ -152,7 +144,6 @@ export default function Modal({
           </div>
         )}
 
-        {/* Loading overlay */}
         {loading && (
           <div className="modal__loading-overlay">
             <div className="modal__spinner" />
@@ -178,7 +169,7 @@ Modal.propTypes = {
     variant: PropTypes.oneOf(['primary', 'secondary', 'danger', 'warning', 'ghost']),
     disabled: PropTypes.bool,
     loading: PropTypes.bool,
-    type: PropTypes.string
+    type: PropTypes.string,
   })),
   closeOnOverlayClick: PropTypes.bool,
   closeOnEscape: PropTypes.bool,
@@ -186,12 +177,9 @@ Modal.propTypes = {
   className: PropTypes.string,
   footer: PropTypes.node,
   icon: PropTypes.node,
-  loading: PropTypes.bool
+  loading: PropTypes.bool,
 }
 
-/**
- * Confirmation Modal - Specialized modal for confirmations
- */
 export function ConfirmModal({
   isOpen,
   onClose,
@@ -214,7 +202,7 @@ export function ConfirmModal({
       loading={loading}
       actions={[
         { label: cancelLabel, variant: 'secondary', onClick: onClose },
-        { label: confirmLabel, variant: variant === 'danger' ? 'danger' : 'primary', onClick: onConfirm, loading }
+        { label: confirmLabel, variant: variant === 'danger' ? 'danger' : 'primary', onClick: onConfirm, loading },
       ]}
       {...props}
     >
@@ -232,5 +220,5 @@ ConfirmModal.propTypes = {
   confirmLabel: PropTypes.string,
   cancelLabel: PropTypes.string,
   variant: PropTypes.oneOf(['warning', 'danger', 'info']),
-  loading: PropTypes.bool
+  loading: PropTypes.bool,
 }

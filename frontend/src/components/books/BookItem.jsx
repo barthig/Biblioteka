@@ -189,7 +189,7 @@ export default function BookItem({ book, onBorrowed, compact = false, expanded =
               disabled={!isAvailable || loading}
               onClick={borrow}
             >
-              {loading ? 'WysyBanie...' : 'Wypo|ycz egzemplarz'}
+              {loading ? 'Wysy?anie...' : 'Wypo?ycz egzemplarz'}
             </button>
             <button
               className="btn btn-outline"
@@ -197,14 +197,14 @@ export default function BookItem({ book, onBorrowed, compact = false, expanded =
               onClick={reserve}
               style={{ visibility: !isAvailable ? 'visible' : 'hidden' }}
             >
-              {reserveLoading ? 'Przetwarzanie...' : reserved ? 'Zarezerwowano' : 'DoBcz do kolejki'}
+              {reserveLoading ? 'Przetwarzanie...' : reserved ? 'Zarezerwowano' : 'Do??cz do kolejki'}
             </button>
             <button
               className="btn btn-ghost"
               disabled={favoriteLoading}
               onClick={toggleFavorite}
             >
-              {favoriteLoading ? 'Aktualizuj...' : favorite ? 'UsuD z ulubionych' : 'Dodaj do ulubionych'}
+              {favoriteLoading ? 'Aktualizuj?...' : favorite ? 'Usu? z ulubionych' : 'Dodaj do ulubionych'}
             </button>
             <Link to={`/books/${book.id}`} className="btn btn-outline">Szczegóły</Link>
           </>

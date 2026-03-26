@@ -7,11 +7,12 @@ use App\Entity\BookCopy;
 use App\Repository\BookCopyRepository;
 use App\Repository\BookRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 class CreateBookCopyHandlerTest extends TestCase
 {
-    private EntityManagerInterface $entityManager;
+    private EntityManagerInterface&MockObject $entityManager;
     private BookRepository $bookRepository;
     private BookCopyRepository $bookCopyRepository;
     private CreateBookCopyHandler $handler;

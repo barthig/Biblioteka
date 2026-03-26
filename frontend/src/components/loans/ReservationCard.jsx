@@ -32,7 +32,7 @@ export default function ReservationCard({ reservation, onCancel, onFulfill }) {
       <div className="reservation-book-info">
         <FaBook className="reservation-icon" />
         <div>
-          <h3>{reservation.book?.title || 'Nieznana ksi|ka'}</h3>
+          <h3>{reservation.book?.title || 'Nieznana ksi??ka'}</h3>
           <p className="reservation-author">{reservation.book?.author || ''}</p>
         </div>
       </div>
