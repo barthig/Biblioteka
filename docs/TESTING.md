@@ -1,17 +1,20 @@
-# Testing Guide
+# Przewodnik testowania
+
+Dokument opisuje, gdzie znajdują się testy i jak je uruchamiać lokalnie.
 
 ## Backend (PHPUnit)
 
-Test configuration is defined in `backend/phpunit.xml.dist`.
+Konfiguracja testów backendu: [backend/phpunit.xml.dist](backend/phpunit.xml.dist).
 
-Main suites:
-- `tests/Unit` - isolated unit tests for services, value objects and helpers.
-- `tests/Application` - CQRS command/query handler tests.
-- `tests/Functional` - HTTP/API tests using Symfony WebTestCase.
-- `tests/EventSubscriber` - event subscriber tests.
-- `tests/Service` - business service and Messenger handler tests.
+Najważniejsze katalogi testowe:
 
-Run examples:
+- `backend/tests/Unit` - testy jednostkowe,
+- `backend/tests/Application` - testy warstwy CQRS,
+- `backend/tests/Functional` - testy HTTP/API,
+- `backend/tests/EventSubscriber` - testy subskrybentów zdarzeń,
+- `backend/tests/Service` - testy usług i handlerów.
+
+Uruchamianie:
 
 ```bash
 cd backend
@@ -21,31 +24,48 @@ php vendor/bin/phpunit --testsuite Functional
 php vendor/bin/phpunit
 ```
 
-## Frontend (Vitest + Vite build)
+Dodatkowa kontrola jakości:
 
-Run examples:
+```bash
+cd backend
+vendor/bin/phpstan analyse src --level=6
+```
+
+## Frontend (Vitest i Playwright)
+
+Uruchamianie:
 
 ```bash
 cd frontend
-npm test -- --run
+npm ci
+npm run lint
+npm run test:run
+npm run test:coverage
+npm run test:e2e
 npm run build
 ```
 
-This split matches the diploma requirements: backend unit tests are in `tests/Unit`, while CQRS and async notification flow coverage is expanded in `tests/Application`, `tests/EventSubscriber` and `tests/Service`.
+## Testy integracyjne architektury rozproszonej
 
-## Distributed architecture smoke tests
+Skrypty smoke/integration:
 
-When the distributed stack is running through Traefik, use:
+- [tests/integration/test_cross_service.sh](tests/integration/test_cross_service.sh)
+- [tests/integration/test_gateway_routing.sh](tests/integration/test_gateway_routing.sh)
+- [tests/integration/test_standalone_stack.sh](tests/integration/test_standalone_stack.sh)
+
+Przykład uruchomienia po starcie kontenerów:
 
 ```bash
 ./tests/integration/test_cross_service.sh
 ./tests/integration/test_gateway_routing.sh
 ```
 
-Purpose:
-- `test_cross_service.sh` verifies health, metrics and public API availability through the gateway.
-- `test_gateway_routing.sh` verifies that collision-prone paths are routed to the correct owner behind Traefik.
+Co weryfikują:
 
-## API clients
+- zdrowie usług i dostępność metryk,
+- dostępność API publicznego przez bramę,
+- poprawność routingu konfliktowych ścieżek backend/mikroserwis.
 
-For manual API verification in Postman or Insomnia, import the ready-made artifacts from `docs/api-clients/`.
+## Klienci API do testów ręcznych
+
+Gotowe pliki do Postmana i Insomnii znajdziesz w [docs/api-clients](docs/api-clients).

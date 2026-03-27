@@ -1,28 +1,33 @@
-# API Verification with Postman and Insomnia
+# Weryfikacja API w Postmanie i Insomnii
 
-This repository includes ready-to-import artifacts for manual verification of the distributed API.
+Repozytorium zawiera gotowe pliki do importu, które ułatwiają ręczne testowanie API w trybie rozproszonym.
 
-Files:
+## Dostępne pliki
+
 - `docs/api-clients/Biblioteka.postman_collection.json`
 - `docs/api-clients/Biblioteka.postman_environment.json`
 - `docs/api-clients/Biblioteka.insomnia.json`
 
-## Recommended flow
+## Zalecany przebieg
 
-1. Start the distributed stack:
-   - `docker compose -f docker-compose.distributed.yml up --build -d`
-2. Import the collection or workspace into your client.
-3. Run `Auth / Login` first.
-4. Verify that `accessToken` and `refreshToken` were stored.
-5. Run authenticated requests such as:
-   - `Account / Get Me`
-   - `Loans and Reservations / List Loans`
-6. Run public distributed checks:
-   - `Health / Distributed Health`
-   - `Distributed Services / Notification Stats`
-   - `Distributed Services / Recommendation Search`
+1. Uruchom stos rozproszony:
 
-## Default variables
+```bash
+docker compose -f docker-compose.distributed.yml up --build -d
+```
+
+2. Zaimportuj kolekcję/workspace do klienta API.
+3. Wykonaj żądanie logowania (`Auth / Login`).
+4. Potwierdź zapis `accessToken` i `refreshToken`.
+5. Wykonaj przykładowe żądania autoryzowane, np.:
+   - `Account / Get Me`,
+   - `Loans and Reservations / List Loans`.
+6. Wykonaj żądania publiczne dla architektury rozproszonej, np.:
+   - `Health / Distributed Health`,
+   - `Distributed Services / Notification Stats`,
+   - `Distributed Services / Recommendation Search`.
+
+## Domyślne zmienne
 
 - `baseUrl`: `http://localhost`
 - `email`: `user01@example.com`
@@ -31,8 +36,8 @@ Files:
 - `loanId`: `1`
 - `reservationId`: `1`
 
-## Notes
+## Uwagi
 
-- The collection targets the distributed gateway at `http://localhost`.
-- Notification and recommendation services are verified through Traefik routes, not direct host ports.
-- `Extend Loan` and `Fulfill Reservation` are included as manual smoke requests and may require adjusting `loanId` or `reservationId` to existing seeded records.
+- Kolekcja jest przygotowana pod bramę Traefik (`http://localhost`).
+- Endpointy notification-service i recommendation-service są testowane przez trasy bramy, a nie przez porty wewnętrzne.
+- Żądania typu `Extend Loan` i `Fulfill Reservation` mogą wymagać podania identyfikatorów istniejących rekordów testowych.

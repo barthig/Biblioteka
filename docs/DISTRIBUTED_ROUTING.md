@@ -1,69 +1,69 @@
-# Distributed Routing Contract
+# Kontrakt routingu w trybie rozproszonym
 
-This document defines public API ownership in distributed mode when requests pass through Traefik.
+Dokument opisuje, które ścieżki publiczne są obsługiwane przez backend, a które przez mikroserwisy, gdy ruch przechodzi przez Traefik.
 
-## Rule of thumb
+## Zasada ogólna
 
-Frontend talks only to the gateway.
-Each public path has exactly one owner behind the gateway.
-Backend acts as BFF for user-facing endpoints that aggregate domain logic or enforce auth flows.
-Microservices expose only their own read models or specialized APIs.
+- Frontend rozmawia wyłącznie z bramą (`http://localhost`).
+- Każda publiczna ścieżka ma jednego właściciela.
+- Backend pełni rolę warstwy BFF dla endpointów wymagających kontekstu użytkownika lub spójnej logiki domenowej.
+- Mikroserwisy wystawiają tylko swoje wyspecjalizowane API.
 
-## Public path ownership
+## Własność ścieżek
 
-### Backend-owned paths
+### Ścieżki backendu
 
-These paths are routed by Traefik to the Symfony backend:
+Przykładowe ścieżki kierowane do backendu Symfony:
+
 - `/api/notifications`
 - `/api/notifications/test`
 - `/api/recommendations/personal`
-- all remaining `/api/**` paths that are not explicitly delegated to a microservice
-- `/health` and `/health/distributed`
+- pozostałe `/api/**`, które nie są jawnie przekierowane do mikroserwisu
+- `/health` oraz `/health/distributed`
 
-Rationale:
-- they depend on backend auth/session context or CQRS handlers
-- they are part of the public BFF contract used by the frontend
+Uzasadnienie:
 
-### Notification-service paths
+- wymagają centralnej autoryzacji i logiki BFF,
+- stanowią publiczny kontrakt dla frontendu.
 
-These paths are routed by Traefik directly to notification-service:
+### Ścieżki notification-service
+
+Ścieżki kierowane bezpośrednio do usługi powiadomień:
+
 - `/api/notifications/logs`
 - `/api/notifications/stats`
 
-Rationale:
-- they are notification-service read models backed by its own database
-- they should not shadow the backend BFF endpoint `/api/notifications`
+Uzasadnienie:
 
-### Recommendation-service paths
+- to read model usługi powiadomień oparty o jej własną bazę,
+- nie powinny kolidować z endpointem backendowym `/api/notifications`.
 
-These paths are routed by Traefik directly to recommendation-service:
+### Ścieżki recommendation-service
+
+Ścieżki kierowane bezpośrednio do usługi rekomendacji:
+
 - `/api/recommendations/similar/{bookId}`
 - `/api/recommendations/for-user/{userId}`
 - `/api/recommendations/search`
 
-Rationale:
-- they are recommendation-service specialized APIs
-- frontend-facing personalized recommendations remain exposed through backend BFF as `/api/recommendations/personal`
+Uzasadnienie:
 
-## Frontend contract
+- to wyspecjalizowane endpointy usługowe,
+- personalizacja dla użytkownika końcowego pozostaje pod backendowym BFF (`/api/recommendations/personal`).
 
-Frontend code should use only public paths guaranteed by the gateway contract.
-Current user-facing paths include:
-- `/api/notifications`
-- `/api/notifications/test`
-- `/api/recommendations/personal`
-- `/api/recommendations/feedback`
-- `/api/recommendations/feedback/{bookId}`
+## Kontrakt dla frontendu
 
-If a frontend feature needs data from a microservice-only path, prefer adding a backend adapter first instead of coupling the UI directly to an internal service contract.
+Kod frontendu powinien używać wyłącznie publicznych ścieżek bramy. Jeżeli funkcja UI potrzebuje danych dostępnych tylko w mikroserwisie, preferowane jest dodanie adaptera po stronie backendu zamiast bezpośredniego spinania UI z wewnętrznym kontraktem usługi.
 
-## Regression checks
+## Testy regresyjne routingu
 
-Use these scripts after changing Traefik rules or service paths:
+Po zmianach w Traefik lub ścieżkach API uruchamiaj:
+
 - `tests/integration/test_cross_service.sh`
 - `tests/integration/test_gateway_routing.sh`
 
-The gateway smoke test is focused on collision-prone paths and verifies that:
-- backend-owned endpoints do not get swallowed by microservice prefix routing
-- microservice-owned paths still resolve through Traefik
-- wrong-owner 404s do not reappear after config changes
+Skrypty sprawdzają m.in.:
+
+- czy endpointy backendowe nie są „połykane” przez reguły prefiksowe mikroserwisów,
+- czy ścieżki mikroserwisów pozostają osiągalne przez bramę,
+- czy nie wracają błędy 404 wynikające z nieprawidłowego ownera trasy.

@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [main, develop]
 
+permissions:
+  contents: read
+  id-token: write
+
 env:
   PHP_VERSION: '8.2'
   NODE_VERSION: '20'
@@ -86,10 +90,9 @@ jobs:
         run: vendor/bin/phpunit --coverage-clover coverage.xml
 
       - name: Upload coverage to Codecov
-        if: ${{ secrets.CODECOV_TOKEN != '' }}
         uses: codecov/codecov-action@v4
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
+          use_oidc: true
           file: backend/coverage.xml
           flags: backend
           name: backend-coverage
@@ -169,10 +172,9 @@ jobs:
         run: npm run test:coverage
 
       - name: Upload coverage to Codecov
-        if: ${{ secrets.CODECOV_TOKEN != '' }}
         uses: codecov/codecov-action@v4
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
+          use_oidc: true
           file: frontend/coverage/coverage-final.json
           flags: frontend
           name: frontend-coverage
