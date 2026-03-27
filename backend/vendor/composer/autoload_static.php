@@ -33,6 +33,7 @@ class ComposerStaticInit65ce50d89d4e417b146049a1d141d5ee
         '9b38cf48e83f5d8f60375221cd213eee' => __DIR__ . '/..' . '/phpstan/phpstan/bootstrap.php',
         'ec07570ca5a812141189b1fa81503674' => __DIR__ . '/..' . '/phpunit/phpunit/src/Framework/Assert/Functions.php',
         '6cf4a06389f4c126153cd6f07686ec42' => __DIR__ . '/../..' . '/compat/doctrine_version_aware_platform_driver.php',
+        '9afab1479543b9faa475e49a7623a25c' => __DIR__ . '/../..' . '/compat/doctrine_well_known_schema_filter_pass.php',
         '6588714690f694b8fb6c15a7149e00eb' => __DIR__ . '/../..' . '/compat/symfony_app_reference.php',
         '5e34ec8a67dae2653f7bae4b70ade870' => __DIR__ . '/../..' . '/compat/symfony_idle_connection_driver.php',
         'e2f45e1c8ec682e058b6c2e6a8585018' => __DIR__ . '/../..' . '/compat/symfony_idle_connection_listener.php',

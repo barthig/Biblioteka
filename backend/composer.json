@@ -52,6 +52,7 @@
     "autoload":  {
                      "files":  [
                                    "compat/doctrine_version_aware_platform_driver.php",
+                                   "compat/doctrine_well_known_schema_filter_pass.php",
                                    "compat/symfony_app_reference.php",
                                    "compat/symfony_idle_connection_driver.php",
                                    "compat/symfony_idle_connection_listener.php",
