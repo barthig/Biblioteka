@@ -80,8 +80,10 @@ jobs:
           echo "APP_ENV=test" >> .env.test.local
           echo "APP_SECRET=test_secret_12345678901234567890" >> .env.test.local
 
-      - name: Run database migrations
-        run: php bin/console doctrine:migrations:migrate --no-interaction --env=test
+      - name: Load test database schema
+        env:
+          PGPASSWORD: ${{ env.POSTGRES_PASSWORD }}
+        run: psql -h localhost -p 5432 -U $POSTGRES_USER -d $POSTGRES_DB -f init-db-expanded-v2.sql
 
       - name: Run PHPStan (Static Analysis)
         run: vendor/bin/phpstan analyse src --level=6 --no-progress
