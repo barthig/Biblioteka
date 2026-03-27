@@ -1,0 +1,33 @@
+@startuml
+node "Przegladarka / PWA" as Browser {
+  component "Frontend React" as Frontend
+}
+
+node "Traefik Gateway" as Gateway
+node "Backend Container" as Backend
+node "Worker Symfony" as Worker
+node "notification-service" as Notification
+node "recommendation-service" as Recommendation
+node "Redis" as Redis
+queue "RabbitMQ" as MQ
+
+database "PostgreSQL backend" as MainDb
+database "PostgreSQL notifications" as NotificationDb
+database "PostgreSQL recommendations" as RecommendationDb
+
+Browser --> Gateway : HTTP/HTTPS
+Gateway --> Frontend : assets + SPA
+Gateway --> Backend : /api, /health
+Gateway --> Notification : /api/notifications/logs, /stats
+Gateway --> Recommendation : /api/recommendations/search, /similar
+
+Backend --> MainDb
+Backend --> Redis
+Backend --> MQ
+Worker --> MQ
+Worker --> MainDb
+Notification --> NotificationDb
+Notification --> MQ
+Recommendation --> RecommendationDb
+Recommendation --> MainDb
+@enduml

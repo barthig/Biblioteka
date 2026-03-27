@@ -5,7 +5,7 @@ import { AuthProvider } from './context/AuthContext'
 import { ResourceCacheProvider } from './context/ResourceCacheContext'
 import ErrorBoundary from './components/ErrorBoundary'
 import { AuthGuard } from './guards'
-import { Navbar, RequireRole } from './components/common'
+import { Navbar, PwaStatusBanner, RequireRole } from './components/common'
 
 const Login = React.lazy(() => import('./pages/auth/Login'))
 const Register = React.lazy(() => import('./pages/auth/Register'))
@@ -56,12 +56,13 @@ export default function App() {
           />
           <div className="app-shell theme-root min-h-screen">
             <Navbar />
+            <PwaStatusBanner />
             <main className="main flex-1 px-4 sm:px-5 lg:px-10">
               <div className="content-shell mx-auto w-full max-w-screen-2xl">
                 <Suspense
                   fallback={(
                     <div className="page page--centered px-4 py-8 sm:px-6">
-                      <p>Ładowanie...</p>
+                      <p>Ladowanie...</p>
                     </div>
                   )}
                 >
@@ -131,10 +132,10 @@ export default function App() {
                   </Routes>
                 </Suspense>
                 <footer className="footer px-2 py-6 sm:px-4">
-                  <p>(c) 2025 Biblioteka. System zarządzania biblioteką i wypożyczeniami.</p>
+                  <p>(c) 2025 Biblioteka. System zarzadzania biblioteka i wypozyczeniami.</p>
                   <div className="footer__links flex-wrap gap-3 sm:gap-6">
                     <a href="#regulamin">Regulamin</a>
-                    <a href="#prywatnosc">Polityka prywatności</a>
+                    <a href="#prywatnosc">Polityka prywatnosci</a>
                     <a href="#kontakt">Kontakt</a>
                   </div>
                 </footer>

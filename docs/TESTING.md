@@ -69,3 +69,13 @@ Co weryfikują:
 ## Klienci API do testów ręcznych
 
 Gotowe pliki do Postmana i Insomnii znajdziesz w [docs/api-clients](docs/api-clients).
+
+## Artefakty do dokumentacji projektu
+
+Na potrzeby pracy dyplomowej repozytorium zawiera dodatkowe materialy projektowe:
+
+- diagramy C4 w `docs/c4`,
+- diagram bazy danych w `docs/database-diagram.puml`,
+- diagram przypadkow uzycia i diagramy sekwencji w `docs/uml`,
+- instrukcje uzytkownika w `docs/USER_GUIDE.md`,
+- instrukcje administratora w `docs/ADMIN_GUIDE.md`.

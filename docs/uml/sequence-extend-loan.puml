@@ -1,0 +1,16 @@
+@startuml
+actor "Czytelnik" as Reader
+participant "Frontend PWA" as Frontend
+participant "Traefik Gateway" as Gateway
+participant "Backend Symfony" as Backend
+database "PostgreSQL" as DB
+
+Reader -> Frontend: zadanie prolongaty
+Frontend -> Gateway: PUT /api/loans/{id}/extend
+Gateway -> Backend: przekazanie zadania
+Backend -> DB: pobranie wypozyczenia i rezerwacji
+DB --> Backend: stan wypozyczenia
+Backend -> Backend: walidacja uprawnien i limitu prolongat
+Backend -> DB: aktualizacja terminu zwrotu
+Backend --> Frontend: 200 OK + nowy termin zwrotu
+@enduml

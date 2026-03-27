@@ -20,6 +20,12 @@ self.addEventListener('install', (event) => {
   self.skipWaiting()
 })
 
+self.addEventListener('message', (event) => {
+  if (event.data?.type === 'SKIP_WAITING') {
+    self.skipWaiting()
+  }
+})
+
 self.addEventListener('activate', (event) => {
   const keep = new Set([SHELL_CACHE, RUNTIME_CACHE, API_CACHE])
   event.waitUntil(

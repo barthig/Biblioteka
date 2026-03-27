@@ -1,0 +1,17 @@
+@startuml
+actor "Bibliotekarz" as Librarian
+participant "Frontend PWA" as Frontend
+participant "Traefik Gateway" as Gateway
+participant "Backend Symfony" as Backend
+database "PostgreSQL" as DB
+
+Librarian -> Frontend: rejestracja zwrotu
+Frontend -> Gateway: POST /api/loans/{id}/return
+Gateway -> Backend: przekazanie zadania
+Backend -> DB: odczyt aktywnego wypozyczenia
+DB --> Backend: dane wypozyczenia
+Backend -> Backend: obliczenie przekroczenia terminu i kary
+Backend -> DB: zamkniecie wypozyczenia, aktualizacja egzemplarza
+Backend -> DB: ewentualny zapis oplaty
+Backend --> Frontend: 200 OK + podsumowanie zwrotu
+@enduml

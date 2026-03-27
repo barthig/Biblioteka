@@ -1,0 +1,20 @@
+@startuml
+actor "Czytelnik" as Reader
+participant "Frontend PWA" as Frontend
+participant "Traefik Gateway" as Gateway
+participant "Backend Symfony" as Backend
+database "PostgreSQL" as DB
+queue "RabbitMQ" as MQ
+participant "notification-service" as Notification
+
+Reader -> Frontend: wybor ksiazki i zadanie wypozyczenia
+Frontend -> Gateway: POST /api/loans
+Gateway -> Backend: przekazanie zadania
+Backend -> DB: walidacja limitow i dostepnosci egzemplarza
+DB --> Backend: dane uzytkownika i egzemplarza
+Backend -> DB: zapis wypozyczenia i zmiana statusu egzemplarza
+Backend -> MQ: publikacja zdarzenia powiadomienia
+Backend --> Frontend: 201 Created + dane wypozyczenia
+MQ -> Notification: obsluga wiadomosci
+Notification -> Notification: zapis logu i wysylka powiadomienia
+@enduml

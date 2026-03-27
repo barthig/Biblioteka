@@ -1,0 +1,46 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+
+actor "Czytelnik" as Reader
+actor "Bibliotekarz" as Librarian
+actor "Administrator" as Admin
+
+rectangle "System Biblioteka" {
+  usecase "Przegladanie katalogu" as UC1
+  usecase "Wyszukiwanie ksiazek" as UC2
+  usecase "Wypozyczenie ksiazki" as UC3
+  usecase "Zwrot ksiazki" as UC4
+  usecase "Prolongata wypozyczenia" as UC5
+  usecase "Rezerwacja ksiazki" as UC6
+  usecase "Zarzadzanie profilem" as UC7
+  usecase "Zarzadzanie katalogiem" as UC8
+  usecase "Obsluga egzemplarzy" as UC9
+  usecase "Obsluga kar i oplat" as UC10
+  usecase "Zarzadzanie uzytkownikami" as UC11
+  usecase "Przeglad raportow i statystyk" as UC12
+  usecase "Konfiguracja systemu" as UC13
+}
+
+Reader --> UC1
+Reader --> UC2
+Reader --> UC3
+Reader --> UC5
+Reader --> UC6
+Reader --> UC7
+
+Librarian --> UC1
+Librarian --> UC2
+Librarian --> UC4
+Librarian --> UC8
+Librarian --> UC9
+Librarian --> UC10
+Librarian --> UC12
+
+Admin --> UC8
+Admin --> UC9
+Admin --> UC10
+Admin --> UC11
+Admin --> UC12
+Admin --> UC13
+@enduml
