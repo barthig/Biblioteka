@@ -45,3 +45,7 @@ When the distributed stack is running through Traefik, use:
 Purpose:
 - `test_cross_service.sh` verifies health, metrics and public API availability through the gateway.
 - `test_gateway_routing.sh` verifies that collision-prone paths are routed to the correct owner behind Traefik.
+
+## API clients
+
+For manual API verification in Postman or Insomnia, import the ready-made artifacts from `docs/api-clients/`.

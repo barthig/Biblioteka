@@ -5,29 +5,50 @@ declare(strict_types=1);
 namespace Symfony\Bridge\Doctrine\Middleware\IdleConnection;
 
 use ArrayObject;
+use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Driver as DriverInterface;
-use Doctrine\DBAL\Driver\Middleware\AbstractDriverMiddleware;
+use Doctrine\DBAL\Driver\API\ExceptionConverter;
+use Doctrine\DBAL\Platforms\AbstractPlatform;
 
 if (!class_exists(Driver::class, false)) {
     /**
      * Compatibility shim for DoctrineBundle versions that expect
      * Symfony\Bridge\Doctrine\Middleware\IdleConnection\Driver to exist.
      *
-     * In this project we only need a transparent wrapper so the backend can
-     * bootstrap consistently across environments with older doctrine-bridge.
+     * The wrapper intentionally avoids extending Doctrine DBAL middleware
+     * internals because CI/autoload boot order can differ between environments.
      */
-    final class Driver extends AbstractDriverMiddleware
+    final class Driver implements DriverInterface
     {
         /**
          * @param ArrayObject<string, int> $connectionExpiries
          */
         public function __construct(
-            DriverInterface $driver,
+            private readonly DriverInterface $driver,
             ArrayObject $connectionExpiries,
             int $ttl,
             string $connectionName,
         ) {
-            parent::__construct($driver);
+        }
+
+        public function connect(array $params)
+        {
+            return $this->driver->connect($params);
+        }
+
+        public function getDatabasePlatform()
+        {
+            return $this->driver->getDatabasePlatform();
+        }
+
+        public function getSchemaManager(Connection $conn, AbstractPlatform $platform)
+        {
+            return $this->driver->getSchemaManager($conn, $platform);
+        }
+
+        public function getExceptionConverter(): ExceptionConverter
+        {
+            return $this->driver->getExceptionConverter();
         }
     }
 }

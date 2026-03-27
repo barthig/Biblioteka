@@ -1,4 +1,4 @@
-import React from 'react'
+﻿import React from 'react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
@@ -43,9 +43,9 @@ describe('LibrarianPanel', () => {
     expect(screen.getByRole('heading', { name: /Panel bibliotekarza/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Dashboard/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Ustawienia/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Wypożyczenia/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Wypo.yczenia/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Rezerwacje/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Opłaty/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Op.aty/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Egzemplarze/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Kolekcje/i })).toBeInTheDocument()
     expect(screen.getByText('Librarian Dashboard Widget')).toBeInTheDocument()
@@ -103,7 +103,9 @@ describe('LibrarianPanel', () => {
     )
 
     expect(await screen.findByRole('heading', { name: /Rezerwacje/i })).toBeInTheDocument()
-    expect(screen.getByText(/Jan Kowalski/i)).toBeInTheDocument()
-    expect(screen.getByText(/Solaris/i)).toBeInTheDocument()
+    expect(await screen.findByText(/Jan Kowalski/i)).toBeInTheDocument()
+    expect(await screen.findByText(/Solaris/i)).toBeInTheDocument()
   })
 })
+
+

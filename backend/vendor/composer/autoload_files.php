@@ -31,6 +31,7 @@ return array(
     'decc78cc4436b1292c6c0d151b19445c' => $vendorDir . '/phpseclib/phpseclib/phpseclib/bootstrap.php',
     '9b38cf48e83f5d8f60375221cd213eee' => $vendorDir . '/phpstan/phpstan/bootstrap.php',
     'ec07570ca5a812141189b1fa81503674' => $vendorDir . '/phpunit/phpunit/src/Framework/Assert/Functions.php',
+    '6cf4a06389f4c126153cd6f07686ec42' => $baseDir . '/compat/doctrine_version_aware_platform_driver.php',
     '6588714690f694b8fb6c15a7149e00eb' => $baseDir . '/compat/symfony_app_reference.php',
     '5e34ec8a67dae2653f7bae4b70ade870' => $baseDir . '/compat/symfony_idle_connection_driver.php',
     'e2f45e1c8ec682e058b6c2e6a8585018' => $baseDir . '/compat/symfony_idle_connection_listener.php',

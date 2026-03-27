@@ -1,0 +1,242 @@
+{
+  "info": {
+    "name": "Biblioteka Distributed API",
+    "description": "Collection for manual API verification in Postman against the distributed stack.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost" },
+    { "key": "email", "value": "user01@example.com" },
+    { "key": "password", "value": "password123" },
+    { "key": "accessToken", "value": "" },
+    { "key": "refreshToken", "value": "" },
+    { "key": "bookId", "value": "1" },
+    { "key": "loanId", "value": "1" },
+    { "key": "reservationId", "value": "1" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Gateway Health",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/health", "host": ["{{baseUrl}}"], "path": ["health"] }
+          }
+        },
+        {
+          "name": "Distributed Health",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/health/distributed", "host": ["{{baseUrl}}"], "path": ["health", "distributed"] }
+          }
+        },
+        {
+          "name": "OpenAPI JSON",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/docs.json", "host": ["{{baseUrl}}"], "path": ["api", "docs.json"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Login returns 200', function () { pm.response.to.have.status(200); });",
+                  "var data = pm.response.json();",
+                  "if (data && data.token) { pm.collectionVariables.set('accessToken', data.token); }",
+                  "if (data && data.refreshToken) { pm.collectionVariables.set('refreshToken', data.refreshToken); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/auth/refresh", "host": ["{{baseUrl}}"], "path": ["api", "auth", "refresh"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Account",
+      "item": [
+        {
+          "name": "Get Me",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/me", "host": ["{{baseUrl}}"], "path": ["api", "me"] }
+          }
+        },
+        {
+          "name": "My Loans",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/me/loans", "host": ["{{baseUrl}}"], "path": ["api", "me", "loans"] }
+          }
+        },
+        {
+          "name": "My Reservations",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/me/reservations", "host": ["{{baseUrl}}"], "path": ["api", "me", "reservations"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Catalog",
+      "item": [
+        {
+          "name": "List Books",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/books?limit=5",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "books"],
+              "query": [
+                { "key": "limit", "value": "5" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Book Details",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/books/{{bookId}}", "host": ["{{baseUrl}}"], "path": ["api", "books", "{{bookId}}"] }
+          }
+        },
+        {
+          "name": "Book Availability",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/books/{{bookId}}/availability", "host": ["{{baseUrl}}"], "path": ["api", "books", "{{bookId}}", "availability"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Loans and Reservations",
+      "item": [
+        {
+          "name": "List Loans",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/loans", "host": ["{{baseUrl}}"], "path": ["api", "loans"] }
+          }
+        },
+        {
+          "name": "Extend Loan",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{}" },
+            "url": { "raw": "{{baseUrl}}/api/loans/{{loanId}}/extend", "host": ["{{baseUrl}}"], "path": ["api", "loans", "{{loanId}}", "extend"] }
+          }
+        },
+        {
+          "name": "List Reservations",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/reservations?limit=20", "host": ["{{baseUrl}}"], "path": ["api", "reservations"], "query": [{ "key": "limit", "value": "20" }] }
+          }
+        },
+        {
+          "name": "Fulfill Reservation",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{}" },
+            "url": { "raw": "{{baseUrl}}/api/reservations/{{reservationId}}/fulfill", "host": ["{{baseUrl}}"], "path": ["api", "reservations", "{{reservationId}}", "fulfill"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Distributed Services",
+      "item": [
+        {
+          "name": "Notification Stats",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/notifications/stats", "host": ["{{baseUrl}}"], "path": ["api", "notifications", "stats"] }
+          }
+        },
+        {
+          "name": "Notification Logs",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/notifications/logs", "host": ["{{baseUrl}}"], "path": ["api", "notifications", "logs"] }
+          }
+        },
+        {
+          "name": "Recommendation Search",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/recommendations/search?q=fantasy",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "recommendations", "search"],
+              "query": [
+                { "key": "q", "value": "fantasy" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Recommendations Similar",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/recommendations/similar/{{bookId}}", "host": ["{{baseUrl}}"], "path": ["api", "recommendations", "similar", "{{bookId}}"] }
+          }
+        }
+      ]
+    }
+  ]
+}

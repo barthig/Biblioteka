@@ -1,0 +1,140 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2026-03-27T12:00:00.000Z",
+  "__export_source": "openai-codex",
+  "resources": [
+    {
+      "_id": "wrk_biblioteka_distributed",
+      "_type": "workspace",
+      "name": "Biblioteka Distributed API",
+      "scope": "collection"
+    },
+    {
+      "_id": "env_biblioteka_distributed",
+      "_type": "environment",
+      "parentId": "wrk_biblioteka_distributed",
+      "name": "Base Environment",
+      "data": {
+        "base_url": "http://localhost",
+        "email": "user01@example.com",
+        "password": "password123",
+        "access_token": "",
+        "refresh_token": "",
+        "book_id": 1,
+        "loan_id": 1,
+        "reservation_id": 1
+      }
+    },
+    {
+      "_id": "fld_health",
+      "_type": "request_group",
+      "parentId": "wrk_biblioteka_distributed",
+      "name": "Health"
+    },
+    {
+      "_id": "req_gateway_health",
+      "_type": "request",
+      "parentId": "fld_health",
+      "name": "Gateway Health",
+      "method": "GET",
+      "url": "{{ _.base_url }}/health"
+    },
+    {
+      "_id": "req_distributed_health",
+      "_type": "request",
+      "parentId": "fld_health",
+      "name": "Distributed Health",
+      "method": "GET",
+      "url": "{{ _.base_url }}/health/distributed"
+    },
+    {
+      "_id": "fld_auth",
+      "_type": "request_group",
+      "parentId": "wrk_biblioteka_distributed",
+      "name": "Auth"
+    },
+    {
+      "_id": "req_login",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "name": "Login",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/auth/login",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"email\": \"{{ _.email }}\",\n  \"password\": \"{{ _.password }}\"\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" }
+      ]
+    },
+    {
+      "_id": "req_refresh",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "name": "Refresh Token",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/auth/refresh",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"refreshToken\": \"{{ _.refresh_token }}\"\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" }
+      ]
+    },
+    {
+      "_id": "fld_api",
+      "_type": "request_group",
+      "parentId": "wrk_biblioteka_distributed",
+      "name": "API"
+    },
+    {
+      "_id": "req_me",
+      "_type": "request",
+      "parentId": "fld_api",
+      "name": "Get Me",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/me",
+      "headers": [
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ]
+    },
+    {
+      "_id": "req_books",
+      "_type": "request",
+      "parentId": "fld_api",
+      "name": "List Books",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/books?limit=5"
+    },
+    {
+      "_id": "req_loans",
+      "_type": "request",
+      "parentId": "fld_api",
+      "name": "List Loans",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/loans",
+      "headers": [
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ]
+    },
+    {
+      "_id": "req_notifications_stats",
+      "_type": "request",
+      "parentId": "fld_api",
+      "name": "Notification Stats",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/notifications/stats"
+    },
+    {
+      "_id": "req_recommendation_search",
+      "_type": "request",
+      "parentId": "fld_api",
+      "name": "Recommendation Search",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/recommendations/search?q=fantasy"
+    }
+  ]
+}

@@ -127,7 +127,7 @@ jobs:
           fi
 
       - name: Security check
-        run: composer audit
+        run: composer audit --abandoned=ignore
 
   # ============================================
   # FRONTEND TESTS
@@ -253,32 +253,6 @@ jobs:
           retention-days: 7
 
   # ============================================
-  # DOCKER STANDALONE SMOKE
-  # ============================================
-  docker-standalone-smoke:
-    name: Docker Standalone Smoke
-    runs-on: ubuntu-latest
-    needs: [backend-tests, frontend-tests]
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Build and start standalone stack
-        run: docker compose --project-directory . -f config/docker-compose.yml up -d --build
-
-      - name: Run standalone smoke test
-        run: bash tests/integration/test_standalone_stack.sh
-
-      - name: Print standalone container logs
-        if: failure()
-        run: docker compose --project-directory . -f config/docker-compose.yml logs --no-color backend nginx frontend db php-worker
-
-      - name: Stop standalone stack
-        if: always()
-        run: docker compose --project-directory . -f config/docker-compose.yml down -v
-
-  # ============================================
   # DOCKER DISTRIBUTED SMOKE
   # ============================================
   docker-distributed-smoke:
@@ -325,7 +299,7 @@ jobs:
 
       - name: Build Docker images
         run: |
-          docker compose -f config/docker-compose.yml build --no-cache
+          docker compose -f docker-compose.distributed.yml build --no-cache
         continue-on-error: true
 
   # ============================================

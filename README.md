@@ -1,4 +1,4 @@
-﻿# Biblioteka - System Zarządzania Biblioteką
+# Biblioteka - System Zarządzania Biblioteką
 
 > Kompleksowy system zarządzania biblioteką z architekturą REST API + SPA, wspierający pełny cykl wypożyczeń, inteligentne rekomendacje oparte na AI oraz asynchroniczne przetwarzanie zadań.
 
@@ -1925,7 +1925,9 @@ Get-Content .env | Select-String "JWT_"
        allow_headers: ['*']
    ```
 
-3. Upewnij się, że backend działa:
+3. Do ręcznej weryfikacji API w Postmanie lub Insomnii użyj plików z `docs/api-clients/`.
+
+4. Upewnij się, że backend działa:
    ```powershell
    curl http://localhost:8000/api/docs
    ```
