@@ -77,7 +77,7 @@ services:
 
   # Baza danych główna (katalog i wypożyczenia)
   db:
-    image: postgres:16-alpine
+    image: pgvector/pgvector:pg16
     restart: unless-stopped
     ports:
       - "5432:5432"
@@ -85,7 +85,6 @@ services:
       POSTGRES_DB: biblioteka
       POSTGRES_USER: ${MAIN_DB_USER:-biblioteka}
       POSTGRES_PASSWORD: ${MAIN_DB_PASSWORD:-change_me_main_db}
-      POSTGRES_INITDB_ARGS: "-c shared_preload_libraries=vector"
     volumes:
       - ./backend/init-db-expanded-v2.sql:/docker-entrypoint-initdb.d/01-init.sql
       - db_data:/var/lib/postgresql/data
@@ -117,13 +116,12 @@ services:
 
   # Baza danych usługi rekomendacji
   recommendation-db:
-    image: postgres:16-alpine
+    image: pgvector/pgvector:pg16
     restart: unless-stopped
     environment:
       POSTGRES_DB: recommendations
       POSTGRES_USER: ${RECOMMENDATION_DB_USER:-recommendations}
       POSTGRES_PASSWORD: ${RECOMMENDATION_DB_PASSWORD:-change_me_recommendation_db}
-      POSTGRES_INITDB_ARGS: "-c shared_preload_libraries=vector"
     volumes:
       - recommendation_db_data:/var/lib/postgresql/data
     networks:
@@ -137,8 +135,8 @@ services:
   # Backend PHP-FPM
   backend:
     build:
-      context: ./backend
-      dockerfile: ../docker/backend/Dockerfile
+      context: .
+      dockerfile: docker/backend/Dockerfile
     restart: unless-stopped
     environment:
       DATABASE_URL: postgresql://${MAIN_DB_USER:-biblioteka}:${MAIN_DB_PASSWORD:-change_me_main_db}@db:5432/biblioteka?serverVersion=16&charset=utf8
@@ -164,8 +162,8 @@ services:
   # PHP Worker (procesuje job'i asynchronicznie)
   php-worker:
     build:
-      context: ./backend
-      dockerfile: ../docker/php-worker/Dockerfile
+      context: .
+      dockerfile: docker/php-worker/Dockerfile
     restart: unless-stopped
     environment:
       DATABASE_URL: postgresql://${MAIN_DB_USER:-biblioteka}:${MAIN_DB_PASSWORD:-change_me_main_db}@db:5432/biblioteka?serverVersion=16&charset=utf8
@@ -192,7 +190,7 @@ services:
     ports:
       - "8000:80"
     volumes:
-      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
       - ./backend/public:/app/public:ro
     depends_on:
       - backend
@@ -202,8 +200,8 @@ services:
   # Frontend React
   frontend:
     build:
-      context: ./frontend
-      dockerfile: ../docker/frontend/Dockerfile
+      context: .
+      dockerfile: docker/frontend/Dockerfile
     restart: unless-stopped
     ports:
       - "3000:80"
