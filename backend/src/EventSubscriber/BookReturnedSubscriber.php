@@ -31,11 +31,12 @@ final class BookReturnedSubscriber implements EventSubscriberInterface
     public function onBookReturned(BookReturnedEvent $event): void
     {
         $loan = $event->getLoan();
+        $book = $loan->getBook();
+        $user = $loan->getUser();
+        $returnedAt = $loan->getReturnedAt();
 
         try {
-            $returnedAt = $loan->getReturnedAt();
-            $user = $loan->getUser();
-            if ($returnedAt && $user) {
+            if ($returnedAt !== null) {
                 $this->bus->dispatch(new LoanReturnedMessage(
                     $loan->getId(),
                     $user->getId(),
@@ -48,20 +49,20 @@ final class BookReturnedSubscriber implements EventSubscriberInterface
             $auditLog->setAction('return');
             $auditLog->setEntityType('Loan');
             $auditLog->setEntityId($loan->getId());
-            $auditLog->setUser($loan->getUser());
+            $auditLog->setUser($user);
             $auditLog->setNewValues([
-                'bookId' => $loan->getBook()?->getId(),
-                'bookTitle' => $loan->getBook()?->getTitle(),
+                'bookId' => $book->getId(),
+                'bookTitle' => $book->getTitle(),
                 'wasOverdue' => $event->isOverdue(),
-                'returnedAt' => $loan->getReturnedAt()?->format('Y-m-d H:i:s'),
+                'returnedAt' => $returnedAt?->format('Y-m-d H:i:s'),
             ]);
 
             $this->auditLogRepository->save($auditLog, true);
 
             $this->logger->info('Book returned successfully', [
                 'loanId' => $loan->getId(),
-                'userId' => $loan->getUser()?->getId(),
-                'bookId' => $loan->getBook()?->getId(),
+                'userId' => $user->getId(),
+                'bookId' => $book->getId(),
                 'overdue' => $event->isOverdue(),
             ]);
         } catch (\Throwable $e) {

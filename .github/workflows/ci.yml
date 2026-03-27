@@ -16,6 +16,7 @@ env:
   POSTGRES_DB: biblioteka_test
   POSTGRES_USER: biblioteka
   POSTGRES_PASSWORD: biblioteka_test
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
 jobs:
   # ============================================
@@ -334,4 +335,6 @@ jobs:
         with:
           sarif_file: 'trivy-results.sarif'
         continue-on-error: true
+
+
 

@@ -11,10 +11,7 @@ use OpenApi\Generator;
 
 class DefaultOperationDescriber
 {
-    /**
-     * @param OpenApi $api
-     */
-    public function describe($api)
+    public function describe(OpenApi $api): void
     {
         if (Generator::isDefault($api->paths)) {
             return;
@@ -135,7 +132,6 @@ class DefaultOperationDescriber
 
         return '#/components/schemas/ItemResponse';
     }
-
 
     private function guessTagName(string $path): string
     {

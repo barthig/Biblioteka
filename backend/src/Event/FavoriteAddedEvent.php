@@ -7,10 +7,6 @@ namespace App\Event;
 use App\Entity\Favorite;
 use Symfony\Contracts\EventDispatcher\Event;
 
-/**
- * Event dispatched when a user adds a book to favorites.
- * Consumed by Recommendation Service to update user interaction data.
- */
 final class FavoriteAddedEvent extends Event
 {
     public const NAME = 'favorite.added';
@@ -27,11 +23,11 @@ final class FavoriteAddedEvent extends Event
 
     public function getUserId(): ?int
     {
-        return $this->favorite->getUser()?->getId();
+        return $this->favorite->getUser()->getId();
     }
 
     public function getBookId(): ?int
     {
-        return $this->favorite->getBook()?->getId();
+        return $this->favorite->getBook()->getId();
     }
 }

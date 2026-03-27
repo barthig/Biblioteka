@@ -7,10 +7,6 @@ namespace App\Event;
 use App\Entity\Rating;
 use Symfony\Contracts\EventDispatcher\Event;
 
-/**
- * Event dispatched when a user rates a book.
- * Consumed by Recommendation Service to update user interaction data.
- */
 final class RatingCreatedEvent extends Event
 {
     public const NAME = 'rating.created';
@@ -27,12 +23,12 @@ final class RatingCreatedEvent extends Event
 
     public function getUserId(): ?int
     {
-        return $this->rating->getUser()?->getId();
+        return $this->rating->getUser()->getId();
     }
 
     public function getBookId(): ?int
     {
-        return $this->rating->getBook()?->getId();
+        return $this->rating->getBook()->getId();
     }
 
     public function getRatingValue(): int

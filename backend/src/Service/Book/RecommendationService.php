@@ -36,7 +36,7 @@ class RecommendationService
         if ($vector === null) {
             return [
                 'status' => 'not_enough_data',
-                'books' => $this->bookRepository->findPopularBooks($limit, $excludedIds),
+                'books' => $this->bookRepository->findMostBorrowedBooks($limit, $excludedIds),
             ];
         }
 
@@ -109,4 +109,7 @@ class RecommendationService
         return 1.0;
     }
 }
+
+
+
 

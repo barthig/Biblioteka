@@ -6,7 +6,6 @@ namespace App\Controller;
 
 use App\Application\Query\Book\ExportBooksQuery;
 use App\Entity\Book;
-use App\Service\Auth\SecurityService;
 use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
@@ -19,7 +18,6 @@ class ExportController extends AbstractController
 {
     public function __construct(
         private readonly MessageBusInterface $queryBus,
-        private readonly SecurityService $security
     ) {
     }
 
@@ -93,7 +91,7 @@ class ExportController extends AbstractController
 
         fputcsv($handle, [
             'ID',
-            'Tytuł',
+            'Tytul',
             'Autor',
             'ISBN',
             'Wydawca',
@@ -101,16 +99,15 @@ class ExportController extends AbstractController
             'Kategorie',
             'Sygnatura',
             'Liczba egzemplarzy',
-            'Dostępne',
-            'Wypożyczone',
-            'Ocena średnia',
+            'Dostepne',
+            'Wypozyczone',
+            'Ocena srednia',
             'Liczba ocen',
-            'Język',
+            'Jezyk',
             'Grupa wiekowa',
             'Typ zasobu'
         ]);
 
-        /** @var Book $book */
         foreach ($books as $book) {
             $categories = [];
             foreach ($book->getCategories() as $category) {

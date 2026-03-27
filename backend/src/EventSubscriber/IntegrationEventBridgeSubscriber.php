@@ -59,12 +59,12 @@ final class IntegrationEventBridgeSubscriber implements EventSubscriberInterface
         $loan = $event->getLoan();
         $this->publisher->publish('loan.borrowed', [
             'loan_id' => $loan->getId(),
-            'user_id' => $loan->getUser()?->getId(),
-            'user_email' => $loan->getUser()?->getEmail(),
-            'user_name' => $loan->getUser()?->getName(),
-            'book_id' => $loan->getBook()?->getId(),
-            'book_title' => $loan->getBook()?->getTitle(),
-            'due_date' => $loan->getDueAt()?->format('Y-m-d'),
+            'user_id' => $loan->getUser()->getId(),
+            'user_email' => $loan->getUser()->getEmail(),
+            'user_name' => $loan->getUser()->getName(),
+            'book_id' => $loan->getBook()->getId(),
+            'book_title' => $loan->getBook()->getTitle(),
+            'due_date' => $loan->getDueAt()->format('Y-m-d'),
         ]);
     }
 
@@ -73,11 +73,11 @@ final class IntegrationEventBridgeSubscriber implements EventSubscriberInterface
         $loan = $event->getLoan();
         $this->publisher->publish('loan.returned', [
             'loan_id' => $loan->getId(),
-            'user_id' => $loan->getUser()?->getId(),
-            'user_email' => $loan->getUser()?->getEmail(),
-            'user_name' => $loan->getUser()?->getName(),
-            'book_id' => $loan->getBook()?->getId(),
-            'book_title' => $loan->getBook()?->getTitle(),
+            'user_id' => $loan->getUser()->getId(),
+            'user_email' => $loan->getUser()->getEmail(),
+            'user_name' => $loan->getUser()->getName(),
+            'book_id' => $loan->getBook()->getId(),
+            'book_title' => $loan->getBook()->getTitle(),
             'is_overdue' => $event->isOverdue(),
         ]);
     }
@@ -87,12 +87,12 @@ final class IntegrationEventBridgeSubscriber implements EventSubscriberInterface
         $loan = $event->getLoan();
         $this->publisher->publish('loan.overdue', [
             'loan_id' => $loan->getId(),
-            'user_id' => $loan->getUser()?->getId(),
-            'user_email' => $loan->getUser()?->getEmail(),
-            'user_name' => $loan->getUser()?->getName(),
-            'book_id' => $loan->getBook()?->getId(),
-            'book_title' => $loan->getBook()?->getTitle(),
-            'due_date' => $loan->getDueAt()?->format('Y-m-d'),
+            'user_id' => $loan->getUser()->getId(),
+            'user_email' => $loan->getUser()->getEmail(),
+            'user_name' => $loan->getUser()->getName(),
+            'book_id' => $loan->getBook()->getId(),
+            'book_title' => $loan->getBook()->getTitle(),
+            'due_date' => $loan->getDueAt()->format('Y-m-d'),
             'days_late' => $event->getDaysOverdue(),
         ]);
     }
@@ -102,12 +102,12 @@ final class IntegrationEventBridgeSubscriber implements EventSubscriberInterface
         $loan = $event->getLoan();
         $this->publisher->publish('loan.extended', [
             'loan_id' => $loan->getId(),
-            'user_id' => $loan->getUser()?->getId(),
-            'user_email' => $loan->getUser()?->getEmail(),
-            'user_name' => $loan->getUser()?->getName(),
-            'book_id' => $loan->getBook()?->getId(),
-            'book_title' => $loan->getBook()?->getTitle(),
-            'new_due_date' => $loan->getDueAt()?->format('Y-m-d'),
+            'user_id' => $loan->getUser()->getId(),
+            'user_email' => $loan->getUser()->getEmail(),
+            'user_name' => $loan->getUser()->getName(),
+            'book_id' => $loan->getBook()->getId(),
+            'book_title' => $loan->getBook()->getTitle(),
+            'new_due_date' => $loan->getDueAt()->format('Y-m-d'),
         ]);
     }
 
@@ -129,12 +129,12 @@ final class IntegrationEventBridgeSubscriber implements EventSubscriberInterface
         $reservation = $event->getReservation();
         $this->publisher->publish('reservation.fulfilled', [
             'reservation_id' => $reservation->getId(),
-            'user_id' => $reservation->getUser()?->getId(),
-            'user_email' => $reservation->getUser()?->getEmail(),
-            'user_name' => $reservation->getUser()?->getName(),
-            'book_id' => $reservation->getBook()?->getId(),
-            'book_title' => $reservation->getBook()?->getTitle(),
-            'expires_at' => $reservation->getExpiresAt()?->format('Y-m-d H:i'),
+            'user_id' => $reservation->getUser()->getId(),
+            'user_email' => $reservation->getUser()->getEmail(),
+            'user_name' => $reservation->getUser()->getName(),
+            'book_id' => $reservation->getBook()->getId(),
+            'book_title' => $reservation->getBook()->getTitle(),
+            'expires_at' => $reservation->getExpiresAt()->format('Y-m-d H:i'),
         ]);
     }
 
@@ -143,11 +143,11 @@ final class IntegrationEventBridgeSubscriber implements EventSubscriberInterface
         $reservation = $event->getReservation();
         $this->publisher->publish('reservation.expired', [
             'reservation_id' => $reservation->getId(),
-            'user_id' => $reservation->getUser()?->getId(),
-            'user_email' => $reservation->getUser()?->getEmail(),
-            'user_name' => $reservation->getUser()?->getName(),
-            'book_id' => $reservation->getBook()?->getId(),
-            'book_title' => $reservation->getBook()?->getTitle(),
+            'user_id' => $reservation->getUser()->getId(),
+            'user_email' => $reservation->getUser()->getEmail(),
+            'user_name' => $reservation->getUser()->getName(),
+            'book_id' => $reservation->getBook()->getId(),
+            'book_title' => $reservation->getBook()->getTitle(),
         ]);
     }
 
@@ -156,9 +156,9 @@ final class IntegrationEventBridgeSubscriber implements EventSubscriberInterface
         $fine = $event->getFine();
         $this->publisher->publish('fine.created', [
             'fine_id' => $fine->getId(),
-            'user_id' => $fine->getUser()?->getId(),
-            'user_email' => $fine->getUser()?->getEmail(),
-            'user_name' => $fine->getUser()?->getName(),
+            'user_id' => $fine->getUser()->getId(),
+            'user_email' => $fine->getUser()->getEmail(),
+            'user_name' => $fine->getUser()->getName(),
             'amount' => (string) $fine->getAmount(),
             'reason' => $fine->getReason(),
         ]);
@@ -187,7 +187,7 @@ final class IntegrationEventBridgeSubscriber implements EventSubscriberInterface
         $this->publisher->publish('book.created', [
             'book_id' => $book->getId(),
             'title' => $book->getTitle(),
-            'author' => $book->getAuthor()?->getName(),
+            'author' => $book->getAuthor()->getName(),
             'category' => implode(', ', $categories),
             'description' => $book->getDescription() ?? '',
             'isbn' => $book->getIsbn(),
@@ -205,7 +205,7 @@ final class IntegrationEventBridgeSubscriber implements EventSubscriberInterface
         $this->publisher->publish('book.updated', [
             'book_id' => $book->getId(),
             'title' => $book->getTitle(),
-            'author' => $book->getAuthor()?->getName(),
+            'author' => $book->getAuthor()->getName(),
             'category' => implode(', ', $categories),
             'description' => $book->getDescription() ?? '',
             'isbn' => $book->getIsbn(),
@@ -239,3 +239,4 @@ final class IntegrationEventBridgeSubscriber implements EventSubscriberInterface
         ]);
     }
 }
+

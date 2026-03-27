@@ -7,9 +7,6 @@ namespace App\Event;
 use App\Entity\Loan;
 use Symfony\Contracts\EventDispatcher\Event;
 
-/**
- * Event dispatched when a book is returned.
- */
 final class BookReturnedEvent extends Event
 {
     public const NAME = 'book.returned';
@@ -25,23 +22,21 @@ final class BookReturnedEvent extends Event
 
     public function getBookId(): ?int
     {
-        return $this->loan->getBook()?->getId();
+        return $this->loan->getBook()->getId();
     }
 
     public function getUserId(): ?int
     {
-        return $this->loan->getUser()?->getId();
+        return $this->loan->getUser()->getId();
     }
 
     public function isOverdue(): bool
     {
-        $dueAt = $this->loan->getDueAt();
         $returnedAt = $this->loan->getReturnedAt();
-        
-        if (!$dueAt || !$returnedAt) {
+        if ($returnedAt === null) {
             return false;
         }
-        
-        return $returnedAt > $dueAt;
+
+        return $returnedAt > $this->loan->getDueAt();
     }
 }

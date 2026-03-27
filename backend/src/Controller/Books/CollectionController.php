@@ -74,7 +74,7 @@ class CollectionController extends AbstractController
                     'author' => $book->getAuthor()?->getName(),
                     'coverUrl' => method_exists($book, 'getCoverUrl') ? $book->getCoverUrl() : null,
                 ], $c->getBooks()->toArray()),
-                'curatedBy' => $c->getCuratedBy()?->getName(),
+                'curatedBy' => $c->getCuratedBy()->getName(),
                 'createdAt' => $c->getCreatedAt()->format('Y-m-d H:i:s'),
             ], $collections)
         ]);
@@ -151,8 +151,8 @@ class CollectionController extends AbstractController
     }
     #[OA\Post(
         path: '/api/collections',
-        summary: 'Utwórz kolekcję',
-        description: 'Tworzy nową kolekcję książek. Wymaga roli LIBRARIAN.',
+        summary: 'UtwĂłrz kolekcjÄ™',
+        description: 'Tworzy nowÄ… kolekcjÄ™ ksiÄ…ĹĽek. Wymaga roli LIBRARIAN.',
         tags: ['Collections'],
         requestBody: new OA\RequestBody(
             required: true,
@@ -169,7 +169,7 @@ class CollectionController extends AbstractController
         ),
         responses: [
             new OA\Response(response: 201, description: 'Kolekcja utworzona', content: new OA\JsonContent(type: 'object')),
-            new OA\Response(response: 403, description: 'Brak uprawnień', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
+            new OA\Response(response: 403, description: 'Brak uprawnieĹ„', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
         ]
     )]    public function update(int $id, Request $request): JsonResponse
     {
@@ -192,15 +192,15 @@ class CollectionController extends AbstractController
     }
     #[OA\Delete(
         path: '/api/collections/{id}',
-        summary: 'Usuń kolekcję',
-        description: 'Usuwa kolekcję. Wymaga roli ADMIN.',
+        summary: 'UsuĹ„ kolekcjÄ™',
+        description: 'Usuwa kolekcjÄ™. Wymaga roli ADMIN.',
         tags: ['Collections'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
         ],
         responses: [
-            new OA\Response(response: 204, description: 'Kolekcja usunięta'),
-            new OA\Response(response: 403, description: 'Brak uprawnień', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
+            new OA\Response(response: 204, description: 'Kolekcja usuniÄ™ta'),
+            new OA\Response(response: 403, description: 'Brak uprawnieĹ„', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
         ]
     )]    public function delete(int $id, Request $request): JsonResponse
     {
@@ -214,4 +214,8 @@ class CollectionController extends AbstractController
         return new JsonResponse(null, 204);
     }
 }
+
+
+
+
 

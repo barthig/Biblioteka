@@ -10,13 +10,6 @@ use PhpAmqpLib\Connection\AMQPStreamConnection;
 use PhpAmqpLib\Message\AMQPMessage;
 use Psr\Log\LoggerInterface;
 
-/**
- * Publishes integration events to RabbitMQ topic exchange for consumption
- * by external microservices (Notification Service, Recommendation Service).
- *
- * This is the bridge between Symfony's internal domain events and the
- * distributed event bus (RabbitMQ topic exchange: biblioteka.events).
- */
 class IntegrationEventPublisher
 {
     private const MAX_ATTEMPTS = 3;
@@ -30,12 +23,6 @@ class IntegrationEventPublisher
     ) {
     }
 
-    /**
-     * Publish an integration event to the topic exchange.
-     *
-     * @param string $routingKey e.g. "loan.borrowed", "reservation.created"
-     * @param array  $payload    JSON-serializable payload
-     */
     public function publish(string $routingKey, array $payload): void
     {
         $lastError = null;
@@ -95,7 +82,7 @@ class IntegrationEventPublisher
                 'Failed to publish integration event "%s" after %d attempts. Last error: %s',
                 $routingKey,
                 self::MAX_ATTEMPTS,
-                $lastError?->getMessage() ?? 'unknown error'
+                $lastError->getMessage()
             )
         );
     }
@@ -120,10 +107,11 @@ class IntegrationEventPublisher
                     $this->channel->close();
                 }
             } catch (\Throwable) {
-                // Ignore cleanup failures, the next publish attempt will rebuild the channel.
             }
         }
 
         $this->channel = null;
     }
 }
+
+

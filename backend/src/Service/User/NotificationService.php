@@ -30,15 +30,8 @@ final class NotificationService
     public function notifyReservationPrepared(Reservation $reservation): void
     {
         $user = $reservation->getUser();
-        if (!$user) {
-            $this->logger->warning('Notification skipped - missing user for reservation', [
-                'reservationId' => $reservation->getId(),
-            ]);
-            return;
-        }
-
-        $bookTitle = $reservation->getBook()?->getTitle() ?? 'book';
-        $expiresAt = $reservation->getExpiresAt()?->format('Y-m-d') ?? 'soon';
+        $bookTitle = $reservation->getBook()->getTitle();
+        $expiresAt = $reservation->getExpiresAt()->format('Y-m-d');
 
         $title = 'Reservation ready for pickup';
         $message = sprintf(
@@ -63,15 +56,8 @@ final class NotificationService
     public function notifyReservationQueued(Reservation $reservation): void
     {
         $user = $reservation->getUser();
-        if (!$user) {
-            $this->logger->warning('Notification skipped - missing user for queued reservation', [
-                'reservationId' => $reservation->getId(),
-            ]);
-            return;
-        }
-
-        $bookTitle = $reservation->getBook()?->getTitle() ?? 'book';
-        $expiresAt = $reservation->getExpiresAt()?->format('Y-m-d') ?? 'soon';
+        $bookTitle = $reservation->getBook()->getTitle();
+        $expiresAt = $reservation->getExpiresAt()->format('Y-m-d');
 
         $title = 'Reservation added to queue';
         $message = sprintf(
@@ -170,12 +156,6 @@ final class NotificationService
     private function sendReservationNotification(Reservation $reservation, string $subject, string $text, ?string $html): void
     {
         $user = $reservation->getUser();
-        if (!$user) {
-            $this->logger->warning('Notification skipped - missing user for reservation', [
-                'reservationId' => $reservation->getId(),
-            ]);
-            return;
-        }
 
         $channels = ['email'];
         if ($user->getPhoneNumber()) {
@@ -185,11 +165,9 @@ final class NotificationService
         $content = new NotificationContent($subject, $text, $html, $channels);
 
         foreach ($channels as $channel) {
-            $result = match ($channel) {
-                'email' => $this->sender->sendEmail($user, $content),
-                'sms' => $this->sender->sendSms($user, $content),
-                default => ['status' => 'skipped', 'error' => 'unsupported_channel'],
-            };
+            $result = $channel === 'email'
+                ? $this->sender->sendEmail($user, $content)
+                : $this->sender->sendSms($user, $content);
 
             if (($result['status'] ?? '') !== 'sent') {
                 $this->logger->info('Notification not sent', [
@@ -348,3 +326,4 @@ final class NotificationService
         return rtrim($slice) . '...';
     }
 }
+

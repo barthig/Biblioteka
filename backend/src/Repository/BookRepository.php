@@ -975,6 +975,7 @@ class BookRepository extends ServiceEntityRepository
         return (int) $this->createQueryBuilder('b')
             ->select('SUM(b.copies)')
             ->getQuery()
-            ->getSingleScalarResult() ?? 0;
+            ->getSingleScalarResult();
     }
 }
+

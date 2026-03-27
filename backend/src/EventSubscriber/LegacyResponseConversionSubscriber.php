@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\EventSubscriber;
@@ -6,32 +7,26 @@ namespace App\EventSubscriber;
 use App\Middleware\LegacyErrorResponseConverter;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 
-/**
- * Automatically converts legacy error responses to standardized format.
- * This allows gradual migration of controllers without breaking changes.
- */
 final class LegacyResponseConversionSubscriber implements EventSubscriberInterface
 {
     public static function getSubscribedEvents(): array
     {
         return [
-            KernelEvents::RESPONSE => ['onResponse', -5], // After other subscribers
+            KernelEvents::RESPONSE => ['onResponse', -5],
         ];
     }
 
     public function onResponse(ResponseEvent $event): void
     {
         $response = $event->getResponse();
-        
-        // Only process JSON responses
         if (!$response instanceof JsonResponse) {
             return;
         }
 
-        // Only process API responses
         $request = $event->getRequest();
         if (!$this->isApiRequest($request)) {
             return;
@@ -40,7 +35,7 @@ final class LegacyResponseConversionSubscriber implements EventSubscriberInterfa
         LegacyErrorResponseConverter::convertIfNeeded($response);
     }
 
-    private function isApiRequest($request): bool
+    private function isApiRequest(Request $request): bool
     {
         if (str_starts_with($request->getPathInfo(), '/api')) {
             return true;

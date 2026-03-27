@@ -81,6 +81,6 @@ class ApiResponse
      */
     public function getStatusCode(): int
     {
-        return $this->error?->statusCode ?? 200;
+        return $this->error !== null ? $this->error->statusCode : 200;
     }
 }

@@ -19,10 +19,7 @@ class RouteOperationDescriber
     {
     }
 
-    /**
-     * @param OpenApi $api
-     */
-    public function describe($api)
+    public function describe(OpenApi $api): void
     {
         foreach ($this->router->getRouteCollection() as $name => $route) {
             if (!$route instanceof Route) {
@@ -146,5 +143,4 @@ class RouteOperationDescriber
 
         return 'string';
     }
-
 }

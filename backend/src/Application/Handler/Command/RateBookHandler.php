@@ -29,7 +29,7 @@ class RateBookHandler
 
     /**
      * @return array{
-     *   rating: array{id: int|null, rating: int, review: string|null},
+     *   rating: array{id: int|null, rating: int},
      *   averageRating: float|null,
      *   ratingCount: int
      * }

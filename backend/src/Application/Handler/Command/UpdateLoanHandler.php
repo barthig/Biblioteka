@@ -3,8 +3,8 @@ declare(strict_types=1);
 namespace App\Application\Handler\Command;
 
 use App\Application\Command\Loan\UpdateLoanCommand;
-use App\Entity\Book;
 use App\Entity\BookCopy;
+use App\Entity\Loan;
 use App\Exception\BusinessLogicException;
 use App\Exception\NotFoundException;
 use App\Repository\BookCopyRepository;
@@ -26,7 +26,7 @@ class UpdateLoanHandler
     ) {
     }
 
-    public function __invoke(UpdateLoanCommand $command)
+    public function __invoke(UpdateLoanCommand $command): Loan
     {
         $loan = $this->loanRepository->find($command->loanId);
         if (!$loan) {

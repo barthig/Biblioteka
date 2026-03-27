@@ -19,12 +19,10 @@ class MetricsController extends AbstractController
     {
         $metrics = [];
 
-        // PHP process metrics
         $metrics[] = '# HELP php_info PHP runtime information';
         $metrics[] = '# TYPE php_info gauge';
         $metrics[] = sprintf('php_info{version="%s"} 1', PHP_VERSION);
 
-        // Memory usage
         $metrics[] = '# HELP php_memory_usage_bytes Current memory usage in bytes';
         $metrics[] = '# TYPE php_memory_usage_bytes gauge';
         $metrics[] = sprintf('php_memory_usage_bytes %d', memory_get_usage(true));
@@ -33,10 +31,9 @@ class MetricsController extends AbstractController
         $metrics[] = '# TYPE php_memory_peak_bytes gauge';
         $metrics[] = sprintf('php_memory_peak_bytes %d', memory_get_peak_usage(true));
 
-        // OPcache statistics (if available)
         if (function_exists('opcache_get_status')) {
             $opcache = @opcache_get_status(false);
-            if ($opcache && is_array($opcache)) {
+            if ($opcache !== false) {
                 $stats = $opcache['opcache_statistics'] ?? [];
 
                 $metrics[] = '# HELP php_opcache_hits_total Number of OPcache cache hits';
@@ -54,7 +51,6 @@ class MetricsController extends AbstractController
             }
         }
 
-        // Uptime approximation via request time
         $metrics[] = '# HELP php_uptime_seconds Server request timestamp';
         $metrics[] = '# TYPE php_uptime_seconds gauge';
         $metrics[] = sprintf('php_uptime_seconds %d', time());

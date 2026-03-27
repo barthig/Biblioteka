@@ -31,35 +31,34 @@ final class BookBorrowedSubscriber implements EventSubscriberInterface
     public function onBookBorrowed(BookBorrowedEvent $event): void
     {
         $loan = $event->getLoan();
+        $book = $loan->getBook();
+        $user = $loan->getUser();
+        $dueAt = $loan->getDueAt();
 
         try {
-            $dueAt = $loan->getDueAt();
-            $user = $loan->getUser();
-            if ($dueAt && $user) {
-                $this->bus->dispatch(new LoanBorrowedMessage(
-                    $loan->getId(),
-                    $user->getId(),
-                    $dueAt->format(DATE_ATOM)
-                ));
-            }
+            $this->bus->dispatch(new LoanBorrowedMessage(
+                $loan->getId(),
+                $user->getId(),
+                $dueAt->format(DATE_ATOM)
+            ));
 
             $auditLog = new AuditLog();
             $auditLog->setAction('borrow');
             $auditLog->setEntityType('Loan');
             $auditLog->setEntityId($loan->getId());
-            $auditLog->setUser($loan->getUser());
+            $auditLog->setUser($user);
             $auditLog->setNewValues([
-                'bookId' => $loan->getBook()?->getId(),
-                'bookTitle' => $loan->getBook()?->getTitle(),
-                'dueDate' => $loan->getDueAt()?->format('Y-m-d'),
+                'bookId' => $book->getId(),
+                'bookTitle' => $book->getTitle(),
+                'dueDate' => $dueAt->format('Y-m-d'),
             ]);
 
             $this->auditLogRepository->save($auditLog, true);
 
             $this->logger->info('Book borrowed successfully', [
                 'loanId' => $loan->getId(),
-                'userId' => $loan->getUser()?->getId(),
-                'bookId' => $loan->getBook()?->getId(),
+                'userId' => $user->getId(),
+                'bookId' => $book->getId(),
             ]);
         } catch (\Throwable $e) {
             $this->logger->error('Failed to handle book borrowed event', [

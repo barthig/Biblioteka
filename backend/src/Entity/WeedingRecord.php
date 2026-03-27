@@ -14,6 +14,7 @@ class WeedingRecord
     public const ACTION_DISCARD = 'DISCARD';
     public const ACTION_DONATE = 'DONATE';
     public const ACTION_SELL = 'SELL';
+    public const ACTION_TRANSFER = 'TRANSFER';
 
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -117,7 +118,7 @@ class WeedingRecord
     public function setAction(string $action): self
     {
         $action = strtoupper(trim($action));
-        if (!in_array($action, [self::ACTION_DISCARD, self::ACTION_DONATE, self::ACTION_SELL], true)) {
+        if (!in_array($action, [self::ACTION_DISCARD, self::ACTION_DONATE, self::ACTION_SELL, self::ACTION_TRANSFER], true)) {
             throw new \InvalidArgumentException('Invalid weeding action: ' . $action);
         }
         $this->action = $action;

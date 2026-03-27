@@ -22,7 +22,7 @@ final class DoctrineMigrationsCompatBundle extends Bundle
         }
     }
 
-    public function getContainerExtension(): ?ExtensionInterface
+    public function getContainerExtension(): ExtensionInterface
     {
         return new DoctrineMigrationsExtension();
     }
