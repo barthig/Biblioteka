@@ -20,7 +20,7 @@ Całościowy system biblioteczny zbudowany w nowoczesnej architekturze rozproszo
 14. [Mikroserwisy (FastAPI)](#mikroserwisy-fastapi)
 15. [Bazy danych](#bazy-danych)
 16. [Komunikacja asynchroniczna (RabbitMQ)](#komunikacja-asynchroniczna-rabbitmq)
-17. [Obserwiowalność i monitoring](#obserwiowalność-i-monitoring)
+17. [Obserwowalność i monitoring](#obserwowalność-i-monitoring)
 18. [Testy i jakość kodu](#testy-i-jakość-kodu)
 19. [Development lokalny](#development-lokalny)
 20. [CI/CD Pipeline](#cicd-pipeline)
@@ -823,7 +823,7 @@ Exchange: bibliote.events (type: topic)
 └→ Queue: recommendation.queue → recommendation-service
 ```
 
-## Obserwiowalność i monitoring
+## Obserwowalność i monitoring
 
 ### Prometheus
 

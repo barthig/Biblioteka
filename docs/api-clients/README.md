@@ -4,9 +4,9 @@ Repozytorium zawiera gotowe pliki do importu, które ułatwiają ręczne testowa
 
 ## Dostępne pliki
 
-- `docs/api-clients/Biblioteka.postman_collection.json`
-- `docs/api-clients/Biblioteka.postman_environment.json`
-- `docs/api-clients/Biblioteka.insomnia.json`
+- [Biblioteka.postman_collection.json](Biblioteka.postman_collection.json)
+- [Biblioteka.postman_environment.json](Biblioteka.postman_environment.json)
+- [Biblioteka.insomnia.json](Biblioteka.insomnia.json)
 
 ## Zalecany przebieg
 

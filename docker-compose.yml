@@ -1,0 +1,119 @@
+services:
+  traefik:
+    image: traefik:v3
+    restart: unless-stopped
+    command:
+      - --api.dashboard=true
+      - --api.insecure=true
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --providers.docker.network=biblioteka_net
+      - --providers.file.filename=/etc/traefik/dynamic.yml
+      - --providers.file.watch=true
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./config/traefik/dynamic.yml:/etc/traefik/dynamic.yml:ro
+    networks:
+      - biblioteka_net
+
+  backend:
+    container_name: backend
+    build:
+      context: .
+      dockerfile: docker/backend/Dockerfile
+    restart: unless-stopped
+    environment:
+      APP_ENV: ${APP_ENV:-dev}
+      DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}?serverVersion=16&charset=utf8
+      REDIS_URL: redis://redis:6379
+      MESSENGER_TRANSPORT_DSN: amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:5672/%2f/messages
+      MESSENGER_FAILURE_TRANSPORT_DSN: amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:5672/%2f/messages_failed
+      INTEGRATION_AMQP_DSN: amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:5672/%2f/messages
+      JWT_SECRET: ${JWT_SECRET}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+    expose:
+      - "8000"
+    depends_on:
+      - db
+      - redis
+      - rabbitmq
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.biblioteka-backend.rule=PathPrefix(`/api`) || PathPrefix(`/health`)
+      - traefik.http.routers.biblioteka-backend.entrypoints=web
+      - traefik.http.routers.biblioteka-backend.priority=20
+      - traefik.http.services.biblioteka-backend.loadbalancer.server.port=8000
+    networks:
+      - biblioteka_net
+
+  frontend:
+    container_name: frontend
+    build:
+      context: .
+      dockerfile: docker/frontend/Dockerfile
+    restart: unless-stopped
+    environment:
+      VITE_API_URL: http://localhost
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.biblioteka-frontend.rule=PathPrefix(`/`)
+      - traefik.http.routers.biblioteka-frontend.entrypoints=web
+      - traefik.http.routers.biblioteka-frontend.priority=1
+      - traefik.http.services.biblioteka-frontend.loadbalancer.server.port=80
+    networks:
+      - biblioteka_net
+
+  db:
+    container_name: db
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - biblioteka_net
+
+  redis:
+    container_name: redis
+    image: redis:7
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    networks:
+      - biblioteka_net
+
+  rabbitmq:
+    container_name: rabbitmq
+    image: rabbitmq:3-management
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    ports:
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - biblioteka_net
+
+volumes:
+  db_data:
+  redis_data:
+  rabbitmq_data:
+
+networks:
+  biblioteka_net:
+    name: biblioteka_net

@@ -4,7 +4,7 @@ Dokument opisuje, gdzie znajdują się testy i jak je uruchamiać lokalnie.
 
 ## Backend (PHPUnit)
 
-Konfiguracja testów backendu: [backend/phpunit.xml.dist](backend/phpunit.xml.dist).
+Konfiguracja testów backendu: [backend/phpunit.xml.dist](../backend/phpunit.xml.dist).
 
 Najważniejsze katalogi testowe:
 
@@ -49,9 +49,9 @@ npm run build
 
 Skrypty smoke/integration:
 
-- [tests/integration/test_cross_service.sh](tests/integration/test_cross_service.sh)
-- [tests/integration/test_gateway_routing.sh](tests/integration/test_gateway_routing.sh)
-- [tests/integration/test_standalone_stack.sh](tests/integration/test_standalone_stack.sh)
+- [tests/integration/test_cross_service.sh](../tests/integration/test_cross_service.sh)
+- [tests/integration/test_gateway_routing.sh](../tests/integration/test_gateway_routing.sh)
+- [tests/integration/test_standalone_stack.sh](../tests/integration/test_standalone_stack.sh)
 
 Przykład uruchomienia po starcie kontenerów:
 
@@ -68,14 +68,14 @@ Co weryfikują:
 
 ## Klienci API do testów ręcznych
 
-Gotowe pliki do Postmana i Insomnii znajdziesz w [docs/api-clients](docs/api-clients).
+Gotowe pliki do Postmana i Insomnii znajdziesz w [docs/api-clients](api-clients).
 
 ## Artefakty do dokumentacji projektu
 
-Na potrzeby pracy dyplomowej repozytorium zawiera dodatkowe materialy projektowe:
+Na potrzeby pracy dyplomowej repozytorium zawiera dodatkowe materiały projektowe:
 
 - diagramy C4 w `docs/c4`,
 - diagram bazy danych w `docs/database-diagram.puml`,
-- diagram przypadkow uzycia i diagramy sekwencji w `docs/uml`,
-- instrukcje uzytkownika w `docs/USER_GUIDE.md`,
+- diagram przypadków użycia i diagramy sekwencji w `docs/uml`,
+- instrukcje użytkownika w `docs/USER_GUIDE.md`,
 - instrukcje administratora w `docs/ADMIN_GUIDE.md`.
