@@ -37,7 +37,9 @@ class UserJourneyTest extends ApiTestCase
         $jwt = $this->loginAndGetToken('journey@example.com', 'StrongPass1');
         self::assertNotEmpty($jwt, 'Verified user should be able to log in');
 
-        $borrowClient = $this->createApiClient($jwt);
+        $borrowClient = $this->createClientWithoutSecret([
+            'HTTP_AUTHORIZATION' => 'Bearer ' . $jwt,
+        ]);
         $book = $this->createBook('Integration Journey Book');
         $this->jsonRequest($borrowClient, 'POST', '/api/loans', [
             'userId' => $user->getId(),

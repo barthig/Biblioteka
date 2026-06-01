@@ -24,6 +24,7 @@ http:
           - Content-Type
           - X-Requested-With
           - X-API-SECRET
+          - X-Request-ID
         accessControlAllowOriginList:
           - "http://localhost:5173"
           - "http://localhost:3000"

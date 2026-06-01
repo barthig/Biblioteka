@@ -6,6 +6,7 @@ import StatGrid from '../../components/ui/StatGrid'
 import StatCard from '../../components/ui/StatCard'
 import SectionCard from '../../components/ui/SectionCard'
 import FeedbackCard from '../../components/ui/FeedbackCard'
+import { getNotificationDisplay } from '../../utils'
 
 export default function Notifications() {
   const { user } = useAuth()
@@ -133,7 +134,7 @@ export default function Notifications() {
             )}
             {isAdmin && (
               <button className="btn btn-primary" onClick={() => setShowTestForm(!showTestForm)}>
-                {showTestForm ? 'Anuluj' : 'Wy[lij test'}
+                {showTestForm ? 'Anuluj' : 'Wyślij test'}
               </button>
             )}
           </div>
@@ -220,17 +221,21 @@ export default function Notifications() {
             <ul className="list list--bordered">
               {items.map((n) => (
                 <li key={n.id || `${n.type}-${n.createdAt}`}>
+                  {(() => {
+                    const display = getNotificationDisplay(n)
+
+                    return (
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--space-3)', alignItems: 'flex-start', flexWrap: 'wrap' }}>
                     <div style={{ minWidth: '16rem', flex: '1 1 18rem' }}>
-                      <div className="list__title">{n.title || n.subject || 'Powiadomienie'}</div>
-                      {n.message && <div className="support-copy">{n.message}</div>}
+                      <div className="list__title">{display.title}</div>
+                      {display.message && <div className="support-copy">{display.message}</div>}
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', alignItems: 'flex-end', flex: '0 1 16rem' }}>
                       <div className="list__meta" style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                         <span className={`status-pill ${readKeys.has(getNotificationKey(n)) ? '' : 'is-warning'}`}>
                           {readKeys.has(getNotificationKey(n)) ? 'Przeczytane' : 'Nieprzeczytane'}
                         </span>
-                        <span>{n.type || 'info'}</span>
+                        <span>{display.typeLabel}</span>
                         <span>{n.createdAt ? new Date(n.createdAt).toLocaleString('pl-PL') : '-'}</span>
                       </div>
                       <button type="button" className="btn btn-ghost" onClick={() => toggleRead(n)}>
@@ -238,6 +243,8 @@ export default function Notifications() {
                       </button>
                     </div>
                   </div>
+                    )
+                  })()}
                 </li>
               ))}
             </ul>

@@ -434,7 +434,7 @@ export default function LibrarianPanel() {
     try {
       await apiFetch(`/api/reservations/${reservationId}`, { method: 'DELETE' })
       invalidateResource('librarian:/api/reservations*')
-      setSuccess('Rezerwacja zosta?a anulowana')
+      setSuccess('Rezerwacja została anulowana')
       loadReservations()
     } catch (err) {
       setError(err.message || 'Nie udało się anulować rezerwacji')
@@ -453,7 +453,7 @@ export default function LibrarianPanel() {
       invalidateResource('librarian:/api/reservations*')
       invalidateResource('librarian:/api/loans')
       invalidateResource('librarian:/api/statistics/dashboard')
-      setSuccess('Rezerwacja zosta?a zrealizowana')
+      setSuccess('Rezerwacja została zrealizowana')
       loadReservations()
     } catch (err) {
       setError(err.message || 'Nie udało się zrealizować rezerwacji')
@@ -470,7 +470,7 @@ export default function LibrarianPanel() {
     try {
       await apiFetch(`/api/reservations/${reservationId}/prepare`, { method: 'POST' })
       invalidateResource('librarian:/api/reservations*')
-      setSuccess('Rezerwacja zosta?a oznaczona jako przygotowana. Powiadomienie wys?ane.')
+      setSuccess('Rezerwacja została oznaczona jako przygotowana. Powiadomienie wysłane.')
       loadReservations()
     } catch (err) {
       setError(err.message || 'Nie udało się oznaczyć rezerwacji jako przygotowanej')
@@ -652,21 +652,21 @@ export default function LibrarianPanel() {
     if (!normalizedCode) {
       errors.inventoryCode = 'Kod inwentarzowy jest wymagany'
     } else if (normalizedCode.length > 60) {
-      errors.inventoryCode = 'Kod inwentarzowy moze miec maksymalnie 60 znakow'
+      errors.inventoryCode = 'Kod inwentarzowy może mieć maksymalnie 60 znaków'
     } else if (!/^[A-Z0-9\\-_.]+$/.test(normalizedCode)) {
-      errors.inventoryCode = 'Kod moze zawierac tylko litery, cyfry, -, _ oraz kropke'
+      errors.inventoryCode = 'Kod może zawierać tylko litery, cyfry, -, _ oraz kropkę'
     }
     if (!form.status) {
       errors.status = 'Wybierz status'
     }
     if (!form.accessType) {
-      errors.accessType = 'Wybierz typ dostepu'
+      errors.accessType = 'Wybierz typ dostępu'
     }
     if (form.location && form.location.length > 120) {
-      errors.location = 'Lokalizacja moze miec maksymalnie 120 znakow'
+      errors.location = 'Lokalizacja może mieć maksymalnie 120 znaków'
     }
     if (form.condition && form.condition.length > 120) {
-      errors.condition = 'Stan moze miec maksymalnie 120 znakow'
+      errors.condition = 'Stan może mieć maksymalnie 120 znaków'
     }
     return errors
   }
@@ -677,21 +677,21 @@ export default function LibrarianPanel() {
     if (!normalizedCode) {
       errors.inventoryCode = 'Kod inwentarzowy jest wymagany'
     } else if (normalizedCode.length > 60) {
-      errors.inventoryCode = 'Kod inwentarzowy moze miec maksymalnie 60 znakow'
+      errors.inventoryCode = 'Kod inwentarzowy może mieć maksymalnie 60 znaków'
     } else if (!/^[A-Z0-9\\-_.]+$/.test(normalizedCode)) {
-      errors.inventoryCode = 'Kod moze zawierac tylko litery, cyfry, -, _ oraz kropke'
+      errors.inventoryCode = 'Kod może zawierać tylko litery, cyfry, -, _ oraz kropkę'
     }
     if (!form.status) {
       errors.status = 'Wybierz status'
     }
     if (!form.accessType) {
-      errors.accessType = 'Wybierz typ dostepu'
+      errors.accessType = 'Wybierz typ dostępu'
     }
     if (form.location && form.location.length > 120) {
-      errors.location = 'Lokalizacja moze miec maksymalnie 120 znakow'
+      errors.location = 'Lokalizacja może mieć maksymalnie 120 znaków'
     }
     if (form.condition && form.condition.length > 120) {
-      errors.condition = 'Stan moze miec maksymalnie 120 znakow'
+      errors.condition = 'Stan może mieć maksymalnie 120 znaków'
     }
     return errors
   }
@@ -705,7 +705,7 @@ export default function LibrarianPanel() {
   async function addCopy(e) {
     e.preventDefault()
     if (!inventoryBookId) {
-      setError('Podaj ID ksiazki, do ktorej dodajesz egzemplarz')
+      setError('Podaj ID książki, do której dodajesz egzemplarz')
       return
     }
     const validationErrors = validateAddCopy(copyForm)
@@ -722,7 +722,7 @@ export default function LibrarianPanel() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(copyForm)
       })
-      setSuccess('Egzemplarz zostal dodany')
+      setSuccess('Egzemplarz został dodany')
       setCopyForm({ inventoryCode: '', status: 'AVAILABLE', accessType: 'STORAGE', location: '', condition: '' })
       setAddCopyErrors({ inventoryCode: '', status: '', accessType: '', location: '', condition: '' })
       loadCopies(inventoryBookId)
@@ -775,7 +775,7 @@ export default function LibrarianPanel() {
   }
 
   async function deleteCopy(copy) {
-    if (!confirm('Usun?? egzemplarz?')) return
+    if (!confirm('Usunąć egzemplarz?')) return
     try {
       const bookId = inventoryBookId || copy.bookId || copy.book?.id
       await apiFetch(`/api/admin/books/${bookId}/copies/${copy.id}`, { method: 'DELETE' })
@@ -1016,10 +1016,10 @@ export default function LibrarianPanel() {
             </div>
             <div className="modal-actions">
               <button className="btn btn-secondary" onClick={() => setReturnModal({ show: false, loan: null, fine: null })}>
-                {returnModal.fine ? 'Potwierd? zwrot i na??? kar?' : 'Potwierd? zwrot'}
+                {returnModal.fine ? 'Potwierdź zwrot i nałóż karę' : 'Potwierdź zwrot'}
               </button>
               <button className="btn btn-primary" onClick={confirmReturn}>
-                {returnModal.fine ? 'Potwierd? zwrot i na??? kar?' : 'Potwierd? zwrot'}
+                {returnModal.fine ? 'Potwierdź zwrot i nałóż karę' : 'Potwierdź zwrot'}
               </button>
             </div>
           </div>
@@ -1050,7 +1050,7 @@ export default function LibrarianPanel() {
           </div>
 
           <h2>Aktywne wypożyczenia</h2>
-          {loading && <p>?adowanie...</p>}
+          {loading && <p>Ładowanie...</p>}
           {!loading && filteredLoans.length === 0 && (
             <p>{hasLoanFilters ? 'Brak wyników wyszukiwania.' : 'Brak aktywnych wypożyczeń.'}</p>
           )}
@@ -1139,7 +1139,7 @@ export default function LibrarianPanel() {
                   setLoanForm(prev => ({ ...prev, userId: '' }))
                   searchLoanUser(value)
                 }}
-                placeholder="Wpisz imi? i nazwisko..."
+                placeholder="Wpisz imię i nazwisko..."
                 required
               />
               {loanUserResults.length > 0 && (
@@ -1235,7 +1235,7 @@ export default function LibrarianPanel() {
               <select value={loanForm.copyId} onChange={e => setLoanForm({ ...loanForm, copyId: e.target.value })} required>
                 <option value="">Wybierz egzemplarz</option>
                 {availableCopies.length === 0 && (
-                  <option value="" disabled>Brak dost?pnych egzemplarzy</option>
+                  <option value="" disabled>Brak dostępnych egzemplarzy</option>
                 )}
                 {availableCopies.map(copy => (
                   <option key={copy.id} value={copy.id}>
@@ -1453,7 +1453,7 @@ export default function LibrarianPanel() {
                       setFineUserLoans([])
                       searchFineUser(value)
                     }}
-                    placeholder="Wpisz imi? i nazwisko..."
+                    placeholder="Wpisz imię i nazwisko..."
                     required
                   />
                   {fineUserResults.length > 0 && (
@@ -1477,14 +1477,14 @@ export default function LibrarianPanel() {
                   )}
                 </div>
                 <div className="form-field">
-                  <label>Wypozyczenie</label>
+                  <label>Wypożyczenie</label>
                   <select
                     value={fineForm.loanId}
                     onChange={e => setFineForm(prev => ({ ...prev, loanId: e.target.value }))}
                     required
                     disabled={fineUserLoans.length === 0}
                   >
-                    <option value="">Wybierz wypozyczenie</option>
+                    <option value="">Wybierz wypożyczenie</option>
                     {fineUserLoans.map(loan => (
                       <option key={loan.id} value={loan.id}>
                         {loan.book?.title || 'Książka'} (ID: {loan.id})
@@ -1492,7 +1492,7 @@ export default function LibrarianPanel() {
                     ))}
                   </select>
                   {fineUserQuery && fineUserLoans.length === 0 && (
-                    <small className="support-copy">Brak aktywnych wypozyczen dla wybranego uzytkownika.</small>
+                    <small className="support-copy">Brak aktywnych wypożyczeń dla wybranego użytkownika.</small>
                   )}
                 </div>
               </div>
@@ -1521,7 +1521,7 @@ export default function LibrarianPanel() {
                 </div>
               </div>
               <div className="form-field">
-                <label>Powod</label>
+                <label>Powód</label>
                 <input
                   value={fineForm.reason}
                   onChange={e => setFineForm(prev => ({ ...prev, reason: e.target.value }))}
@@ -1544,7 +1544,7 @@ export default function LibrarianPanel() {
                 const isExpanded = expandedFineId === fine.id
                 const userLabel = fine.user?.name || fine.userName || fine.user?.email || fine.userEmail || 'N/A'
                 const amountLabel = `${fine.amount} ${fine.currency || 'PLN'}`
-                const statusLabel = fine.status || (fine.paidAt ? 'oplacono' : 'nalezna')
+                const statusLabel = fine.status || (fine.paidAt ? 'opłacono' : 'należna')
                 const detailsId = `fine-details-${fine.id}`
                 return (
                   <div key={fine.id} className="compact-card">
@@ -1558,7 +1558,7 @@ export default function LibrarianPanel() {
                     >
                       <div>
                         <div className="compact-card__title">{userLabel}</div>
-                        <div className="compact-card__subtitle">{fine.reason || 'Oplata biblioteczna'}</div>
+                        <div className="compact-card__subtitle">{fine.reason || 'Opłata biblioteczna'}</div>
                       </div>
                       <div className="compact-card__summary">
                         <span className="compact-card__amount">{amountLabel}</span>
@@ -1584,20 +1584,20 @@ export default function LibrarianPanel() {
                         )}
                         {fine.paidAt && (
                           <div className="compact-card__row">
-                            <span className="label">Oplacono</span>
+                            <span className="label">Opłacono</span>
                             <span className="value">{new Date(fine.paidAt).toLocaleDateString('pl-PL')}</span>
                           </div>
                         )}
                         {fine.reason && (
                           <div className="compact-card__row">
-                            <span className="label">Powod</span>
+                            <span className="label">Powód</span>
                             <span className="value">{fine.reason}</span>
                           </div>
                         )}
                         {!fine.paidAt && (
                           <div className="compact-card__actions">
                             <button className="btn btn-sm btn-primary" onClick={() => payFine(fine.id)} disabled={loading}>
-                              Oznacz jako oplacone
+                              Oznacz jako opłacone
                             </button>
                             {isAdmin && (
                               <button className="btn btn-sm" onClick={() => cancelFine(fine.id)} disabled={loading}>
@@ -1621,8 +1621,8 @@ export default function LibrarianPanel() {
           <div className="surface-card">
             <div className="section-header">
               <div>
-                <h2>Egzemplarze ksiazek</h2>
-                <p className="support-copy">Wybierz ksiazke, aby zobaczyc jej egzemplarze.</p>
+                <h2>Egzemplarze książek</h2>
+                <p className="support-copy">Wybierz książkę, aby zobaczyć jej egzemplarze.</p>
               </div>
               <button
                 type="button"
@@ -1631,11 +1631,11 @@ export default function LibrarianPanel() {
                 aria-expanded={inventorySortOpen}
                 aria-controls="inventory-sort-panel"
               >
-                {inventorySortOpen ? 'Ukryj sortowanie' : 'Pokaz sortowanie'}
+                {inventorySortOpen ? 'Ukryj sortowanie' : 'Pokaż sortowanie'}
               </button>
             </div>
             <div className="form-field" style={{ position: 'relative' }}>
-              <label>Wybierz ksiazke do dodania egzemplarza</label>
+              <label>Wybierz książkę do dodania egzemplarza</label>
               <input
                 type="text"
                 value={bookSearchQuery}
@@ -1772,9 +1772,9 @@ export default function LibrarianPanel() {
                 </table>
               </div>
             )}
-            {!loading && sortedInventoryRows.length === 0 && inventoryBookId && <p>Brak egzemplarzy dla podanej ksiazki.</p>}
+            {!loading && sortedInventoryRows.length === 0 && inventoryBookId && <p>Brak egzemplarzy dla podanej książki.</p>}
             {!loading && sortedInventoryRows.length === 0 && !inventoryBookId && (
-              <p>Wybierz ksiazke, aby zobaczyc liste egzemplarzy.</p>
+              <p>Wybierz książkę, aby zobaczyć listę egzemplarzy.</p>
             )}
           </div>
 
@@ -1800,8 +1800,8 @@ export default function LibrarianPanel() {
                     <select value={editCopyForm.status} onChange={e => setEditCopyForm({ ...editCopyForm, status: e.target.value })}>
                       <option value="AVAILABLE">Dostępny</option>
                       <option value="RESERVED">Zarezerwowany</option>
-                      <option value="BORROWED">Wypozyczony</option>
-                      <option value="MAINTENANCE">Niedostepny</option>
+                      <option value="BORROWED">Wypożyczony</option>
+                      <option value="MAINTENANCE">Niedostępny</option>
                       <option value="WITHDRAWN">Wycofany</option>
                     </select>
                     {formatFieldError(editErrors.status) && (
@@ -1809,11 +1809,11 @@ export default function LibrarianPanel() {
                     )}
                   </div>
                   <div className="form-field">
-                    <label>Tryb dostepu</label>
+                    <label>Tryb dostępu</label>
                     <select value={editCopyForm.accessType} onChange={e => setEditCopyForm({ ...editCopyForm, accessType: e.target.value })}>
                       <option value="STORAGE">Magazyn</option>
-                      <option value="OPEN_STACK">Wypozyczalnia</option>
-                      <option value="REFERENCE">Czytelnia/Odwolawcze</option>
+                      <option value="OPEN_STACK">Wypożyczalnia</option>
+                      <option value="REFERENCE">Czytelnia/Odwoławcze</option>
                     </select>
                     {formatFieldError(editErrors.accessType) && (
                       <div className="error">{formatFieldError(editErrors.accessType)}</div>
@@ -1865,8 +1865,8 @@ export default function LibrarianPanel() {
                     <select value={copyForm.status} onChange={e => setCopyForm({ ...copyForm, status: e.target.value })}>
                       <option value="AVAILABLE">Dostępny</option>
                       <option value="RESERVED">Zarezerwowany</option>
-                      <option value="BORROWED">Wypozyczony</option>
-                      <option value="MAINTENANCE">Niedostepny</option>
+                      <option value="BORROWED">Wypożyczony</option>
+                      <option value="MAINTENANCE">Niedostępny</option>
                       <option value="WITHDRAWN">Wycofany</option>
                     </select>
                     {formatFieldError(addCopyErrors.status) && (
@@ -1874,11 +1874,11 @@ export default function LibrarianPanel() {
                     )}
                   </div>
                   <div className="form-field">
-                    <label>Tryb dostepu</label>
+                    <label>Tryb dostępu</label>
                     <select value={copyForm.accessType} onChange={e => setCopyForm({ ...copyForm, accessType: e.target.value })}>
                       <option value="STORAGE">Magazyn</option>
-                      <option value="OPEN_STACK">Wypozyczalnia</option>
-                      <option value="REFERENCE">Czytelnia/Odwolawcze</option>
+                      <option value="OPEN_STACK">Wypożyczalnia</option>
+                      <option value="REFERENCE">Czytelnia/Odwoławcze</option>
                     </select>
                     {formatFieldError(addCopyErrors.accessType) && (
                       <div className="error">{formatFieldError(addCopyErrors.accessType)}</div>
@@ -1910,7 +1910,7 @@ export default function LibrarianPanel() {
         <div className="surface-card">
           <div className="section-header">
             <div>
-              <h2>Kolekcje ksiazek</h2>
+              <h2>Kolekcje książek</h2>
               <p className="support-copy">Twórz i zarządzaj kolekcjami książek dla czytelników</p>
             </div>
             <div className="fines-toolbar">
@@ -1954,12 +1954,12 @@ export default function LibrarianPanel() {
                   checked={collectionForm.featured}
                   onChange={e => setCollectionForm({ ...collectionForm, featured: e.target.checked })}
                 />
-                {' '}Wyrozniona (wyswietlana w Polecanych)
+                {' '}Wyróżniona (wyświetlana w Polecanych)
               </label>
             </div>
 
             <div className="form-field">
-              <label>Kolejnosc wyswietlania</label>
+              <label>Kolejność wyświetlania</label>
               <input
                 type="number"
                 value={collectionForm.displayOrder}
@@ -1976,7 +1976,7 @@ export default function LibrarianPanel() {
                   setCollectionBookSearch(e.target.value)
                   searchBooksForCollection(e.target.value)
                 }}
-                placeholder="Szukaj ksiazek do dodania..."
+                placeholder="Szukaj książek do dodania..."
               />
 
               {collectionBookResults.length > 0 && (
@@ -2057,7 +2057,7 @@ export default function LibrarianPanel() {
                     <div id={detailsId} className="compact-card__details">
                       <div className="compact-card__row">
                         <span className="label">Status</span>
-                        <span className="value">{collection.featured ? 'Wyrozniona' : 'Standardowa'}</span>
+                        <span className="value">{collection.featured ? 'Wyróżniona' : 'Standardowa'}</span>
                       </div>
                       {collection.description && (
                         <div className="compact-card__row">

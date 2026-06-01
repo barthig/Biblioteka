@@ -33,9 +33,9 @@ final class NotificationService
         $bookTitle = $reservation->getBook()->getTitle();
         $expiresAt = $reservation->getExpiresAt()->format('Y-m-d');
 
-        $title = 'Reservation ready for pickup';
+        $title = 'Rezerwacja gotowa do odbioru';
         $message = sprintf(
-            'Your reservation for "%s" is ready for pickup. Please collect it by %s.',
+            'Twoja rezerwacja na tytuł "%s" jest gotowa do odbioru. Odbierz ją do %s.',
             $bookTitle,
             $expiresAt
         );
@@ -59,9 +59,9 @@ final class NotificationService
         $bookTitle = $reservation->getBook()->getTitle();
         $expiresAt = $reservation->getExpiresAt()->format('Y-m-d');
 
-        $title = 'Reservation added to queue';
+        $title = 'Rezerwacja dodana do kolejki';
         $message = sprintf(
-            'Your reservation for "%s" has been registered. We will notify you when a copy is ready. Current expiry date: %s.',
+            'Twoja rezerwacja na tytuł "%s" została zarejestrowana. Powiadomimy Cię, gdy egzemplarz będzie gotowy do odbioru. Aktualna data wygaśnięcia: %s.',
             $bookTitle,
             $expiresAt
         );
@@ -76,16 +76,16 @@ final class NotificationService
             sprintf('reservation-queued:%d', $reservation->getId() ?? 0)
         );
 
-        $subject = sprintf('Reservation queued: "%s"', $bookTitle);
+        $subject = sprintf('Rezerwacja w kolejce: "%s"', $bookTitle);
         $text = sprintf(
-            "Hello %s,\n\nYour reservation for \"%s\" has been added to the queue. We will notify you when a copy is ready for pickup. Current expiry date: %s.\n\nLibrary",
-            $user->getName() ?: 'reader',
+            "Witaj %s,\n\nTwoja rezerwacja na tytuł \"%s\" została dodana do kolejki. Powiadomimy Cię, gdy egzemplarz będzie gotowy do odbioru. Aktualna data wygaśnięcia: %s.\n\nBiblioteka",
+            $user->getName() ?: 'czytelniku',
             $bookTitle,
             $expiresAt
         );
         $html = sprintf(
-            '<p>Hello %s,</p><p>Your reservation for <strong>%s</strong> has been added to the queue. We will notify you when a copy is ready for pickup.</p><p>Current expiry date: <strong>%s</strong>.</p><p>Library</p>',
-            htmlspecialchars($user->getName() ?: 'reader', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
+            '<p>Witaj %s,</p><p>Twoja rezerwacja na tytuł <strong>%s</strong> została dodana do kolejki. Powiadomimy Cię, gdy egzemplarz będzie gotowy do odbioru.</p><p>Aktualna data wygaśnięcia: <strong>%s</strong>.</p><p>Biblioteka</p>',
+            htmlspecialchars($user->getName() ?: 'czytelniku', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
             htmlspecialchars($bookTitle, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
             $expiresAt
         );
@@ -108,7 +108,7 @@ final class NotificationService
 
         foreach ($recipients as $user) {
             $isEvent = $announcement->getType() === 'event' || $announcement->getEventAt() !== null;
-            $title = $isEvent ? 'New library event' : 'New library announcement';
+            $title = $isEvent ? 'Nowe wydarzenie biblioteczne' : 'Nowe ogłoszenie biblioteczne';
             $message = $this->buildAnnouncementMessage($announcement, $isEvent);
 
             $this->storeInAppNotification(
@@ -136,7 +136,7 @@ final class NotificationService
         }
 
         foreach ($recipients as $user) {
-            $title = 'New item in catalog';
+            $title = 'Nowa pozycja w katalogu';
             $message = $this->buildNewBookMessage($book);
 
             $this->storeInAppNotification(

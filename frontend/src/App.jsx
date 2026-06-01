@@ -132,10 +132,10 @@ export default function App() {
                   </Routes>
                 </Suspense>
                 <footer className="footer px-2 py-6 sm:px-4">
-                  <p>(c) 2025 Biblioteka. System zarzadzania biblioteka i wypozyczeniami.</p>
+                  <p>(c) 2025 Smart Library. System zarządzania biblioteką i wypożyczeniami.</p>
                   <div className="footer__links flex-wrap gap-3 sm:gap-6">
                     <a href="#regulamin">Regulamin</a>
-                    <a href="#prywatnosc">Polityka prywatnosci</a>
+                    <a href="#prywatnosc">Polityka prywatności</a>
                     <a href="#kontakt">Kontakt</a>
                   </div>
                 </footer>

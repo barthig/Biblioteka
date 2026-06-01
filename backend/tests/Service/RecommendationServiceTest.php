@@ -17,7 +17,7 @@ class RecommendationServiceTest extends TestCase
 
         $interactionRepo->expects($this->once())->method('findBookIdsByUser')->with($user)->willReturn([1, 2]);
         $interactionRepo->expects($this->once())->method('findLikedInteractions')->with($user)->willReturn([]);
-        $bookRepo->expects($this->once())->method('findPopularBooks')->with(3, [1, 2])->willReturn([]);
+        $bookRepo->expects($this->once())->method('findMostBorrowedBooks')->with(3, [1, 2])->willReturn([]);
 
         $service = new RecommendationService($bookRepo, $interactionRepo);
         $result = $service->getPersonalizedRecommendations($user, 3);

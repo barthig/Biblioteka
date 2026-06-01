@@ -148,7 +148,7 @@ function buildAnnouncement(id = 1) {
 }
 
 function mockApiRoutes(page) {
-  page.route('**/api/**', route => {
+  page.route(/^https?:\/\/[^/]+\/api(?:\/|\?|$)/, route => {
     const request = route.request()
     const url = new URL(request.url())
     const path = url.pathname
@@ -286,6 +286,7 @@ function mockApiRoutes(page) {
         data: [
           {
             id: 1,
+            userId: 1,
             status: 'ACTIVE',
             reservedAt: '2025-01-01T10:00:00Z',
             expiresAt: '2025-02-01T10:00:00Z',
@@ -293,6 +294,7 @@ function mockApiRoutes(page) {
           },
           {
             id: 2,
+            userId: 1,
             status: 'FULFILLED',
             reservedAt: '2025-01-01T10:00:00Z',
             fulfilledAt: '2025-01-05T10:00:00Z',

@@ -204,7 +204,7 @@ export default function RolesAndAudit({
                   disabled={entityAuditLoading}
                   aria-busy={entityAuditLoading}
                 >
-                  {entityAuditLoading ? '?adowanie...' : 'Pobierz histori?'}
+                  {entityAuditLoading ? 'Ładowanie...' : 'Pobierz historię'}
                 </button>
               </div>
               

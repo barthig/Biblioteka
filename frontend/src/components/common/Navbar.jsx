@@ -21,15 +21,15 @@ export default function Navbar() {
       <div className="top-nav__inner">
         <NavLink to="/" className="top-nav__brand" onClick={closeMenu}>
           <span className="top-nav__logo" aria-hidden>
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M5 4.5h10.5a2.5 2.5 0 0 1 2.5 2.5v11a2 2 0 0 0-2-2H5z" />
-              <path d="M5 4.5v11.5a2 2 0 0 1 2-2h10.5" />
-              <path d="M9.5 7.5h5" />
-              <path d="M9.5 10h5" />
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M5 5.5h10.5a3 3 0 0 1 3 3v9a2 2 0 0 0-2-2H5z" />
+              <path d="M5 5.5v11.5" />
+              <path d="M8.5 8.5h6" />
+              <path d="M8.5 11.5h6" />
             </svg>
           </span>
           <div>
-            <strong>Biblioteka</strong>
+            <strong>Smart Library</strong>
             <span>Panel czytelnika</span>
           </div>
         </NavLink>

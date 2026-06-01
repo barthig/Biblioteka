@@ -38,6 +38,8 @@ abstract class ApiTestCase extends WebTestCase
         $_ENV['LEGACY_AUTH_SUBSCRIBER'] = '0';
         putenv('MESSENGER_TRANSPORT_DSN=sync://');
         $_ENV['MESSENGER_TRANSPORT_DSN'] = 'sync://';
+        putenv('INTEGRATION_AMQP_DSN=sync://');
+        $_ENV['INTEGRATION_AMQP_DSN'] = 'sync://';
 
         /** @var EntityManagerInterface $em */
         $em = static::getContainer()->get('doctrine')->getManager();
@@ -136,8 +138,7 @@ abstract class ApiTestCase extends WebTestCase
 
     protected function createAuthenticatedClient(User $user, array $extraClaims = []): HttpKernelBrowser
     {
-        $token = $this->generateTokenForUser($user, $extraClaims);
-        return $this->createApiClient($token);
+        return $this->createAuthenticatedClientWithoutApiSecret($user, $extraClaims);
     }
 
     protected function jsonRequest(HttpKernelBrowser $client, string $method, string $uri, ?array $payload = null, array $server = []): void

@@ -4,7 +4,7 @@ import { FaExclamationTriangle, FaTimes } from 'react-icons/fa'
 export default function ErrorMessage({ error, onDismiss }) {
   if (!error) return null
 
-  const message = typeof error === 'string' ? error : error.message || 'Wyst?pi? nieoczekiwany b??d'
+  const message = typeof error === 'string' ? error : error.message || 'Wystąpił nieoczekiwany błąd'
 
   return (
     <div className="error-message">

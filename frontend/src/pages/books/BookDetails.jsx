@@ -10,6 +10,7 @@ import StatCard from '../../components/ui/StatCard'
 import SectionCard from '../../components/ui/SectionCard'
 import BookCover from '../../components/books/BookCover'
 import { logger } from '../../utils/logger'
+import { getAgeGroupLabel } from '../../utils'
 import FeedbackCard from '../../components/ui/FeedbackCard'
 
 function formatDate(value, withTime = false) {
@@ -248,7 +249,7 @@ export default function BookDetails() {
     return book.categories.map(c => c.name).join(', ')
   }, [book])
 
-  const ageGroupLabel = book?.targetAgeGroupLabel ?? book?.targetAgeGroup ?? null
+  const ageGroupLabel = getAgeGroupLabel(book?.targetAgeGroupLabel ?? book?.targetAgeGroup)
 
   const anyAvailable = book ? (book.copies ?? 0) > 0 : false
 
@@ -465,9 +466,9 @@ export default function BookDetails() {
       </SectionCard>
 
       <StatGrid>
-        <StatCard valueClassName="stat-card__value--sm" title="Dost?pno??" value={anyAvailable ? 'Dost?pne' : 'Brak'} subtitle={`${book.copies ?? 0} z ${book.totalCopies ?? book.copies ?? 0}`} />
+        <StatCard valueClassName="stat-card__value--sm" title="Dostępność" value={anyAvailable ? 'Dostępne' : 'Brak'} subtitle={`${book.copies ?? 0} z ${book.totalCopies ?? book.copies ?? 0}`} />
         <StatCard valueClassName="stat-card__value--sm" title="Oceny" value={ratingSummaryAverage ? ratingSummaryAverage.toFixed(1) : 'Brak'} />
-        <StatCard valueClassName="stat-card__value--sm" title="Rezerwacje" value={activeReservation ? 'Aktywna' : (anyAvailable ? 'Niepotrzebna' : 'Dost?pna')} />
+        <StatCard valueClassName="stat-card__value--sm" title="Rezerwacje" value={activeReservation ? 'Aktywna' : (anyAvailable ? 'Niepotrzebna' : 'Dostępna')} />
       </StatGrid>
 
       <SectionCard>
@@ -540,7 +541,7 @@ export default function BookDetails() {
               onClick={handleBorrow}
               disabled={!canBorrow || borrowing}
             >
-              {borrowing ? 'Przetwarzanie...' : 'Wypo|ycz'}
+              {borrowing ? 'Przetwarzanie...' : 'Wypożycz'}
             </button>
           ) : (
 
@@ -550,7 +551,7 @@ export default function BookDetails() {
             onClick={handleReservation}
             disabled={!canReserve || reserving}
           >
-            {reserving ? 'Przetwarzanie...' : 'Do??cz do kolejki rezerwacji'}
+            {reserving ? 'Przetwarzanie...' : 'Dołącz do kolejki rezerwacji'}
           </button>
           )}
           <button
@@ -559,7 +560,7 @@ export default function BookDetails() {
             onClick={toggleFavorite}
             disabled={favoriteLoading}
           >
-            {favorite ? 'UsuD z ulubionych' : 'Dodaj do ulubionych'}
+            {favorite ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'}
           </button>
         </div>
         <p className="support-copy">
@@ -587,7 +588,7 @@ export default function BookDetails() {
         {reviewsError && <p className="error">{reviewsError}</p>}
         <div className="review-summary">
           <div>
-            <strong>Aarednia ocena:</strong> {ratingSummaryAverage ? ratingSummaryAverage.toFixed(1) : 'Brak ocen'}
+            <strong>Średnia ocena:</strong> {ratingSummaryAverage ? ratingSummaryAverage.toFixed(1) : 'Brak ocen'}
           </div>
           <div>
             <strong>Liczba ocen:</strong> {ratingSummaryCount ?? 0}
@@ -598,7 +599,7 @@ export default function BookDetails() {
         {isAuthenticated && (
           <div className="quick-rating" style={{ margin: '1rem 0', padding: '1rem', background: 'var(--surface-secondary)', borderRadius: '8px' }}>
             <p style={{ marginBottom: '0.5rem' }}>
-              <strong>Szybka ocena:</strong> {ratingData.userRating ? `Twoja ocena: ${ratingData.userRating}/5` : 'Oce? t? ksi??k?'}
+              <strong>Szybka ocena:</strong> {ratingData.userRating ? `Twoja ocena: ${ratingData.userRating}/5` : 'Oceń tę książkę'}
             </p>
             <StarRating
               rating={ratingData.userRating || 0}
@@ -684,7 +685,6 @@ export default function BookDetails() {
     </div>
   )
 }
-
 
 
 

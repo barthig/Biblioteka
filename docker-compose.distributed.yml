@@ -21,7 +21,6 @@ services:
       - "8080:8080"    # Dashboard
       - "8082:8082"    # Metrics
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./config/traefik/traefik.yml:/etc/traefik/traefik.yml:ro
       - ./config/traefik/dynamic.yml:/etc/traefik/dynamic.yml:ro
     environment:

@@ -2,44 +2,52 @@
 
 from unittest.mock import MagicMock, patch
 
+from app.database import get_db
+
 
 class TestNotificationRoutes:
     """Test suite for /api/notifications/* endpoints."""
 
     def test_logs_endpoint_returns_200(self, client):
         """GET /api/notifications/logs should return 200."""
-        with patch("app.routes.notifications.get_db") as mock_get_db:
-            mock_session = MagicMock()
-            mock_query = MagicMock()
-            mock_query.order_by.return_value = mock_query
-            mock_query.count.return_value = 0
-            mock_query.offset.return_value = mock_query
-            mock_query.limit.return_value = mock_query
-            mock_query.all.return_value = []
-            mock_session.query.return_value = mock_query
-            mock_get_db.return_value = iter([mock_session])
+        mock_session = MagicMock()
+        mock_query = MagicMock()
+        mock_query.order_by.return_value = mock_query
+        mock_query.count.return_value = 0
+        mock_query.offset.return_value = mock_query
+        mock_query.limit.return_value = mock_query
+        mock_query.all.return_value = []
+        mock_session.query.return_value = mock_query
+        client.app.dependency_overrides[get_db] = lambda: mock_session
 
+        try:
             response = client.get("/api/notifications/logs")
-            assert response.status_code == 200
-            data = response.json()
-            assert "total" in data
-            assert "items" in data
-            assert data["total"] == 0
+        finally:
+            client.app.dependency_overrides.pop(get_db, None)
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "total" in data
+        assert "items" in data
+        assert data["total"] == 0
 
     def test_stats_endpoint_returns_200(self, client):
         """GET /api/notifications/stats should return stats dict."""
-        with patch("app.routes.notifications.get_db") as mock_get_db:
-            mock_session = MagicMock()
-            mock_query = MagicMock()
-            mock_query.group_by.return_value = mock_query
-            mock_query.all.return_value = [("SENT", 5), ("FAILED", 1)]
-            mock_session.query.return_value = mock_query
-            mock_get_db.return_value = iter([mock_session])
+        mock_session = MagicMock()
+        mock_query = MagicMock()
+        mock_query.group_by.return_value = mock_query
+        mock_query.all.return_value = [("SENT", 5), ("FAILED", 1)]
+        mock_session.query.return_value = mock_query
+        client.app.dependency_overrides[get_db] = lambda: mock_session
 
+        try:
             response = client.get("/api/notifications/stats")
-            assert response.status_code == 200
-            data = response.json()
-            assert "total" in data
+        finally:
+            client.app.dependency_overrides.pop(get_db, None)
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "total" in data
 
 
 class TestNotificationConfig:

@@ -84,7 +84,7 @@ export default function Profile() {
       setRatingsError(null)
     } catch (err) {
       const statusInfo = err?.status ? ` (HTTP ${err.status})` : ''
-      setRatingsError(`${err?.message || 'Nie uda?o si? pobra? ocen'}${statusInfo}`)
+      setRatingsError(`${err?.message || 'Nie udało się pobrać ocen'}${statusInfo}`)
     } finally {
       setRatingsLoading(false)
     }
@@ -103,7 +103,7 @@ export default function Profile() {
       setFees(list)
     } catch (err) {
       const statusInfo = err?.status ? ` (HTTP ${err.status})` : ''
-      setFeesError(`${err?.message || 'Nie uda?o si? pobra? op?at'}${statusInfo}`)
+      setFeesError(`${err?.message || 'Nie udało się pobrać opłat'}${statusInfo}`)
     } finally {
       setFeesLoading(false)
     }
@@ -283,7 +283,7 @@ export default function Profile() {
     setFeesError(null)
     try {
       await apiFetch(`/api/me/fees/${feeId}/pay`, { method: 'POST' })
-      toast.success('P?atno?? zosta?a zarejestrowana')
+      toast.success('Płatność została zarejestrowana')
       refreshFees()
     } catch (err) {
       setFeesError(err.message || 'Nie udało się opłacić opłaty')
@@ -444,7 +444,7 @@ export default function Profile() {
             </div>
             <div>
               <h2 className="form-section__title">Bezpieczeństwo konta</h2>
-              <p className="form-section__description">Zarz?dzaj has?em i aktywnymi sesjami</p>
+              <p className="form-section__description">Zarządzaj hasłem i aktywnymi sesjami</p>
             </div>
           </div>
 
@@ -497,7 +497,7 @@ export default function Profile() {
             <div className="form-actions">
               {passwordError && <p className="error">{passwordError}</p>}
               <button type="submit" className="btn btn-primary" disabled={saving}>
-                {saving ? 'Zapisywanie...' : 'Zmie? has?o'}
+                {saving ? 'Zapisywanie...' : 'Zmień hasło'}
               </button>
             </div>
           </form>
@@ -923,7 +923,7 @@ export default function Profile() {
         <SectionCard title="Twoje oceny">
           <div className="form-actions">
             <button type="button" className="btn btn-secondary" onClick={refreshRatings} disabled={ratingsLoading}>
-              {ratingsLoading ? 'Od?wie?anie...' : 'Od?wie? oceny'}
+              {ratingsLoading ? 'Odświeżanie...' : 'Odśwież oceny'}
             </button>
           </div>
         {ratingsError && <p className="error">{ratingsError}</p>}
@@ -933,7 +933,7 @@ export default function Profile() {
           <ul className="list list--bordered">
             {ratings.map(r => (
               <li key={r.id}>
-                <div className="list__title">{r.book?.title || 'Ksi??ka'}</div>
+                <div className="list__title">{r.book?.title || 'Książka'}</div>
                 <div className="list__meta">
                   <span>Ocena: {r.rating}/5</span>
                   {r.createdAt && <span>{new Date(r.createdAt).toLocaleDateString('pl-PL')}</span>}
@@ -960,11 +960,11 @@ export default function Profile() {
               onClick={() => setFeesExpanded(prev => !prev)}
               aria-expanded={feesExpanded}
               aria-controls="fees-panel"
-              aria-label={`${feesExpanded ? 'Zwi?' : 'Rozwi?'} op?aty i p?atno?ci`}
+              aria-label={`${feesExpanded ? 'Zwiń' : 'Rozwiń'} opłaty i płatności`}
             >
               <div>
                 <h2>Opłaty i płatności</h2>
-                <p className="support-copy">Kliknij, aby {feesExpanded ? 'zwin??' : 'rozwin??'} sekcj? op?at i kar.</p>
+                <p className="support-copy">Kliknij, aby {feesExpanded ? 'zwinąć' : 'rozwinąć'} sekcję opłat i kar.</p>
               </div>
               <div className="fees-accordion__meta">
                 <span className="fees-accordion__count">{fees.length} pozycji</span>
@@ -980,7 +980,7 @@ export default function Profile() {
           >
             <div className="fees-toolbar">
               <button type="button" className="btn btn-secondary" onClick={refreshFees} disabled={feesLoading}>
-                {feesLoading ? 'Od?wie?anie...' : 'Od?wie? op?aty'}
+                {feesLoading ? 'Odświeżanie...' : 'Odśwież opłaty'}
               </button>
               <div className="fees-filter">
                 <label htmlFor="fee-search" className="sr-only">Filtruj po imieniu i nazwisku</label>
@@ -995,13 +995,13 @@ export default function Profile() {
             </div>
             <div className="fees-note">
               <p className="support-copy">
-                Aby op?aci? zaleg?o?ci, wybierz op?at? z listy i ureguluj p?atno?? online lub post?puj zgodnie z instrukcj?.
+                Aby opłacić zaległości, wybierz opłatę z listy i ureguluj płatność online lub postępuj zgodnie z instrukcją.
               </p>
             </div>
             <div className="surface-card fees-payment-card">
               <h3>Instrukcja płatności</h3>
               <p className="support-copy">
-                W tytule przelewu podaj numer karty lub identyfikator op?aty. P?atno?ci online s? ksi?gowane zwykle w 1-2 dni robocze.
+                W tytule przelewu podaj numer karty lub identyfikator opłaty. Płatności online są księgowane zwykle w 1-2 dni robocze.
               </p>
               <div className="form-row form-row--two">
                 <div className="form-field form-field--readonly">
@@ -1015,12 +1015,12 @@ export default function Profile() {
               </div>
               <div className="form-row form-row--two">
                 <div className="form-field form-field--readonly">
-                  <label>Tytu? przelewu</label>
-                  <div className="form-field__value">Op?ata biblioteczna / {profile.cardNumber || 'Numer karty'}</div>
+                  <label>Tytuł przelewu</label>
+                  <div className="form-field__value">Opłata biblioteczna / {profile.cardNumber || 'Numer karty'}</div>
                 </div>
                 <div className="form-field form-field--readonly">
-                  <label>Przyk?ad</label>
-                  <div className="form-field__value">Op?ata biblioteczna / 123456</div>
+                  <label>Przykład</label>
+                  <div className="form-field__value">Opłata biblioteczna / 123456</div>
                 </div>
               </div>
               <div className="form-actions">
@@ -1031,17 +1031,17 @@ export default function Profile() {
             </div>
             {feesError && <p className="error">{feesError}</p>}
             {filteredFees.length === 0 ? (
-              <p>Brak aktywnych op?at do uregulowania.</p>
+              <p>Brak aktywnych opłat do uregulowania.</p>
             ) : (
               <ul className="fees-list">
                 {filteredFees.map(fee => (
                   <li key={fee.id} className="fees-row">
                     <div className="fees-row__main">
-                      <div className="fees-row__title">{fee.reason || 'Op?ata biblioteczna'}</div>
+                      <div className="fees-row__title">{fee.reason || 'Opłata biblioteczna'}</div>
                       <div className="fees-row__meta">
                         <span className="fees-row__amount">{fee.amount} {fee.currency || 'PLN'}</span>
                         {fee.createdAt && <span>{new Date(fee.createdAt).toLocaleDateString('pl-PL')}</span>}
-                        {fee.paidAt && <span className="fees-row__status">Op?acona</span>}
+                        {fee.paidAt && <span className="fees-row__status">Opłacona</span>}
                       </div>
                     </div>
                     {!fee.paidAt && fee.id && (
@@ -1065,5 +1065,3 @@ export default function Profile() {
     </div>
   )
 }
-
-

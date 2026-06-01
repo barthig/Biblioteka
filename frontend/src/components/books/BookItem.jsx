@@ -4,6 +4,7 @@ import { apiFetch } from '../../api'
 import { useAuth } from '../../context/AuthContext'
 import { useResourceCache } from '../../context/ResourceCacheContext'
 import { RatingDisplay } from './StarRating'
+import { getAgeGroupLabel } from '../../utils'
 
 export default function BookItem({ book, onBorrowed, compact = false, expanded = false, onToggleExpand }) {
   const [loading, setLoading] = useState(false)
@@ -27,7 +28,7 @@ export default function BookItem({ book, onBorrowed, compact = false, expanded =
   const publicationYear = book?.publicationYear
   const resourceType = book?.resourceType
   const signature = book?.signature
-  const ageGroupLabel = book?.targetAgeGroupLabel ?? book?.targetAgeGroup ?? null
+  const ageGroupLabel = getAgeGroupLabel(book?.targetAgeGroupLabel ?? book?.targetAgeGroup)
 
   // Determine availability status
   const getAvailabilityStatus = () => {
@@ -189,7 +190,7 @@ export default function BookItem({ book, onBorrowed, compact = false, expanded =
               disabled={!isAvailable || loading}
               onClick={borrow}
             >
-              {loading ? 'Wysy?anie...' : 'Wypo?ycz egzemplarz'}
+              {loading ? 'Wysyłanie...' : 'Wypożycz egzemplarz'}
             </button>
             <button
               className="btn btn-outline"
@@ -197,14 +198,14 @@ export default function BookItem({ book, onBorrowed, compact = false, expanded =
               onClick={reserve}
               style={{ visibility: !isAvailable ? 'visible' : 'hidden' }}
             >
-              {reserveLoading ? 'Przetwarzanie...' : reserved ? 'Zarezerwowano' : 'Do??cz do kolejki'}
+              {reserveLoading ? 'Przetwarzanie...' : reserved ? 'Zarezerwowano' : 'Dołącz do kolejki'}
             </button>
             <button
               className="btn btn-ghost"
               disabled={favoriteLoading}
               onClick={toggleFavorite}
             >
-              {favoriteLoading ? 'Aktualizuj?...' : favorite ? 'Usu? z ulubionych' : 'Dodaj do ulubionych'}
+              {favoriteLoading ? 'Aktualizowanie...' : favorite ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'}
             </button>
             <Link to={`/books/${book.id}`} className="btn btn-outline">Szczegóły</Link>
           </>

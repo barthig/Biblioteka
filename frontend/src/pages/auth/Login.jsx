@@ -83,7 +83,7 @@ export default function Login() {
           </div>
           <div className="form-actions">
             <button className="btn btn-primary" type="submit" disabled={loading}>
-              {loading ? 'Logowanie...' : 'Zaloguj si?'}
+              {loading ? 'Logowanie...' : 'Zaloguj się'}
             </button>
             <Link to="/register" className="btn btn-outline">
               Zarejestruj

@@ -6,6 +6,7 @@ use App\Application\Handler\Command\CreateBookCopyHandler;
 use App\Entity\BookCopy;
 use App\Repository\BookCopyRepository;
 use App\Repository\BookRepository;
+use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -28,8 +29,16 @@ class CreateBookCopyHandlerTest extends TestCase
     public function testCreateBookCopySuccess(): void
     {
         $book = $this->createMock(\App\Entity\Book::class);
+        $connection = $this->createMock(Connection::class);
         
         $this->bookRepository->method('find')->with(1)->willReturn($book);
+        $this->bookCopyRepository->method('findOneBy')->willReturn(null);
+        $this->entityManager->method('getConnection')->willReturn($connection);
+        $connection->expects($this->once())->method('beginTransaction');
+        $connection->expects($this->once())->method('commit');
+        $connection->expects($this->never())->method('rollBack');
+        $book->expects($this->once())->method('addInventoryCopy')->with($this->isInstanceOf(BookCopy::class));
+        $book->expects($this->once())->method('recalculateInventoryCounters');
         $this->entityManager->expects($this->once())->method('persist');
         $this->entityManager->expects($this->once())->method('flush');
 

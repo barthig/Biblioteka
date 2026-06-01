@@ -45,6 +45,14 @@ function stubAuthRoutes(page) {
     route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(null) })
   })
 
+  page.route(`${API_PREFIX}/announcements?limit=10`, route => {
+    route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ data: [] }) })
+  })
+
+  page.route(`${API_PREFIX}/recommendations/personal`, route => {
+    route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ groups: [] }) })
+  })
+
   const emptyList = JSON.stringify({ data: [], meta: { total: 0 } })
   page.route(`${API_PREFIX}/reservations?history=true`, route => route.fulfill({ status: 200, contentType: 'application/json', body: emptyList }))
   page.route(`${API_PREFIX}/favorites`, route => route.fulfill({ status: 200, contentType: 'application/json', body: emptyList }))

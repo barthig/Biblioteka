@@ -2,6 +2,8 @@
 export * from './rbac'
 export { default as logger, LogLevel } from './logger'
 export { default as uiPreferences } from './uiPreferences'
+export { getAgeGroupLabel } from './ageGroups'
+export { getNotificationDisplay } from './notificationDisplay'
 
 // Common utility functions
 export function formatDate(date, options = {}) {

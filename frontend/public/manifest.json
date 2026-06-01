@@ -1,7 +1,7 @@
 {
-  "name": "Biblioteka",
-  "short_name": "Biblioteka",
-  "description": "System zarzadzania biblioteka w architekturze rozproszonej",
+  "name": "Smart Library",
+  "short_name": "Smart Library",
+  "description": "System zarządzania biblioteką w architekturze rozproszonej",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

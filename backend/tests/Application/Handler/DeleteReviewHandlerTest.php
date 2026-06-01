@@ -6,6 +6,7 @@ use App\Application\Handler\Command\DeleteReviewHandler;
 use App\Entity\Review;
 use App\Repository\ReviewRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\Persistence\ObjectRepository;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -25,7 +26,11 @@ class DeleteReviewHandlerTest extends TestCase
     public function testDeleteReviewSuccess(): void
     {
         $review = $this->createMock(Review::class);
+        $ratingRepository = $this->createMock(ObjectRepository::class);
+
         $this->reviewRepository->method('find')->with(1)->willReturn($review);
+        $ratingRepository->method('findOneBy')->willReturn(null);
+        $this->entityManager->method('getRepository')->willReturn($ratingRepository);
         $this->entityManager->expects($this->once())->method('remove')->with($review);
         $this->entityManager->expects($this->once())->method('flush');
 

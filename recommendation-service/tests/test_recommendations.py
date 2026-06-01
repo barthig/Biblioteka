@@ -2,6 +2,8 @@
 
 from unittest.mock import MagicMock, patch
 
+from app.database import get_db
+
 
 class TestRecommendationConfig:
     """Test suite for recommendation configuration."""
@@ -54,19 +56,48 @@ class TestEmbedding:
                 assert result is not None
                 assert len(result) == 1536
 
+    def test_get_embedding_raises_when_openai_request_fails(self):
+        """get_embedding should surface provider errors after retry attempts."""
+        with patch("app.embedding.settings") as mock_settings:
+            mock_settings.openai_api_key = "sk-test-valid-key"
+            mock_settings.openai_model = "text-embedding-3-small"
+
+            with patch("app.embedding.httpx.post", side_effect=RuntimeError("api down")):
+                from app.embedding import get_embedding
+                from tenacity import RetryError, wait_none
+
+                fast_get_embedding = get_embedding.retry_with(wait=wait_none())
+
+                try:
+                    fast_get_embedding("test text about books")
+                except RetryError as exc:
+                    assert "api down" in str(exc.last_attempt.exception())
+                else:
+                    raise AssertionError("Expected RetryError")
+
 
 class TestSimilarBooksEndpoint:
     """Test suite for /api/recommendations/similar/{book_id}."""
 
     def test_similar_returns_404_when_no_embedding(self, client):
         """Should return 404 when book has no embedding."""
-        with patch("app.routes.recommendations.get_db") as mock_get_db:
-            mock_session = MagicMock()
-            mock_query = MagicMock()
-            mock_query.filter_by.return_value = mock_query
-            mock_query.first.return_value = None
-            mock_session.query.return_value = mock_query
-            mock_get_db.return_value = iter([mock_session])
+        mock_session = MagicMock()
+        mock_query = MagicMock()
+        mock_query.filter_by.return_value = mock_query
+        mock_query.first.return_value = None
+        mock_session.query.return_value = mock_query
+        client.app.dependency_overrides[get_db] = lambda: mock_session
 
+        try:
             response = client.get("/api/recommendations/similar/999")
-            assert response.status_code == 404
+        finally:
+            client.app.dependency_overrides.pop(get_db, None)
+
+        assert response.status_code == 404
+
+    def test_search_returns_503_when_embedding_service_unavailable(self, client):
+        """Semantic search should report 503 when embeddings are unavailable."""
+        with patch("app.routes.recommendations.get_embedding", return_value=None):
+            response = client.get("/api/recommendations/search?q=history")
+
+        assert response.status_code == 503

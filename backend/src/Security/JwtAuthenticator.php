@@ -35,13 +35,13 @@ class JwtAuthenticator extends AbstractAuthenticator
         if ($method === 'OPTIONS') {
             return false;
         }
-        if ($this->publicRouteMatcher->isPublicPath($path, $method)) {
-            return false;
-        }
-
         // Check for credentials
         $hasBearer = $this->getBearerToken($request) !== null;
         $hasApiSecret = $request->headers->get('x-api-secret');
+
+        if ($this->publicRouteMatcher->isPublicPath($path, $method) && !$hasBearer && !$hasApiSecret) {
+            return false;
+        }
 
         if ($hasBearer || $hasApiSecret) {
             return true; // Yes, we should authenticate
@@ -112,7 +112,10 @@ class JwtAuthenticator extends AbstractAuthenticator
 
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?JsonResponse
     {
-        return new JsonResponse(['message' => 'Unauthorized'], 401);
+        $message = $exception->getMessage();
+        $status = in_array($message, ['Account awaiting approval', 'Account is blocked'], true) ? 403 : 401;
+
+        return new JsonResponse(['message' => $status === 403 ? $message : 'Unauthorized'], $status);
     }
 
     public function start(Request $request, AuthenticationException $authException = null): JsonResponse

@@ -1,21 +1,22 @@
 <?php
+
 declare(strict_types=1);
+
 namespace App\Controller\Books;
 
 use App\Application\Command\Collection\CreateCollectionCommand;
-use App\Application\Command\Collection\UpdateCollectionCommand;
 use App\Application\Command\Collection\DeleteCollectionCommand;
+use App\Application\Command\Collection\UpdateCollectionCommand;
 use App\Controller\Traits\ExceptionHandlingTrait;
-use App\Dto\ApiError;
 use App\Entity\BookCollection;
 use App\Repository\CollectionRepository;
 use App\Service\Auth\SecurityService;
+use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
-use OpenApi\Attributes as OA;
 
 #[OA\Tag(name: 'Collection')]
 class CollectionController extends AbstractController
@@ -26,7 +27,8 @@ class CollectionController extends AbstractController
         private readonly SecurityService $security,
         private readonly CollectionRepository $collectionRepo,
         private readonly MessageBusInterface $commandBus
-    ) {}
+    ) {
+    }
 
     #[OA\Get(
         path: '/api/collections',
@@ -56,19 +58,19 @@ class CollectionController extends AbstractController
     {
         $featured = $request->query->getBoolean('featured', false);
 
-        $collections = $featured 
+        $collections = $featured
             ? $this->collectionRepo->findFeatured()
             : $this->collectionRepo->findAllOrdered();
 
         return $this->json([
-            'collections' => array_map(fn(BookCollection $c) => [
+            'collections' => array_map(fn (BookCollection $c) => [
                 'id' => $c->getId(),
                 'name' => $c->getName(),
                 'description' => $c->getDescription(),
                 'featured' => $c->isFeatured(),
                 'displayOrder' => $c->getDisplayOrder(),
                 'bookCount' => $c->getBooks()->count(),
-                'books' => array_map(fn($book) => [
+                'books' => array_map(fn ($book) => [
                     'id' => $book->getId(),
                     'title' => $book->getTitle(),
                     'author' => $book->getAuthor()?->getName(),
@@ -105,7 +107,7 @@ class CollectionController extends AbstractController
             'description' => $collection->getDescription(),
             'featured' => $collection->isFeatured(),
             'displayOrder' => $collection->getDisplayOrder(),
-            'books' => array_map(fn($book) => [
+            'books' => array_map(fn ($book) => [
                 'id' => $book->getId(),
                 'title' => $book->getTitle(),
                 'author' => $book->getAuthor()?->getName(),
@@ -121,6 +123,29 @@ class CollectionController extends AbstractController
         ]);
     }
 
+    #[OA\Post(
+        path: '/api/collections',
+        summary: 'Utwórz kolekcję',
+        description: 'Tworzy nową kolekcję książek. Wymaga roli LIBRARIAN.',
+        tags: ['Collections'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['name'],
+                properties: [
+                    new OA\Property(property: 'name', type: 'string'),
+                    new OA\Property(property: 'description', type: 'string'),
+                    new OA\Property(property: 'featured', type: 'boolean'),
+                    new OA\Property(property: 'displayOrder', type: 'integer'),
+                    new OA\Property(property: 'bookIds', type: 'array', items: new OA\Items(type: 'integer'))
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 201, description: 'Kolekcja utworzona', content: new OA\JsonContent(type: 'object')),
+            new OA\Response(response: 403, description: 'Brak uprawnień', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
+        ]
+    )]
     public function create(Request $request): JsonResponse
     {
         $userId = $this->security->getCurrentUserId($request);
@@ -149,15 +174,18 @@ class CollectionController extends AbstractController
             ]
         ], 201);
     }
-    #[OA\Post(
-        path: '/api/collections',
-        summary: 'UtwĂłrz kolekcjÄ™',
-        description: 'Tworzy nowÄ… kolekcjÄ™ ksiÄ…ĹĽek. Wymaga roli LIBRARIAN.',
+
+    #[OA\Put(
+        path: '/api/collections/{id}',
+        summary: 'Aktualizuj kolekcję',
+        description: 'Aktualizuje kolekcję książek. Wymaga roli LIBRARIAN.',
         tags: ['Collections'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
+        ],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
-                required: ['name'],
                 properties: [
                     new OA\Property(property: 'name', type: 'string'),
                     new OA\Property(property: 'description', type: 'string'),
@@ -168,10 +196,11 @@ class CollectionController extends AbstractController
             )
         ),
         responses: [
-            new OA\Response(response: 201, description: 'Kolekcja utworzona', content: new OA\JsonContent(type: 'object')),
-            new OA\Response(response: 403, description: 'Brak uprawnieĹ„', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
+            new OA\Response(response: 200, description: 'Kolekcja zaktualizowana', content: new OA\JsonContent(type: 'object')),
+            new OA\Response(response: 403, description: 'Brak uprawnień', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
         ]
-    )]    public function update(int $id, Request $request): JsonResponse
+    )]
+    public function update(int $id, Request $request): JsonResponse
     {
         $userId = $this->security->getCurrentUserId($request);
         if (!$userId || !$this->security->hasRole($request, 'ROLE_LIBRARIAN')) {
@@ -190,19 +219,21 @@ class CollectionController extends AbstractController
 
         return $this->jsonSuccess(['message' => 'Collection updated']);
     }
+
     #[OA\Delete(
         path: '/api/collections/{id}',
-        summary: 'UsuĹ„ kolekcjÄ™',
-        description: 'Usuwa kolekcjÄ™. Wymaga roli ADMIN.',
+        summary: 'Usuń kolekcję',
+        description: 'Usuwa kolekcję. Wymaga roli ADMIN.',
         tags: ['Collections'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
         ],
         responses: [
-            new OA\Response(response: 204, description: 'Kolekcja usuniÄ™ta'),
-            new OA\Response(response: 403, description: 'Brak uprawnieĹ„', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
+            new OA\Response(response: 204, description: 'Kolekcja usunięta'),
+            new OA\Response(response: 403, description: 'Brak uprawnień', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
         ]
-    )]    public function delete(int $id, Request $request): JsonResponse
+    )]
+    public function delete(int $id, Request $request): JsonResponse
     {
         $userId = $this->security->getCurrentUserId($request);
         if (!$userId || !$this->security->hasRole($request, 'ROLE_ADMIN')) {
@@ -214,8 +245,3 @@ class CollectionController extends AbstractController
         return new JsonResponse(null, 204);
     }
 }
-
-
-
-
-

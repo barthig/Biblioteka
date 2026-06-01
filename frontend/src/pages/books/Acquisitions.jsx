@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { acquisitionService } from '../../services/acquisitionService'
 
@@ -19,6 +19,29 @@ export default function Acquisitions() {
   const [budgetForm, setBudgetForm] = useState({ name: '', amount: '' })
   const [orderForm, setOrderForm] = useState({ supplierId: '', title: '', amount: '' })
   const [weedingForm, setWeedingForm] = useState({ bookId: '', reason: '' })
+
+  const overviewItems = useMemo(() => ([
+    {
+      label: 'Dostawcy',
+      value: suppliers.length,
+      caption: 'aktywni partnerzy',
+    },
+    {
+      label: 'Budżety',
+      value: budgets.length,
+      caption: 'otwarte pule',
+    },
+    {
+      label: 'Zamówienia',
+      value: orders.length,
+      caption: 'w rejestrze',
+    },
+    {
+      label: 'Ubytki',
+      value: weeding.length,
+      caption: 'protokóły wycofań',
+    },
+  ]), [budgets.length, orders.length, suppliers.length, weeding.length])
 
   useEffect(() => {
     if (canManageAcquisitions) {
@@ -153,48 +176,46 @@ export default function Acquisitions() {
   }
 
   return (
-    <div className="page">
+    <div className="page acquisitions-page">
       <header className="page-header">
         <div>
           <h1>Akcesje</h1>
           <p className="support-copy">Dostawcy, budżety, zamówienia i ubytki.</p>
         </div>
+        <div className="page-header__actions">
+          <button type="button" className="btn btn-outline" onClick={loadAll} disabled={loading}>
+            {loading ? 'Odświeżanie...' : 'Odśwież dane'}
+          </button>
+        </div>
       </header>
 
-      <div className="card-grid card-grid--columns-3">
-        <div className="surface-card stat-card">
-          <h3>Dostawcy</h3>
-          <strong>{suppliers.length}</strong>
-          <span>Aktywni partnerzy</span>
+      <section className="surface-card acquisitions-hero">
+        <div>
+          <p className="acquisitions-hero__eyebrow">Panel operacyjny</p>
+          <h2>Zakupy, budżety i wycofania w jednym widoku</h2>
+          <p className="support-copy">
+            Szybki podgląd danych i skrócone formularze pomagają wykonać najczęstsze operacje bez przeklikiwania się między ekranami.
+          </p>
         </div>
-        <div className="surface-card stat-card">
-          <h3>Budżety</h3>
-          <strong>{budgets.length}</strong>
-          <span>Aktywne pule</span>
+        <div className="acquisitions-hero__chips">
+          {overviewItems.map(item => (
+            <div key={item.label} className="acquisitions-chip">
+              <strong>{item.value}</strong>
+              <span>{item.label}</span>
+              <small>{item.caption}</small>
+            </div>
+          ))}
         </div>
-        <div className="surface-card stat-card">
-          <h3>Zamówienia</h3>
-          <strong>{orders.length}</strong>
-          <span>Rejestr zamówień</span>
-        </div>
-      </div>
+      </section>
 
-      {loading && <div className="surface-card">Ładowanie...</div>}
-      {error && (
-        <div className="surface-card">
-          <p className="error">{error}</p>
-        </div>
-      )}
-      {message && (
-        <div className="surface-card">
-          <p className="success">{message}</p>
-        </div>
-      )}
+      {loading && <div className="surface-card empty-state">Ładowanie danych akcesji...</div>}
+      {error && <div className="surface-card empty-state acquisitions-status acquisitions-status--error"><p className="error">{error}</p></div>}
+      {message && <div className="surface-card empty-state acquisitions-status acquisitions-status--success"><p className="success">{message}</p></div>}
 
-      <div className="grid grid-2">
-        <div className="surface-card">
+      <div className="acquisitions-layout">
+        <section className="surface-card acquisitions-panel">
           <h3>Dostawcy</h3>
-          <form className="form-row" onSubmit={handleCreateSupplier}>
+          <form className="form-row form-row--two acquisitions-form" onSubmit={handleCreateSupplier}>
             <input
               placeholder="Nazwa"
               value={supplierForm.name}
@@ -215,11 +236,11 @@ export default function Acquisitions() {
               </li>
             ))}
           </ul>
-        </div>
+        </section>
 
-        <div className="surface-card">
+        <section className="surface-card acquisitions-panel">
           <h3>Budżety</h3>
-          <form className="form-row" onSubmit={handleCreateBudget}>
+          <form className="form-row form-row--two acquisitions-form" onSubmit={handleCreateBudget}>
             <input
               placeholder="Nazwa"
               value={budgetForm.name}
@@ -250,16 +271,16 @@ export default function Acquisitions() {
             ))}
           </ul>
           {budgetSummary && (
-            <div className="surface-card" style={{ marginTop: '1rem' }}>
+            <div className="surface-card acquisitions-summary">
               <strong>Podsumowanie budżetu</strong>
               <pre style={{ whiteSpace: 'pre-wrap' }}>{JSON.stringify(budgetSummary, null, 2)}</pre>
             </div>
           )}
-        </div>
+        </section>
 
-        <div className="surface-card surface-card--wide">
+        <section className="surface-card surface-card--wide acquisitions-panel acquisitions-panel--wide">
           <h3>Zamówienia</h3>
-          <form className="form-row" onSubmit={handleCreateOrder}>
+          <form className="form-row form-row--two acquisitions-form" onSubmit={handleCreateOrder}>
             <input
               placeholder="ID dostawcy"
               value={orderForm.supplierId}
@@ -293,11 +314,11 @@ export default function Acquisitions() {
               </li>
             ))}
           </ul>
-        </div>
+        </section>
 
-        <div className="surface-card">
+        <section className="surface-card acquisitions-panel">
           <h3>Ubytki</h3>
-          <form className="form-row" onSubmit={handleCreateWeeding}>
+          <form className="form-row form-row--two acquisitions-form" onSubmit={handleCreateWeeding}>
             <input
               placeholder="ID książki"
               value={weedingForm.bookId}
@@ -318,7 +339,7 @@ export default function Acquisitions() {
               </li>
             ))}
           </ul>
-        </div>
+        </section>
       </div>
     </div>
   )
