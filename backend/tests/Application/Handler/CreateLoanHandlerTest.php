@@ -8,6 +8,7 @@ use App\Entity\BookCopy;
 use App\Entity\Loan;
 use App\Entity\User;
 use App\Repository\BookCopyRepository;
+use App\Repository\FineRepository;
 use App\Repository\LoanRepository;
 use App\Repository\ReservationRepository;
 use App\Service\Book\BookService;
@@ -24,6 +25,7 @@ class CreateLoanHandlerTest extends TestCase
     private LoanRepository&MockObject $loanRepository;
     private ReservationRepository&MockObject $reservationRepository;
     private BookCopyRepository&MockObject $bookCopyRepository;
+    private FineRepository&MockObject $fineRepository;
     private \App\Service\System\SystemSettingsService&MockObject $settingsService;
     private EventDispatcherInterface&MockObject $eventDispatcher;
     private CreateLoanHandler $handler;
@@ -35,6 +37,7 @@ class CreateLoanHandlerTest extends TestCase
         $this->loanRepository = $this->createMock(LoanRepository::class);
         $this->reservationRepository = $this->createMock(ReservationRepository::class);
         $this->bookCopyRepository = $this->createMock(BookCopyRepository::class);
+        $this->fineRepository = $this->createMock(FineRepository::class);
         $this->settingsService = $this->createMock(\App\Service\System\SystemSettingsService::class);
         $this->eventDispatcher = $this->createMock(EventDispatcherInterface::class);
 
@@ -44,6 +47,7 @@ class CreateLoanHandlerTest extends TestCase
             $this->loanRepository,
             $this->reservationRepository,
             $this->bookCopyRepository,
+            $this->fineRepository,
             $this->settingsService,
             $this->eventDispatcher,
             new NullLogger()
@@ -86,8 +90,9 @@ class CreateLoanHandlerTest extends TestCase
             });
 
         $this->loanRepository->method('countActiveByUser')->with($user)->willReturn(2);
+        $this->fineRepository->method('sumOutstandingByUser')->with($user)->willReturn(0.0);
         $this->reservationRepository->method('findFirstActiveForUserAndBook')->willReturn(null);
-        $this->bookService->method('borrow')->with($book, null, null, false)->willReturn($copy);
+        $this->bookService->method('borrow')->with($book, null, null, false, true)->willReturn($copy);
         $this->settingsService->method('getLoanDurationDays')->willReturn(14);
 
         $this->em->expects($this->once())->method('beginTransaction');
@@ -137,7 +142,9 @@ class CreateLoanHandlerTest extends TestCase
         $userRepo = $this->createMock(\Doctrine\ORM\EntityRepository::class);
         $userRepo->method('find')->with(1)->willReturn($user);
 
+        $book = $this->createMock(Book::class);
         $bookRepo = $this->createMock(\Doctrine\ORM\EntityRepository::class);
+        $bookRepo->method('find')->with(10)->willReturn($book);
 
         $this->em->method('getRepository')->willReturnCallback(function ($class) use ($userRepo, $bookRepo) {
             return match ($class) {
@@ -163,7 +170,9 @@ class CreateLoanHandlerTest extends TestCase
         $userRepo = $this->createMock(\Doctrine\ORM\EntityRepository::class);
         $userRepo->method('find')->with(1)->willReturn($user);
 
+        $book = $this->createMock(Book::class);
         $bookRepo = $this->createMock(\Doctrine\ORM\EntityRepository::class);
+        $bookRepo->method('find')->with(10)->willReturn($book);
 
         $this->em->method('getRepository')->willReturnCallback(function ($class) use ($userRepo, $bookRepo) {
             return match ($class) {
@@ -174,6 +183,7 @@ class CreateLoanHandlerTest extends TestCase
         });
 
         $this->loanRepository->method('countActiveByUser')->with($user)->willReturn(3);
+        $this->fineRepository->method('sumOutstandingByUser')->with($user)->willReturn(0.0);
         $this->settingsService->method('getLoanDurationDays')->willReturn(14);
 
         $command = new CreateLoanCommand(userId: 1, bookId: 10);
@@ -207,9 +217,40 @@ class CreateLoanHandlerTest extends TestCase
             });
 
         $this->loanRepository->method('countActiveByUser')->with($user)->willReturn(0);
+        $this->fineRepository->method('sumOutstandingByUser')->with($user)->willReturn(0.0);
         $this->settingsService->method('getLoanDurationDays')->willReturn(14);
 
         $command = new CreateLoanCommand(userId: 1, bookId: 999);
+        ($this->handler)($command);
+    }
+
+    public function testThrowsExceptionWhenUserHasUnpaidFees(): void
+    {
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('User has unpaid fees: 12.50 PLN');
+
+        $user = $this->createMock(User::class);
+        $user->method('isBlocked')->willReturn(false);
+
+        $book = $this->createMock(Book::class);
+
+        $userRepo = $this->createMock(\Doctrine\ORM\EntityRepository::class);
+        $userRepo->method('find')->with(1)->willReturn($user);
+
+        $bookRepo = $this->createMock(\Doctrine\ORM\EntityRepository::class);
+        $bookRepo->method('find')->with(10)->willReturn($book);
+
+        $this->em->method('getRepository')->willReturnCallback(function ($class) use ($userRepo, $bookRepo) {
+            return match ($class) {
+                User::class => $userRepo,
+                Book::class => $bookRepo,
+                default => $this->createMock(\Doctrine\ORM\EntityRepository::class),
+            };
+        });
+
+        $this->fineRepository->method('sumOutstandingByUser')->with($user)->willReturn(12.50);
+
+        $command = new CreateLoanCommand(userId: 1, bookId: 10);
         ($this->handler)($command);
     }
 
@@ -243,9 +284,10 @@ class CreateLoanHandlerTest extends TestCase
             });
 
         $this->loanRepository->method('countActiveByUser')->with($user)->willReturn(0);
+        $this->fineRepository->method('sumOutstandingByUser')->with($user)->willReturn(0.0);
         $this->reservationRepository->method('findFirstActiveForUserAndBook')->willReturn(null);
         $this->reservationRepository->method('findActiveByBook')->willReturn([]);
-        $this->bookService->method('borrow')->with($book, null, null, false)->willReturn(null);
+        $this->bookService->method('borrow')->with($book, null, null, false, true)->willReturn(null);
         $this->settingsService->method('getLoanDurationDays')->willReturn(14);
 
         $command = new CreateLoanCommand(userId: 1, bookId: 10);

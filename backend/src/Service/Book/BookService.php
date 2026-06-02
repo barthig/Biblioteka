@@ -38,7 +38,13 @@ class BookService
      *
      * @return BookCopy|null The borrowed copy, or null if unavailable
      */
-    public function borrow(Book $book, ?Reservation $reservation = null, ?BookCopy $preferredCopy = null, bool $flush = true): ?BookCopy
+    public function borrow(
+        Book $book,
+        ?Reservation $reservation = null,
+        ?BookCopy $preferredCopy = null,
+        bool $flush = true,
+        bool $forUpdate = false
+    ): ?BookCopy
     {
         if ($preferredCopy !== null) {
             if ($preferredCopy->getBook()->getId() !== $book->getId()) {
@@ -52,7 +58,7 @@ class BookService
 
             $copy = $preferredCopy;
         } else {
-            $available = $this->bookCopyRepository->findAvailableCopies($book, 1);
+            $available = $this->bookCopyRepository->findAvailableCopies($book, 1, null, $forUpdate);
             if (empty($available)) {
                 return null;
             }

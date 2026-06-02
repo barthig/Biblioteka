@@ -54,6 +54,8 @@ http:
       middlewares:
         - cors-headers
         - rate-limit
+        - retry-middleware
+        - circuit-breaker
 
     # Recommendation Service - only microservice-owned recommendation endpoints
     recommendation-api:
@@ -65,6 +67,8 @@ http:
       middlewares:
         - cors-headers
         - rate-limit
+        - retry-middleware
+        - circuit-breaker
 
     # Main backend API - BFF endpoints and the rest of the application API
     backend-api:
@@ -76,6 +80,7 @@ http:
       middlewares:
         - cors-headers
         - rate-limit
+        - retry-middleware
         - circuit-breaker
 
     # Frontend (lowest priority - catch-all)

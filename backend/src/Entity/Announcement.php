@@ -279,10 +279,22 @@ class Announcement
         $userRoles = $user->getRoles();
         
         foreach ($this->targetAudience as $audience) {
-            if (in_array('ROLE_LIBRARIAN', $userRoles, true) && $audience === 'librarians') {
+            if (
+                in_array('ROLE_LIBRARIAN', $userRoles, true)
+                && in_array($audience, ['librarians', 'ROLE_LIBRARIAN'], true)
+            ) {
                 return true;
             }
-            if (in_array('ROLE_USER', $userRoles, true) && $audience === 'users') {
+            if (
+                in_array('ROLE_USER', $userRoles, true)
+                && in_array($audience, ['users', 'ROLE_USER'], true)
+            ) {
+                return true;
+            }
+            if (
+                in_array('ROLE_ADMIN', $userRoles, true)
+                && in_array($audience, ['admins', 'ROLE_ADMIN'], true)
+            ) {
                 return true;
             }
         }

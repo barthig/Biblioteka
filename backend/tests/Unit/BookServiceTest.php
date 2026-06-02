@@ -30,7 +30,7 @@ class BookServiceTest extends TestCase
         $em->expects($this->exactly(2))->method('flush');
 
         $repo = $this->createMock(BookCopyRepository::class);
-        $repo->expects($this->once())->method('findAvailableCopies')->with($book, 1)->willReturn([$copy]);
+        $repo->expects($this->once())->method('findAvailableCopies')->with($book, 1, null, false)->willReturn([$copy]);
 
         $svc = new BookService($em, $repo);
         $borrowedCopy = $svc->borrow($book);

@@ -164,6 +164,33 @@ class AnnouncementTest extends TestCase
         $this->assertFalse($announcement->isVisibleForUser(null));
     }
 
+    public function testIsVisibleForRoleBasedAudienceValues(): void
+    {
+        $librarian = $this->createUser(['ROLE_LIBRARIAN']);
+        $regularUser = $this->createUser(['ROLE_USER']);
+        $admin = $this->createUser(['ROLE_ADMIN']);
+
+        $forUsers = new Announcement();
+        $forUsers->setTitle('For users');
+        $forUsers->setContent('Content');
+        $forUsers->setCreatedBy($librarian);
+        $forUsers->setTargetAudience(['ROLE_USER']);
+        $forUsers->publish();
+
+        $forStaff = new Announcement();
+        $forStaff->setTitle('For staff');
+        $forStaff->setContent('Content');
+        $forStaff->setCreatedBy($librarian);
+        $forStaff->setTargetAudience(['ROLE_LIBRARIAN', 'ROLE_ADMIN']);
+        $forStaff->publish();
+
+        $this->assertTrue($forUsers->isVisibleForUser($regularUser));
+        $this->assertFalse($forUsers->isVisibleForUser($librarian));
+        $this->assertTrue($forStaff->isVisibleForUser($librarian));
+        $this->assertTrue($forStaff->isVisibleForUser($admin));
+        $this->assertFalse($forStaff->isVisibleForUser($regularUser));
+    }
+
     public function testIsNotVisibleWhenNotActive(): void
     {
         $admin = $this->createUser(['ROLE_LIBRARIAN']);

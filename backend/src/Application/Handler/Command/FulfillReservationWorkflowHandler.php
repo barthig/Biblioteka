@@ -7,7 +7,6 @@ use App\Application\Command\Reservation\FulfillReservationCommand;
 use App\Application\Command\Reservation\FulfillReservationWorkflowCommand;
 use App\Entity\BookCopy;
 use App\Repository\ReservationRepository;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
@@ -18,7 +17,6 @@ class FulfillReservationWorkflowHandler
 {
     public function __construct(
         private ReservationRepository $reservationRepository,
-        private EntityManagerInterface $entityManager,
         private MessageBusInterface $commandBus
     ) {
     }
@@ -48,29 +46,25 @@ class FulfillReservationWorkflowHandler
             throw new BadRequestHttpException('Book copy is not in RESERVED status');
         }
 
-        $this->entityManager->beginTransaction();
-        try {
-            $loanEnvelope = $this->commandBus->dispatch(
-                new CreateLoanCommand(
-                    userId: $reservation->getUser()->getId(),
-                    bookId: $copy->getBook()->getId(),
-                    reservationId: $reservation->getId(),
-                    bookCopyId: $copy->getId()
-                )
-            );
-            $loan = $loanEnvelope->last(\Symfony\Component\Messenger\Stamp\HandledStamp::class)?->getResult();
+        $loanEnvelope = $this->commandBus->dispatch(
+            new CreateLoanCommand(
+                userId: $reservation->getUser()->getId(),
+                bookId: $copy->getBook()->getId(),
+                reservationId: $reservation->getId(),
+                bookCopyId: $copy->getId()
+            )
+        );
+        $loan = $loanEnvelope->last(\Symfony\Component\Messenger\Stamp\HandledStamp::class)?->getResult();
 
-            $this->commandBus->dispatch(
-                new FulfillReservationCommand(
-                    reservationId: $reservation->getId(),
-                    loanId: $loan->getId()
-                )
-            );
-
-            $this->entityManager->commit();
-        } catch (\Throwable $e) {
-            $this->entityManager->rollback();
-            throw $e;
+        if (!$loan) {
+            throw new BadRequestHttpException('Loan could not be created for reservation');
         }
+
+        $this->commandBus->dispatch(
+            new FulfillReservationCommand(
+                reservationId: $reservation->getId(),
+                loanId: $loan->getId()
+            )
+        );
     }
 }

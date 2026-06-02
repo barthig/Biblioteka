@@ -59,7 +59,7 @@ class CreateReservationHandler
         // Issue #15: Check actual availability, not just copy count
         $availableCopies = $book->getCopies();
         if ($availableCopies > 0) {
-            throw BusinessLogicException::invalidState('Book is currently available — borrow instead of reserving.');
+            throw BusinessLogicException::invalidState('Book is currently available - borrow instead of reserving.');
         }
 
         if ($this->reservationRepository->findFirstActiveForUserAndBook($user, $book)) {

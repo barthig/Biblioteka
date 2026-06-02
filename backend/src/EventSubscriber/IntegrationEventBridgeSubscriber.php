@@ -19,6 +19,7 @@ use App\Event\ReservationExpiredEvent;
 use App\Event\ReservationFulfilledEvent;
 use App\Event\UserBlockedEvent;
 use App\Service\Integration\IntegrationEventPublisher;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
@@ -31,6 +32,7 @@ final class IntegrationEventBridgeSubscriber implements EventSubscriberInterface
 {
     public function __construct(
         private readonly IntegrationEventPublisher $publisher,
+        private readonly LoggerInterface $logger,
     ) {
     }
 
@@ -57,7 +59,7 @@ final class IntegrationEventBridgeSubscriber implements EventSubscriberInterface
     public function onBookBorrowed(BookBorrowedEvent $event): void
     {
         $loan = $event->getLoan();
-        $this->publisher->publish('loan.borrowed', [
+        $this->publish('loan.borrowed', [
             'loan_id' => $loan->getId(),
             'user_id' => $loan->getUser()->getId(),
             'user_email' => $loan->getUser()->getEmail(),
@@ -71,7 +73,7 @@ final class IntegrationEventBridgeSubscriber implements EventSubscriberInterface
     public function onBookReturned(BookReturnedEvent $event): void
     {
         $loan = $event->getLoan();
-        $this->publisher->publish('loan.returned', [
+        $this->publish('loan.returned', [
             'loan_id' => $loan->getId(),
             'user_id' => $loan->getUser()->getId(),
             'user_email' => $loan->getUser()->getEmail(),
@@ -85,7 +87,7 @@ final class IntegrationEventBridgeSubscriber implements EventSubscriberInterface
     public function onLoanOverdue(LoanOverdueEvent $event): void
     {
         $loan = $event->getLoan();
-        $this->publisher->publish('loan.overdue', [
+        $this->publish('loan.overdue', [
             'loan_id' => $loan->getId(),
             'user_id' => $loan->getUser()->getId(),
             'user_email' => $loan->getUser()->getEmail(),
@@ -100,7 +102,7 @@ final class IntegrationEventBridgeSubscriber implements EventSubscriberInterface
     public function onLoanExtended(LoanExtendedEvent $event): void
     {
         $loan = $event->getLoan();
-        $this->publisher->publish('loan.extended', [
+        $this->publish('loan.extended', [
             'loan_id' => $loan->getId(),
             'user_id' => $loan->getUser()->getId(),
             'user_email' => $loan->getUser()->getEmail(),
@@ -114,7 +116,7 @@ final class IntegrationEventBridgeSubscriber implements EventSubscriberInterface
     public function onReservationCreated(ReservationCreatedEvent $event): void
     {
         $reservation = $event->getReservation();
-        $this->publisher->publish('reservation.created', [
+        $this->publish('reservation.created', [
             'reservation_id' => $reservation->getId(),
             'user_id' => $event->getUser()->getId(),
             'user_email' => $event->getUser()->getEmail(),
@@ -127,7 +129,7 @@ final class IntegrationEventBridgeSubscriber implements EventSubscriberInterface
     public function onReservationFulfilled(ReservationFulfilledEvent $event): void
     {
         $reservation = $event->getReservation();
-        $this->publisher->publish('reservation.fulfilled', [
+        $this->publish('reservation.fulfilled', [
             'reservation_id' => $reservation->getId(),
             'user_id' => $reservation->getUser()->getId(),
             'user_email' => $reservation->getUser()->getEmail(),
@@ -141,7 +143,7 @@ final class IntegrationEventBridgeSubscriber implements EventSubscriberInterface
     public function onReservationExpired(ReservationExpiredEvent $event): void
     {
         $reservation = $event->getReservation();
-        $this->publisher->publish('reservation.expired', [
+        $this->publish('reservation.expired', [
             'reservation_id' => $reservation->getId(),
             'user_id' => $reservation->getUser()->getId(),
             'user_email' => $reservation->getUser()->getEmail(),
@@ -154,7 +156,7 @@ final class IntegrationEventBridgeSubscriber implements EventSubscriberInterface
     public function onFineCreated(FineCreatedEvent $event): void
     {
         $fine = $event->getFine();
-        $this->publisher->publish('fine.created', [
+        $this->publish('fine.created', [
             'fine_id' => $fine->getId(),
             'user_id' => $fine->getUser()->getId(),
             'user_email' => $fine->getUser()->getEmail(),
@@ -167,7 +169,7 @@ final class IntegrationEventBridgeSubscriber implements EventSubscriberInterface
     public function onUserBlocked(UserBlockedEvent $event): void
     {
         $user = $event->getUser();
-        $this->publisher->publish('user.blocked', [
+        $this->publish('user.blocked', [
             'user_id' => $user->getId(),
             'user_email' => $user->getEmail(),
             'reason' => $event->getReason(),
@@ -184,7 +186,7 @@ final class IntegrationEventBridgeSubscriber implements EventSubscriberInterface
             $book->getCategories()->toArray()
         );
 
-        $this->publisher->publish('book.created', [
+        $this->publish('book.created', [
             'book_id' => $book->getId(),
             'title' => $book->getTitle(),
             'author' => $book->getAuthor()->getName(),
@@ -202,7 +204,7 @@ final class IntegrationEventBridgeSubscriber implements EventSubscriberInterface
             $book->getCategories()->toArray()
         );
 
-        $this->publisher->publish('book.updated', [
+        $this->publish('book.updated', [
             'book_id' => $book->getId(),
             'title' => $book->getTitle(),
             'author' => $book->getAuthor()->getName(),
@@ -214,7 +216,7 @@ final class IntegrationEventBridgeSubscriber implements EventSubscriberInterface
 
     public function onBookDeleted(BookDeletedEvent $event): void
     {
-        $this->publisher->publish('book.deleted', [
+        $this->publish('book.deleted', [
             'book_id' => $event->getBookId(),
             'book_title' => $event->getBookTitle(),
         ]);
@@ -224,7 +226,7 @@ final class IntegrationEventBridgeSubscriber implements EventSubscriberInterface
 
     public function onRatingCreated(RatingCreatedEvent $event): void
     {
-        $this->publisher->publish('rating.created', [
+        $this->publish('rating.created', [
             'user_id' => $event->getUserId(),
             'book_id' => $event->getBookId(),
             'rating' => $event->getRatingValue(),
@@ -233,10 +235,22 @@ final class IntegrationEventBridgeSubscriber implements EventSubscriberInterface
 
     public function onFavoriteAdded(FavoriteAddedEvent $event): void
     {
-        $this->publisher->publish('favorite.added', [
+        $this->publish('favorite.added', [
             'user_id' => $event->getUserId(),
             'book_id' => $event->getBookId(),
         ]);
+    }
+
+    private function publish(string $routingKey, array $payload): void
+    {
+        try {
+            $this->publisher->publish($routingKey, $payload);
+        } catch (\Throwable $error) {
+            $this->logger->error('Integration event publish failed without interrupting domain flow', [
+                'routing_key' => $routingKey,
+                'error' => $error->getMessage(),
+            ]);
+        }
     }
 }
 

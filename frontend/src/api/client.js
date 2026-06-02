@@ -153,6 +153,38 @@ let refreshToken = localStorage.getItem('refreshToken')
 let isRefreshing = false
 let refreshSubscribers = []
 
+const createTimeoutSignal = (timeoutMs) => {
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
+
+  return {
+    signal: controller.signal,
+    clear: () => clearTimeout(timeoutId),
+  }
+}
+
+const createCompositeSignal = (externalSignal, timeoutMs) => {
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
+
+  const abort = () => controller.abort()
+  if (externalSignal) {
+    if (externalSignal.aborted) {
+      abort()
+    } else {
+      externalSignal.addEventListener('abort', abort, { once: true })
+    }
+  }
+
+  return {
+    signal: controller.signal,
+    clear: () => {
+      clearTimeout(timeoutId)
+      externalSignal?.removeEventListener?.('abort', abort)
+    },
+  }
+}
+
 const getStoredToken = (key) => {
   try {
     return localStorage.getItem(key)
@@ -254,8 +286,8 @@ const subscribeTokenRefresh = (callback) => {
   refreshSubscribers.push(callback)
 }
 
-const onTokenRefreshed = (newToken) => {
-  refreshSubscribers.forEach((callback) => callback(newToken))
+const notifyTokenRefreshSubscribers = (error, newToken = null) => {
+  refreshSubscribers.forEach((callback) => callback(error, newToken))
   refreshSubscribers = []
 }
 
@@ -274,24 +306,31 @@ const refreshAccessToken = async () => {
   if (!refreshToken) {
     throw new Error('No refresh token available')
   }
+
+  const timeout = createTimeoutSignal(config.timeout)
   
-  const response = await fetch(`${config.baseURL}/api/auth/refresh`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ refreshToken }),
-  })
-  
-  if (!response.ok) {
-    clearTokens()
-    // Intentional full reload: this runs outside the React component tree
-    // where useNavigate() is unavailable
-    window.location.href = '/login'
-    throw new Error('Token refresh failed')
+  try {
+    const response = await fetch(`${config.baseURL}/api/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken }),
+      signal: timeout.signal,
+    })
+    
+    if (!response.ok) {
+      clearTokens()
+      // Intentional full reload: this runs outside the React component tree
+      // where useNavigate() is unavailable
+      window.location.href = '/login'
+      throw new Error('Token refresh failed')
+    }
+    
+    const data = await response.json()
+    setTokens(data.token, data.refreshToken || refreshToken)
+    return data.token
+  } finally {
+    timeout.clear()
   }
-  
-  const data = await response.json()
-  setTokens(data.token, data.refreshToken || refreshToken)
-  return data.token
 }
 
 // ============================================
@@ -346,17 +385,17 @@ export const apiClient = async (endpoint, options = {}) => {
   
   while (attempt < config.retryAttempts) {
     attempt++
+    let requestSignal = null
     
     try {
-      const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), config.timeout)
+      requestSignal = createCompositeSignal(requestOptions.signal, config.timeout)
       
       const response = await fetch(url, {
         ...requestOptions,
-        signal: controller.signal,
+        signal: requestSignal.signal,
       })
       
-      clearTimeout(timeoutId)
+      requestSignal.clear()
       
       // Apply response interceptors
       for (const interceptor of responseInterceptors) {
@@ -370,7 +409,7 @@ export const apiClient = async (endpoint, options = {}) => {
           try {
             const newToken = await refreshAccessToken()
             isRefreshing = false
-            onTokenRefreshed(newToken)
+            notifyTokenRefreshSubscribers(null, newToken)
             // Retry original request with new token
             requestOptions.headers = {
               ...requestOptions.headers,
@@ -379,12 +418,17 @@ export const apiClient = async (endpoint, options = {}) => {
             return apiClient(endpoint, { ...options, noRefresh: true })
           } catch (refreshError) {
             isRefreshing = false
+            notifyTokenRefreshSubscribers(refreshError)
             throw refreshError
           }
         } else {
           // Wait for token refresh
           return new Promise((resolve, reject) => {
-            subscribeTokenRefresh((newToken) => {
+            subscribeTokenRefresh((refreshError, newToken) => {
+              if (refreshError || !newToken) {
+                reject(refreshError || new Error('Token refresh failed'))
+                return
+              }
               requestOptions.headers = {
                 ...requestOptions.headers,
                 'Authorization': `Bearer ${newToken}`,
@@ -424,6 +468,7 @@ export const apiClient = async (endpoint, options = {}) => {
       return data
       
     } catch (error) {
+      requestSignal?.clear()
       lastError = error
       
       // Apply error interceptors

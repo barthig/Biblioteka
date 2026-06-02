@@ -9,6 +9,7 @@ import SectionCard from '../../components/ui/SectionCard'
 import BookCover from '../../components/books/BookCover'
 import { bookService } from '../../services/bookService'
 import { normalizeDisplayText } from '../../utils/textNormalization'
+import { APP_NAME } from '../../constants/app'
 
 export default function Dashboard() {
   const [stats, setStats] = useState(null)
@@ -314,7 +315,7 @@ export default function Dashboard() {
         <main>
           <section className="hero-guest" aria-labelledby="hero-title">
             <div className="hero-guest__content">
-              <p className="hero-guest__eyebrow">Biblioteka miejska online</p>
+              <p className="hero-guest__eyebrow">{APP_NAME} online</p>
           <h1 id="hero-title">Znajdź książkę, której szukasz w kilka sekund</h1>
               <p className="hero-guest__lead">
                 Wyszukuj po tytule, autorze lub temacie i sprawdzaj dostępność bez wychodzenia z domu.
@@ -456,7 +457,7 @@ export default function Dashboard() {
             <div>
               <strong>Kontakt</strong>
               <p>tel. (61) 123 45 67</p>
-              <p>kontakt@biblioteka.pl</p>
+              <p>kontakt@smartlibrary.pl</p>
             </div>
             <div>
               <strong>Godziny otwarcia</strong>
@@ -471,7 +472,7 @@ export default function Dashboard() {
             </div>
           </div>
           <p className="public-footer__copyright">
-            (c) 2025 Biblioteka Publiczna. Wszelkie prawa zastrzeżone.
+            (c) 2025 {APP_NAME}. Wszelkie prawa zastrzeżone.
           </p>
         </footer>
       </div>

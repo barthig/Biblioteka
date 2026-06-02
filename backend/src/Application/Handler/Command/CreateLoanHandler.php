@@ -13,10 +13,12 @@ use App\Event\BookBorrowedEvent;
 use App\Exception\BusinessLogicException;
 use App\Exception\NotFoundException;
 use App\Repository\BookCopyRepository;
+use App\Repository\FineRepository;
 use App\Repository\LoanRepository;
 use App\Repository\ReservationRepository;
 use App\Service\Book\BookService;
 use App\Service\System\SystemSettingsService;
+use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
@@ -31,6 +33,7 @@ class CreateLoanHandler
         private LoanRepository $loanRepository,
         private ReservationRepository $reservationRepository,
         private BookCopyRepository $bookCopyRepository,
+        private FineRepository $fineRepository,
         private SystemSettingsService $settingsService,
         private EventDispatcherInterface $eventDispatcher,
         private LoggerInterface $logger
@@ -47,16 +50,6 @@ class CreateLoanHandler
             throw NotFoundException::forUser($command->userId);
         }
 
-        if ($user->isBlocked()) {
-            throw BusinessLogicException::invalidState('User account is blocked.');
-        }
-
-        $activeLoans = $this->loanRepository->countActiveByUser($user);
-        $loanLimit = $user->getLoanLimit();
-        if ($loanLimit > 0 && $activeLoans >= $loanLimit) {
-            throw BusinessLogicException::maxLoansReached($loanLimit);
-        }
-
         $book = $bookRepo->find($command->bookId);
         if (!$book) {
             throw NotFoundException::forBook($command->bookId);
@@ -65,29 +58,50 @@ class CreateLoanHandler
         $preferredCopy = null;
         $reservation = null;
 
-        if ($command->bookCopyId) {
-            $preferredCopy = $this->bookCopyRepository->find($command->bookCopyId);
-            if (!$preferredCopy) {
-                throw NotFoundException::forEntity('BookCopy', $command->bookCopyId);
-            }
-
-            if ($preferredCopy->getStatus() === BookCopy::STATUS_BORROWED) {
-                throw BusinessLogicException::bookNotAvailable($command->bookCopyId);
-            }
-        }
-
-        if ($command->reservationId) {
-            $reservation = $this->reservationRepository->find($command->reservationId);
-            if (!$reservation || $reservation->getUser()->getId() !== $user->getId()) {
-                throw NotFoundException::forReservation($command->reservationId);
-            }
-        } else {
-            $reservation = $this->reservationRepository->findFirstActiveForUserAndBook($user, $book);
-        }
-
         $this->entityManager->beginTransaction();
         try {
-            $copy = $this->bookService->borrow($book, $reservation, $preferredCopy, false);
+            $this->entityManager->lock($user, LockMode::PESSIMISTIC_WRITE);
+            $this->entityManager->lock($book, LockMode::PESSIMISTIC_WRITE);
+
+            if ($user->isBlocked()) {
+                throw BusinessLogicException::invalidState('User account is blocked.');
+            }
+
+            $outstandingFines = $this->fineRepository->sumOutstandingByUser($user);
+            if ($outstandingFines > 0.0) {
+                throw BusinessLogicException::userHasUnpaidFees($outstandingFines);
+            }
+
+            $activeLoans = $this->loanRepository->countActiveByUser($user);
+            $loanLimit = $user->getLoanLimit();
+            if ($loanLimit > 0 && $activeLoans >= $loanLimit) {
+                throw BusinessLogicException::maxLoansReached($loanLimit);
+            }
+
+            if ($command->bookCopyId) {
+                $preferredCopy = $this->bookCopyRepository->find($command->bookCopyId, LockMode::PESSIMISTIC_WRITE);
+                if (!$preferredCopy) {
+                    throw NotFoundException::forEntity('BookCopy', $command->bookCopyId);
+                }
+
+                if ($preferredCopy->getStatus() === BookCopy::STATUS_BORROWED) {
+                    throw BusinessLogicException::bookNotAvailable($command->bookCopyId);
+                }
+            }
+
+            if ($command->reservationId) {
+                $reservation = $this->reservationRepository->find($command->reservationId, LockMode::PESSIMISTIC_WRITE);
+                if (!$reservation || $reservation->getUser()->getId() !== $user->getId()) {
+                    throw NotFoundException::forReservation($command->reservationId);
+                }
+            } else {
+                $reservation = $this->reservationRepository->findFirstActiveForUserAndBook($user, $book);
+                if ($reservation) {
+                    $this->entityManager->lock($reservation, LockMode::PESSIMISTIC_WRITE);
+                }
+            }
+
+            $copy = $this->bookService->borrow($book, $reservation, $preferredCopy, false, true);
             if (!$copy) {
                 $queue = $this->reservationRepository->findActiveByBook($book);
                 if (!empty($queue)) {
@@ -118,8 +132,14 @@ class CreateLoanHandler
             $this->entityManager->flush();
             $this->entityManager->commit();
             
-            // Dispatch event
-            $this->eventDispatcher->dispatch(new BookBorrowedEvent($loan));
+            try {
+                $this->eventDispatcher->dispatch(new BookBorrowedEvent($loan));
+            } catch (\Throwable $eventError) {
+                $this->logger->error('BookBorrowedEvent dispatch failed after loan commit', [
+                    'loanId' => $loan->getId(),
+                    'error' => $eventError->getMessage(),
+                ]);
+            }
             
         } catch (\Exception $e) {
             $this->entityManager->rollback();

@@ -1,4 +1,64 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <rect width="100" height="100" fill="#2563eb"/>
-  <text x="50" y="70" font-size="60" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-weight="bold">B</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Smart Library">
+  <defs>
+    <linearGradient id="app-bg" x1="72" y1="64" x2="440" y2="448" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#16d1c3"/>
+      <stop offset="0.48" stop-color="#0b8eb8"/>
+      <stop offset="1" stop-color="#293a8f"/>
+    </linearGradient>
+    <radialGradient id="soft-light" cx="30%" cy="22%" r="72%">
+      <stop offset="0" stop-color="#e5ffff" stop-opacity="0.24"/>
+      <stop offset="0.56" stop-color="#74f3ff" stop-opacity="0.07"/>
+      <stop offset="1" stop-color="#0b102d" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="icon-glow" x="-35%" y="-35%" width="170%" height="170%">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feColorMatrix
+        in="blur"
+        type="matrix"
+        values="0 0 0 0 0.68 0 0 0 0 0.93 0 0 0 0 1 0 0 0 0.42 0"
+        result="glow"
+      />
+      <feMerge>
+        <feMergeNode in="glow"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect width="512" height="512" rx="116" fill="#0b102d"/>
+  <rect x="22" y="22" width="468" height="468" rx="104" fill="url(#app-bg)"/>
+  <rect x="22" y="22" width="468" height="468" rx="104" fill="url(#soft-light)"/>
+  <path
+    d="M120 125c44-19 88-16 132 10 44-26 88-29 132-10"
+    fill="none"
+    stroke="#ffffff"
+    stroke-opacity="0.16"
+    stroke-width="2"
+  />
+
+  <g filter="url(#icon-glow)" fill="none" stroke="#f5fdff" stroke-linecap="round" stroke-linejoin="round" stroke-width="14">
+    <path d="M148 165c35-15 72-10 108 15v174c-36-25-73-30-108-15z"/>
+    <path d="M364 165c-35-15-72-10-108 15v174c36-25 73-30 108-15z"/>
+    <path d="M256 180v174"/>
+    <path d="M178 209c17-4 33-2 49 5"/>
+    <path d="M178 248c17-4 33-2 49 5"/>
+    <path d="M285 214c16-7 32-9 49-5"/>
+    <path d="M285 253c16-7 32-9 49-5"/>
+  </g>
+
+  <g fill="none" stroke="#dffbff" stroke-linecap="round" stroke-linejoin="round" stroke-width="8" opacity="0.86">
+    <path d="M170 318h-24c-17 0-30-13-30-30v-18"/>
+    <path d="M342 318h24c17 0 30-13 30-30v-18"/>
+    <path d="M206 384v26"/>
+    <path d="M306 384v26"/>
+  </g>
+
+  <g fill="#f5fdff">
+    <circle cx="116" cy="262" r="8" opacity="0.86"/>
+    <circle cx="396" cy="262" r="8" opacity="0.86"/>
+    <circle cx="206" cy="424" r="7" opacity="0.78"/>
+    <circle cx="306" cy="424" r="7" opacity="0.78"/>
+    <circle cx="407" cy="184" r="5" opacity="0.32"/>
+    <circle cx="104" cy="369" r="4" opacity="0.28"/>
+  </g>
 </svg>

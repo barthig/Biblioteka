@@ -10,6 +10,7 @@ import StatGrid from '../../components/ui/StatGrid'
 import StatCard from '../../components/ui/StatCard'
 import FeedbackCard from '../../components/ui/FeedbackCard'
 import SectionCard from '../../components/ui/SectionCard'
+import { APP_NAME } from '../../constants/app'
 
 const blankProfile = {
   name: '',
@@ -1006,7 +1007,7 @@ export default function Profile() {
               <div className="form-row form-row--two">
                 <div className="form-field form-field--readonly">
                   <label>Odbiorca</label>
-                  <div className="form-field__value">Miejska Biblioteka Publiczna</div>
+                  <div className="form-field__value">{APP_NAME}</div>
                 </div>
                 <div className="form-field form-field--readonly">
                   <label>Numer konta</label>

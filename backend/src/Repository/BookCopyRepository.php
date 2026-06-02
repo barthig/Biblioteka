@@ -5,6 +5,7 @@ namespace App\Repository;
 use App\Entity\Book;
 use App\Entity\BookCopy;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\DBAL\LockMode;
 use Doctrine\Persistence\ManagerRegistry;
 
 class BookCopyRepository extends ServiceEntityRepository
@@ -27,7 +28,7 @@ class BookCopyRepository extends ServiceEntityRepository
     /**
      * @return BookCopy[]
      */
-    public function findAvailableCopies(Book $book, int $limit = 1, ?array $accessTypes = null): array
+    public function findAvailableCopies(Book $book, int $limit = 1, ?array $accessTypes = null, bool $forUpdate = false): array
     {
         $qb = $this->createQueryBuilder('c')
             ->andWhere('c.book = :book')
@@ -73,6 +74,11 @@ class BookCopyRepository extends ServiceEntityRepository
             }
         }
 
-        return $qb->getQuery()->getResult();
+        $query = $qb->getQuery();
+        if ($forUpdate) {
+            $query->setLockMode(LockMode::PESSIMISTIC_WRITE);
+        }
+
+        return $query->getResult();
     }
 }

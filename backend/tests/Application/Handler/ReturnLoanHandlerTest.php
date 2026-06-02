@@ -60,10 +60,12 @@ class ReturnLoanHandlerTest extends TestCase
 
         $this->loanRepository->method('find')->with(1)->willReturn($loan);
         $this->reservationRepository->method('findActiveByBook')->with($book)->willReturn([]);
-        $this->bookService->expects($this->once())->method('restore')->with($book, $copy);
+        $this->bookService->expects($this->once())->method('restore')->with($book, $copy, true, false);
 
+        $this->em->expects($this->once())->method('beginTransaction');
         $this->em->expects($this->once())->method('persist')->with($loan);
         $this->em->expects($this->once())->method('flush');
+        $this->em->expects($this->once())->method('commit');
 
         $command = new ReturnLoanCommand(loanId: 1, userId: 1);
         $result = ($this->handler)($command);

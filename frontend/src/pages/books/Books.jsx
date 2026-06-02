@@ -56,6 +56,7 @@ export default function Books() {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
   const filtersRef = useRef(filters)
   const lastCacheKeyRef = useRef(null)
+  const requestSeqRef = useRef(0)
   const { getCachedResource, setCachedResource, invalidateResource } = useResourceCache()
   const location = useLocation()
   const LIST_CACHE_TTL = 60000
@@ -102,6 +103,7 @@ export default function Books() {
     if (activeFilters.availableOnly) params.set('available', 'true')
 
     const endpoint = `/api/books?${params.toString()}`
+    const requestSeq = ++requestSeqRef.current
     const cacheKey = `books:${endpoint}`
     lastCacheKeyRef.current = cacheKey
     const hasNonQueryFilters = Boolean(
@@ -146,6 +148,9 @@ export default function Books() {
     setLastQuery(finalTerm)
     try {
       const data = await apiFetch(endpoint)
+      if (requestSeq !== requestSeqRef.current) {
+        return
+      }
       const list = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : []
       const meta = data?.meta || {}
       setBooks(list)
@@ -155,8 +160,14 @@ export default function Books() {
       setLimit(meta.limit ?? targetLimit)
       setCachedResource(cacheKey, { items: list, meta })
     } catch (err) {
+      if (requestSeq !== requestSeqRef.current) {
+        return
+      }
       setError(err.message || 'Nie udało się pobrać listy książek.')
     } finally {
+      if (requestSeq !== requestSeqRef.current) {
+        return
+      }
       setLoading(false)
     }
   }

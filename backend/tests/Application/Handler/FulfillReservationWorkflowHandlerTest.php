@@ -10,7 +10,6 @@ use App\Entity\Loan;
 use App\Entity\Reservation;
 use App\Entity\User;
 use App\Repository\ReservationRepository;
-use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Messenger\MessageBusInterface;
@@ -22,19 +21,16 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 class FulfillReservationWorkflowHandlerTest extends TestCase
 {
     private ReservationRepository|MockObject $reservationRepository;
-    private EntityManagerInterface|MockObject $em;
     private MessageBusInterface|MockObject $commandBus;
     private FulfillReservationWorkflowHandler $handler;
 
     protected function setUp(): void
     {
         $this->reservationRepository = $this->createMock(ReservationRepository::class);
-        $this->em = $this->createMock(EntityManagerInterface::class);
         $this->commandBus = $this->createMock(MessageBusInterface::class);
 
         $this->handler = new FulfillReservationWorkflowHandler(
             $this->reservationRepository,
-            $this->em,
             $this->commandBus
         );
     }
@@ -108,9 +104,6 @@ class FulfillReservationWorkflowHandlerTest extends TestCase
 
         $loan = $this->createMock(Loan::class);
         $loan->method('getId')->willReturn(99);
-
-        $this->em->expects($this->once())->method('beginTransaction');
-        $this->em->expects($this->once())->method('commit');
 
         $this->commandBus->expects($this->exactly(2))
             ->method('dispatch')

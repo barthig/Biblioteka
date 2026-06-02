@@ -90,7 +90,7 @@ class AnnouncementFixtures extends Fixture
         $maintenance->setIsPinned(true);
         $maintenance->setShowOnHomepage(true);
         $maintenance->setTargetAudience(['all']);
-        $maintenance->setExpiresAt(new \DateTimeImmutable('2025-12-16'));
+        $maintenance->setExpiresAt((new \DateTimeImmutable())->modify('+14 days'));
         $maintenance->publish();
         $manager->persist($maintenance);
 
