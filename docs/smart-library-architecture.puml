@@ -1,0 +1,85 @@
+@startuml smart_library_architecture
+title Model zaprojektowanej architektury systemu Smart Library
+
+left to right direction
+skinparam shadowing false
+skinparam rectangle {
+  RoundCorner 8
+}
+skinparam defaultFontSize 10
+skinparam titleFontSize 14
+skinparam nodesep 16
+skinparam ranksep 14
+skinparam linetype ortho
+
+actor "Czytelnik" as Reader
+actor "Bibliotekarz" as Librarian
+actor "Administrator" as Admin
+
+Reader -[hidden]down- Librarian
+Librarian -[hidden]down- Admin
+
+rectangle "Warstwa kliencka" as ClientLayer {
+  component "Frontend SPA\nReact / Vite" as Frontend
+}
+
+rectangle "Warstwa brzegowa" as EdgeLayer {
+  component "API Gateway\nTraefik" as Gateway
+  component "Reverse Proxy\nNginx" as Nginx
+}
+
+rectangle "Warstwa aplikacyjna" as AppLayer {
+  component "Backend główny\nSymfony / PHP" as Backend
+  component "Worker async\nSymfony Messenger" as Worker
+  component "Notification Service\nFastAPI" as Notification
+  component "Recommendation Service\nFastAPI" as Recommendation
+}
+
+rectangle "Dane i komunikacja" as DataLayer {
+  database "PostgreSQL\nbaza główna" as MainDb
+  database "Redis\ncache / sesje" as Redis
+  queue "RabbitMQ\nzdarzenia" as RabbitMq
+  database "PostgreSQL\npowiadomienia" as NotificationDb
+  database "PostgreSQL + pgvector\nrekomendacje" as RecommendationDb
+}
+
+rectangle "Usługi zewnętrzne" as ExternalLayer {
+  component "SMTP" as Smtp
+  component "OpenAI API" as OpenAi
+}
+
+rectangle "Monitoring" as MonitoringLayer {
+  component "Prometheus\nGrafana\nJaeger" as Monitoring
+}
+
+Reader --> Frontend
+Librarian --> Frontend
+Admin --> Frontend
+
+Frontend --> Gateway : HTTPS
+Gateway --> Nginx : /api/*
+Nginx --> Backend
+
+Backend --> MainDb
+Backend --> Redis
+Backend --> RabbitMq
+Worker --> RabbitMq
+Worker --> MainDb
+
+Gateway --> Notification : /notifications/*
+Gateway --> Recommendation : /recommendations/*
+
+Notification --> RabbitMq
+Notification --> NotificationDb
+Notification --> Smtp
+
+Recommendation --> RabbitMq
+Recommendation --> RecommendationDb
+Recommendation --> OpenAi
+
+Monitoring ..> Gateway
+Monitoring ..> Backend
+Monitoring ..> Notification
+Monitoring ..> Recommendation
+
+@enduml

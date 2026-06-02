@@ -106,7 +106,7 @@ class ExportController extends AbstractController
             'Jezyk',
             'Grupa wiekowa',
             'Typ zasobu'
-        ]);
+        ], ',', '"', '\\');
 
         foreach ($books as $book) {
             $categories = [];
@@ -131,7 +131,7 @@ class ExportController extends AbstractController
                 'pl',
                 $this->getAgeGroupLabel($book->getTargetAgeGroup()),
                 $book->getResourceType() ?? 'book'
-            ]);
+            ], ',', '"', '\\');
         }
     }
 

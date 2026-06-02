@@ -7,6 +7,13 @@ const isDev = import.meta.env.DEV;
 const isTest = import.meta.env.MODE === 'test';
 const shouldLog = isDev && !isTest;
 
+export const LogLevel = {
+  DEBUG: 'debug',
+  INFO: 'info',
+  WARN: 'warn',
+  ERROR: 'error'
+};
+
 export const logger = {
   /**
    * Log general information (development only)
@@ -47,3 +54,5 @@ export const logger = {
     if (shouldLog) console.debug(...args);
   }
 };
+
+export default logger;

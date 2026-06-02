@@ -170,14 +170,30 @@ export default function Books() {
     }
 
     try {
-      const data = await apiFetch('/api/books/filters')
+      const [booksFilters, authorsData, categoriesData] = await Promise.all([
+        apiFetch('/api/books/filters'),
+        apiFetch('/api/authors'),
+        apiFetch('/api/categories'),
+      ])
       const normalized = {
-        authors: Array.isArray(data?.authors) ? data.authors : [],
-        categories: Array.isArray(data?.categories) ? data.categories : [],
-        publishers: Array.isArray(data?.publishers) ? data.publishers : [],
-        resourceTypes: Array.isArray(data?.resourceTypes) ? data.resourceTypes : [],
-        years: data?.years ?? { min: null, max: null },
-        ageGroups: Array.isArray(data?.ageGroups) ? data.ageGroups : [],
+        authors: Array.isArray(authorsData?.data)
+          ? authorsData.data
+          : Array.isArray(booksFilters?.authors)
+            ? booksFilters.authors
+            : Array.isArray(authorsData)
+              ? authorsData
+              : [],
+        categories: Array.isArray(categoriesData?.data)
+          ? categoriesData.data
+          : Array.isArray(booksFilters?.categories)
+            ? booksFilters.categories
+            : Array.isArray(categoriesData)
+              ? categoriesData
+              : [],
+        publishers: Array.isArray(booksFilters?.publishers) ? booksFilters.publishers : [],
+        resourceTypes: Array.isArray(booksFilters?.resourceTypes) ? booksFilters.resourceTypes : [],
+        years: booksFilters?.years ?? { min: null, max: null },
+        ageGroups: Array.isArray(booksFilters?.ageGroups) ? booksFilters.ageGroups : [],
       }
       setFacets(normalized)
       setCachedResource(cacheKey, normalized)

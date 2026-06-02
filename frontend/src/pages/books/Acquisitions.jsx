@@ -16,7 +16,8 @@ export default function Acquisitions() {
   const [budgetSummary, setBudgetSummary] = useState(null)
 
   const [supplierForm, setSupplierForm] = useState({ name: '', contact: '' })
-  const [budgetForm, setBudgetForm] = useState({ name: '', amount: '' })
+  const currentYear = String(new Date().getFullYear())
+  const [budgetForm, setBudgetForm] = useState({ name: '', fiscalYear: currentYear, allocatedAmount: '', currency: 'PLN' })
   const [orderForm, setOrderForm] = useState({ supplierId: '', title: '', amount: '' })
   const [weedingForm, setWeedingForm] = useState({ bookId: '', reason: '' })
 
@@ -103,9 +104,14 @@ export default function Acquisitions() {
     event.preventDefault()
     clearMessages()
     try {
-      await acquisitionService.createBudget({ ...budgetForm, amount: Number(budgetForm.amount) })
+      await acquisitionService.createBudget({
+        name: budgetForm.name,
+        fiscalYear: Number(budgetForm.fiscalYear),
+        allocatedAmount: Number(budgetForm.allocatedAmount),
+        currency: budgetForm.currency,
+      })
       setMessage('Dodano budżet.')
-      setBudgetForm({ name: '', amount: '' })
+      setBudgetForm({ name: '', fiscalYear: currentYear, allocatedAmount: '', currency: 'PLN' })
       await loadAll()
     } catch (err) {
       setError(err.message || 'Nie udało się dodać budżetu.')
@@ -245,13 +251,34 @@ export default function Acquisitions() {
               placeholder="Nazwa"
               value={budgetForm.name}
               onChange={e => setBudgetForm(prev => ({ ...prev, name: e.target.value }))}
+              required
+            />
+            <input
+              placeholder="Rok"
+              type="number"
+              min="2000"
+              max="2100"
+              value={budgetForm.fiscalYear}
+              onChange={e => setBudgetForm(prev => ({ ...prev, fiscalYear: e.target.value }))}
+              required
             />
             <input
               placeholder="Kwota"
               type="number"
-              value={budgetForm.amount}
-              onChange={e => setBudgetForm(prev => ({ ...prev, amount: e.target.value }))}
+              min="0.01"
+              step="0.01"
+              value={budgetForm.allocatedAmount}
+              onChange={e => setBudgetForm(prev => ({ ...prev, allocatedAmount: e.target.value }))}
+              required
             />
+            <select
+              value={budgetForm.currency}
+              onChange={e => setBudgetForm(prev => ({ ...prev, currency: e.target.value }))}
+            >
+              <option value="PLN">PLN</option>
+              <option value="EUR">EUR</option>
+              <option value="USD">USD</option>
+            </select>
             <button className="btn btn-primary" type="submit">Dodaj</button>
           </form>
           <ul className="list list--bordered">
@@ -259,8 +286,9 @@ export default function Acquisitions() {
               <li key={budget.id || budget.name}>
                 <div className="list__title">{budget.name}</div>
                 <div className="list__meta">
-                  <span>Kwota: {budget.amount ?? budget.total ?? '-'}</span>
-                  {budget.spent ? <span>Wydano: {budget.spent}</span> : null}
+                  <span>Rok: {budget.fiscalYear ?? '-'}</span>
+                  <span>Kwota: {budget.allocatedAmount ?? budget.amount ?? budget.total ?? '-'} {budget.currency ?? 'PLN'}</span>
+                  {budget.spentAmount || budget.spent ? <span>Wydano: {budget.spentAmount ?? budget.spent}</span> : null}
                 </div>
                 <div className="list__actions">
                   <button className="btn btn-outline btn-sm" type="button" onClick={() => handleBudgetSummary(budget.id)}>

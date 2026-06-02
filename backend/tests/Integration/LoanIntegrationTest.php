@@ -3,6 +3,7 @@
 namespace App\Tests\Integration;
 
 use App\Entity\Book;
+use App\Entity\Fine;
 use App\Entity\Loan;
 use App\Tests\Functional\ApiTestCase;
 
@@ -77,9 +78,21 @@ class LoanIntegrationTest extends ApiTestCase
         $this->assertCount(1, $reservations['data']);
     }
 
-    public function testOverdueLoanCreatesfine(): void
+    public function testOverdueLoanCreatesFine(): void
     {
-        $this->markTestSkipped('Requires time manipulation or cron job simulation');
+        $user = $this->createUser('integration-overdue@example.com');
+        $book = $this->createBook('Overdue Integration Book');
+        $loan = $this->createLoan($user, $book, new \DateTimeImmutable('-4 days'));
+        $client = $this->createAuthenticatedClient($user);
+
+        $this->sendRequest($client, 'PUT', '/api/loans/' . $loan->getId() . '/return');
+        $this->assertResponseStatusCodeSame(200);
+
+        $fine = $this->entityManager->getRepository(Fine::class)->findOneBy(['loan' => $loan]);
+        $this->assertNotNull($fine);
+        $this->assertSame('2', rtrim(rtrim($fine->getAmount(), '0'), '.'));
+        $this->assertSame('PLN', $fine->getCurrency());
+        $this->assertStringContainsString('Zwrot po terminie', $fine->getReason());
     }
 }
 

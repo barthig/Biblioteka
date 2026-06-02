@@ -45,3 +45,21 @@ test('login navigates to home', async ({ page }) => {
 
   await expect(page).toHaveURL(/\/$/)
 })
+
+test('login shows error for invalid credentials', async ({ page }) => {
+  await page.route('**/api/auth/login', async (route) => {
+    await route.fulfill({
+      status: 401,
+      contentType: 'application/json',
+      body: JSON.stringify({ message: 'Nieprawidłowy adres e-mail lub hasło' })
+    })
+  })
+
+  await page.goto('/login')
+  await page.fill('#login-email', 'wrong@example.com')
+  await page.fill('#login-password', 'bad-password')
+  await page.click('button[type="submit"]')
+
+  await expect(page.getByText('Nieprawidłowy adres e-mail lub hasło')).toBeVisible()
+  await expect(page).toHaveURL(/\/login$/)
+})

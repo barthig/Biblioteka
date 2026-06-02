@@ -199,6 +199,11 @@ class BookControllerTest extends ApiTestCase
 
         $this->assertResponseStatusCodeSame(200);
         $data = $this->getJsonResponse($client);
+        $this->assertArrayHasKey('authors', $data);
+        $this->assertArrayHasKey('categories', $data);
+        $this->assertArrayHasKey('publishers', $data);
+        $this->assertArrayHasKey('resourceTypes', $data);
+        $this->assertArrayHasKey('years', $data);
         $this->assertArrayHasKey('ageGroups', $data);
         $this->assertNotEmpty($data['ageGroups']);
         $first = $data['ageGroups'][0];

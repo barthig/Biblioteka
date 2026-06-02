@@ -30,6 +30,35 @@ class AnnouncementControllerTest extends ApiTestCase
         }
     }
 
+    public function testHomepageAnnouncementsApplyLimitAfterPublicVisibilityFilter(): void
+    {
+        $librarian = $this->createUser('homepage-filter@example.com', ['ROLE_LIBRARIAN']);
+        for ($i = 1; $i <= 6; $i++) {
+            $this->createAnnouncement($librarian, [
+                'title' => 'Wewnętrzne ' . $i,
+                'targetAudience' => ['librarians'],
+                'isPinned' => true,
+                'status' => 'published',
+            ]);
+        }
+        $this->createAnnouncement($librarian, [
+            'title' => 'Publiczne na stronie startowej',
+            'targetAudience' => ['all'],
+            'isPinned' => false,
+            'status' => 'published',
+        ]);
+
+        $client = $this->createApiClient();
+        $this->sendRequest($client, 'GET', '/api/announcements?homepage=true&limit=5');
+
+        $this->assertResponseIsSuccessful();
+
+        $responseData = $this->getJsonResponse($client);
+        $titles = array_column($responseData['data'], 'title');
+        $this->assertContains('Publiczne na stronie startowej', $titles);
+        $this->assertNotContains('Wewnętrzne 1', $titles);
+    }
+
     public function testListAnnouncementsWithPagination(): void
     {
         $librarian = $this->createUser('pager@example.com', ['ROLE_LIBRARIAN']);

@@ -9,6 +9,7 @@ export { getNotificationDisplay } from './notificationDisplay'
 export function formatDate(date, options = {}) {
   if (!date) return '-'
   const d = new Date(date)
+  if (Number.isNaN(d.getTime())) return '-'
   
   const defaultOptions = {
     year: 'numeric',

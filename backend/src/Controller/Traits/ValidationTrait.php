@@ -37,7 +37,6 @@ trait ValidationTrait
         foreach ($data as $key => $value) {
             if ($reflection->hasProperty($key)) {
                 $property = $reflection->getProperty($key);
-                $property->setAccessible(true);
                 
                 // Type coercion for scalar and DateTime types
                 $type = $property->getType();

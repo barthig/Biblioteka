@@ -7,7 +7,7 @@ import { useResourceCache } from '../../context/ResourceCacheContext'
 import LibrarianDashboard from './LibrarianDashboard'
 import PageHeader from '../../components/ui/PageHeader'
 import FeedbackCard from '../../components/ui/FeedbackCard'
-import { logger } from '../../utils/logger'
+import { formatDate, logger } from '../../utils'
 
 export default function LibrarianPanel() {
   const { user } = useAuth()
@@ -1001,8 +1001,8 @@ export default function LibrarianPanel() {
             <div className="modal-body">
               <p><strong>Książka:</strong> {returnModal.loan?.book?.title || 'N/A'}</p>
               <p><strong>Użytkownik:</strong> {returnModal.loan?.user?.name || returnModal.loan?.user?.email || 'N/A'}</p>
-              <p><strong>Data wypożyczenia:</strong> {new Date(returnModal.loan?.borrowedAt).toLocaleDateString()}</p>
-              <p><strong>Termin zwrotu:</strong> {new Date(returnModal.loan?.dueAt).toLocaleDateString()}</p>
+              <p><strong>Data wypożyczenia:</strong> {formatDate(returnModal.loan?.borrowedAt)}</p>
+              <p><strong>Termin zwrotu:</strong> {formatDate(returnModal.loan?.dueAt)}</p>
               {returnModal.fine ? (
                 <div className="fine-warning">
                   <h4 style={{ color: '#d32f2f', marginTop: '1rem' }}>Zwrot po terminie</h4>
@@ -1060,8 +1060,8 @@ export default function LibrarianPanel() {
                 const isExpanded = expandedLoanId === loan.id
                 const userLabel = loan.user?.name || loan.user?.email || 'N/A'
                 const bookLabel = loan.book?.title || 'N/A'
-                const dueLabel = loan.dueAt ? new Date(loan.dueAt).toLocaleDateString() : '-'
-                const borrowedLabel = loan.borrowedAt ? new Date(loan.borrowedAt).toLocaleDateString() : '-'
+                const dueLabel = formatDate(loan.dueAt)
+                const borrowedLabel = formatDate(loan.borrowedAt)
                 const isOverdue = !loan.returnedAt && loan.dueAt && new Date(loan.dueAt) < new Date()
                 const statusLabel = loan.returnedAt
                   ? 'Zwracono'
@@ -1579,13 +1579,13 @@ export default function LibrarianPanel() {
                         {fine.createdAt && (
                           <div className="compact-card__row">
                             <span className="label">Utworzono</span>
-                            <span className="value">{new Date(fine.createdAt).toLocaleDateString('pl-PL')}</span>
+                            <span className="value">{formatDate(fine.createdAt)}</span>
                           </div>
                         )}
                         {fine.paidAt && (
                           <div className="compact-card__row">
                             <span className="label">Opłacono</span>
-                            <span className="value">{new Date(fine.paidAt).toLocaleDateString('pl-PL')}</span>
+                            <span className="value">{formatDate(fine.paidAt)}</span>
                           </div>
                         )}
                         {fine.reason && (

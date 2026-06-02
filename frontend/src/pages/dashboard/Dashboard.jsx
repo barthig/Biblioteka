@@ -194,7 +194,7 @@ export default function Dashboard() {
 
     let mounted = true
     async function loadPublicAnnouncements() {
-      const cacheKey = 'dashboard:/api/announcements?homepage=true&limit=6'
+      const cacheKey = 'dashboard:/api/announcements?homepage=true&limit=20'
       const cached = getCachedResource(cacheKey, PUBLIC_ANNOUNCEMENTS_TTL)
       if (cached) {
         if (mounted) {
@@ -203,7 +203,7 @@ export default function Dashboard() {
         return
       }
       try {
-        const result = await apiFetch('/api/announcements?homepage=true&limit=6')
+        const result = await apiFetch('/api/announcements?homepage=true&limit=20')
         if (mounted) {
           const list = Array.isArray(result?.data) ? result.data : []
           setPublicAnnouncements(list)

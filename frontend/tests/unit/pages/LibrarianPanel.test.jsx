@@ -106,5 +106,27 @@ describe('LibrarianPanel', () => {
     expect(await screen.findByText(/Jan Kowalski/i)).toBeInTheDocument()
     expect(await screen.findByText(/Solaris/i)).toBeInTheDocument()
   })
+
+  it('renders loans tab even when dates are missing', async () => {
+    apiFetch.mockResolvedValue([
+      {
+        id: 42,
+        user: { name: 'Anna Nowak' },
+        book: { title: 'Lalka' },
+        returnedAt: null
+      }
+    ])
+
+    render(
+      <MemoryRouter initialEntries={['/librarian?tab=loans']} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <LibrarianPanel />
+      </MemoryRouter>
+    )
+
+    expect(await screen.findByRole('heading', { name: /Aktywne wypożyczenia/i })).toBeInTheDocument()
+    expect(await screen.findByText(/Anna Nowak/i)).toBeInTheDocument()
+    expect(await screen.findByText(/Lalka/i)).toBeInTheDocument()
+    expect(screen.getByText('-')).toBeInTheDocument()
+  })
 })
 

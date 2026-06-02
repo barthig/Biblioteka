@@ -15,12 +15,12 @@ use App\Entity\Book;
 use App\Request\CreateBookRequest;
 use App\Request\UpdateBookRequest;
 use App\Dto\ApiError;
+use App\Repository\BookRepository;
 use App\Service\Book\PersonalizedRecommendationService;
 use App\Service\Auth\SecurityService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Exception\HandlerFailedException;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
@@ -37,7 +37,8 @@ class BookController extends AbstractController
         private readonly MessageBusInterface $commandBus,
         private readonly MessageBusInterface $queryBus,
         private readonly SecurityService $security,
-        private readonly PersonalizedRecommendationService $recommendations
+        private readonly PersonalizedRecommendationService $recommendations,
+        private readonly BookRepository $bookRepository
     ) {}
 
     #[OA\Get(
@@ -145,7 +146,7 @@ class BookController extends AbstractController
     #[OA\Get(
         path: '/api/books/filters',
         summary: 'Dostępne filtry dla książek',
-        description: 'Zwraca listę dostępnych wartości filtrów (grupy wiekowe)',
+        description: 'Zwraca listę dostępnych wartości filtrów książek',
         tags: ['Books'],
         responses: [
             new OA\Response(
@@ -153,6 +154,11 @@ class BookController extends AbstractController
                 description: 'Lista filtrów',
                 content: new OA\JsonContent(
                     properties: [
+                        new OA\Property(property: 'authors', type: 'array', items: new OA\Items(type: 'object')),
+                        new OA\Property(property: 'categories', type: 'array', items: new OA\Items(type: 'object')),
+                        new OA\Property(property: 'publishers', type: 'array', items: new OA\Items(type: 'string')),
+                        new OA\Property(property: 'resourceTypes', type: 'array', items: new OA\Items(type: 'string')),
+                        new OA\Property(property: 'years', type: 'object'),
                         new OA\Property(property: 'ageGroups', type: 'array', items: new OA\Items(type: 'object'))
                     ]
                 )
@@ -161,21 +167,7 @@ class BookController extends AbstractController
     )]
     public function filters(): JsonResponse
     {
-        $ageGroups = [];
-        $ageGroupDefinitions = [
-            Book::AGE_GROUP_TODDLERS => '0-2 lata',
-            Book::AGE_GROUP_PRESCHOOL => '3-6 lat',
-            Book::AGE_GROUP_EARLY_SCHOOL => '7-9 lat',
-            Book::AGE_GROUP_MIDDLE_GRADE => '10-12 lat',
-            Book::AGE_GROUP_YA_EARLY => '13-15 lat',
-            Book::AGE_GROUP_YA_LATE => '16+ lat',
-        ];
-
-        foreach ($ageGroupDefinitions as $value => $label) {
-            $ageGroups[] = ['value' => $value, 'label' => $label];
-        }
-
-        return $this->json(['ageGroups' => $ageGroups]);
+        return $this->json($this->bookRepository->getPublicFacets());
     }
 
     #[OA\Get(

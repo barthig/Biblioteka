@@ -118,7 +118,7 @@ class JwtAuthenticator extends AbstractAuthenticator
         return new JsonResponse(['message' => $status === 403 ? $message : 'Unauthorized'], $status);
     }
 
-    public function start(Request $request, AuthenticationException $authException = null): JsonResponse
+    public function start(Request $request, ?AuthenticationException $authException = null): JsonResponse
     {
         return new JsonResponse(['message' => 'Unauthorized'], 401);
     }

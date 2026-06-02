@@ -23,3 +23,21 @@ test('books list and details', async ({ page }) => {
   await page.click('text=Alpha')
   await expect(page.getByRole('heading', { name: 'Alpha' })).toBeVisible()
 })
+
+test('books search shows empty result message', async ({ page }) => {
+  await page.route('**/api/books/filters', async (route) => {
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ authors: [], categories: [], publishers: [], resourceTypes: [], years: {}, ageGroups: [] }) })
+  })
+  await page.route('**/api/books?*', async (route) => {
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ data: [] }) })
+  })
+  await page.route('**/api/books', async (route) => {
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ data: [] }) })
+  })
+
+  await page.goto('/books')
+  await page.getByLabel('Szukaj książek').fill('Nieistniejący tytuł')
+  await page.getByRole('button', { name: 'Szukaj' }).click()
+
+  await expect(page.getByText('Brak wyników dla frazy "Nieistniejący tytuł".')).toBeVisible()
+})

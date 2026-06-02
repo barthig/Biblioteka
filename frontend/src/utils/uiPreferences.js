@@ -59,3 +59,11 @@ export function clearUiPreferences() {
     // ignore storage failures
   }
 }
+
+export default {
+  normalizeUiPreferences,
+  applyUiPreferences,
+  loadStoredUiPreferences,
+  storeUiPreferences,
+  clearUiPreferences,
+}

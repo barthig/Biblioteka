@@ -77,7 +77,7 @@ final class RateLimiterSubscriber implements EventSubscriberInterface
             $response->headers->set('X-RateLimit-Limit', (string) $limit->getLimit());
             $response->headers->set('X-RateLimit-Remaining', '0');
             $response->headers->set('X-RateLimit-Reset', (string) $retryAfterTimestamp);
-            $response->headers->set('Retry-After', (string) $retryAfter->format(\DateTimeInterface::RFC7231));
+            $response->headers->set('Retry-After', gmdate('D, d M Y H:i:s \G\M\T', $retryAfterTimestamp));
 
             $event->setResponse($response);
         }

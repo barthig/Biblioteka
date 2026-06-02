@@ -59,14 +59,15 @@ class AnnouncementRepository extends ServiceEntityRepository
             ->andWhere('(a.expiresAt IS NULL OR a.expiresAt > :now)')
             ->setParameter('now', new \DateTimeImmutable())
             ->orderBy('a.isPinned', 'DESC')
-            ->addOrderBy('a.publishedAt', 'DESC')
-            ->setMaxResults($limit);
+            ->addOrderBy('a.publishedAt', 'DESC');
 
         $announcements = $qb->getQuery()->getResult();
 
-        return array_filter($announcements, function (Announcement $announcement) use ($user) {
+        $visibleAnnouncements = array_filter($announcements, function (Announcement $announcement) use ($user) {
             return $announcement->isVisibleForUser($user);
         });
+
+        return array_slice(array_values($visibleAnnouncements), 0, $limit);
     }
 
     /**
