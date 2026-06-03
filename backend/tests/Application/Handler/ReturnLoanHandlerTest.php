@@ -6,6 +6,7 @@ use App\Application\Handler\Command\ReturnLoanHandler;
 use App\Entity\Book;
 use App\Entity\BookCopy;
 use App\Entity\Loan;
+use App\Repository\FineRepository;
 use App\Repository\LoanRepository;
 use App\Repository\ReservationRepository;
 use App\Service\Book\BookService;
@@ -22,6 +23,7 @@ class ReturnLoanHandlerTest extends TestCase
     private BookService&MockObject $bookService;
     private LoanRepository&MockObject $loanRepository;
     private ReservationRepository&MockObject $reservationRepository;
+    private FineRepository&MockObject $fineRepository;
     private MessageBusInterface&MockObject $bus;
     private LoggerInterface&MockObject $logger;
     private EventDispatcherInterface&MockObject $eventDispatcher;
@@ -32,6 +34,7 @@ class ReturnLoanHandlerTest extends TestCase
         $this->em = $this->createMock(EntityManagerInterface::class);
         $this->loanRepository = $this->createMock(LoanRepository::class);
         $this->reservationRepository = $this->createMock(ReservationRepository::class);
+        $this->fineRepository = $this->createMock(FineRepository::class);
         $this->bus = $this->createMock(MessageBusInterface::class);
         $this->logger = $this->createMock(LoggerInterface::class);
         $this->bookService = $this->createMock(BookService::class);
@@ -42,6 +45,7 @@ class ReturnLoanHandlerTest extends TestCase
             $this->bookService,
             $this->loanRepository,
             $this->reservationRepository,
+            $this->fineRepository,
             $this->bus,
             $this->logger,
             $this->eventDispatcher

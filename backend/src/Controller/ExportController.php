@@ -43,6 +43,8 @@ class ExportController extends AbstractController
     )]
     public function exportBooks(): Response
     {
+        $this->denyAccessUnlessGranted('ROLE_LIBRARIAN');
+
         $envelope = $this->queryBus->dispatch(new ExportBooksQuery());
         $books = $envelope->last(HandledStamp::class)?->getResult();
 

@@ -255,10 +255,13 @@ class AuthController extends AbstractController
             return $this->jsonError(ApiError::forbidden());
         }
 
-        $this->refreshTokenService->revokeRefreshToken($refreshTokenString);
-        
         try {
-            $newRefreshToken = $this->refreshTokenService->createRefreshToken($user, $request);
+            $rotation = $this->refreshTokenService->rotateRefreshToken($refreshTokenString, $request);
+            if ($rotation === null) {
+                return $this->jsonError(ApiError::unauthorized());
+            }
+
+            $newRefreshToken = $rotation['refreshToken'];
             $newRefreshTokenString = $newRefreshToken->getToken();
         } catch (\Throwable $e) {
             return $this->jsonError(ApiError::internalError('Failed to rotate refresh token'));

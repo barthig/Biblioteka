@@ -91,13 +91,6 @@ http:
         - web
       priority: 1
 
-    # Traefik dashboard
-    traefik-dashboard:
-      rule: "PathPrefix(`/dashboard`)"
-      service: api@internal
-      entryPoints:
-        - web
-
   services:
     backend-svc:
       loadBalancer:

@@ -28,8 +28,8 @@ class JwtAuthenticator extends AbstractAuthenticator
         $path = $request->getPathInfo();
         $method = $request->getMethod();
 
-        // Only protect API/admin paths; skip OPTIONS and public routes
-        if (!str_starts_with($path, '/api') && !str_starts_with($path, '/admin')) {
+        // Only protect API/admin/metrics paths; skip OPTIONS and public routes
+        if (!str_starts_with($path, '/api') && !str_starts_with($path, '/admin') && $path !== '/metrics') {
             return false;
         }
         if ($method === 'OPTIONS') {

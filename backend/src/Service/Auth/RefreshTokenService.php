@@ -6,6 +6,7 @@ namespace App\Service\Auth;
 use App\Entity\RefreshToken;
 use App\Entity\User;
 use App\Repository\RefreshTokenRepository;
+use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -67,6 +68,41 @@ class RefreshTokenService
     }
 
     /**
+     * Atomically consumes a valid refresh token and creates its replacement.
+     *
+     * @return array{user: User, refreshToken: RefreshToken}|null
+     */
+    public function rotateRefreshToken(string $tokenString, Request $request): ?array
+    {
+        $this->em->beginTransaction();
+
+        try {
+            $token = $this->findTokenForUpdate($tokenString);
+            if (!$token || !$token->isValid() || !$token->verifyToken($tokenString)) {
+                $this->em->rollback();
+                return null;
+            }
+
+            $user = $token->getUser();
+            $token->revoke();
+
+            $newToken = $this->createRefreshToken($user, $request);
+            $this->em->commit();
+
+            return [
+                'user' => $user,
+                'refreshToken' => $newToken,
+            ];
+        } catch (\Throwable $e) {
+            if ($this->em->getConnection()->isTransactionActive()) {
+                $this->em->rollback();
+            }
+
+            throw $e;
+        }
+    }
+
+    /**
      * Unieważnia refresh token
      */
     public function revokeRefreshToken(string $tokenString): bool
@@ -106,6 +142,23 @@ class RefreshTokenService
     private function generateSecureToken(): string
     {
         return bin2hex(random_bytes(32));
+    }
+
+    private function findTokenForUpdate(string $tokenString): ?RefreshToken
+    {
+        $tokenHash = hash('sha256', $tokenString);
+        $query = $this->em->createQueryBuilder()
+            ->select('rt')
+            ->from(RefreshToken::class, 'rt')
+            ->where('rt.tokenHash = :tokenHash')
+            ->setParameter('tokenHash', $tokenHash)
+            ->getQuery();
+
+        if ($this->em->getConnection()->getDatabasePlatform()->getName() !== 'sqlite') {
+            $query->setLockMode(LockMode::PESSIMISTIC_WRITE);
+        }
+
+        return $query->getOneOrNullResult();
     }
 
     /**

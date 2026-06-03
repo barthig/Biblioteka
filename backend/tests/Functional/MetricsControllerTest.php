@@ -6,7 +6,7 @@ class MetricsControllerTest extends ApiTestCase
 {
     public function testMetricsEndpointReturnsPrometheusPayload(): void
     {
-        $client = $this->createClientWithoutSecret();
+        $client = $this->createApiClient();
 
         $client->request('GET', '/metrics');
 
@@ -18,4 +18,3 @@ class MetricsControllerTest extends ApiTestCase
         $this->assertStringContainsString('php_memory_usage_bytes', $content);
     }
 }
-

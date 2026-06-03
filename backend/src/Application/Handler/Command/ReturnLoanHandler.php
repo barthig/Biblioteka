@@ -10,6 +10,7 @@ use App\Event\BookReturnedEvent;
 use App\Exception\BusinessLogicException;
 use App\Exception\NotFoundException;
 use App\Message\ReservationReadyMessage;
+use App\Repository\FineRepository;
 use App\Repository\LoanRepository;
 use App\Repository\ReservationRepository;
 use App\Service\Book\BookService;
@@ -23,11 +24,14 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 #[AsMessageHandler(bus: 'command.bus')]
 class ReturnLoanHandler
 {
+    private const DAILY_OVERDUE_FINE = 0.50;
+
     public function __construct(
         private EntityManagerInterface $entityManager,
         private BookService $bookService,
         private LoanRepository $loanRepository,
         private ReservationRepository $reservationRepository,
+        private FineRepository $fineRepository,
         private MessageBusInterface $bus,
         private LoggerInterface $logger,
         private EventDispatcherInterface $eventDispatcher
@@ -59,28 +63,9 @@ class ReturnLoanHandler
                 throw BusinessLogicException::loanAlreadyReturned();
             }
 
-            $dueDate = $loan->getDueAt();
-            if ($now > $dueDate) {
-                $interval = $now->diff($dueDate);
-                $daysOverdue = $interval->days;
-
-                if ($daysOverdue > 0) {
-                    $fineAmount = $daysOverdue * 0.50;
-
-                    $fine = new Fine();
-                    $fine->setLoan($loan);
-                    $fine->setAmount((string) $fineAmount);
-                    $fine->setCurrency('PLN');
-                    $fine->setReason("Zwrot po terminie ({$daysOverdue} dni spóźnienia)");
-
-                    $this->entityManager->persist($fine);
-
-                    $this->logger->info('Fine created for overdue loan', [
-                        'loanId' => $loan->getId(),
-                        'daysOverdue' => $daysOverdue,
-                        'fineAmount' => $fineAmount,
-                    ]);
-                }
+            $daysOverdue = $this->calculateStartedOverdueDays($loan->getDueAt(), $now);
+            if ($daysOverdue > 0) {
+                $this->applyOverdueFine($loan, $daysOverdue);
             }
 
             $loan->setReturnedAt($now);
@@ -140,5 +125,40 @@ class ReturnLoanHandler
         }
 
         return $loan;
+    }
+
+    private function calculateStartedOverdueDays(\DateTimeImmutable $dueAt, \DateTimeImmutable $returnedAt): int
+    {
+        $secondsLate = $returnedAt->getTimestamp() - $dueAt->getTimestamp();
+        if ($secondsLate <= 0) {
+            return 0;
+        }
+
+        return max(1, (int) ceil($secondsLate / 86400));
+    }
+
+    private function applyOverdueFine(Loan $loan, int $daysOverdue): void
+    {
+        $fineAmount = number_format($daysOverdue * self::DAILY_OVERDUE_FINE, 2, '.', '');
+        $fine = $this->fineRepository->findActiveOverdueFine($loan);
+        $created = false;
+
+        if (!$fine) {
+            $fine = new Fine();
+            $fine->setLoan($loan);
+            $created = true;
+        }
+
+        $fine->setAmount($fineAmount);
+        $fine->setCurrency('PLN');
+        $fine->setReason(sprintf('Zwrot po terminie (%d dni spóźnienia)', $daysOverdue));
+
+        $this->entityManager->persist($fine);
+
+        $this->logger->info($created ? 'Fine created for overdue loan return' : 'Fine updated for overdue loan return', [
+            'loanId' => $loan->getId(),
+            'daysOverdue' => $daysOverdue,
+            'fineAmount' => $fineAmount,
+        ]);
     }
 }

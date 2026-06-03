@@ -45,7 +45,7 @@ describe('Acquisitions page', () => {
     acquisitionService.createSupplier.mockResolvedValue({})
     render(<Acquisitions />)
 
-    expect(await screen.findByText('Supplier A')).toBeInTheDocument()
+    expect(await screen.findAllByText('Supplier A')).not.toHaveLength(0)
     const supplierSections = screen.getAllByRole('heading', { name: /Dostawcy/i })
     const suppliersCard = supplierSections
       .map(heading => heading.closest('.surface-card'))

@@ -29,7 +29,8 @@ services:
     networks:
       - main
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
 
   rabbitmq:
     image: rabbitmq:3.12-management-alpine
@@ -143,8 +144,9 @@ services:
       MESSENGER_TRANSPORT_DSN: amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD:-guest}@rabbitmq:5672/%2f/messages
       MESSENGER_FAILURE_TRANSPORT_DSN: amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD:-guest}@rabbitmq:5672/%2f/messages_failed
       INTEGRATION_AMQP_DSN: amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD:-guest}@rabbitmq:5672/%2f/messages
-      API_SECRET: ${API_SECRET:-change_me_api}
-      JWT_SECRET: ${JWT_SECRET:-change_me_jwt_distributed_1234567890}
+      APP_SECRET: ${APP_SECRET:-distributed_app_secret_for_smart_library_2026_please_override}
+      API_SECRET: ${API_SECRET:-distributed_api_secret_for_smart_library_2026_please_override}
+      JWT_SECRET: ${JWT_SECRET:-distributed_jwt_secret_for_smart_library_2026_please_override}
       APP_ENV: distributed
       APP_DISTRIBUTED_MODE: 1
       APP_DEBUG: "false"
@@ -170,8 +172,9 @@ services:
       MESSENGER_TRANSPORT_DSN: amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD:-guest}@rabbitmq:5672/%2f/messages
       MESSENGER_FAILURE_TRANSPORT_DSN: amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD:-guest}@rabbitmq:5672/%2f/messages_failed
       INTEGRATION_AMQP_DSN: amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD:-guest}@rabbitmq:5672/%2f/messages
-      API_SECRET: ${API_SECRET:-change_me_api}
-      JWT_SECRET: ${JWT_SECRET:-change_me_jwt_distributed_1234567890}
+      APP_SECRET: ${APP_SECRET:-distributed_app_secret_for_smart_library_2026_please_override}
+      API_SECRET: ${API_SECRET:-distributed_api_secret_for_smart_library_2026_please_override}
+      JWT_SECRET: ${JWT_SECRET:-distributed_jwt_secret_for_smart_library_2026_please_override}
       APP_ENV: distributed
       APP_DISTRIBUTED_MODE: 1
       CONTAINER_ROLE: worker
@@ -204,8 +207,6 @@ services:
     restart: unless-stopped
     ports:
       - "3000:80"
-    environment:
-      VITE_API_URL: http://localhost
     depends_on:
       - backend
     networks:

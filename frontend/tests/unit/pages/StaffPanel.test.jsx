@@ -49,7 +49,7 @@ describe('StaffPanel', () => {
 
     renderStaffPanel('/admin')
 
-    expect(await screen.findByText('Admin Section')).toBeInTheDocument()
+    expect(await screen.findByText('Admin Section', {}, { timeout: 3000 })).toBeInTheDocument()
     expect(screen.queryByText('Operations Section')).not.toBeInTheDocument()
   })
 

@@ -33,18 +33,25 @@ class OpenAIEmbeddingService
             throw new ExternalServiceException('OpenAI API key is not configured.');
         }
 
-        $response = $this->httpClient->request('POST', 'https://api.openai.com/v1/embeddings', [
-            'headers' => [
-                'Authorization' => 'Bearer ' . $this->apiKey,
-                'Content-Type' => 'application/json',
-            ],
-            'json' => [
-                'model' => 'text-embedding-3-small',
-                'input' => $text,
-            ],
-        ]);
+        try {
+            $response = $this->httpClient->request('POST', 'https://api.openai.com/v1/embeddings', [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $this->apiKey,
+                    'Content-Type' => 'application/json',
+                ],
+                'json' => [
+                    'model' => 'text-embedding-3-small',
+                    'input' => $text,
+                ],
+                'timeout' => 5,
+                'max_duration' => 8,
+            ]);
 
-        $data = $response->toArray(false);
+            $data = $response->toArray(false);
+        } catch (\Throwable $e) {
+            throw new ExternalServiceException('OpenAI embedding request failed.');
+        }
+
         if (!isset($data['data'][0]['embedding']) || !is_array($data['data'][0]['embedding'])) {
             throw new ExternalServiceException('OpenAI embedding response is missing embedding data.');
         }

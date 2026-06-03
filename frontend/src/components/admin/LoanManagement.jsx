@@ -14,6 +14,12 @@ export default function LoanManagement({
   editingLoan,
   editForm,
   setEditForm,
+  editBookQuery = '',
+  setEditBookQuery = () => {},
+  editBookResults = [],
+  searchEditBooks,
+  editCopies = [],
+  loadEditCopies,
   onSaveEdit,
   onCloseEdit,
 }) {
@@ -31,6 +37,13 @@ export default function LoanManagement({
     const due = loan?.dueAt ? new Date(loan.dueAt) : null
     if (due && due < today) return 'Przeterminowane'
     return 'Aktywne'
+  }
+
+  const selectBook = (book) => {
+    setEditForm(prev => ({ ...prev, bookId: String(book.id), bookCopyId: '' }))
+    setEditBookQuery(book.title || `Książka #${book.id}`)
+    searchEditBooks?.('')
+    loadEditCopies?.(book.id)
   }
 
   return (
@@ -133,20 +146,10 @@ export default function LoanManagement({
                       <button className="btn btn-sm" type="button" onClick={() => onEdit(loan)}>
                         Edytuj
                       </button>
-                      <button
-                        className="btn btn-sm btn-secondary"
-                        type="button"
-                        onClick={() => onExtend(loan)}
-                        disabled={!!loan.returnedAt}
-                      >
+                      <button className="btn btn-sm btn-secondary" type="button" onClick={() => onExtend(loan)} disabled={!!loan.returnedAt}>
                         Przedłuż
                       </button>
-                      <button
-                        className="btn btn-sm btn-secondary"
-                        type="button"
-                        onClick={() => onReturn(loan)}
-                        disabled={!!loan.returnedAt}
-                      >
+                      <button className="btn btn-sm btn-secondary" type="button" onClick={() => onReturn(loan)} disabled={!!loan.returnedAt}>
                         Zwrot
                       </button>
                       <button className="btn btn-sm btn-danger" type="button" onClick={() => onDelete(loan)}>
@@ -195,23 +198,73 @@ export default function LoanManagement({
                 </div>
               </div>
               <div className="form-row form-row--two">
-                <div className="form-field">
-                  <label htmlFor="loan-edit-book">ID książki (opcjonalnie)</label>
+                <div className="form-field" style={{ position: 'relative' }}>
+                  <label htmlFor="loan-edit-book">Książka</label>
                   <input
                     id="loan-edit-book"
-                    type="number"
-                    value={editForm.bookId}
-                    onChange={(event) => setEditForm(prev => ({ ...prev, bookId: event.target.value }))}
+                    type="search"
+                    value={editBookQuery}
+                    onChange={(event) => {
+                      const value = event.target.value
+                      setEditBookQuery(value)
+                      setEditForm(prev => ({ ...prev, bookId: '', bookCopyId: '' }))
+                      searchEditBooks?.(value)
+                    }}
+                    placeholder="Wyszukaj po tytule"
                   />
+                  {editBookResults.length > 0 && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '100%',
+                      left: 0,
+                      right: 0,
+                      backgroundColor: 'white',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      maxHeight: '220px',
+                      overflowY: 'auto',
+                      zIndex: 10000,
+                      marginTop: '4px',
+                      boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                    }}>
+                      {editBookResults.map(book => (
+                        <button
+                          key={book.id}
+                          type="button"
+                          onClick={() => selectBook(book)}
+                          style={{
+                            display: 'block',
+                            width: '100%',
+                            padding: '8px 12px',
+                            cursor: 'pointer',
+                            border: 0,
+                            borderBottom: '1px solid #eee',
+                            background: 'white',
+                            textAlign: 'left'
+                          }}
+                        >
+                          <strong>{book.title || `Książka #${book.id}`}</strong>
+                          {book.author?.name && <div style={{ fontSize: '0.875rem', color: '#666' }}>{book.author.name}</div>}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <div className="form-field">
-                  <label htmlFor="loan-edit-copy">ID egzemplarza (opcjonalnie)</label>
-                  <input
+                  <label htmlFor="loan-edit-copy">Egzemplarz</label>
+                  <select
                     id="loan-edit-copy"
-                    type="number"
                     value={editForm.bookCopyId}
                     onChange={(event) => setEditForm(prev => ({ ...prev, bookCopyId: event.target.value }))}
-                  />
+                    disabled={!editForm.bookId}
+                  >
+                    <option value="">Bez zmiany egzemplarza</option>
+                    {editCopies.map(copy => (
+                      <option key={copy.id} value={copy.id}>
+                        {copy.inventoryCode || `Egzemplarz #${copy.id}`} {copy.status ? `(${copy.status})` : ''}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
               <div className="form-actions">

@@ -1,5 +1,5 @@
 
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { apiFetch } from '../../api'
 import { useAuth } from '../../context/AuthContext'
@@ -8,6 +8,29 @@ import LibrarianDashboard from './LibrarianDashboard'
 import PageHeader from '../../components/ui/PageHeader'
 import FeedbackCard from '../../components/ui/FeedbackCard'
 import { formatDate, logger } from '../../utils'
+
+const extractLoanItems = (payload) => {
+  if (Array.isArray(payload)) return payload
+  if (Array.isArray(payload?.data)) return payload.data
+  if (Array.isArray(payload?.items)) return payload.items
+  return []
+}
+
+const DAILY_OVERDUE_FINE = 0.5
+
+const getLoanReturnFinePreview = (loan) => {
+  const dueValue = loan?.dueAt || loan?.dueDate
+  if (!dueValue || loan?.returnedAt) return null
+  const dueDate = new Date(dueValue)
+  const dueTime = dueDate.getTime()
+  if (Number.isNaN(dueTime)) return null
+
+  const secondsLate = (Date.now() - dueTime) / 1000
+  if (secondsLate <= 0) return null
+
+  const days = Math.max(1, Math.ceil(secondsLate / 86400))
+  return { days, amount: days * DAILY_OVERDUE_FINE }
+}
 
 export default function LibrarianPanel() {
   const { user } = useAuth()
@@ -46,6 +69,7 @@ export default function LibrarianPanel() {
   const [editingCollection, setEditingCollection] = useState(null)
   const [collectionBookSearch, setCollectionBookSearch] = useState('')
   const [collectionBookResults, setCollectionBookResults] = useState([])
+  const [selectedCollectionBooks, setSelectedCollectionBooks] = useState({})
   const [collectionSearch, setCollectionSearch] = useState('')
   const [expandedCollectionId, setExpandedCollectionId] = useState(null)
   const [, setStats] = useState({
@@ -114,6 +138,11 @@ export default function LibrarianPanel() {
 
   const [returnModal, setReturnModal] = useState({ show: false, loan: null, fine: null })
   const CACHE_TTL = 120000
+  const loanUserSearchSeqRef = useRef(0)
+  const loanBookSearchSeqRef = useRef(0)
+  const inventoryBookSearchSeqRef = useRef(0)
+  const fineUserSearchSeqRef = useRef(0)
+  const collectionBookSearchSeqRef = useRef(0)
 
   useEffect(() => {
     const tab = searchParams.get('tab')
@@ -285,12 +314,11 @@ export default function LibrarianPanel() {
       const cacheKey = 'librarian:/api/loans'
       const cached = getCachedResource(cacheKey, CACHE_TTL)
       if (typeof cached !== 'undefined') {
-        setLoans(cached)
+        setLoans(extractLoanItems(cached))
         return
       }
       const data = await prefetchResource(cacheKey, () => apiFetch('/api/loans'), CACHE_TTL)
-      const nextLoans = Array.isArray(data) ? data : data.data || []
-      setLoans(nextLoans)
+      setLoans(extractLoanItems(data))
     } catch (err) {
       setError(err.message || 'Nie udało się pobrać wypożyczeń')
     } finally {
@@ -299,27 +327,35 @@ export default function LibrarianPanel() {
   }
 
   async function searchLoanUser(query) {
-    if (!query || query.length < 2) {
+    const term = (query || '').trim()
+    const requestSeq = ++loanUserSearchSeqRef.current
+    if (term.length < 2) {
       setLoanUserResults([])
       return
     }
     try {
-      const data = await apiFetch(`/api/users/search?q=${encodeURIComponent(query)}`)
+      const data = await apiFetch(`/api/users/search?q=${encodeURIComponent(term)}`)
+      if (requestSeq !== loanUserSearchSeqRef.current) return
       setLoanUserResults(Array.isArray(data) ? data : data?.data || [])
     } catch (err) {
+      if (requestSeq !== loanUserSearchSeqRef.current) return
       setError(err.message || 'Nie udało się wyszukać użytkownika')
     }
   }
 
   async function searchLoanBook(query) {
-    if (!query || query.length < 2) {
+    const term = (query || '').trim()
+    const requestSeq = ++loanBookSearchSeqRef.current
+    if (term.length < 2) {
       setLoanBookResults([])
       return
     }
     try {
-      const data = await apiFetch(`/api/books?q=${encodeURIComponent(query)}&limit=10`)
-      setLoanBookResults(Array.isArray(data?.data) ? data.data : [])
+      const data = await apiFetch(`/api/books?q=${encodeURIComponent(term)}&limit=10`)
+      if (requestSeq !== loanBookSearchSeqRef.current) return
+      setLoanBookResults(Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [])
     } catch (err) {
+      if (requestSeq !== loanBookSearchSeqRef.current) return
       setError(err.message || 'Nie udało się wyszukać książki')
     }
   }
@@ -480,27 +516,35 @@ export default function LibrarianPanel() {
   }
 
   async function searchBooks(query) {
-    if (!query || query.length < 2) {
+    const term = (query || '').trim()
+    const requestSeq = ++inventoryBookSearchSeqRef.current
+    if (term.length < 2) {
       setAvailableBooks([])
       return
     }
     try {
-      const data = await apiFetch(`/api/books?q=${encodeURIComponent(query)}&limit=10`)
-      setAvailableBooks(Array.isArray(data?.data) ? data.data : [])
+      const data = await apiFetch(`/api/books?q=${encodeURIComponent(term)}&limit=10`)
+      if (requestSeq !== inventoryBookSearchSeqRef.current) return
+      setAvailableBooks(Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [])
     } catch (err) {
+      if (requestSeq !== inventoryBookSearchSeqRef.current) return
       logger.error('Błąd wyszukiwania książek:', err)
     }
   }
 
   async function searchFineUser(query) {
-    if (!query || query.length < 2) {
+    const term = (query || '').trim()
+    const requestSeq = ++fineUserSearchSeqRef.current
+    if (term.length < 2) {
       setFineUserResults([])
       return
     }
     try {
-      const data = await apiFetch(`/api/users/search?q=${encodeURIComponent(query)}`)
+      const data = await apiFetch(`/api/users/search?q=${encodeURIComponent(term)}`)
+      if (requestSeq !== fineUserSearchSeqRef.current) return
       setFineUserResults(Array.isArray(data) ? data : data?.data || [])
     } catch (err) {
+      if (requestSeq !== fineUserSearchSeqRef.current) return
       setError(err.message || 'Nie udało się wyszukać użytkownika')
     }
   }
@@ -705,7 +749,7 @@ export default function LibrarianPanel() {
   async function addCopy(e) {
     e.preventDefault()
     if (!inventoryBookId) {
-      setError('Podaj ID książki, do której dodajesz egzemplarz')
+      setError('Wybierz książkę z listy, do której dodajesz egzemplarz')
       return
     }
     const validationErrors = validateAddCopy(copyForm)
@@ -788,8 +832,8 @@ export default function LibrarianPanel() {
 
   async function handleCreateLoan(e) {
     e.preventDefault()
-    if (!loanForm.userId || !loanForm.bookId || !loanForm.copyId) {
-      setError('Wybierz użytkownika, książkę i egzemplarz')
+    if (!loanForm.userId || !loanForm.bookId || !loanForm.copyId || !loanForm.dueDate) {
+      setError('Wybierz użytkownika, książkę, egzemplarz i termin zwrotu')
       return
     }
     setLoading(true)
@@ -816,6 +860,7 @@ export default function LibrarianPanel() {
       setLoanUserResults([])
       setLoanBookQuery('')
       setLoanBookResults([])
+      setCopies([])
       loadLoans()
     } catch (err) {
       setError(err.message || 'Nie udało się utworzyć wypożyczenia')
@@ -825,22 +870,10 @@ export default function LibrarianPanel() {
   }
 
   async function handleReturnLoan(loan) {
-    const now = new Date()
-    const dueDate = new Date(loan.dueAt)
-    const isOverdue = now > dueDate && !loan.returnedAt
-
-    let fineAmount = 0
-    let daysOverdue = 0
-
-    if (isOverdue) {
-      daysOverdue = Math.floor((now.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24))
-      fineAmount = daysOverdue * 0.50
-    }
-
     setReturnModal({
       show: true,
       loan,
-      fine: isOverdue ? { amount: fineAmount, days: daysOverdue } : null
+      fine: getLoanReturnFinePreview(loan)
     })
   }
 
@@ -879,7 +912,13 @@ export default function LibrarianPanel() {
         return
       }
       const data = await apiFetch('/api/collections')
-      const nextCollections = data.collections || []
+      const nextCollections = Array.isArray(data?.collections)
+        ? data.collections
+        : Array.isArray(data?.data)
+          ? data.data
+          : Array.isArray(data)
+            ? data
+            : []
       setCachedResource(cacheKey, nextCollections)
       setCollections(nextCollections)
     } catch (err) {
@@ -888,14 +927,23 @@ export default function LibrarianPanel() {
   }
 
   async function searchBooksForCollection(query) {
-    if (!query || query.length < 2) {
+    const term = (query || '').trim()
+    const requestSeq = ++collectionBookSearchSeqRef.current
+    if (term.length < 2) {
       setCollectionBookResults([])
       return
     }
     try {
-      const data = await apiFetch(`/api/books?q=${encodeURIComponent(query)}`)
-      setCollectionBookResults(data.data || [])
+      const data = await apiFetch(`/api/books?q=${encodeURIComponent(term)}`)
+      if (requestSeq !== collectionBookSearchSeqRef.current) return
+      const results = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : []
+      setCollectionBookResults(results)
+      setSelectedCollectionBooks(prev => ({
+        ...prev,
+        ...Object.fromEntries(results.map(book => [book.id, book]))
+      }))
     } catch (err) {
+      if (requestSeq !== collectionBookSearchSeqRef.current) return
       logger.error('Book search failed:', err)
     }
   }
@@ -923,6 +971,7 @@ export default function LibrarianPanel() {
       invalidateResource('librarian:/api/collections')
       setCollectionForm({ name: '', description: '', featured: false, displayOrder: 0, bookIds: [] })
       setEditingCollection(null)
+      setSelectedCollectionBooks({})
       loadCollections()
     } catch (err) {
       setError(err.message)
@@ -1016,7 +1065,7 @@ export default function LibrarianPanel() {
             </div>
             <div className="modal-actions">
               <button className="btn btn-secondary" onClick={() => setReturnModal({ show: false, loan: null, fine: null })}>
-                {returnModal.fine ? 'Potwierdź zwrot i nałóż karę' : 'Potwierdź zwrot'}
+                Anuluj
               </button>
               <button className="btn btn-primary" onClick={confirmReturn}>
                 {returnModal.fine ? 'Potwierdź zwrot i nałóż karę' : 'Potwierdź zwrot'}
@@ -1187,6 +1236,7 @@ export default function LibrarianPanel() {
                   const value = e.target.value
                   setLoanBookQuery(value)
                   setLoanForm(prev => ({ ...prev, bookId: '', copyId: '' }))
+                  setCopies([])
                   searchLoanBook(value)
                 }}
                 placeholder="Wpisz tytuł książki..."
@@ -1985,7 +2035,10 @@ export default function LibrarianPanel() {
                     <div
                       key={book.id}
                       className={`book-selector__item ${collectionForm.bookIds.includes(book.id) ? 'book-selector__item--selected' : ''}`}
-                      onClick={() => toggleBookInCollection(book.id)}
+                      onClick={() => {
+                        setSelectedCollectionBooks(prev => ({ ...prev, [book.id]: book }))
+                        toggleBookInCollection(book.id)
+                      }}
                     >
                       <input type="checkbox" checked={collectionForm.bookIds.includes(book.id)} readOnly />
                       <span>{book.title} - {book.author?.name || 'Nieznany autor'}</span>
@@ -1997,7 +2050,7 @@ export default function LibrarianPanel() {
               {collectionForm.bookIds.length > 0 && (
                 <div className="selected-books-list">
                   {collectionForm.bookIds.map(bookId => {
-                    const book = collectionBookResults.find(b => b.id === bookId)
+                    const book = selectedCollectionBooks[bookId] || collectionBookResults.find(b => b.id === bookId)
                     return (
                       <span key={bookId} className="selected-book-tag">
                         {book?.title || `Książka #${bookId}`}
@@ -2016,6 +2069,7 @@ export default function LibrarianPanel() {
                   onClick={() => {
                     setEditingCollection(null)
                     setCollectionForm({ name: '', description: '', featured: false, displayOrder: 0, bookIds: [] })
+                    setSelectedCollectionBooks({})
                   }}
                 >
                   Anuluj
@@ -2084,6 +2138,7 @@ export default function LibrarianPanel() {
                           className="btn btn-sm btn-secondary"
                           onClick={() => {
                             setEditingCollection(collection.id)
+                            setSelectedCollectionBooks(Object.fromEntries((collection.books || []).map(book => [book.id, book])))
                             setCollectionForm({
                               name: collection.name,
                               description: collection.description,

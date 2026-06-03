@@ -256,12 +256,15 @@ a {
         border-radius: 14px;
         display: grid;
         place-items: center;
-        background: linear-gradient(135deg, rgba(92, 225, 230, 0.35), rgba(124, 157, 209, 0.8));
-        color: #0f172a;
+        background: none;
+        color: #f5fdff;
+        overflow: hidden;
 }
 
 .top-nav__logo svg {
 	display: block;
+        width: 40px;
+        height: 40px;
 }
 
 .top-nav__toggle {

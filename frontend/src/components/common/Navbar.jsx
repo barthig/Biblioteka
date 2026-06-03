@@ -21,11 +21,51 @@ export default function Navbar() {
       <div className="top-nav__inner">
         <NavLink to="/" className="top-nav__brand" onClick={closeMenu}>
           <span className="top-nav__logo" aria-hidden>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M5 5.5h10.5a3 3 0 0 1 3 3v9a2 2 0 0 0-2-2H5z" />
-              <path d="M5 5.5v11.5" />
-              <path d="M8.5 8.5h6" />
-              <path d="M8.5 11.5h6" />
+            <svg width="40" height="40" viewBox="0 0 64 64" fill="none" role="img" aria-label="Smart Library">
+              <defs>
+                <linearGradient id="navbar-logo-bg" x1="8" y1="7" x2="56" y2="57" gradientUnits="userSpaceOnUse">
+                  <stop offset="0" stopColor="#16d1c3" />
+                  <stop offset="0.5" stopColor="#0b8eb8" />
+                  <stop offset="1" stopColor="#293a8f" />
+                </linearGradient>
+                <filter id="navbar-logo-glow" x="-30%" y="-30%" width="160%" height="160%">
+                  <feGaussianBlur stdDeviation="1.2" result="blur" />
+                  <feColorMatrix
+                    in="blur"
+                    type="matrix"
+                    values="0 0 0 0 0.7 0 0 0 0 0.95 0 0 0 0 1 0 0 0 0.45 0"
+                    result="glow"
+                  />
+                  <feMerge>
+                    <feMergeNode in="glow" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+              <rect width="64" height="64" rx="17" fill="#0b102d" />
+              <rect x="3" y="3" width="58" height="58" rx="15" fill="url(#navbar-logo-bg)" />
+              <path d="M16 18c5.5-2.2 11.1-1.5 16 2.2 4.9-3.7 10.5-4.4 16-2.2" stroke="#ffffff" strokeOpacity="0.18" strokeWidth="1.2" strokeLinecap="round" />
+              <g filter="url(#navbar-logo-glow)" stroke="#f5fdff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 22c4.6-2 9.3-1.2 14 2.2v22c-4.7-3.4-9.4-4.2-14-2.2V22Z" />
+                <path d="M46 22c-4.6-2-9.3-1.2-14 2.2v22c4.7-3.4 9.4-4.2 14-2.2V22Z" />
+                <path d="M32 24.2V46" />
+                <path d="M22 29c2.2-.5 4.3-.2 6.2.8" />
+                <path d="M22 34c2.2-.5 4.3-.2 6.2.8" />
+                <path d="M36 29.8c1.9-1 4-1.3 6.2-.8" />
+                <path d="M36 34.8c1.9-1 4-1.3 6.2-.8" />
+              </g>
+              <g stroke="#dffbff" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" opacity="0.9">
+                <path d="M19 41h-3.5A4.5 4.5 0 0 1 11 36.5V34" />
+                <path d="M45 41h3.5A4.5 4.5 0 0 0 53 36.5V34" />
+                <path d="M26 50v3" />
+                <path d="M38 50v3" />
+              </g>
+              <g fill="#f5fdff">
+                <circle cx="11" cy="32" r="1.7" opacity="0.9" />
+                <circle cx="53" cy="32" r="1.7" opacity="0.9" />
+                <circle cx="26" cy="55" r="1.4" opacity="0.78" />
+                <circle cx="38" cy="55" r="1.4" opacity="0.78" />
+              </g>
             </svg>
           </span>
           <div>
@@ -167,7 +207,6 @@ export default function Navbar() {
     </header>
   )
 }
-
 
 
 

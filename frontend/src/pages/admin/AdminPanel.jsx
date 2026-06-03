@@ -20,8 +20,30 @@ const defaultIntegration = {
 }
 const defaultRole = { name: '', roleKey: '', modules: '', description: '' }
 
+const extractLoanItems = (payload) => {
+  if (Array.isArray(payload)) return payload
+  if (Array.isArray(payload?.data)) return payload.data
+  if (Array.isArray(payload?.items)) return payload.items
+  return []
+}
+
+const DAILY_OVERDUE_FINE = 0.5
+
+const getLoanReturnFinePreview = (loan) => {
+  if (!loan?.dueAt || loan.returnedAt) return null
+  const dueDate = new Date(loan.dueAt)
+  const dueTime = dueDate.getTime()
+  if (Number.isNaN(dueTime)) return null
+
+  const secondsLate = (Date.now() - dueTime) / 1000
+  if (secondsLate <= 0) return null
+
+  const days = Math.max(1, Math.ceil(secondsLate / 86400))
+  return { days, amount: days * DAILY_OVERDUE_FINE }
+}
+
 export default function AdminPanel() {
-  const { getCachedResource, setCachedResource, prefetchResource } = useResourceCache()
+  const { getCachedResource, setCachedResource, invalidateResource, prefetchResource } = useResourceCache()
   const [activeTab, setActiveTab] = useState('users')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -59,6 +81,11 @@ export default function AdminPanel() {
     bookId: '',
     bookCopyId: ''
   })
+  const [loanEditBookQuery, setLoanEditBookQuery] = useState('')
+  const [loanEditBookResults, setLoanEditBookResults] = useState([])
+  const [loanEditCopies, setLoanEditCopies] = useState([])
+  const userSearchSeqRef = React.useRef(0)
+  const loanEditBookSearchSeqRef = React.useRef(0)
 
   const systemLoaded = useMemo(() => settings.length > 0 || integrations.length > 0, [settings, integrations])
   const rolesLoaded = useMemo(() => roles.length > 0, [roles])
@@ -148,14 +175,26 @@ export default function AdminPanel() {
   }
 
   async function searchUsers(query) {
-    if (!query || query.length < 2) {
-      loadUsers()
+    const term = (query || '').trim()
+    const requestSeq = ++userSearchSeqRef.current
+    if (term.length < 2) {
+      try {
+        const data = await apiFetch('/api/users')
+        if (requestSeq !== userSearchSeqRef.current) return
+        setUsers(Array.isArray(data) ? data : [])
+        setError(null)
+      } catch (err) {
+        if (requestSeq !== userSearchSeqRef.current) return
+        setError(err.message || 'Nie udało się pobrać użytkowników')
+      }
       return
     }
     try {
-      const data = await apiFetch(`/api/users/search?q=${encodeURIComponent(query)}`)
+      const data = await apiFetch(`/api/users/search?q=${encodeURIComponent(term)}`)
+      if (requestSeq !== userSearchSeqRef.current) return
       setUsers(Array.isArray(data) ? data : [])
     } catch (err) {
+      if (requestSeq !== userSearchSeqRef.current) return
       setError(err.message || 'Nie udało się wyszukać użytkowników')
     }
   }
@@ -485,7 +524,7 @@ export default function AdminPanel() {
     const cacheKey = `admin:/api/loans:${JSON.stringify(params)}`
     const cached = getCachedResource(cacheKey, ADMIN_CACHE_TTL)
     if (cached) {
-      setLoans(Array.isArray(cached) ? cached : [])
+      setLoans(extractLoanItems(cached))
       setLoansLoading(false)
       setError(null)
       return
@@ -495,9 +534,7 @@ export default function AdminPanel() {
     setError(null)
     try {
       const data = await prefetchResource(cacheKey, () => loanService.getAllLoans(params), ADMIN_CACHE_TTL)
-      const items = data?.data || data?.items || data || []
-      const nextLoans = Array.isArray(items) ? items : []
-      setLoans(nextLoans)
+      setLoans(extractLoanItems(data))
     } catch (err) {
       setError(err.message || 'Nie udało się pobrać wypożyczeń')
     } finally {
@@ -513,12 +550,55 @@ export default function AdminPanel() {
 
   function openLoanEdit(loan) {
     setEditingLoan(loan)
+    setLoanEditBookQuery(loan.book?.title || '')
+    setLoanEditBookResults([])
+    setLoanEditCopies([])
     setLoanEditForm({
       dueAt: formatDateInput(loan.dueAt),
       status: loan.returnedAt ? 'returned' : 'active',
-      bookId: loan.book?.id ?? '',
-      bookCopyId: loan.bookCopy?.id ?? ''
+      bookId: '',
+      bookCopyId: ''
     })
+  }
+
+  async function searchLoanEditBooks(query) {
+    const term = (query || '').trim()
+    const requestSeq = ++loanEditBookSearchSeqRef.current
+    if (term.length < 2) {
+      setLoanEditBookResults([])
+      return
+    }
+
+    try {
+      const data = await apiFetch(`/api/books?q=${encodeURIComponent(term)}&limit=10`)
+      if (requestSeq !== loanEditBookSearchSeqRef.current) return
+      setLoanEditBookResults(Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [])
+    } catch (err) {
+      if (requestSeq !== loanEditBookSearchSeqRef.current) return
+      setError(err.message || 'Nie udało się wyszukać książki')
+    }
+  }
+
+  async function loadLoanEditCopies(bookId) {
+    if (!bookId) {
+      setLoanEditCopies([])
+      return
+    }
+
+    try {
+      const data = await apiFetch(`/api/admin/books/${bookId}/copies`)
+      const items = Array.isArray(data?.items)
+        ? data.items
+        : Array.isArray(data?.data)
+          ? data.data
+          : Array.isArray(data)
+            ? data
+            : []
+      setLoanEditCopies(items)
+    } catch (err) {
+      setLoanEditCopies([])
+      setError(err.message || 'Nie udało się pobrać egzemplarzy książki')
+    }
   }
 
   async function saveLoanEdit() {
@@ -535,6 +615,7 @@ export default function AdminPanel() {
       await loanService.updateLoan(editingLoan.id, payload)
       setSuccess('Wypożyczenie zostało zaktualizowane')
       setEditingLoan(null)
+      invalidateResource('admin:/api/loans*')
       loadLoans()
     } catch (err) {
       setError(err.message || 'Nie udało się zaktualizować wypożyczenia')
@@ -545,9 +626,15 @@ export default function AdminPanel() {
     if (!confirm('Potwierdzić zwrot wypożyczenia?')) return
     setError(null)
     setSuccess(null)
+    const finePreview = getLoanReturnFinePreview(loan)
     try {
       await loanService.returnLoan(loan.id)
-      setSuccess('Wypożyczenie zostało zwrócone')
+      if (finePreview) {
+        setSuccess(`Zwrot po terminie. Naliczono opłatę: ${finePreview.amount.toFixed(2)} PLN za ${finePreview.days} dni.`)
+      } else {
+        setSuccess('Wypożyczenie zostało zwrócone')
+      }
+      invalidateResource('admin:/api/loans*')
       loadLoans()
     } catch (err) {
       setError(err.message || 'Nie udało się zwrócić wypożyczenia')
@@ -560,6 +647,7 @@ export default function AdminPanel() {
     try {
       await loanService.extendLoan(loan.id)
       setSuccess('Wypożyczenie zostało przedłużone')
+      invalidateResource('admin:/api/loans*')
       loadLoans()
     } catch (err) {
       setError(err.message || 'Nie udało się przedłużyć wypożyczenia')
@@ -573,6 +661,7 @@ export default function AdminPanel() {
     try {
       await loanService.deleteLoan(loan.id)
       setSuccess('Wypożyczenie zostało usunięte')
+      invalidateResource('admin:/api/loans*')
       loadLoans()
     } catch (err) {
       setError(err.message || 'Nie udało się usunąć wypożyczenia')
@@ -747,8 +836,19 @@ export default function AdminPanel() {
             editingLoan={editingLoan}
             editForm={loanEditForm}
             setEditForm={setLoanEditForm}
+            editBookQuery={loanEditBookQuery}
+            setEditBookQuery={setLoanEditBookQuery}
+            editBookResults={loanEditBookResults}
+            searchEditBooks={searchLoanEditBooks}
+            editCopies={loanEditCopies}
+            loadEditCopies={loadLoanEditCopies}
             onSaveEdit={saveLoanEdit}
-            onCloseEdit={() => setEditingLoan(null)}
+            onCloseEdit={() => {
+              setEditingLoan(null)
+              setLoanEditBookQuery('')
+              setLoanEditBookResults([])
+              setLoanEditCopies([])
+            }}
           />
         )}
       </div>

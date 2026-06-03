@@ -36,9 +36,10 @@ class FineRepository extends ServiceEntityRepository
         return $this->createQueryBuilder('f')
             ->andWhere('f.loan = :loan')
             ->andWhere('f.paidAt IS NULL')
-            ->andWhere('f.reason LIKE :reason')
+            ->andWhere('(f.reason LIKE :automaticReason OR f.reason LIKE :returnReason)')
             ->setParameter('loan', $loan)
-            ->setParameter('reason', 'Przetrzymanie%')
+            ->setParameter('automaticReason', 'Przetrzymanie%')
+            ->setParameter('returnReason', 'Zwrot po terminie%')
             ->setMaxResults(1)
             ->getQuery()
             ->getOneOrNullResult();

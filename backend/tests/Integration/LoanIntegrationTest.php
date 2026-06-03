@@ -94,5 +94,22 @@ class LoanIntegrationTest extends ApiTestCase
         $this->assertSame('PLN', $fine->getCurrency());
         $this->assertStringContainsString('Zwrot po terminie', $fine->getReason());
     }
+
+    public function testStartedOverdueDayCreatesMinimumFine(): void
+    {
+        $user = $this->createUser('integration-started-overdue@example.com');
+        $book = $this->createBook('Started Overdue Integration Book');
+        $loan = $this->createLoan($user, $book, new \DateTimeImmutable('-1 hour'));
+        $client = $this->createAuthenticatedClient($user);
+
+        $this->sendRequest($client, 'PUT', '/api/loans/' . $loan->getId() . '/return');
+        $this->assertResponseStatusCodeSame(200);
+
+        $fine = $this->entityManager->getRepository(Fine::class)->findOneBy(['loan' => $loan]);
+        $this->assertNotNull($fine);
+        $this->assertSame('0.5', rtrim(rtrim($fine->getAmount(), '0'), '.'));
+        $this->assertSame('PLN', $fine->getCurrency());
+        $this->assertStringContainsString('1 dni', $fine->getReason());
+    }
 }
 

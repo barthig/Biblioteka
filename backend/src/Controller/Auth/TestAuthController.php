@@ -8,6 +8,7 @@ use App\Dto\ApiError;
 use App\Repository\UserRepository;
 use App\Service\Auth\JwtService;
 use App\Service\Auth\RefreshTokenService;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -47,7 +48,7 @@ class TestAuthController extends AbstractController
             new OA\Response(response: 404, description: 'User not found or endpoint unavailable', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))
         ]
     )]
-    public function testLogin(Request $request, UserRepository $repo): JsonResponse
+    public function testLogin(Request $request, UserRepository $repo, LoggerInterface $logger): JsonResponse
     {
         $env = getenv('APP_ENV') ?: ($_ENV['APP_ENV'] ?? 'prod');
         if (!in_array($env, ['dev', 'test'], true)) {
@@ -69,11 +70,7 @@ class TestAuthController extends AbstractController
             }
 
             if (!$this->passwordHasher->isPasswordValid($user, $password)) {
-                return $this->json([
-                    'error' => 'Invalid password',
-                    'hashLength' => strlen($user->getPassword()),
-                    'passwordLength' => strlen($password)
-                ], 401);
+                return $this->jsonError(ApiError::unauthorized());
             }
 
             // Test JWT
@@ -96,11 +93,13 @@ class TestAuthController extends AbstractController
                 'refreshToken' => $refreshToken->getToken()
             ]);
         } catch (\Throwable $e) {
-            return $this->json([
-                'error' => 'Exception: ' . $e->getMessage(),
-                'file' => $e->getFile() . ':' . $e->getLine(),
-                'trace' => array_slice(explode("\n", $e->getTraceAsString()), 0, 10)
-            ], 500);
+            $logger->error('Test login failed', [
+                'exception' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+
+            return $this->jsonError(ApiError::internalError('Test login failed'));
         }
     }
 }

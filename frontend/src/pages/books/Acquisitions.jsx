@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { apiFetch } from '../../api'
 import { useAuth } from '../../context/AuthContext'
 import { acquisitionService } from '../../services/acquisitionService'
 
@@ -20,6 +21,9 @@ export default function Acquisitions() {
   const [budgetForm, setBudgetForm] = useState({ name: '', fiscalYear: currentYear, allocatedAmount: '', currency: 'PLN' })
   const [orderForm, setOrderForm] = useState({ supplierId: '', title: '', amount: '' })
   const [weedingForm, setWeedingForm] = useState({ bookId: '', reason: '' })
+  const [weedingBookQuery, setWeedingBookQuery] = useState('')
+  const [weedingBookResults, setWeedingBookResults] = useState([])
+  const weedingBookSearchSeqRef = useRef(0)
 
   const overviewItems = useMemo(() => ([
     {
@@ -121,11 +125,16 @@ export default function Acquisitions() {
   async function handleCreateOrder(event) {
     event.preventDefault()
     clearMessages()
+    const orderAmount = Number(orderForm.amount)
+    if (!orderForm.supplierId || !orderForm.title.trim() || !Number.isFinite(orderAmount) || orderAmount <= 0) {
+      setError('Wybierz dostawcę oraz podaj tytuł i kwotę zamówienia.')
+      return
+    }
     try {
       await acquisitionService.createOrder({
         supplierId: Number(orderForm.supplierId),
-        title: orderForm.title,
-        amount: Number(orderForm.amount),
+        title: orderForm.title.trim(),
+        amount: orderAmount,
       })
       setMessage('Dodano zamówienie.')
       setOrderForm({ supplierId: '', title: '', amount: '' })
@@ -160,16 +169,44 @@ export default function Acquisitions() {
   async function handleCreateWeeding(event) {
     event.preventDefault()
     clearMessages()
+    if (!weedingForm.bookId) {
+      setError('Wybierz książkę z listy wyników.')
+      return
+    }
+    if (!weedingForm.reason.trim()) {
+      setError('Podaj powód ubytku.')
+      return
+    }
     try {
       await acquisitionService.createWeeding({
         bookId: Number(weedingForm.bookId),
-        reason: weedingForm.reason,
+        reason: weedingForm.reason.trim(),
       })
       setMessage('Dodano protokół ubytków.')
       setWeedingForm({ bookId: '', reason: '' })
+      setWeedingBookQuery('')
+      setWeedingBookResults([])
       await loadAll()
     } catch (err) {
       setError(err.message || 'Nie udało się dodać ubytku.')
+    }
+  }
+
+  async function searchWeedingBooks(query) {
+    const term = (query || '').trim()
+    const requestSeq = ++weedingBookSearchSeqRef.current
+    if (term.length < 2) {
+      setWeedingBookResults([])
+      return
+    }
+
+    try {
+      const data = await apiFetch(`/api/books?q=${encodeURIComponent(term)}&limit=10`)
+      if (requestSeq !== weedingBookSearchSeqRef.current) return
+      setWeedingBookResults(Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [])
+    } catch (err) {
+      if (requestSeq !== weedingBookSearchSeqRef.current) return
+      setError(err.message || 'Nie udało się wyszukać książki.')
     }
   }
 
@@ -309,21 +346,32 @@ export default function Acquisitions() {
         <section className="surface-card surface-card--wide acquisitions-panel acquisitions-panel--wide">
           <h3>Zamówienia</h3>
           <form className="form-row form-row--two acquisitions-form" onSubmit={handleCreateOrder}>
-            <input
-              placeholder="ID dostawcy"
+            <select
               value={orderForm.supplierId}
               onChange={e => setOrderForm(prev => ({ ...prev, supplierId: e.target.value }))}
-            />
+              required
+            >
+              <option value="">Wybierz dostawcę</option>
+              {suppliers.map(supplier => (
+                <option key={supplier.id} value={supplier.id}>
+                  {supplier.name || `Dostawca #${supplier.id}`}
+                </option>
+              ))}
+            </select>
             <input
               placeholder="Tytuł"
               value={orderForm.title}
               onChange={e => setOrderForm(prev => ({ ...prev, title: e.target.value }))}
+              required
             />
             <input
               placeholder="Kwota"
               type="number"
+              min="0.01"
+              step="0.01"
               value={orderForm.amount}
               onChange={e => setOrderForm(prev => ({ ...prev, amount: e.target.value }))}
+              required
             />
             <button className="btn btn-primary" type="submit">Dodaj</button>
           </form>
@@ -347,22 +395,74 @@ export default function Acquisitions() {
         <section className="surface-card acquisitions-panel">
           <h3>Ubytki</h3>
           <form className="form-row form-row--two acquisitions-form" onSubmit={handleCreateWeeding}>
-            <input
-              placeholder="ID książki"
-              value={weedingForm.bookId}
-              onChange={e => setWeedingForm(prev => ({ ...prev, bookId: e.target.value }))}
-            />
+            <div className="form-field" style={{ position: 'relative' }}>
+              <input
+                placeholder="Wyszukaj książkę"
+                value={weedingBookQuery}
+                onChange={e => {
+                  const value = e.target.value
+                  setWeedingBookQuery(value)
+                  setWeedingForm(prev => ({ ...prev, bookId: '' }))
+                  searchWeedingBooks(value)
+                }}
+                required
+              />
+              {weedingBookResults.length > 0 && (
+                <div style={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: 0,
+                  right: 0,
+                  backgroundColor: 'white',
+                  border: '1px solid #ddd',
+                  borderRadius: '4px',
+                  maxHeight: '220px',
+                  overflowY: 'auto',
+                  zIndex: 10000,
+                  marginTop: '4px',
+                  boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                }}>
+                  {weedingBookResults.map(book => (
+                    <button
+                      key={book.id}
+                      type="button"
+                      onClick={() => {
+                        setWeedingForm(prev => ({ ...prev, bookId: String(book.id) }))
+                        setWeedingBookQuery(book.title || `Książka #${book.id}`)
+                        setWeedingBookResults([])
+                      }}
+                      style={{
+                        display: 'block',
+                        width: '100%',
+                        padding: '8px 12px',
+                        cursor: 'pointer',
+                        border: 0,
+                        borderBottom: '1px solid #eee',
+                        background: 'white',
+                        textAlign: 'left'
+                      }}
+                    >
+                      <strong>{book.title || `Książka #${book.id}`}</strong>
+                      {book.author?.name && <div style={{ fontSize: '0.875rem', color: '#666' }}>{book.author.name}</div>}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             <input
               placeholder="Powód"
               value={weedingForm.reason}
               onChange={e => setWeedingForm(prev => ({ ...prev, reason: e.target.value }))}
+              required
             />
             <button className="btn btn-primary" type="submit">Dodaj</button>
           </form>
           <ul className="list list--bordered">
             {weeding.map(entry => (
               <li key={entry.id || `${entry.bookId}-${entry.reason}`}>
-                <div className="list__title">Książka: {entry.bookId || entry.book?.id}</div>
+                <div className="list__title">
+                  Książka: {entry.book?.title || entry.bookTitle || (entry.bookId ? `Książka #${entry.bookId}` : '-')}
+                </div>
                 <div className="list__meta">{entry.reason || 'Brak powodu'}</div>
               </li>
             ))}

@@ -28,29 +28,35 @@ security:
 
   access_control:
     # Public endpoints
-    - { path: ^/api/test-login, roles: PUBLIC_ACCESS }
     - { path: ^/api/auth/login, roles: PUBLIC_ACCESS }
     - { path: ^/api/auth/register, roles: PUBLIC_ACCESS }
     - { path: ^/api/auth/verify, roles: PUBLIC_ACCESS }
     - { path: ^/api/auth/refresh, roles: PUBLIC_ACCESS }
     - { path: ^/api/health, roles: PUBLIC_ACCESS }
     - { path: ^/health, roles: PUBLIC_ACCESS }
-    - { path: ^/metrics, roles: PUBLIC_ACCESS }
-    - { path: ^/api/docs, roles: PUBLIC_ACCESS }
-    - { path: ^/api/docs\.json, roles: PUBLIC_ACCESS }
-    - { path: ^/api/books, roles: PUBLIC_ACCESS, methods: [GET] }
-    - { path: ^/api/books/\d+, roles: PUBLIC_ACCESS, methods: [GET] }
-    - { path: ^/api/books/\d+/cover, roles: PUBLIC_ACCESS, methods: [GET] }
-    - { path: ^/api/books/\d+/availability, roles: PUBLIC_ACCESS, methods: [GET] }
-    - { path: ^/api/books/\d+/ratings, roles: PUBLIC_ACCESS, methods: [GET] }
-    - { path: ^/api/collections, roles: PUBLIC_ACCESS, methods: [GET] }
-    - { path: ^/api/collections/\d+, roles: PUBLIC_ACCESS, methods: [GET] }
-    - { path: ^/api/announcements, roles: PUBLIC_ACCESS, methods: [GET] }
-    - { path: ^/api/announcements/\d+, roles: PUBLIC_ACCESS, methods: [GET] }
-    - { path: ^/api/library/hours, roles: PUBLIC_ACCESS, methods: [GET] }
-    - { path: ^/api/library-hours, roles: PUBLIC_ACCESS, methods: [GET] }
+    - { path: ^/api/test-login$, roles: PUBLIC_ACCESS }
+    - { path: ^/api/books$, roles: PUBLIC_ACCESS, methods: [GET] }
+    - { path: ^/api/books/filters$, roles: PUBLIC_ACCESS, methods: [GET] }
+    - { path: ^/api/books/recommended$, roles: PUBLIC_ACCESS, methods: [GET] }
+    - { path: ^/api/books/popular$, roles: PUBLIC_ACCESS, methods: [GET] }
+    - { path: ^/api/books/new$, roles: PUBLIC_ACCESS, methods: [GET] }
+    - { path: ^/api/books/\d+$, roles: PUBLIC_ACCESS, methods: [GET] }
+    - { path: ^/api/books/\d+/cover$, roles: PUBLIC_ACCESS, methods: [GET] }
+    - { path: ^/api/books/\d+/availability$, roles: PUBLIC_ACCESS, methods: [GET] }
+    - { path: ^/api/books/\d+/ratings$, roles: PUBLIC_ACCESS, methods: [GET] }
+    - { path: ^/api/books/\d+/reviews$, roles: PUBLIC_ACCESS, methods: [GET] }
+    - { path: ^/api/collections$, roles: PUBLIC_ACCESS, methods: [GET] }
+    - { path: ^/api/collections/\d+$, roles: PUBLIC_ACCESS, methods: [GET] }
+    - { path: ^/api/announcements$, roles: PUBLIC_ACCESS, methods: [GET] }
+    - { path: ^/api/announcements/\d+$, roles: PUBLIC_ACCESS, methods: [GET] }
+    - { path: ^/api/library/hours$, roles: PUBLIC_ACCESS, methods: [GET] }
+    - { path: ^/api/library-hours$, roles: PUBLIC_ACCESS, methods: [GET] }
 
     # Admin / restricted
+    - { path: ^/metrics, roles: ROLE_ADMIN }
+    - { path: ^/api/docs, roles: ROLE_ADMIN }
+    - { path: ^/api/docs\.json, roles: ROLE_ADMIN }
+    - { path: ^/api/books/export$, roles: ROLE_LIBRARIAN, methods: [GET] }
     - { path: ^/api/admin/books/\d+/assets, roles: ROLE_LIBRARIAN }
     - { path: ^/api/admin/books/\d+/copies, roles: ROLE_LIBRARIAN }
     - { path: ^/api/admin/copies/barcode, roles: ROLE_LIBRARIAN }

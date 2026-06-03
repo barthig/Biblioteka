@@ -20,6 +20,30 @@ export default function RolesAndAudit({
   entityAuditLoading,
   loadEntityAudit
 }) {
+  const entityOptions = Array.from(
+    new Map(
+      auditLogs
+        .map(entry => {
+          const entityType = entry.entityType || entry.entity
+          const entityId = entry.entityId || entry.entity_id
+          if (!entityType || !entityId) return null
+          return [
+            `${entityType}:${entityId}`,
+            {
+              entityType,
+              entityId,
+              label: `${entry.action || entry.event || 'Zdarzenie'} - ${entityType} #${entityId}`
+            }
+          ]
+        })
+        .filter(Boolean)
+    ).values()
+  )
+
+  const selectedEntityValue = entityAuditForm.entityType && entityAuditForm.entityId
+    ? `${entityAuditForm.entityType}:${entityAuditForm.entityId}`
+    : ''
+
   return (
     <div className="grid two-columns">
       <section className="surface-card" role="region" aria-labelledby="roles-title">
@@ -171,29 +195,30 @@ export default function RolesAndAudit({
           <>
             <div className="form" style={{ marginBottom: '1.5rem' }} aria-labelledby="entity-audit-title">
               <h3 id="entity-audit-title">Historia encji</h3>
-              <div className="form-row form-row--two">
+              <div className="form-row">
                 <div className="form-field">
-                  <label htmlFor="entity-type">Typ encji</label>
-                  <input
-                    id="entity-type"
-                    value={entityAuditForm.entityType}
-                    onChange={e => setEntityAuditForm(prev => ({ ...prev, entityType: e.target.value }))}
-                    placeholder="np. announcement, loan"
-                    aria-describedby="entity-type-help"
-                  />
-                  <small id="entity-type-help" className="support-copy">
-                    announcement, loan, book, user, itp.
-                  </small>
-                </div>
-                <div className="form-field">
-                  <label htmlFor="entity-id">ID encji</label>
-                  <input
-                    id="entity-id"
-                    value={entityAuditForm.entityId}
-                    onChange={e => setEntityAuditForm(prev => ({ ...prev, entityId: e.target.value }))}
-                    placeholder="np. 12"
-                    type="number"
-                  />
+                  <label htmlFor="entity-audit-select">Obiekt z ostatnich zdarzeń</label>
+                  <select
+                    id="entity-audit-select"
+                    value={selectedEntityValue}
+                    onChange={e => {
+                      const selected = entityOptions.find(option => `${option.entityType}:${option.entityId}` === e.target.value)
+                      setEntityAuditForm({
+                        entityType: selected?.entityType || '',
+                        entityId: selected?.entityId || ''
+                      })
+                    }}
+                  >
+                    <option value="">Wybierz obiekt</option>
+                    {entityOptions.map(option => (
+                      <option key={`${option.entityType}:${option.entityId}`} value={`${option.entityType}:${option.entityId}`}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                  {entityOptions.length === 0 && (
+                    <small className="support-copy">Brak ostatnich zdarzeń, z których można wybrać obiekt.</small>
+                  )}
                 </div>
               </div>
               <div className="form-actions">
