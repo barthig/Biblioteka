@@ -8,14 +8,17 @@ use App\Entity\Review;
 use App\Entity\User;
 use App\Repository\BookRepository;
 use App\Repository\UserRepository;
+use App\Service\User\NotificationService;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\NullLogger;
 
 class CreateReviewHandlerTest extends TestCase
 {
     private EntityManagerInterface $entityManager;
     private BookRepository $bookRepository;
     private UserRepository $userRepository;
+    private NotificationService $notificationService;
     private CreateReviewHandler $handler;
 
     protected function setUp(): void
@@ -23,7 +26,13 @@ class CreateReviewHandlerTest extends TestCase
         $this->entityManager = $this->createMock(EntityManagerInterface::class);
         $this->bookRepository = $this->createMock(BookRepository::class);
         $this->userRepository = $this->createMock(UserRepository::class);
-        $this->handler = new CreateReviewHandler($this->entityManager, $this->createMock(\App\Repository\ReviewRepository::class));
+        $this->notificationService = $this->createMock(NotificationService::class);
+        $this->handler = new CreateReviewHandler(
+            $this->entityManager,
+            $this->createMock(\App\Repository\ReviewRepository::class),
+            $this->notificationService,
+            new NullLogger()
+        );
     }
 
     public function testCreateReviewSuccess(): void
@@ -51,6 +60,7 @@ class CreateReviewHandlerTest extends TestCase
         
         $this->entityManager->expects($this->exactly(2))->method('persist');
         $this->entityManager->expects($this->once())->method('flush');
+        $this->notificationService->expects($this->once())->method('notifyReviewCreated');
 
         $command = new CreateReviewCommand(
             bookId: 1,

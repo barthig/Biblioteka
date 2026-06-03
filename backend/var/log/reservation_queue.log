@@ -315,3 +315,5 @@
 2026-06-01T13:17:24+00:00 reservation:6 book:97 user:integration-reservation@example.com
 2026-06-03T09:31:43+00:00 reservation:1 book:2 user:integration-reservation@example.com
 2026-06-03T09:46:01+00:00 reservation:1 book:2 user:integration-reservation@example.com
+2026-06-03T11:06:16+00:00 reservation:4 book:77 user:waiter@example.com
+2026-06-03T11:06:17+00:00 reservation:5 book:78 user:waiter@example.com

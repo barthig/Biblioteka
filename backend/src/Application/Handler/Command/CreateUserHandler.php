@@ -6,7 +6,9 @@ use App\Application\Command\User\CreateUserCommand;
 use App\Entity\User;
 use App\Exception\BusinessLogicException;
 use App\Exception\ValidationException;
+use App\Service\User\NotificationService;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
@@ -15,7 +17,9 @@ class CreateUserHandler
 {
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
-        private readonly UserPasswordHasherInterface $passwordHasher
+        private readonly UserPasswordHasherInterface $passwordHasher,
+        private readonly NotificationService $notificationService,
+        private readonly LoggerInterface $logger
     ) {
     }
 
@@ -83,6 +87,15 @@ class CreateUserHandler
         } catch (\Exception $e) {
             $conn->rollBack();
             throw BusinessLogicException::operationFailed('Create user', $e->getMessage());
+        }
+
+        try {
+            $this->notificationService->notifyWelcome($user);
+        } catch (\Throwable $notificationError) {
+            $this->logger->error('Welcome notification failed after user creation', [
+                'userId' => $user->getId(),
+                'error' => $notificationError->getMessage(),
+            ]);
         }
 
         return $user;

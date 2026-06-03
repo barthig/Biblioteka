@@ -78,6 +78,45 @@ class AcquisitionBudgetControllerTest extends ApiTestCase
         $this->assertSame('PLN', $summary['currency']);
     }
 
+    public function testAddExpenseAcceptsLegacyManualType(): void
+    {
+        $librarian = $this->createUser('budget-legacy-expense@example.com', ['ROLE_LIBRARIAN']);
+        $client = $this->createAuthenticatedClientWithoutApiSecret($librarian);
+
+        $this->jsonRequest($client, 'POST', '/api/admin/acquisitions/budgets', [
+            'name' => 'Legacy Expense Budget',
+            'fiscalYear' => '2026',
+            'allocatedAmount' => '300',
+            'currency' => 'PLN',
+        ]);
+        $this->assertResponseStatusCodeSame(201);
+        $budgetData = $this->getJsonResponse($client);
+        $budgetId = $budgetData['id'] ?? null;
+        if ($budgetId === null) {
+            $budget = $this->entityManager->getRepository(AcquisitionBudget::class)
+                ->findOneBy(['name' => 'Legacy Expense Budget']);
+            $this->assertNotNull($budget, 'Created budget should exist in database.');
+            $budgetId = $budget->getId();
+        }
+
+        $this->jsonRequest($client, 'POST', '/api/admin/acquisitions/budgets/' . $budgetId . '/expenses', [
+            'amount' => '10.00',
+            'description' => 'Manual alias expense',
+            'type' => 'MANUAL',
+        ]);
+
+        $this->assertResponseStatusCodeSame(201);
+        $expense = $this->getJsonResponse($client);
+        if (isset($expense['type'])) {
+            $this->assertSame('MISC', $expense['type']);
+        }
+
+        $expenseEntity = $this->entityManager->getRepository(AcquisitionExpense::class)
+            ->findOneBy(['description' => 'Manual alias expense']);
+        $this->assertNotNull($expenseEntity, 'Expense should exist in database.');
+        $this->assertSame('MISC', $expenseEntity->getType());
+    }
+
     public function testUpdateBudgetAdjustsFields(): void
     {
         $librarian = $this->createUser('budget-update@example.com', ['ROLE_LIBRARIAN']);

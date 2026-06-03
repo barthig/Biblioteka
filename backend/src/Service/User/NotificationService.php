@@ -6,8 +6,11 @@ namespace App\Service\User;
 
 use App\Entity\Announcement;
 use App\Entity\Book;
+use App\Entity\Loan;
 use App\Entity\NotificationLog;
+use App\Entity\Rating;
 use App\Entity\Reservation;
+use App\Entity\Review;
 use App\Entity\User;
 use App\Repository\NotificationLogRepository;
 use App\Repository\UserRepository;
@@ -16,7 +19,7 @@ use App\Service\Notification\NotificationSender;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 
-final class NotificationService
+class NotificationService
 {
     public function __construct(
         private readonly NotificationSender $sender,
@@ -53,7 +56,7 @@ final class NotificationService
         $this->entityManager->flush();
     }
 
-    public function notifyReservationQueued(Reservation $reservation): void
+    public function notifyReservationQueued(Reservation $reservation, bool $sendExternal = true): void
     {
         $user = $reservation->getUser();
         $bookTitle = $reservation->getBook()->getTitle();
@@ -90,7 +93,94 @@ final class NotificationService
             $expiresAt
         );
 
-        $this->sendReservationNotification($reservation, $subject, $text, $html);
+        if ($sendExternal) {
+            $this->sendReservationNotification($reservation, $subject, $text, $html);
+        }
+        $this->entityManager->flush();
+    }
+
+    public function notifyLoanCreated(Loan $loan): void
+    {
+        $book = $loan->getBook();
+        $dueAt = $loan->getDueAt()->format('Y-m-d');
+
+        $this->storeInAppNotification(
+            $loan->getUser(),
+            'loan_created',
+            'Książka wypożyczona',
+            sprintf('Wypożyczono "%s". Termin zwrotu: %s.', $book->getTitle(), $dueAt),
+            '/my-loans',
+            ['loanId' => $loan->getId(), 'bookId' => $book->getId(), 'dueAt' => $dueAt],
+            sprintf('loan-created:%d', $loan->getId() ?? 0)
+        );
+
+        $this->entityManager->flush();
+    }
+
+    public function notifyLoanReturned(Loan $loan): void
+    {
+        $book = $loan->getBook();
+        $returnedAt = $loan->getReturnedAt()?->format('Y-m-d') ?? (new \DateTimeImmutable())->format('Y-m-d');
+
+        $this->storeInAppNotification(
+            $loan->getUser(),
+            'loan_returned',
+            'Zwrot książki przyjęty',
+            sprintf('Przyjęto zwrot książki "%s" w dniu %s.', $book->getTitle(), $returnedAt),
+            '/my-loans',
+            ['loanId' => $loan->getId(), 'bookId' => $book->getId(), 'returnedAt' => $returnedAt],
+            sprintf('loan-returned:%d', $loan->getId() ?? 0)
+        );
+
+        $this->entityManager->flush();
+    }
+
+    public function notifyReviewCreated(Review $review): void
+    {
+        $book = $review->getBook();
+
+        $this->storeInAppNotification(
+            $review->getUser(),
+            'review_created',
+            'Opinia została dodana',
+            sprintf('Dodano Twoją opinię o książce "%s" z oceną %d/5.', $book->getTitle(), $review->getRating()),
+            sprintf('/books/%d', $book->getId()),
+            ['reviewId' => $review->getId(), 'bookId' => $book->getId(), 'rating' => $review->getRating()],
+            sprintf('review-created:%d', $review->getId() ?? 0)
+        );
+
+        $this->entityManager->flush();
+    }
+
+    public function notifyRatingCreated(Rating $rating): void
+    {
+        $book = $rating->getBook();
+
+        $this->storeInAppNotification(
+            $rating->getUser(),
+            'rating_created',
+            'Ocena została zapisana',
+            sprintf('Zapisano Twoją ocenę %d/5 dla książki "%s".', $rating->getRating(), $book->getTitle()),
+            sprintf('/books/%d', $book->getId()),
+            ['ratingId' => $rating->getId(), 'bookId' => $book->getId(), 'rating' => $rating->getRating()],
+            sprintf('rating-created:%d:%d', $rating->getId() ?? 0, $rating->getRating())
+        );
+
+        $this->entityManager->flush();
+    }
+
+    public function notifyWelcome(User $user): void
+    {
+        $this->storeInAppNotification(
+            $user,
+            'welcome',
+            'Witamy w Smart Library',
+            sprintf('Cześć %s, Twoje konto zostało utworzone. Możesz korzystać z katalogu, rezerwacji i wypożyczeń.', $user->getName() ?: 'czytelniku'),
+            '/',
+            ['userId' => $user->getId()],
+            sprintf('welcome:%d', $user->getId() ?? 0)
+        );
+
         $this->entityManager->flush();
     }
 

@@ -12,6 +12,7 @@ use App\Exception\NotFoundException;
 use App\Exception\ValidationException;
 use App\Message\ReservationQueuedNotification;
 use App\Repository\ReservationRepository;
+use App\Service\User\NotificationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
@@ -27,6 +28,7 @@ class CreateReservationHandler
         private MessageBusInterface $bus,
         private LoggerInterface $logger,
         private EventDispatcherInterface $eventDispatcher,
+        private NotificationService $notificationService,
     ) {
     }
 
@@ -75,6 +77,15 @@ class CreateReservationHandler
         $this->entityManager->flush();
 
         $this->eventDispatcher->dispatch(new ReservationCreatedEvent($reservation));
+
+        try {
+            $this->notificationService->notifyReservationQueued($reservation, false);
+        } catch (\Throwable $e) {
+            $this->logger->warning('Reservation in-app notification failed', [
+                'reservationId' => $reservation->getId(),
+                'error' => $e->getMessage()
+            ]);
+        }
 
         try {
             $this->bus->dispatch(new ReservationQueuedNotification(

@@ -18,6 +18,7 @@ use App\Repository\LoanRepository;
 use App\Repository\ReservationRepository;
 use App\Service\Book\BookService;
 use App\Service\System\SystemSettingsService;
+use App\Service\User\NotificationService;
 use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
@@ -36,7 +37,8 @@ class CreateLoanHandler
         private FineRepository $fineRepository,
         private SystemSettingsService $settingsService,
         private EventDispatcherInterface $eventDispatcher,
-        private LoggerInterface $logger
+        private LoggerInterface $logger,
+        private NotificationService $notificationService
     ) {
     }
 
@@ -138,6 +140,15 @@ class CreateLoanHandler
                 $this->logger->error('BookBorrowedEvent dispatch failed after loan commit', [
                     'loanId' => $loan->getId(),
                     'error' => $eventError->getMessage(),
+                ]);
+            }
+
+            try {
+                $this->notificationService->notifyLoanCreated($loan);
+            } catch (\Throwable $notificationError) {
+                $this->logger->error('Loan notification failed after loan commit', [
+                    'loanId' => $loan->getId(),
+                    'error' => $notificationError->getMessage(),
                 ]);
             }
             

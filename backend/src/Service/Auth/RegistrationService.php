@@ -7,9 +7,11 @@ use App\Entity\User;
 use App\Repository\RegistrationTokenRepository;
 use App\Repository\UserRepository;
 use App\Service\Book\OpenAIEmbeddingService;
+use App\Service\User\NotificationService;
 use DateInterval;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class RegistrationService
@@ -24,7 +26,9 @@ class RegistrationService
         private UserRepository $users,
         private RegistrationTokenRepository $tokens,
         private OpenAIEmbeddingService $embeddingService,
-        private UserPasswordHasherInterface $passwordHasher
+        private UserPasswordHasherInterface $passwordHasher,
+        private NotificationService $notificationService,
+        private LoggerInterface $logger
     ) {
 
         $requireApproval = getenv('REGISTRATION_REQUIRE_APPROVAL') ?: ($_ENV['REGISTRATION_REQUIRE_APPROVAL'] ?? 'false');
@@ -134,6 +138,15 @@ class RegistrationService
 
         $this->entityManager->persist($token);
         $this->entityManager->flush();
+
+        try {
+            $this->notificationService->notifyWelcome($user);
+        } catch (\Throwable $notificationError) {
+            $this->logger->error('Welcome notification failed after registration', [
+                'userId' => $user->getId(),
+                'error' => $notificationError->getMessage(),
+            ]);
+        }
 
         return $token;
     }

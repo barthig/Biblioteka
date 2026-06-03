@@ -8,7 +8,9 @@ use App\Entity\Rating;
 use App\Entity\Review;
 use App\Entity\User;
 use App\Repository\ReviewRepository;
+use App\Service\User\NotificationService;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
@@ -17,7 +19,9 @@ class CreateReviewHandler
 {
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
-        private readonly ReviewRepository $reviewRepository
+        private readonly ReviewRepository $reviewRepository,
+        private readonly NotificationService $notificationService,
+        private readonly LoggerInterface $logger
     ) {
     }
 
@@ -57,6 +61,15 @@ class CreateReviewHandler
         $rating->setRating($command->rating);
         $this->entityManager->persist($rating);
         $this->entityManager->flush();
+
+        try {
+            $this->notificationService->notifyReviewCreated($review);
+        } catch (\Throwable $notificationError) {
+            $this->logger->error('Review notification failed after review save', [
+                'reviewId' => $review->getId(),
+                'error' => $notificationError->getMessage(),
+            ]);
+        }
 
         return $review;
     }

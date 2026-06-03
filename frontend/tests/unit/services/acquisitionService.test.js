@@ -62,16 +62,16 @@ describe('acquisitionService', () => {
   it('handles orders endpoints', async () => {
     apiFetch.mockResolvedValue({})
     await acquisitionService.listOrders()
-    await acquisitionService.createOrder({ title: 'Book', amount: 1 })
+    await acquisitionService.createOrder({ title: 'Book', totalAmount: 1 })
     await acquisitionService.updateOrderStatus(7, { status: 'SENT' })
-    await acquisitionService.receiveOrder(8)
+    await acquisitionService.receiveOrder(8, { expenseAmount: 1 })
     await acquisitionService.cancelOrder(9)
 
     expect(apiFetch).toHaveBeenNthCalledWith(1, '/api/admin/acquisitions/orders')
     expect(apiFetch).toHaveBeenNthCalledWith(2, '/api/admin/acquisitions/orders', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title: 'Book', amount: 1 })
+      body: JSON.stringify({ title: 'Book', totalAmount: 1 })
     })
     expect(apiFetch).toHaveBeenNthCalledWith(3, '/api/admin/acquisitions/orders/7/status', {
       method: 'PUT',
@@ -79,7 +79,9 @@ describe('acquisitionService', () => {
       body: JSON.stringify({ status: 'SENT' })
     })
     expect(apiFetch).toHaveBeenNthCalledWith(4, '/api/admin/acquisitions/orders/8/receive', {
-      method: 'POST'
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ expenseAmount: 1 })
     })
     expect(apiFetch).toHaveBeenNthCalledWith(5, '/api/admin/acquisitions/orders/9/cancel', {
       method: 'POST'
@@ -98,4 +100,3 @@ describe('acquisitionService', () => {
     })
   })
 })
-

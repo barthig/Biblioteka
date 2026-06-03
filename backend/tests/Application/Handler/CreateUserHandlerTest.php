@@ -5,10 +5,12 @@ use App\Application\Command\User\CreateUserCommand;
 use App\Application\Handler\Command\CreateUserHandler;
 use App\Entity\User;
 use App\Exception\ValidationException;
+use App\Service\User\NotificationService;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\NullLogger;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class CreateUserHandlerTest extends TestCase
@@ -16,6 +18,7 @@ class CreateUserHandlerTest extends TestCase
     private EntityManagerInterface&MockObject $em;
     private UserPasswordHasherInterface&MockObject $passwordHasher;
     private Connection&MockObject $connection;
+    private NotificationService&MockObject $notificationService;
     private CreateUserHandler $handler;
 
     protected function setUp(): void
@@ -23,11 +26,12 @@ class CreateUserHandlerTest extends TestCase
         $this->em = $this->createMock(EntityManagerInterface::class);
         $this->passwordHasher = $this->createMock(UserPasswordHasherInterface::class);
         $this->connection = $this->createMock(Connection::class);
+        $this->notificationService = $this->createMock(NotificationService::class);
 
         $this->em->method('getConnection')->willReturn($this->connection);
         $this->passwordHasher->method('hashPassword')->willReturn('hashed_password');
 
-        $this->handler = new CreateUserHandler($this->em, $this->passwordHasher);
+        $this->handler = new CreateUserHandler($this->em, $this->passwordHasher, $this->notificationService, new NullLogger());
     }
 
     public function testCreateUserSuccess(): void
@@ -36,6 +40,7 @@ class CreateUserHandlerTest extends TestCase
         $this->connection->expects($this->once())->method('commit');
         $this->em->expects($this->once())->method('persist')->with($this->isInstanceOf(User::class));
         $this->em->expects($this->once())->method('flush');
+        $this->notificationService->expects($this->once())->method('notifyWelcome');
 
         $command = new CreateUserCommand(
             email: 'test@example.com',
@@ -57,6 +62,7 @@ class CreateUserHandlerTest extends TestCase
         $this->connection->expects($this->once())->method('commit');
         $this->em->expects($this->once())->method('persist')->with($this->isInstanceOf(User::class));
         $this->em->expects($this->once())->method('flush');
+        $this->notificationService->expects($this->once())->method('notifyWelcome');
 
         $command = new CreateUserCommand(
             email: 'test@example.com',
@@ -80,6 +86,7 @@ class CreateUserHandlerTest extends TestCase
         $this->connection->expects($this->once())->method('commit');
         $this->em->expects($this->once())->method('persist')->with($this->isInstanceOf(User::class));
         $this->em->expects($this->once())->method('flush');
+        $this->notificationService->expects($this->once())->method('notifyWelcome');
 
         $command = new CreateUserCommand(
             email: 'blocked@example.com',

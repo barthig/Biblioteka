@@ -10,6 +10,7 @@ use App\Repository\FineRepository;
 use App\Repository\LoanRepository;
 use App\Repository\ReservationRepository;
 use App\Service\Book\BookService;
+use App\Service\User\NotificationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
@@ -27,6 +28,7 @@ class ReturnLoanHandlerTest extends TestCase
     private MessageBusInterface&MockObject $bus;
     private LoggerInterface&MockObject $logger;
     private EventDispatcherInterface&MockObject $eventDispatcher;
+    private NotificationService&MockObject $notificationService;
     private ReturnLoanHandler $handler;
 
     protected function setUp(): void
@@ -39,6 +41,7 @@ class ReturnLoanHandlerTest extends TestCase
         $this->logger = $this->createMock(LoggerInterface::class);
         $this->bookService = $this->createMock(BookService::class);
         $this->eventDispatcher = $this->createMock(EventDispatcherInterface::class);
+        $this->notificationService = $this->createMock(NotificationService::class);
 
         $this->handler = new ReturnLoanHandler(
             $this->em,
@@ -48,7 +51,8 @@ class ReturnLoanHandlerTest extends TestCase
             $this->fineRepository,
             $this->bus,
             $this->logger,
-            $this->eventDispatcher
+            $this->eventDispatcher,
+            $this->notificationService
         );
     }
 
@@ -70,6 +74,7 @@ class ReturnLoanHandlerTest extends TestCase
         $this->em->expects($this->once())->method('persist')->with($loan);
         $this->em->expects($this->once())->method('flush');
         $this->em->expects($this->once())->method('commit');
+        $this->notificationService->expects($this->once())->method('notifyLoanReturned');
 
         $command = new ReturnLoanCommand(loanId: 1, userId: 1);
         $result = ($this->handler)($command);

@@ -9,7 +9,9 @@ use App\Event\RatingCreatedEvent;
 use App\Repository\BookRepository;
 use App\Repository\RatingRepository;
 use App\Repository\UserRepository;
+use App\Service\User\NotificationService;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
@@ -24,6 +26,8 @@ class RateBookHandler
         private UserRepository $userRepository,
         private EntityManagerInterface $entityManager,
         private EventDispatcherInterface $eventDispatcher,
+        private NotificationService $notificationService,
+        private LoggerInterface $logger,
     ) {
     }
 
@@ -79,6 +83,15 @@ class RateBookHandler
         $this->entityManager->flush();
 
         $this->eventDispatcher->dispatch(new RatingCreatedEvent($existingRating));
+
+        try {
+            $this->notificationService->notifyRatingCreated($existingRating);
+        } catch (\Throwable $notificationError) {
+            $this->logger->error('Rating notification failed after rating save', [
+                'ratingId' => $existingRating->getId(),
+                'error' => $notificationError->getMessage(),
+            ]);
+        }
 
         return [
             'rating' => [

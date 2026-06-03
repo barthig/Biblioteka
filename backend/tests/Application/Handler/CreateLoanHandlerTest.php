@@ -12,6 +12,7 @@ use App\Repository\FineRepository;
 use App\Repository\LoanRepository;
 use App\Repository\ReservationRepository;
 use App\Service\Book\BookService;
+use App\Service\User\NotificationService;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -28,6 +29,7 @@ class CreateLoanHandlerTest extends TestCase
     private FineRepository&MockObject $fineRepository;
     private \App\Service\System\SystemSettingsService&MockObject $settingsService;
     private EventDispatcherInterface&MockObject $eventDispatcher;
+    private NotificationService&MockObject $notificationService;
     private CreateLoanHandler $handler;
 
     protected function setUp(): void
@@ -40,6 +42,7 @@ class CreateLoanHandlerTest extends TestCase
         $this->fineRepository = $this->createMock(FineRepository::class);
         $this->settingsService = $this->createMock(\App\Service\System\SystemSettingsService::class);
         $this->eventDispatcher = $this->createMock(EventDispatcherInterface::class);
+        $this->notificationService = $this->createMock(NotificationService::class);
 
         $this->handler = new CreateLoanHandler(
             $this->em,
@@ -50,7 +53,8 @@ class CreateLoanHandlerTest extends TestCase
             $this->fineRepository,
             $this->settingsService,
             $this->eventDispatcher,
-            new NullLogger()
+            new NullLogger(),
+            $this->notificationService
         );
     }
 
@@ -100,6 +104,7 @@ class CreateLoanHandlerTest extends TestCase
         $this->em->expects($this->once())->method('flush');
         $this->em->expects($this->once())->method('commit');
         $this->eventDispatcher->expects($this->once())->method('dispatch');
+        $this->notificationService->expects($this->once())->method('notifyLoanCreated');
 
         $command = new CreateLoanCommand(userId: 1, bookId: 10);
         $loan = ($this->handler)($command);

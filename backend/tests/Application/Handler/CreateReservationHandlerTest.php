@@ -7,6 +7,7 @@ use App\Entity\Book;
 use App\Entity\Reservation;
 use App\Entity\User;
 use App\Repository\ReservationRepository;
+use App\Service\User\NotificationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
 use PHPUnit\Framework\TestCase;
@@ -21,6 +22,7 @@ class CreateReservationHandlerTest extends TestCase
     private MessageBusInterface $bus;
     private LoggerInterface $logger;
     private EventDispatcherInterface $eventDispatcher;
+    private NotificationService $notificationService;
     private CreateReservationHandler $handler;
 
     protected function setUp(): void
@@ -30,13 +32,15 @@ class CreateReservationHandlerTest extends TestCase
         $this->bus = $this->createMock(MessageBusInterface::class);
         $this->logger = $this->createMock(LoggerInterface::class);
         $this->eventDispatcher = $this->createMock(EventDispatcherInterface::class);
+        $this->notificationService = $this->createMock(NotificationService::class);
 
         $this->handler = new CreateReservationHandler(
             $this->em,
             $this->reservationRepository,
             $this->bus,
             $this->logger,
-            $this->eventDispatcher
+            $this->eventDispatcher,
+            $this->notificationService
         );
     }
 
@@ -68,6 +72,7 @@ class CreateReservationHandlerTest extends TestCase
 
         $this->em->expects($this->once())->method('persist')->with($this->isInstanceOf(Reservation::class));
         $this->em->expects($this->once())->method('flush');
+        $this->notificationService->expects($this->once())->method('notifyReservationQueued');
 
         $command = new CreateReservationCommand(userId: 1, bookId: 1, expiresInDays: 14);
         $result = ($this->handler)($command);

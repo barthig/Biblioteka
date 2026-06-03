@@ -33,7 +33,7 @@ class AddBudgetExpenseHandler
             ->setDescription($command->description);
 
         try {
-            $expense->setType($command->type ?? AcquisitionExpense::TYPE_MISC);
+            $expense->setType($this->normalizeExpenseType($command->type));
         } catch (\InvalidArgumentException $e) {
             throw ValidationException::forField('type', 'Invalid expense type');
         }
@@ -49,5 +49,19 @@ class AddBudgetExpenseHandler
         $this->entityManager->flush();
 
         return $expense;
+    }
+
+    private function normalizeExpenseType(?string $type): string
+    {
+        if ($type === null || trim($type) === '') {
+            return AcquisitionExpense::TYPE_MISC;
+        }
+
+        $normalized = strtoupper(trim($type));
+        if ($normalized === 'MANUAL') {
+            return AcquisitionExpense::TYPE_MISC;
+        }
+
+        return $normalized;
     }
 }

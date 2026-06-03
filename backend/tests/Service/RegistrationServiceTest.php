@@ -8,8 +8,10 @@ use App\Repository\UserRepository;
 use App\Service\Book\OpenAIEmbeddingService;
 use App\Service\Auth\RegistrationException;
 use App\Service\Auth\RegistrationService;
+use App\Service\User\NotificationService;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\NullLogger;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class RegistrationServiceTest extends TestCase
@@ -47,7 +49,10 @@ class RegistrationServiceTest extends TestCase
         $hasher = $this->createMock(UserPasswordHasherInterface::class);
         $hasher->method('hashPassword')->willReturn('hashed_password');
 
-        $service = new RegistrationService($entityManager, $users, $tokens, $embedding, $hasher);
+        $notificationService = $this->createMock(NotificationService::class);
+        $notificationService->expects($this->once())->method('notifyWelcome');
+
+        $service = $this->buildService($entityManager, $users, $tokens, $embedding, $hasher, $notificationService);
         $token = $service->register([
             'email' => 'USER@EXAMPLE.COM',
             'name' => 'Test User',
@@ -78,7 +83,7 @@ class RegistrationServiceTest extends TestCase
 
         $hasher = $this->createMock(UserPasswordHasherInterface::class);
 
-        $service = new RegistrationService($entityManager, $users, $tokens, $embedding, $hasher);
+        $service = $this->buildService($entityManager, $users, $tokens, $embedding, $hasher);
         $verified = $service->verify('token');
 
         $this->assertTrue($verified->isVerified());
@@ -99,7 +104,7 @@ class RegistrationServiceTest extends TestCase
 
         $hasher = $this->createMock(UserPasswordHasherInterface::class);
 
-        $service = new RegistrationService($entityManager, $users, $tokens, $embedding, $hasher);
+        $service = $this->buildService($entityManager, $users, $tokens, $embedding, $hasher);
 
         $this->expectException(RegistrationException::class);
         $service->verify('token');
@@ -115,6 +120,25 @@ class RegistrationServiceTest extends TestCase
         $hasher = $this->createMock(UserPasswordHasherInterface::class);
         $hasher->method('hashPassword')->willReturn('hashed_password');
 
-        return new RegistrationService($entityManager, $users, $tokens, $embedding, $hasher);
+        return $this->buildService($entityManager, $users, $tokens, $embedding, $hasher);
+    }
+
+    private function buildService(
+        EntityManagerInterface $entityManager,
+        UserRepository $users,
+        RegistrationTokenRepository $tokens,
+        OpenAIEmbeddingService $embedding,
+        UserPasswordHasherInterface $hasher,
+        ?NotificationService $notificationService = null
+    ): RegistrationService {
+        return new RegistrationService(
+            $entityManager,
+            $users,
+            $tokens,
+            $embedding,
+            $hasher,
+            $notificationService ?? $this->createMock(NotificationService::class),
+            new NullLogger()
+        );
     }
 }

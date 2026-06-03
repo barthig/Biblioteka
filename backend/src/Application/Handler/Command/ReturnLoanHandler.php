@@ -14,6 +14,7 @@ use App\Repository\FineRepository;
 use App\Repository\LoanRepository;
 use App\Repository\ReservationRepository;
 use App\Service\Book\BookService;
+use App\Service\User\NotificationService;
 use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
@@ -34,7 +35,8 @@ class ReturnLoanHandler
         private FineRepository $fineRepository,
         private MessageBusInterface $bus,
         private LoggerInterface $logger,
-        private EventDispatcherInterface $eventDispatcher
+        private EventDispatcherInterface $eventDispatcher,
+        private NotificationService $notificationService
     ) {
     }
 
@@ -121,6 +123,15 @@ class ReturnLoanHandler
             $this->logger->error('BookReturnedEvent dispatch failed after return commit', [
                 'loanId' => $loan->getId(),
                 'error' => $eventError->getMessage(),
+            ]);
+        }
+
+        try {
+            $this->notificationService->notifyLoanReturned($loan);
+        } catch (\Throwable $notificationError) {
+            $this->logger->error('Return notification failed after return commit', [
+                'loanId' => $loan->getId(),
+                'error' => $notificationError->getMessage(),
             ]);
         }
 

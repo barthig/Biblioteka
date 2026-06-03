@@ -72,9 +72,15 @@ export const acquisitionService = {
       body: JSON.stringify(payload)
     })
   },
-  async receiveOrder(id) {
+  async receiveOrder(id, payload = null) {
     return await apiFetch(`/api/admin/acquisitions/orders/${id}/receive`, {
-      method: 'POST'
+      method: 'POST',
+      ...(payload
+        ? {
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          }
+        : {})
     })
   },
   async cancelOrder(id) {
